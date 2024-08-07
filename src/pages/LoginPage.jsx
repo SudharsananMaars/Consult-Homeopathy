@@ -5,6 +5,7 @@ import { useNavigate } from 'react-router-dom';
 import homeo from 'C:/Users/Mahima Sharon J R/Desktop/website_pro/website/src/assets/images/homeo.png'; // Ensure this path is correct
 import 'C:/Users/Mahima Sharon J R/Desktop/website_pro/website/src/index.css';
 
+
 const LoginPage = () => {
   const [role, setRole] = useState(''); // 'doctor' or 'patient'
   const [mobileNumber, setMobileNumber] = useState('');
@@ -70,7 +71,7 @@ const LoginPage = () => {
 
   const closePopup = () => {
     setShowPopup(false);
-    navigate('C:/Users/Mahima Sharon J R/Desktop/website_pro/website/src/pages/Home.jsx');
+    navigate('/home');
   };
 
   const handleRoleSwitch = () => {
@@ -191,12 +192,14 @@ const LoginPage = () => {
             </label>
           </div>
           <div className="flex justify-center mb-4">
+          
             <button
               onClick={handleLogin}
               className="bg-blue-600 text-white py-2 px-4 rounded-md shadow-sm hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
             >
               Login
             </button>
+            
           </div>
           <div className="text-center">
             <button
@@ -214,12 +217,15 @@ const LoginPage = () => {
                 <h2 className="text-xl font-semibold mb-4">Login Successful</h2>
                 <p>Your login was successful!</p>
                 <div className="flex justify-center mt-4">
+                
                   <button
                     onClick={closePopup}
-                    className="bg-blue-600 text-white py-2 px-4 rounded-md shadow-sm hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+                    className="bg-blue-600 text-white py-2 px-4 rounded-md shadow-sm hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500" 
                   >
-                    Continue
+                  Continue
+                    
                   </button>
+               
                 </div>
               </div>
             </div>
