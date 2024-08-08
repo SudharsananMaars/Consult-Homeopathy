@@ -1,13 +1,15 @@
 import React, { useState } from 'react';
 import Select from 'react-select';
+import { useNavigate } from 'react-router-dom';
 import 'C:/Users/Mahima Sharon J R/Desktop/website_pro/website/src/index.css'; 
 
 
 
 const Form= () => {
-  const feetOptions = [...Array(10).keys()].map(i => ({ value: i, label: `${i} feet` }));
+  const feetOptions = [...Array(10).keys()].map(i => ({ value: i+1, label: `${i+1} feet` }));
   const inchesOptions = [...Array(10).keys()].map(i => ({ value: i, label: `${i} inches` }));
    const weightOptions = [...Array(151).keys()].slice(1).map(i => ({ value: i, label: `${i} kg` }));
+   
  
 
   const country = ["Afghanistan", "Albania", "Algeria", "Andorra", "Angola", "Antigua and Barbuda", "Argentina", "Armenia", "Australia", "Austria", "Azerbaijan", "Bahamas", "Bahrain", "Bangladesh", "Barbados", "Belarus", "Belgium", "Belize", "Benin", "Bhutan", "Bolivia", 
@@ -97,7 +99,7 @@ const cityOptions = cities.map(city => ({
   const [formData, setFormData] = useState({
     feet: null,
     inches: null,
-    weight:  { value: 35, label: '35 kg' },
+    weight:  null,
     occupation: '',
     country: null,
     state: null,
@@ -116,6 +118,7 @@ const cityOptions = cities.map(city => ({
 
   const [errors, setErrors] = useState({});
   const [showSymptomField, setShowSymptomField] = useState(false);
+  const navigate = useNavigate();
  
 
   
@@ -181,12 +184,15 @@ const cityOptions = cities.map(city => ({
       console.log(formData);
       // Handle form submission
     }
+    navigate('/home');
   };
 
   return (
-    <div className="flex justify-center items-center min-h-screen p-10 bg-gradient-to-r from-violet-100 to-fuchsia-100">
-      <form onSubmit={handleSubmit} className="w-1/3 mx-auto p-8 bg-white shadow-md rounded">
+    <div className="flex justify-center items-center min-h-screen p-10 bg-gray-50">
+      <form onSubmit={handleSubmit} className="w-2/4 mx-auto p-8 bg-white shadow-2xl rounded">
+        <div className=' flex justify-center items-center text-xl text-gray-700 font-bold'> <label>Chronic Form</label></div>
         <div className="mb-4">
+       
           <label className="block text-gray-700 text-sm  font-bold mb-2">Height</label>
           <div className="flex space-x-4">
             <Select
@@ -314,7 +320,7 @@ const cityOptions = cities.map(city => ({
         </div>
 
         <div className="mb-4">
-          <label className="block text-gray-700 text-sm font-bold mb-2">Disease History</label>
+          <label className="block text-gray-700 text-sm font-bold mb-2"> History of Disease</label>
           <Select
             options={historyDiseasesOption}
             placeholder="Select Disease History"
@@ -325,7 +331,7 @@ const cityOptions = cities.map(city => ({
         </div>
 
         <div className="mb-4">
-          <label className="block text-gray-700 text-sm font-bold mb-2">Surgery History</label>
+          <label className="block text-gray-700 text-sm font-bold mb-2">History of Surgery </label>
           <input
             type="text"
             value={formData.surgeryHistory}
@@ -372,14 +378,16 @@ const cityOptions = cities.map(city => ({
         </div>
 
         <div className="mb-4">
-          <label className="block text-gray-700 text-sm font-bold mb-2">How did you find our clinic?</label>
+          <label className="block text-gray-700 text-sm font-bold mb-2">How did you find our katyayani clinic?</label>
           {options.map(option => (
             <div key={option}>
               <input
+              
                 type="checkbox"
                 value={option}
                 checked={formData.clinicSource.includes(option)}
                 onChange={handleCheckboxChange}
+
                 
               />
               <label className="ml-2 text-grey-500">{option}</label>
@@ -387,9 +395,8 @@ const cityOptions = cities.map(city => ({
           ))}
           {errors.clinicSource && <p className="text-red-500 text-xs italic">{errors.clinicSource}</p>}
         </div>
-
-        <div className="mb-4">
-          <button type="submit" className="bg-blue-500 hover:bg-blue-700 text-white flex justify-center items-center font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline">
+        <div className="mb-4 flex justify-center items-center  ">
+          <button type="submit" className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline">
             Submit
           </button>
         </div>
