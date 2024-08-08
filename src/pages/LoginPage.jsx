@@ -71,7 +71,7 @@ const LoginPage = () => {
 
   const closePopup = () => {
     setShowPopup(false);
-    navigate('/home');
+    navigate('/form');
   };
 
   const handleRoleSwitch = () => {
