@@ -5,7 +5,6 @@ import { useNavigate } from 'react-router-dom';
 import homeo from 'C:/Users/Mahima Sharon J R/Desktop/website_pro/website/src/assets/images/homeo.png'; // Ensure this path is correct
 import 'C:/Users/Mahima Sharon J R/Desktop/website_pro/website/src/index.css';
 
-
 const LoginPage = () => {
   const [role, setRole] = useState(''); // 'doctor' or 'patient'
   const [mobileNumber, setMobileNumber] = useState('');
