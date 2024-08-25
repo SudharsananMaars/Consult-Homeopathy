@@ -1,24 +1,17 @@
-import { defineConfig } from 'vite'
-import react from '@vitejs/plugin-react'
+import { defineConfig } from 'vite';
+import react from '@vitejs/plugin-react';
+import tailwindcss from 'tailwindcss';
 
-// https://vitejs.dev/config/
 export default defineConfig({
   plugins: [react()],
-})
-// import { defineConfig } from 'vite';
-// import react from '@vitejs/plugin-react';
+  server: {
+    host: '0.0.0.0',
+    port: 5173,  // You can specify a different port here
+  },
 
-// export default defineConfig({
-//   plugins: [react()],
-//   resolve: {
-//     alias: {
-//       '@': '/src', // Example alias configuration
-//     },
-//   },
-//   server: {
-//     port: 3000, // Customize dev server port
-//   },
-//   build: {
-//     outDir: 'build', // Customize output directory
-//   },
-// });
+  css: {
+    postcss: {
+      plugins: [tailwindcss('./tailwind.config.cjs')]
+    }
+  }
+});
