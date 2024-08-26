@@ -1,6 +1,8 @@
 import React, { useState } from 'react';
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
+import { useNavigate } from 'react-router-dom';
+import Pay from "/Pay";
 
 const NewAppointment = () => {
     const [selectedDate, setSelectedDate] = useState(null);
@@ -8,6 +10,7 @@ const NewAppointment = () => {
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [isConfirmModalOpen, setIsConfirmModalOpen] = useState(false);
     const [errorMessage, setErrorMessage] = useState("");
+    const navigate =useNavigate();
 
     const today = new Date();
     const oneMonthLater = new Date();
@@ -30,6 +33,7 @@ const NewAppointment = () => {
     const confirmBooking = () => {
         // Handle the booking confirmation logic here
         setIsConfirmModalOpen(false); // Close the confirmation modal after confirming
+        navigate('/appointments/newappointment/pay');
     };
 
     const cancelBooking = () => {
@@ -87,7 +91,7 @@ const NewAppointment = () => {
                             <div className="relative bg-white rounded-lg shadow dark:bg-gray-800">
                                 <div className="p-4" >
                                 <div className="flex items-center justify-between mb-4">
-        <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
+        <h3 className="text-lg font-semibold text-gray-900 dark:text-white justify-items-center text-center">
             Schedule an Appointment
         </h3>
         
@@ -131,7 +135,7 @@ const NewAppointment = () => {
                                         />
                                         
                                         <div className="w-full lg:w-1/2 pr-4 mr-6">
-                                            <label className="text-sm font-medium text-gray-900 dark:text-white mb-2 mr-2 block">
+                                            <label className="text-md font-medium text-gray-900 dark:text-white mb-2 mr-2 block">
                                                 Pick your time
                                             </label>
                                             
@@ -146,150 +150,156 @@ const NewAppointment = () => {
         className="hidden peer"
         name="timetable"
         onChange={handleTimeChange}
-        checked={selectedTime === '10:00 AM'} 
-
+        checked={selectedTime === '10:00 AM'}
     />
     <label
         htmlFor="10-am"
-        className="inline-flex items-center justify-center px-4 py-2 text-sm lg:text-base font-medium text-center whitespace-nowrap hover:text-purple-900 dark:hover:text-white bg-white hover:bg-blue-300 dark:bg-gray-800 border rounded-lg cursor-pointer text-gray-500 border-gray-900 dark:border-gray-700 peer-checked:bg-blue-400 peer-checked:text-gray-300 dark:peer-checked:border-blue-500 peer-checked:border-blue-700 dark:hover:border-gray-600 dark:peer-checked:text-white dark:text-gray-400 dark:hover:bg-gray-600 dark:peer-checked:bg-blue-900"
+        className="inline-flex items-center justify-center px-4 py-2 text-sm lg:text-base font-medium text-center whitespace-nowrap bg-white hover:bg-blue-300 dark:bg-gray-800 border rounded-lg cursor-pointer text-gray-500 border-gray-200 dark:border-gray-700 peer-checked:bg-blue-400 peer-checked:text-white dark:peer-checked:bg-blue-900 dark:peer-checked:text-white"
     >
         10:00 AM
+    </label>
+</li>
+<li className="inline-flex items-center">
+    <input
+        type="radio"
+        id="10-45-am"
+        value="10:45 AM"
+        className="hidden peer"
+        name="timetable"
+        onChange={handleTimeChange}
+        checked={selectedTime === '10:45 AM'}
+    />
+    <label
+        htmlFor="10-45-am"
+        className="inline-flex items-center justify-center px-4 py-2 text-sm lg:text-base font-medium text-center whitespace-nowrap bg-white hover:bg-blue-300 dark:bg-gray-800 border rounded-lg cursor-pointer text-gray-500 border-gray-200 dark:border-gray-700 peer-checked:bg-blue-400 peer-checked:text-white dark:peer-checked:bg-blue-900 dark:peer-checked:text-white"
+    >
+        10:45 AM
     </label>
 </li>
 
 <li className="inline-flex items-center">
     <input
         type="radio"
-        id="10-am"
-        value="10:00 AM"
+        id="11-30-am"
+        value="11:30 AM"
         className="hidden peer"
         name="timetable"
         onChange={handleTimeChange}
+        checked={selectedTime === '11:30 AM'}
     />
     <label
-        htmlFor="10-am"
-        className="inline-flex items-center justify-center px-4 py-2 text-sm lg:text-base font-medium text-center whitespace-nowrap hover:text-gray-900 dark:hover:text-white bg-white hover:bg-blue-300 dark:bg-gray-800 border rounded-lg cursor-pointer text-gray-500 border-gray-900 dark:border-gray-700 peer-checked:bg-blue-100 peer-checked:text-gray-300 dark:peer-checked:border-blue-500 peer-checked:border-blue-700 dark:hover:border-gray-600 dark:peer-checked:text-white dark:text-gray-400 dark:hover:bg-gray-600 dark:peer-checked:bg-blue-900"
+        htmlFor="11-30-am"
+        className="inline-flex items-center justify-center px-4 py-2 text-sm lg:text-base font-medium text-center whitespace-nowrap bg-white hover:bg-blue-300 dark:bg-gray-800 border rounded-lg cursor-pointer text-gray-500 border-gray-200 dark:border-gray-700 peer-checked:bg-blue-400 peer-checked:text-white dark:peer-checked:bg-blue-900 dark:peer-checked:text-white"
     >
-        10:00 AM
+        11:30 AM
     </label>
 </li>
 
 <li className="inline-flex items-center">
     <input
         type="radio"
-        id="10-am"
-        value="10:00 AM"
+        id="12-15-pm"
+        value="12:15 PM"
         className="hidden peer"
         name="timetable"
         onChange={handleTimeChange}
+        checked={selectedTime === '12:15 PM'}
     />
     <label
-        htmlFor="10-am"
-        className="inline-flex items-center justify-center px-4 py-2 text-sm lg:text-base font-medium text-center whitespace-nowrap hover:text-gray-900 dark:hover:text-white bg-white hover:bg-blue-300 dark:bg-gray-800 border rounded-lg cursor-pointer text-gray-500 border-gray-900 dark:border-gray-700 peer-checked:bg-blue-100 peer-checked:text-gray-300 dark:peer-checked:border-blue-500 peer-checked:border-blue-700 dark:hover:border-gray-600 dark:peer-checked:text-white dark:text-gray-400 dark:hover:bg-gray-600 dark:peer-checked:bg-blue-900"
+        htmlFor="12-15-pm"
+        className="inline-flex items-center justify-center px-4 py-2 text-sm lg:text-base font-medium text-center whitespace-nowrap bg-white hover:bg-blue-300 dark:bg-gray-800 border rounded-lg cursor-pointer text-gray-500 border-gray-200 dark:border-gray-700 peer-checked:bg-blue-400 peer-checked:text-white dark:peer-checked:bg-blue-900 dark:peer-checked:text-white"
     >
-        10:00 AM
+        12:15 PM
     </label>
 </li>
 
 <li className="inline-flex items-center">
     <input
         type="radio"
-        id="10-am"
-        value="10:00 AM"
+        id="1-pm"
+        value="1:00 PM"
         className="hidden peer"
         name="timetable"
         onChange={handleTimeChange}
+        checked={selectedTime === '1:00 PM'}
     />
     <label
-        htmlFor="10-am"
-        className="inline-flex items-center justify-center px-4 py-2 text-sm lg:text-base font-medium text-center whitespace-nowrap hover:text-gray-900 dark:hover:text-white bg-white hover:bg-blue-300 dark:bg-gray-800 border rounded-lg cursor-pointer text-gray-500 border-gray-900 dark:border-gray-700 peer-checked:bg-blue-100 peer-checked:text-gray-300 dark:peer-checked:border-blue-500 peer-checked:border-blue-700 dark:hover:border-gray-600 dark:peer-checked:text-white dark:text-gray-400 dark:hover:bg-gray-600 dark:peer-checked:bg-blue-900"
+        htmlFor="1-pm"
+        className="inline-flex items-center justify-center px-4 py-2 text-sm lg:text-base font-medium text-center whitespace-nowrap bg-white hover:bg-blue-300 dark:bg-gray-800 border rounded-lg cursor-pointer text-gray-500 border-gray-200 dark:border-gray-700 peer-checked:bg-blue-400 peer-checked:text-white dark:peer-checked:bg-blue-900 dark:peer-checked:text-white"
     >
-        10:00 AM
+        1:00  PM
     </label>
 </li>
 
 <li className="inline-flex items-center">
     <input
         type="radio"
-        id="10-am"
-        value="10:00 AM"
+        id="1-45-pm"
+        value="1:45 PM"
         className="hidden peer"
         name="timetable"
         onChange={handleTimeChange}
+        checked={selectedTime === '1:45 PM'}
     />
     <label
-        htmlFor="10-am"
-        className="inline-flex items-center justify-center px-4 py-2 text-sm lg:text-base font-medium text-center whitespace-nowrap hover:text-gray-900 dark:hover:text-white bg-white hover:bg-blue-300 dark:bg-gray-800 border rounded-lg cursor-pointer text-gray-500 border-gray-900 dark:border-gray-700 peer-checked:bg-blue-100 peer-checked:text-gray-300 dark:peer-checked:border-blue-500 peer-checked:border-blue-700 dark:hover:border-gray-600 dark:peer-checked:text-white dark:text-gray-400 dark:hover:bg-gray-600 dark:peer-checked:bg-blue-900"
+        htmlFor="1-45-pm"
+        className="inline-flex items-center justify-center px-4 py-2 text-sm lg:text-base font-medium text-center whitespace-nowrap bg-white hover:bg-blue-300 dark:bg-gray-800 border rounded-lg cursor-pointer text-gray-500 border-gray-200 dark:border-gray-700 peer-checked:bg-blue-400 peer-checked:text-white dark:peer-checked:bg-blue-900 dark:peer-checked:text-white"
     >
-        10:00 AM
+        1:45  PM
     </label>
 </li>
 
 <li className="inline-flex items-center">
     <input
         type="radio"
-        id="10-am"
-        value="10:00 AM"
+        id="2-30-pm"
+        value="2:30 PM"
         className="hidden peer"
         name="timetable"
         onChange={handleTimeChange}
+        checked={selectedTime === '2:30 PM'}
     />
     <label
-        htmlFor="10-am"
-        className="inline-flex items-center justify-center px-4 py-2 text-sm lg:text-base font-medium text-center whitespace-nowrap hover:text-gray-900 dark:hover:text-white bg-white hover:bg-blue-300 dark:bg-gray-800 border rounded-lg cursor-pointer text-gray-500 border-gray-900 dark:border-gray-700 peer-checked:bg-blue-100 peer-checked:text-gray-300 dark:peer-checked:border-blue-500 peer-checked:border-blue-700 dark:hover:border-gray-600 dark:peer-checked:text-white dark:text-gray-400 dark:hover:bg-gray-600 dark:peer-checked:bg-blue-900"
+        htmlFor="2-30-pm"
+        className="inline-flex items-center justify-center px-4 py-2 text-sm lg:text-base font-medium text-center whitespace-nowrap bg-white hover:bg-blue-300 dark:bg-gray-800 border rounded-lg cursor-pointer text-gray-500 border-gray-200 dark:border-gray-700 peer-checked:bg-blue-400 peer-checked:text-white dark:peer-checked:bg-blue-900 dark:peer-checked:text-white"
     >
-        10:00 AM
+        2:30  PM
     </label>
 </li>
 
 <li className="inline-flex items-center">
     <input
         type="radio"
-        id="10-am"
-        value="10:00 AM"
+        id="3-15-pm"
+        value="3:15 PM"
         className="hidden peer"
         name="timetable"
         onChange={handleTimeChange}
+        checked={selectedTime === '3:15 PM'}
     />
     <label
-        htmlFor="10-am"
-        className="inline-flex items-center justify-center px-4 py-2 text-sm lg:text-base font-medium text-center whitespace-nowrap hover:text-gray-900 dark:hover:text-white bg-white hover:bg-blue-300 dark:bg-gray-800 border rounded-lg cursor-pointer text-gray-500 border-gray-900 dark:border-gray-700 peer-checked:bg-blue-100 peer-checked:text-gray-300 dark:peer-checked:border-blue-500 peer-checked:border-blue-700 dark:hover:border-gray-600 dark:peer-checked:text-white dark:text-gray-400 dark:hover:bg-gray-600 dark:peer-checked:bg-blue-900"
+        htmlFor="3-15-pm"
+        className="inline-flex items-center justify-center px-4 py-2 text-sm lg:text-base font-medium text-center whitespace-nowrap bg-white hover:bg-blue-300 dark:bg-gray-800 border rounded-lg cursor-pointer text-gray-500 border-gray-200 dark:border-gray-700 peer-checked:bg-blue-400 peer-checked:text-white dark:peer-checked:bg-blue-900 dark:peer-checked:text-white"
     >
-        10:00 AM
+        3:15  PM
     </label>
 </li>
 
 <li className="inline-flex items-center">
     <input
         type="radio"
-        id="10-am"
-        value="10:00 AM"
+        id="4-pm"
+        value="4:00 PM"
         className="hidden peer"
         name="timetable"
         onChange={handleTimeChange}
+        checked={selectedTime === '4:00 PM'}
     />
     <label
-        htmlFor="10-am"
-        className="inline-flex items-center justify-center px-4 py-2 text-sm lg:text-base font-medium text-center whitespace-nowrap hover:text-gray-900 dark:hover:text-white bg-white hover:bg-blue-300 dark:bg-gray-800 border rounded-lg cursor-pointer text-gray-500 border-gray-900 dark:border-gray-700 peer-checked:bg-blue-100 peer-checked:text-gray-300 dark:peer-checked:border-blue-500 peer-checked:border-blue-700 dark:hover:border-gray-600 dark:peer-checked:text-white dark:text-gray-400 dark:hover:bg-gray-600 dark:peer-checked:bg-blue-900"
+        htmlFor="4-Pm"
+        className="inline-flex items-center justify-center px-4 py-2 text-sm lg:text-base font-medium text-center whitespace-nowrap bg-white hover:bg-blue-300 dark:bg-gray-800 border rounded-lg cursor-pointer text-gray-500 border-gray-200 dark:border-gray-700 peer-checked:bg-blue-400 peer-checked:text-white dark:peer-checked:bg-blue-900 dark:peer-checked:text-white"
     >
-        10:00 AM
-    </label>
-</li>
-
-<li className="inline-flex items-center">
-    <input
-        type="radio"
-        id="10-am"
-        value="10:00 AM"
-        className="hidden peer"
-        name="timetable"
-        onChange={handleTimeChange}
-    />
-    <label
-        htmlFor="10-am"
-        className="inline-flex items-center justify-center px-4 py-2 text-sm lg:text-base font-medium text-center whitespace-nowrap hover:text-gray-900 dark:hover:text-white bg-white hover:bg-blue-300 dark:bg-gray-800 border rounded-lg cursor-pointer text-gray-500 border-gray-900 dark:border-gray-700 peer-checked:bg-blue-100 peer-checked:text-gray-300 dark:peer-checked:border-blue-500 peer-checked:border-blue-700 dark:hover:border-gray-600 dark:peer-checked:text-white dark:text-gray-400 dark:hover:bg-gray-600 dark:peer-checked:bg-blue-900"
-    >
-        10:00 AM
+        4:00  PM
     </label>
 </li>
 
