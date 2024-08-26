@@ -12,7 +12,7 @@ import FirstForm from './pages/FirstForm.jsx';
 import Appointments from './pages/Appointments.jsx';
 import Home from './pages/Home.jsx';
 import Payments from './pages/Payments.jsx';
-import Pay from './pages/';
+import Pay from './components/Pay.jsx';
 
 
 function App() {
@@ -30,7 +30,7 @@ function App() {
             <Route path="/appointments/recent" element={<RecentAppointments />} />
             <Route path="/appointments/upcoming" element={<UpcomingAppointments />} />
             <Route path="/appointments/newappointment" element={<NewAppointment />} />
-            <Route path="/appointmrnts/newappointment/pay" element={<Pay />} />
+            <Route path="/appointments/newappointment/pay" element={<Pay />} />
             <Route path="/appointments/cancelled" element={<CancelledAppointment />} />
 
           </Route>

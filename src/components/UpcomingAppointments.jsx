@@ -1,6 +1,6 @@
 import React from 'react'; 
 import doctor from '../assets/images/doctor.jpeg';
-const UpcomingAppointments = () => {
+const UpcomingAppointments = ({appointments}) => {
     return  <div>
       <div>
         <p className="font-bold mt-7 mb-10 text-xl px-7" >Upcoming Appointments </p>
@@ -12,7 +12,7 @@ const UpcomingAppointments = () => {
  
   <div className="flex-1 text-center md:text-left">
   
-    <p className="text-sm sm:text-base md:text-lg text-gray-600 font-semibold">Monday, August 20, 2024</p>
+    <p className="text-sm sm:text-base md:text-lg text-gray-600 font-semibold">Monday, August 30, 2024</p>
     <p className="text-sm sm:text-base md:text-lg text-gray-600 font-semibold">3:00 PM</p>
     <p className="text-lg sm:text-xl font-bold text-gray-800">Dr. Jane Doe</p>
   </div>

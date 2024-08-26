@@ -1,37 +1,41 @@
 // PaymentOptions.js
 
 import React from 'react';
+import { FaCreditCard, FaPaypal,FaGooglePay, FaAmazonPay } from 'react-icons/fa';
+import { SiPhonepe, SiSamsungpay } from "react-icons/si";
 
 
 const Pay = () => {
     return (
-        <div className="p-4 max-w-screen-lg mx-auto">
-            <h1 className="text-2xl font-bold text-center mb-6">Select Your Payment Method</h1>
-            <div className="flex flex-col lg:flex-row lg:justify-around gap-4">
-                <div className="flex-1 bg-white border rounded-lg shadow-md p-4 flex flex-col items-center">
-                    <h2 className="text-xl font-semibold mb-2">Credit/Debit Card</h2>
-                    <img src="/path/to/credit-card-icon.png" alt="Credit Card" className="w-16 h-16 mb-4" />
-                    <p className="text-gray-600 mb-4">Pay securely with your credit or debit card.</p>
-                    <button className="bg-blue-600 text-white py-2 px-4 rounded-lg hover:bg-blue-700">
-                        Choose
-                    </button>
-                </div>
-                <div className="flex-1 bg-white border rounded-lg shadow-md p-4 flex flex-col items-center">
-                    <h2 className="text-xl font-semibold mb-2">PayPal</h2>
-                    <img src="/path/to/paypal-icon.png" alt="PayPal" className="w-16 h-16 mb-4" />
-                    <p className="text-gray-600 mb-4">Use your PayPal account for a quick and easy payment.</p>
-                    <button className="bg-blue-600 text-white py-2 px-4 rounded-lg hover:bg-blue-700">
-                        Choose
-                    </button>
-                </div>
-                <div className="flex-1 bg-white border rounded-lg shadow-md p-4 flex flex-col items-center">
-                    <h2 className="text-xl font-semibold mb-2">Bank Transfer</h2>
-                    <img src="/path/to/bank-transfer-icon.png" alt="Bank Transfer" className="w-16 h-16 mb-4" />
-                    <p className="text-gray-600 mb-4">Transfer funds directly from your bank account.</p>
-                    <button className="bg-blue-600 text-white py-2 px-4 rounded-lg hover:bg-blue-700">
-                        Choose
-                    </button>
-                </div>
+        <div className="p-6 bg-white rounded-lg shadow-md mt-8">
+            <h3 className="text-xl font-bold mb-8">Select Payment Options</h3>
+            <div className="grid grid-cols-1 sm:grid-cols-1 lg:grid-cols-3 gap-4">
+                <button className="flex items-center px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600">
+                    <FaCreditCard className="mr-2" />
+                    Pay with Credit Card
+                </button>
+                <button className="flex items-center px-4 py-2 bg-yellow-500 text-white rounded hover:bg-yellow-600">
+                    <FaPaypal className="mr-2" />
+                    Pay with PayPal
+                </button>
+    
+                <button className="flex items-center px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600">
+                    <FaGooglePay className="mr-2" />
+                    Pay with Google Pay
+                </button>
+                <button className="flex items-center px-4 py-2 bg-purple-500 text-white rounded hover:bg-purple-600">
+                    <SiPhonepe className="mr-2" />
+                    Pay with PhonePe
+                </button>
+                <button className="flex items-center px-4 py-2 bg-blue-700 text-white rounded hover:bg-blue-800">
+                    <SiSamsungpay className="mr-2" />
+                    Pay with Samsung Pay
+                </button>
+                <button className="flex items-center px-4 py-2 bg-gray-800 text-white rounded hover:bg-gray-900">
+                    <FaAmazonPay className="mr-2" />
+                    Pay with Amazon Pay
+                </button>
+                
             </div>
         </div>
     );

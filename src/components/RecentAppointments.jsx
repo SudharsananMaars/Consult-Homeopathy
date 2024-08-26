@@ -1,6 +1,10 @@
 import React from 'react'; 
 const RecentAppointments = () => {
-    return <div><div className="relative overflow-x-auto pt-10 shadow-lg">
+    return <div>
+      <div>
+        <p className="font-bold mt-7 mb-7 text-xl px-7" >Previous Appointments </p>
+      </div>
+      <div className="relative overflow-x-auto pt-10 shadow-lg">
     <table className="w-full text-sm text-left rtl:text-right text-white-500 dark:text-gray-100">
       <thead className="text-xs text-gray-500 uppercase bg-blue-100 dark:bg-blue-200 dark:text-gray-700">
         <tr>

@@ -4,7 +4,7 @@ import profile from "C:/Users/Mahima Sharon J R/Desktop/website_pro/website/src/
 
 const Header = () =>{
     const name = "Rita";
-    return( <div className="flex justify-between items-center px-5 py-10 ml-2 mr-2 mt-2 h-16 bg-blue-400 shadow-lg rounded-md"> 
+    return( <div className="flex justify-between items-center px-5 py-10 ml-2 mr-2 mt-2 h-16 bg-blue-300 shadow-lg rounded-md"> 
         <div>
         
             <h1 className="text-md font-bold text-gray-700">WELCOME BACK!</h1>

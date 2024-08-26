@@ -1,16 +1,18 @@
 import React, { useState } from 'react';
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
+import Pay from "./Pay";
 import { useNavigate } from 'react-router-dom';
-import Pay from "/Pay";
 
-const NewAppointment = () => {
+const NewAppointment = ({ addAppointment }) => {
     const [selectedDate, setSelectedDate] = useState(null);
     const [selectedTime, setSelectedTime] = useState("");
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [isConfirmModalOpen, setIsConfirmModalOpen] = useState(false);
     const [errorMessage, setErrorMessage] = useState("");
-    const navigate =useNavigate();
+    const [isConfirmed, setIsConfirmed] = useState(false);
+    
+    const navigate = useNavigate();
 
     const today = new Date();
     const oneMonthLater = new Date();
@@ -32,8 +34,10 @@ const NewAppointment = () => {
 
     const confirmBooking = () => {
         // Handle the booking confirmation logic here
+        setIsConfirmed(true);// Close the confirmation modal after confirming
         setIsConfirmModalOpen(false); // Close the confirmation modal after confirming
-        navigate('/appointments/newappointment/pay');
+        navigate('/appointments/newappointment/pay'); // Redirect to the Pay.jsx page
+    
     };
 
     const cancelBooking = () => {
@@ -56,6 +60,7 @@ const NewAppointment = () => {
     };
 
     return (
+               
         <div className="flex justify-center pt-5">
             <button 
                 type="button"
@@ -91,7 +96,7 @@ const NewAppointment = () => {
                             <div className="relative bg-white rounded-lg shadow dark:bg-gray-800">
                                 <div className="p-4" >
                                 <div className="flex items-center justify-between mb-4">
-        <h3 className="text-lg font-semibold text-gray-900 dark:text-white justify-items-center text-center">
+        <h3 className="text-xl font-bold text-gray-900 dark:text-white justify-items-center text-center">
             Schedule an Appointment
         </h3>
         
@@ -135,7 +140,7 @@ const NewAppointment = () => {
                                         />
                                         
                                         <div className="w-full lg:w-1/2 pr-4 mr-6">
-                                            <label className="text-md font-medium text-gray-900 dark:text-white mb-2 mr-2 block">
+                                            <label className="text-lg font-bold text-gray-900 dark:text-white mb-2 mr-2 block">
                                                 Pick your time
                                             </label>
                                             
@@ -154,7 +159,7 @@ const NewAppointment = () => {
     />
     <label
         htmlFor="10-am"
-        className="inline-flex items-center justify-center px-4 py-2 text-sm lg:text-base font-medium text-center whitespace-nowrap bg-white hover:bg-blue-300 dark:bg-gray-800 border rounded-lg cursor-pointer text-gray-500 border-gray-200 dark:border-gray-700 peer-checked:bg-blue-400 peer-checked:text-white dark:peer-checked:bg-blue-900 dark:peer-checked:text-white"
+        className="inline-flex items-center justify-center px-4 py-2 text-sm lg:text-base font-medium text-center whitespace-nowrap bg-white hover:bg-blue-300 dark:bg-gray-800 border rounded-lg cursor-pointer text-gray-500 border-gray-500 dark:border-gray-700 peer-checked:bg-blue-400 peer-checked:text-white dark:peer-checked:bg-blue-900 dark:peer-checked:text-white"
     >
         10:00 AM
     </label>
@@ -171,7 +176,7 @@ const NewAppointment = () => {
     />
     <label
         htmlFor="10-45-am"
-        className="inline-flex items-center justify-center px-4 py-2 text-sm lg:text-base font-medium text-center whitespace-nowrap bg-white hover:bg-blue-300 dark:bg-gray-800 border rounded-lg cursor-pointer text-gray-500 border-gray-200 dark:border-gray-700 peer-checked:bg-blue-400 peer-checked:text-white dark:peer-checked:bg-blue-900 dark:peer-checked:text-white"
+        className="inline-flex items-center justify-center px-4 py-2 text-sm lg:text-base font-medium text-center whitespace-nowrap bg-white hover:bg-blue-300 dark:bg-gray-800 border rounded-lg cursor-pointer text-gray-500 border-gray-500 dark:border-gray-700 peer-checked:bg-blue-400 peer-checked:text-white dark:peer-checked:bg-blue-900 dark:peer-checked:text-white"
     >
         10:45 AM
     </label>
@@ -189,7 +194,7 @@ const NewAppointment = () => {
     />
     <label
         htmlFor="11-30-am"
-        className="inline-flex items-center justify-center px-4 py-2 text-sm lg:text-base font-medium text-center whitespace-nowrap bg-white hover:bg-blue-300 dark:bg-gray-800 border rounded-lg cursor-pointer text-gray-500 border-gray-200 dark:border-gray-700 peer-checked:bg-blue-400 peer-checked:text-white dark:peer-checked:bg-blue-900 dark:peer-checked:text-white"
+        className="inline-flex items-center justify-center px-4 py-2 text-sm lg:text-base font-medium text-center whitespace-nowrap bg-white hover:bg-blue-300 dark:bg-gray-800 border rounded-lg cursor-pointer text-gray-500 border-gray-500 dark:border-gray-700 peer-checked:bg-blue-400 peer-checked:text-white dark:peer-checked:bg-blue-900 dark:peer-checked:text-white"
     >
         11:30 AM
     </label>
@@ -207,7 +212,7 @@ const NewAppointment = () => {
     />
     <label
         htmlFor="12-15-pm"
-        className="inline-flex items-center justify-center px-4 py-2 text-sm lg:text-base font-medium text-center whitespace-nowrap bg-white hover:bg-blue-300 dark:bg-gray-800 border rounded-lg cursor-pointer text-gray-500 border-gray-200 dark:border-gray-700 peer-checked:bg-blue-400 peer-checked:text-white dark:peer-checked:bg-blue-900 dark:peer-checked:text-white"
+        className="inline-flex items-center justify-center px-4 py-2 text-sm lg:text-base font-medium text-center whitespace-nowrap bg-white hover:bg-blue-300 dark:bg-gray-800 border rounded-lg cursor-pointer text-gray-500 border-gray-500 dark:border-gray-700 peer-checked:bg-blue-400 peer-checked:text-white dark:peer-checked:bg-blue-900 dark:peer-checked:text-white"
     >
         12:15 PM
     </label>
@@ -225,7 +230,7 @@ const NewAppointment = () => {
     />
     <label
         htmlFor="1-pm"
-        className="inline-flex items-center justify-center px-4 py-2 text-sm lg:text-base font-medium text-center whitespace-nowrap bg-white hover:bg-blue-300 dark:bg-gray-800 border rounded-lg cursor-pointer text-gray-500 border-gray-200 dark:border-gray-700 peer-checked:bg-blue-400 peer-checked:text-white dark:peer-checked:bg-blue-900 dark:peer-checked:text-white"
+        className="inline-flex items-center justify-center px-4 py-2 text-sm lg:text-base font-medium text-center whitespace-nowrap bg-white hover:bg-blue-300 dark:bg-gray-800 border rounded-lg cursor-pointer text-gray-500 border-gray-500 dark:border-gray-700 peer-checked:bg-blue-400 peer-checked:text-white dark:peer-checked:bg-blue-900 dark:peer-checked:text-white"
     >
         1:00  PM
     </label>
@@ -243,7 +248,7 @@ const NewAppointment = () => {
     />
     <label
         htmlFor="1-45-pm"
-        className="inline-flex items-center justify-center px-4 py-2 text-sm lg:text-base font-medium text-center whitespace-nowrap bg-white hover:bg-blue-300 dark:bg-gray-800 border rounded-lg cursor-pointer text-gray-500 border-gray-200 dark:border-gray-700 peer-checked:bg-blue-400 peer-checked:text-white dark:peer-checked:bg-blue-900 dark:peer-checked:text-white"
+        className="inline-flex items-center justify-center px-4 py-2 text-sm lg:text-base font-medium text-center whitespace-nowrap bg-white hover:bg-blue-300 dark:bg-gray-800 border rounded-lg cursor-pointer text-gray-500 border-gray-500 dark:border-gray-700 peer-checked:bg-blue-400 peer-checked:text-white dark:peer-checked:bg-blue-900 dark:peer-checked:text-white"
     >
         1:45  PM
     </label>
@@ -261,7 +266,7 @@ const NewAppointment = () => {
     />
     <label
         htmlFor="2-30-pm"
-        className="inline-flex items-center justify-center px-4 py-2 text-sm lg:text-base font-medium text-center whitespace-nowrap bg-white hover:bg-blue-300 dark:bg-gray-800 border rounded-lg cursor-pointer text-gray-500 border-gray-200 dark:border-gray-700 peer-checked:bg-blue-400 peer-checked:text-white dark:peer-checked:bg-blue-900 dark:peer-checked:text-white"
+        className="inline-flex items-center justify-center px-4 py-2 text-sm lg:text-base font-medium text-center whitespace-nowrap bg-white hover:bg-blue-300 dark:bg-gray-800 border rounded-lg cursor-pointer text-gray-500 border-gray-500 dark:border-gray-700 peer-checked:bg-blue-400 peer-checked:text-white dark:peer-checked:bg-blue-900 dark:peer-checked:text-white"
     >
         2:30  PM
     </label>
@@ -279,7 +284,7 @@ const NewAppointment = () => {
     />
     <label
         htmlFor="3-15-pm"
-        className="inline-flex items-center justify-center px-4 py-2 text-sm lg:text-base font-medium text-center whitespace-nowrap bg-white hover:bg-blue-300 dark:bg-gray-800 border rounded-lg cursor-pointer text-gray-500 border-gray-200 dark:border-gray-700 peer-checked:bg-blue-400 peer-checked:text-white dark:peer-checked:bg-blue-900 dark:peer-checked:text-white"
+        className="inline-flex items-center justify-center px-4 py-2 text-sm lg:text-base font-medium text-center whitespace-nowrap bg-white hover:bg-blue-300 dark:bg-gray-800 border rounded-lg cursor-pointer text-gray-500 border-gray-500 dark:border-gray-700 peer-checked:bg-blue-400 peer-checked:text-white dark:peer-checked:bg-blue-900 dark:peer-checked:text-white"
     >
         3:15  PM
     </label>
@@ -297,7 +302,7 @@ const NewAppointment = () => {
     />
     <label
         htmlFor="4-Pm"
-        className="inline-flex items-center justify-center px-4 py-2 text-sm lg:text-base font-medium text-center whitespace-nowrap bg-white hover:bg-blue-300 dark:bg-gray-800 border rounded-lg cursor-pointer text-gray-500 border-gray-200 dark:border-gray-700 peer-checked:bg-blue-400 peer-checked:text-white dark:peer-checked:bg-blue-900 dark:peer-checked:text-white"
+        className="inline-flex items-center justify-center px-4 py-2 text-sm lg:text-base font-medium text-center whitespace-nowrap bg-white hover:bg-blue-300 dark:bg-gray-800 border rounded-lg cursor-pointer text-gray-500 border-gray-500 dark:border-gray-700 peer-checked:bg-blue-400 peer-checked:text-white dark:peer-checked:bg-blue-900 dark:peer-checked:text-white"
     >
         4:00  PM
     </label>
@@ -325,47 +330,32 @@ const NewAppointment = () => {
                 )}
 
 {isConfirmModalOpen && (
-  <div
-    id="confirm-modal"
-    tabIndex={-1}
-    aria-hidden="true"
-    className="fixed inset-0 z-50 flex justify-center items-center w-full h-full bg-black bg-opacity-50"
-  >
-    <div className="relative p-6 w-full max-w-lg max-h-full">
-      <div className="relative bg-white rounded-lg shadow dark:bg-gray-800">
-        <div className="p-4">
-          <div className="flex items-center justify-between mb-4">
-            <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
-              Confirm Your Appointment
-            </h3>
-          </div>
-          <div className="text-gray-700 dark:text-gray-300">
-            You have selected {selectedDate?.toLocaleDateString()} at {selectedTime}. 
-          </div>
-          <div className="flex justify-between items-center mt-4">
-            <button
-              type="button"
-              onClick={cancelBooking}
-              className="inline-flex justify-center items-center px-5 py-2.5 text-sm font-medium text-center text-gray-700 bg-gray-200 rounded-lg hover:bg-gray-300 focus:ring-4 focus:outline-none focus:ring-gray-400 dark:bg-gray-700 dark:text-gray-300 dark:hover:bg-gray-600 dark:hover:text-white"
-            >
-              Cancel
-            </button>
-            <button
-              type="button"
-              onClick={confirmBooking}
-              className="inline-flex justify-center items-center px-5 py-2.5 text-sm font-medium text-center text-white bg-blue-700 rounded-lg hover:bg-blue-800 focus:ring-4 focus:outline-none focus:ring-blue-300 dark:bg-blue-600 dark:hover:bg-blue-700 dark:focus:ring-blue-800"
-            >
-              Confirm
-            </button>
-          </div>
-        </div>
-      </div>
-    </div>
-  </div>
-)}
+                <div className="fixed inset-0 flex items-center justify-center z-50 bg-gray-800 bg-opacity-50">
+                    <div className="bg-white p-6 rounded-lg shadow-lg w-96">
+                        <h2 className="text-lg font-semibold mb-4">Confirm Booking</h2>
+                        <p className="mb-4">
+                            Please confirm your appointment on {selectedDate?.toLocaleDateString()} at {selectedTime}.
+                        </p>
+                        <div className="flex justify-end">
+                            <button
+                                onClick={confirmBooking}
+                                className="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600"
+                            >
+                                Confirm
+                            </button>
+                            <button
+                                onClick={cancelBooking}
+                                className="ml-2 bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600"
+                            >
+                                Cancel
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
+</div>
 
-        </div>
-    )
+);
 };
 
 export default NewAppointment;
