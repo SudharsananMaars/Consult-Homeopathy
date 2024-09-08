@@ -8,6 +8,9 @@ module.exports = {
   theme: {
     extend: {},
   },
+  colors: {
+    'custom-blue': 'rgba(11, 143, 172, 1)',
+  },
   plugins: [],
 }
 

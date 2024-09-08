@@ -1,5 +1,3 @@
-// PaymentOptions.js
-
 import React from 'react';
 import { FaCreditCard, FaPaypal,FaGooglePay, FaAmazonPay } from 'react-icons/fa';
 import { SiPhonepe, SiSamsungpay } from "react-icons/si";
@@ -7,6 +5,7 @@ import { SiPhonepe, SiSamsungpay } from "react-icons/si";
 
 const Pay = () => {
     return (
+        <Layout>
         <div className="p-6 bg-white rounded-lg shadow-md mt-8">
             <h3 className="text-xl font-bold mb-8">Select Payment Options</h3>
             <div className="grid grid-cols-1 sm:grid-cols-1 lg:grid-cols-3 gap-4">
@@ -38,6 +37,7 @@ const Pay = () => {
                 
             </div>
         </div>
+        </Layout>
     );
 };
 

@@ -1,361 +1,148 @@
 import React, { useState } from 'react';
-import DatePicker from "react-datepicker";
-import "react-datepicker/dist/react-datepicker.css";
-import Pay from "./Pay";
+import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
+import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
+import { DateCalendar } from '@mui/x-date-pickers/DateCalendar';
+import dayjs from 'dayjs';
+import calendar from '../assets/images/calender.png';
 import { useNavigate } from 'react-router-dom';
 
-const NewAppointment = ({ addAppointment }) => {
-    const [selectedDate, setSelectedDate] = useState(null);
-    const [selectedTime, setSelectedTime] = useState("");
-    const [isModalOpen, setIsModalOpen] = useState(false);
-    const [isConfirmModalOpen, setIsConfirmModalOpen] = useState(false);
-    const [errorMessage, setErrorMessage] = useState("");
-    const [isConfirmed, setIsConfirmed] = useState(false);
+const NewAppointment = () => {
+  const [startDate, setStartDate] = useState(null);
+  const [selectedTime, setSelectedTime] = useState(null);
+  const [dateError, setDateError] = useState('');
+  const [timeError, setTimeError] = useState('');
+  const [isPopupOpen, setIsPopupOpen] = useState(false); // Control popup visibility
+  const navigate = useNavigate(); // Use for redirection
+
+  // Dynamically set min and max dates based on the current date
+  const today = dayjs();
+  const minDate = today; // Today as the minimum date
+  const maxDate = today.add(1, 'month'); // 1 month from today
+
+  const handleBookClick = () => {
+    let hasError = false;
     
-    const navigate = useNavigate();
 
-    const today = new Date();
-    const oneMonthLater = new Date();
-    oneMonthLater.setMonth(today.getMonth() + 1);
+    if (!startDate) {
+      setDateError('Please select a date.');
+      hasError = true;
+    } else {
+      setDateError('');
+    }
 
-    const toggleModal = () => {
-        setIsModalOpen(!isModalOpen);
-        setErrorMessage(""); // Reset error message when opening modal
-    };
+    if (!selectedTime) {
+      setTimeError('Please select a time slot.');
+      hasError = true;
+    } else {
+      setTimeError('');
+    }
 
-    const handleBooking = () => {
-        if (!selectedDate || !selectedTime) {
-            setErrorMessage("Please select both Date and Time");
-            return;
-        }
-        setIsModalOpen(false);  // Close the initial modal
-        setIsConfirmModalOpen(true);  // Open the confirmation modal
-    };
+    if (!hasError) {
+      setIsPopupOpen(true);
+    }
+  };
+  const handleConfirmClick = () => {
+    // Redirect to the payments page on confirm
+    navigate('/payments');
+  };
 
-    const confirmBooking = () => {
-        // Handle the booking confirmation logic here
-        setIsConfirmed(true);// Close the confirmation modal after confirming
-        setIsConfirmModalOpen(false); // Close the confirmation modal after confirming
-        navigate('/appointments/newappointment/pay'); // Redirect to the Pay.jsx page
-    
-    };
+  const handleCancelClick = () => {
+    // Refresh the page when cancel is clicked
+    window.location.reload();
+  };
 
-    const cancelBooking = () => {
-        setIsConfirmModalOpen(false); // Close the confirmation modal
-        setIsModalOpen(true); // Reopen the initial modal if booking is cancelled
-    };
+  return (
+    <div className="flex flex-col lg:flex-row items-center justify-center">
+      {/* Calendar Image */}
+      <div className="sm:w-1/2 mt-0">
+        <img src={calendar} alt="Calendar" className="w-auto h-auto lg:mx-0" />
+      </div>
 
-    const handleDateChange = (date) => {
-        setSelectedDate(date);
-        if (date && selectedTime) {
-            setErrorMessage(""); // Clear error message when both date and time are selected
-        }
-    };
+      {/* Calendar and Time Slots Container */}
+      <div className="p-3 bg-white sm:w-1/ rounded-lg shadow-lg">
+        {/* Calendar */}
+        <div className="mb-6 border-2">
+          <LocalizationProvider dateAdapter={AdapterDayjs}>
+            <DateCalendar
+              value={startDate}
+              onChange={(date) => setStartDate(date)}
+              minDate={minDate}
+              maxDate={maxDate}
+            />
+          </LocalizationProvider>
+          
+        </div>
 
-    const handleTimeChange = (event) => {
-        setSelectedTime(event.target.value);
-        if (selectedDate && event.target.value) {
-            setErrorMessage(""); // Clear error message when both date and time are selected
-        }
-    };
-
-    return (
-               
-        <div className="flex justify-center pt-5">
-            <button 
-                type="button"
-                onClick={toggleModal}
-                className="text-gray-600 bg-blue-300 hover:bg-blue-400 border border-gray-200 focus:ring-4 focus:outline-none focus:ring-gray-100 font-medium rounded-lg text-md px-6 py-2 text-center inline-flex items-center dark:focus:ring-gray-600 dark:bg-gray-800 dark:border-gray-700 dark:text-white dark:hover:bg-gray-700"
-            >
-              <svg
-                  className="w-5 h-5 me-1 pr-1"
-                  aria-hidden="true"
-                  xmlns="http://www.w3.org/2000/svg"
-                  width={24}
-                  height={24}
-                  fill="currentColor"
-                  viewBox="0 0 24 24"
-              >
-                  <path
-                      fillRule="evenodd"
-                      d="M2 12C2 6.477 6.477 2 12 2s10 4.477 10 10-4.477 10-10 10S2 17.523 2 12Zm11-4a1 1 0 1 0-2 0v4a1 1 0 0 0 .293.707l3 3a1 1 0 0 0 1.414-1.414L13 11.586V8Z"
-                      clipRule="evenodd"
-                  />
-              </svg>
-             Schedule Appointment
-            </button>
-
-                {isModalOpen && (
-                    <div
-                        id="timepicker-modal"
-                        tabIndex={-1}
-                        aria-hidden="true"
-                        className="fixed inset-0 z-50 flex justify-center items-center w-full h-full bg-black bg-opacity-50"
-                    >
-                        <div className="relative p-6 pr-6 w-full max-w-3xl max-h-full">
-                            <div className="relative bg-white rounded-lg shadow dark:bg-gray-800">
-                                <div className="p-4" >
-                                <div className="flex items-center justify-between mb-4">
-        <h3 className="text-xl font-bold text-gray-900 dark:text-white justify-items-center text-center">
-            Schedule an Appointment
-        </h3>
-        
-        <button
-            type="button"
-            onClick={toggleModal}
-            className="text-gray-400 bg-transparent hover:bg-gray-200 hover:text-gray-900 rounded-lg text-sm h-8 w-8 ms-auto inline-flex justify-center items-center dark:hover:bg-gray-600 dark:hover:text-white"
-        >
-            <svg
-                className="w-3 h-3"
-                aria-hidden="true"
-                xmlns="http://www.w3.org/2000/svg"
-                fill="none"
-                viewBox="0 0 14 14"
-            >
-                <path
-                    stroke="currentColor"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="m1 1 6 6m0 0 6 6M7 7l6-6M7 7l-6 6"
+        {/* Time Slots */}
+        <div className="p-4">
+          <label className="text-md font-semibold text-gray-900 mb-2 block">
+            Pick Your Time
+          </label>
+          <div className="grid grid-cols-2 gap-4 sm:grid-cols-3">
+            {['10:00 AM', '10:45 AM', '11:30 AM', '12:15 PM', '1:00 PM', '1:45 PM', '2:30 PM', '3:15 PM', '4:00 PM'].map((time) => (
+              <div key={time}>
+                <input
+                  type="radio"
+                  id={time}
+                  name="timetable"
+                  className="hidden peer"
+                  value={time}
+                  checked={selectedTime === time}
+                  onChange={() => setSelectedTime(time)}
                 />
-            </svg>
-            <span className="sr-only">Close modal</span>
-        </button>
+                <label
+                  htmlFor={time}
+                  className={`block p-4 text-center bg-white border-2 border-gray-400 rounded-lg cursor-pointer ${
+                    selectedTime === time ? 'bg-blue-300' : 'hover:bg-blue-200'
+                  }`}
+                >
+                  {time}
+                </label>
+              </div>
+            ))}
+          </div>
+          {dateError && <p className="text-red-500 text-sm mt-2">{dateError}</p>}
+          {timeError && <p className="text-red-500 text-sm mt-2">{timeError}</p>}
+
+          {/* Booking Buttons */}
+          <div className="mt-6 flex space-x-4 justify-center">
+            <button
+              type="button"
+              onClick={handleBookClick}
+              className="text-white bg-blue-700 hover:bg-blue-800 px-5 py-2.5 rounded-lg sm:w-1/3 sm:h-1/3"
+            >
+              Book
+            </button>
+          </div>
+        </div>
+      </div>
+      {isPopupOpen && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center mb-4">
+          <div className="bg-white p-6 rounded-lg shadow-lg  sm:w-1/4 sm:h-1/4">
+            <h2 className="text-lg font-bold mb-4">Confirm Your Booking</h2>
+            <p className="mb-4">
+              Please Confirm your appointment on <br/> {startDate ? startDate.format('DD-MM-YYYY') : ''} at {selectedTime}
+            </p>
+              
+            <div className="flex space-x-4 justify-center">
+              <button
+                onClick={handleConfirmClick}
+                className="text-white bg-green-600 hover:bg-green-700 px-5 py-2.5 rounded-lg"
+              >
+                Confirm
+              </button>
+              <button
+                onClick={handleCancelClick}
+                className="text-white bg-red-500 border  hover:bg-red-600 px-5 py-2.5 rounded-lg"
+              >
+                Cancel
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
-
-            
-                    
-                                    
-                                    <div className="flex flex-col lg:flex-row justify-between items-center gap-10 pl-4">
-                                        <DatePicker
-                                            selected={selectedDate}
-                                            onChange={handleDateChange}
-                                            dateFormat="dd/MM/yyyy"
-                                            minDate={today}
-                                            maxDate={oneMonthLater}
-                                            placeholderText="Select a date"
-                                            inline
-                                            className="shadow-none bg-gray-50 w-full lg:w-1/2"
-                                        />
-                                        
-                                        <div className="w-full lg:w-1/2 pr-4 mr-6">
-                                            <label className="text-lg font-bold text-gray-900 dark:text-white mb-2 mr-2 block">
-                                                Pick your time
-                                            </label>
-                                            
-                                            <ul 
-                                            id="timetable"
-                                            className="grid w-full grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 gap-4 mb-4 mr-4">
-  <li className="inline-flex items-center">
-    <input
-        type="radio"
-        id="10-am"
-        value="10:00 AM"
-        className="hidden peer"
-        name="timetable"
-        onChange={handleTimeChange}
-        checked={selectedTime === '10:00 AM'}
-    />
-    <label
-        htmlFor="10-am"
-        className="inline-flex items-center justify-center px-4 py-2 text-sm lg:text-base font-medium text-center whitespace-nowrap bg-white hover:bg-blue-300 dark:bg-gray-800 border rounded-lg cursor-pointer text-gray-500 border-gray-500 dark:border-gray-700 peer-checked:bg-blue-400 peer-checked:text-white dark:peer-checked:bg-blue-900 dark:peer-checked:text-white"
-    >
-        10:00 AM
-    </label>
-</li>
-<li className="inline-flex items-center">
-    <input
-        type="radio"
-        id="10-45-am"
-        value="10:45 AM"
-        className="hidden peer"
-        name="timetable"
-        onChange={handleTimeChange}
-        checked={selectedTime === '10:45 AM'}
-    />
-    <label
-        htmlFor="10-45-am"
-        className="inline-flex items-center justify-center px-4 py-2 text-sm lg:text-base font-medium text-center whitespace-nowrap bg-white hover:bg-blue-300 dark:bg-gray-800 border rounded-lg cursor-pointer text-gray-500 border-gray-500 dark:border-gray-700 peer-checked:bg-blue-400 peer-checked:text-white dark:peer-checked:bg-blue-900 dark:peer-checked:text-white"
-    >
-        10:45 AM
-    </label>
-</li>
-
-<li className="inline-flex items-center">
-    <input
-        type="radio"
-        id="11-30-am"
-        value="11:30 AM"
-        className="hidden peer"
-        name="timetable"
-        onChange={handleTimeChange}
-        checked={selectedTime === '11:30 AM'}
-    />
-    <label
-        htmlFor="11-30-am"
-        className="inline-flex items-center justify-center px-4 py-2 text-sm lg:text-base font-medium text-center whitespace-nowrap bg-white hover:bg-blue-300 dark:bg-gray-800 border rounded-lg cursor-pointer text-gray-500 border-gray-500 dark:border-gray-700 peer-checked:bg-blue-400 peer-checked:text-white dark:peer-checked:bg-blue-900 dark:peer-checked:text-white"
-    >
-        11:30 AM
-    </label>
-</li>
-
-<li className="inline-flex items-center">
-    <input
-        type="radio"
-        id="12-15-pm"
-        value="12:15 PM"
-        className="hidden peer"
-        name="timetable"
-        onChange={handleTimeChange}
-        checked={selectedTime === '12:15 PM'}
-    />
-    <label
-        htmlFor="12-15-pm"
-        className="inline-flex items-center justify-center px-4 py-2 text-sm lg:text-base font-medium text-center whitespace-nowrap bg-white hover:bg-blue-300 dark:bg-gray-800 border rounded-lg cursor-pointer text-gray-500 border-gray-500 dark:border-gray-700 peer-checked:bg-blue-400 peer-checked:text-white dark:peer-checked:bg-blue-900 dark:peer-checked:text-white"
-    >
-        12:15 PM
-    </label>
-</li>
-
-<li className="inline-flex items-center">
-    <input
-        type="radio"
-        id="1-pm"
-        value="1:00 PM"
-        className="hidden peer"
-        name="timetable"
-        onChange={handleTimeChange}
-        checked={selectedTime === '1:00 PM'}
-    />
-    <label
-        htmlFor="1-pm"
-        className="inline-flex items-center justify-center px-4 py-2 text-sm lg:text-base font-medium text-center whitespace-nowrap bg-white hover:bg-blue-300 dark:bg-gray-800 border rounded-lg cursor-pointer text-gray-500 border-gray-500 dark:border-gray-700 peer-checked:bg-blue-400 peer-checked:text-white dark:peer-checked:bg-blue-900 dark:peer-checked:text-white"
-    >
-        1:00  PM
-    </label>
-</li>
-
-<li className="inline-flex items-center">
-    <input
-        type="radio"
-        id="1-45-pm"
-        value="1:45 PM"
-        className="hidden peer"
-        name="timetable"
-        onChange={handleTimeChange}
-        checked={selectedTime === '1:45 PM'}
-    />
-    <label
-        htmlFor="1-45-pm"
-        className="inline-flex items-center justify-center px-4 py-2 text-sm lg:text-base font-medium text-center whitespace-nowrap bg-white hover:bg-blue-300 dark:bg-gray-800 border rounded-lg cursor-pointer text-gray-500 border-gray-500 dark:border-gray-700 peer-checked:bg-blue-400 peer-checked:text-white dark:peer-checked:bg-blue-900 dark:peer-checked:text-white"
-    >
-        1:45  PM
-    </label>
-</li>
-
-<li className="inline-flex items-center">
-    <input
-        type="radio"
-        id="2-30-pm"
-        value="2:30 PM"
-        className="hidden peer"
-        name="timetable"
-        onChange={handleTimeChange}
-        checked={selectedTime === '2:30 PM'}
-    />
-    <label
-        htmlFor="2-30-pm"
-        className="inline-flex items-center justify-center px-4 py-2 text-sm lg:text-base font-medium text-center whitespace-nowrap bg-white hover:bg-blue-300 dark:bg-gray-800 border rounded-lg cursor-pointer text-gray-500 border-gray-500 dark:border-gray-700 peer-checked:bg-blue-400 peer-checked:text-white dark:peer-checked:bg-blue-900 dark:peer-checked:text-white"
-    >
-        2:30  PM
-    </label>
-</li>
-
-<li className="inline-flex items-center">
-    <input
-        type="radio"
-        id="3-15-pm"
-        value="3:15 PM"
-        className="hidden peer"
-        name="timetable"
-        onChange={handleTimeChange}
-        checked={selectedTime === '3:15 PM'}
-    />
-    <label
-        htmlFor="3-15-pm"
-        className="inline-flex items-center justify-center px-4 py-2 text-sm lg:text-base font-medium text-center whitespace-nowrap bg-white hover:bg-blue-300 dark:bg-gray-800 border rounded-lg cursor-pointer text-gray-500 border-gray-500 dark:border-gray-700 peer-checked:bg-blue-400 peer-checked:text-white dark:peer-checked:bg-blue-900 dark:peer-checked:text-white"
-    >
-        3:15  PM
-    </label>
-</li>
-
-<li className="inline-flex items-center">
-    <input
-        type="radio"
-        id="4-pm"
-        value="4:00 PM"
-        className="hidden peer"
-        name="timetable"
-        onChange={handleTimeChange}
-        checked={selectedTime === '4:00 PM'}
-    />
-    <label
-        htmlFor="4-Pm"
-        className="inline-flex items-center justify-center px-4 py-2 text-sm lg:text-base font-medium text-center whitespace-nowrap bg-white hover:bg-blue-300 dark:bg-gray-800 border rounded-lg cursor-pointer text-gray-500 border-gray-500 dark:border-gray-700 peer-checked:bg-blue-400 peer-checked:text-white dark:peer-checked:bg-blue-900 dark:peer-checked:text-white"
-    >
-        4:00  PM
-    </label>
-</li>
-
-    </ul>
-                                            {errorMessage && (
-                                                <div className="text-red-500 text-sm mb-4">
-                                                    {errorMessage}
-                                                </div>
-                                            )}
-                                            <button
-                                                type="button"
-                                                onClick={handleBooking}
-                                                className="w-full inline-flex justify-center items-center px-5 py-2.5 text-sm font-medium text-center text-white bg-blue-700 rounded-lg hover:bg-blue-800 focus:ring-4 focus:outline-none focus:ring-blue-300 dark:bg-blue-600 dark:hover:bg-blue-700 dark:focus:ring-blue-800"
-                                            >
-                                                Book
-                                            </button>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                )}
-
-{isConfirmModalOpen && (
-                <div className="fixed inset-0 flex items-center justify-center z-50 bg-gray-800 bg-opacity-50">
-                    <div className="bg-white p-6 rounded-lg shadow-lg w-96">
-                        <h2 className="text-lg font-semibold mb-4">Confirm Booking</h2>
-                        <p className="mb-4">
-                            Please confirm your appointment on {selectedDate?.toLocaleDateString()} at {selectedTime}.
-                        </p>
-                        <div className="flex justify-end">
-                            <button
-                                onClick={confirmBooking}
-                                className="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600"
-                            >
-                                Confirm
-                            </button>
-                            <button
-                                onClick={cancelBooking}
-                                className="ml-2 bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600"
-                            >
-                                Cancel
-                            </button>
-                        </div>
-                    </div>
-                </div>
-            )}
-</div>
-
-);
+  );
 };
 
 export default NewAppointment;

@@ -5,18 +5,18 @@ const AppointmentTabs = () => {
   const location = useLocation();
 
   return (
-    <div className="flex justify-center mt-4 shadow-lg pb-4 pf-2 pr-2">
-      <ul className="flex flex-wrap text-sm font-medium text-center text-gray-500 dark:text-gray-400">
+    <div className="flex justify-center mt-4 pb-4 pf-2 pr-2">
+      <ul className="flex flex-wrap text-md font-medium text-center text-gray-500 dark:text-gray-400">
         <li className="me-2">
           <Link
-            to="/appointments/recent"
+            to="/appointments/newappointment"
             className={`inline-block px-4 py-3 rounded-lg ${
-              location.pathname === "/appointments/recent"
+              location.pathname === "/appointments/newappointment"
                 ? "text-white bg-blue-500"
                 : "hover:text-gray-900 hover:bg-blue-100 dark:hover:bg-blue-300 dark:hover:text-white"
             }`}
           >
-            Previous Appointments
+            New Appointment
           </Link>
         </li>
         <li className="me-2 font-md">
@@ -33,14 +33,14 @@ const AppointmentTabs = () => {
         </li>
         <li className="me-2">
           <Link
-            to="/appointments/newappointment"
+            to="/appointments/recent"
             className={`inline-block px-4 py-3 rounded-lg ${
-              location.pathname === "/appointments/newappointment"
+              location.pathname === "/appointments/recent"
                 ? "text-white bg-blue-500"
                 : "hover:text-gray-900 hover:bg-blue-100 dark:hover:bg-blue-300 dark:hover:text-white"
             }`}
           >
-            New Appointment
+            Recent Appointments
           </Link>
         </li>
         <li className="me-2">

@@ -4,7 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import { FiDownload } from "react-icons/fi";
 
 
-const Payments = () => {
+const Invoices = () => {
     const navigate = useNavigate();
 
     const [searchQuery, setSearchQuery] = useState("");
@@ -16,10 +16,10 @@ const Payments = () => {
 
     // Sample data for the table
     const transactions = [
-        { id: 1, patientName: "Rita", receiverName: "Dr.Shilfa", dateTime: "14 Aug 10:00 AM", paymentId: "id1", service: "Workshop", amount: "Rs.400", method: "GPay", status: "Unpaid", coupons: "no", invoice: "" },
-        { id: 2, patientName: "Rita", receiverName: "Dr.Shilfa", dateTime: "14 Aug 10:00 AM", paymentId: "id2", service: "Medicine", amount: "Rs.400", method: "GPay", status: "Unpaid", coupons: "no", invoice: "" },
-        { id: 3, patientName: "Rita", receiverName: "Dr.Shilfa", dateTime: "17 july 11:00 AM", paymentId: "id3", service: "Consultation", amount: "Rs.600", method: "Debit Card", status: "Success", coupons: "no", invoice: "" },
-        { id: 4, patientName: "Riya", receiverName: "Dr.Shilfa", dateTime: "17 june 6:00 PM", paymentId: "id4", service: "Consultation", amount: "Rs.700", method: "GPay", status: "Success", coupons: "yes", invoice: "" },
+        { id: 1, patientName: "Rita", dateTime: "14 Aug 10:00 AM", paymentId: "id1", service: "Workshop", amount: "Rs.400", method: "GPay", status: "Unpaid", coupons: "no", invoice: "" },
+        { id: 2, patientName: "Rita", dateTime: "14 Aug 10:00 AM", paymentId: "id2", service: "Medicine", amount: "Rs.400", method: "GPay", status: "Unpaid", coupons: "no", invoice: "" },
+        { id: 3, patientName: "Rita", dateTime: "17 july 11:00 AM", paymentId: "id3", service: "Consultation", amount: "Rs.600", method: "Debit Card", status: "Success", coupons: "no", invoice: "" },
+        { id: 4, patientName: "Riya", dateTime: "17 june 6:00 PM", paymentId: "id4", service: "Consultation", amount: "Rs.700", method: "GPay", status: "Success", coupons: "yes", invoice: "" },
        
     ];
 
@@ -50,7 +50,6 @@ const Payments = () => {
     // Filter the transactions based on the search query
     const filteredTransactions = transactions.filter(transaction =>
         transaction.patientName.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        transaction.receiverName.toLowerCase().includes(searchQuery.toLowerCase()) ||
         transaction.dateTime.toLowerCase().includes(searchQuery.toLowerCase()) ||
         transaction.paymentId.toLowerCase().includes(searchQuery.toLowerCase()) ||
         transaction.service.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -63,7 +62,7 @@ const Payments = () => {
         <div>
             <Layout>
                 <div>
-                    <p className="font-bold mt-7 mb-7 text-xl px-5">Payments</p>
+                    <p className="font-bold mt-7 mb-7 text-xl px-5">Invoices</p>
                 </div>
 
                 {/* Search Input */}
@@ -83,7 +82,6 @@ const Payments = () => {
                             <tr>
                                 <th scope="col" className="px-3 py-3">S.No</th>
                                 <th scope="col" className="px-3 py-3">Patient Name</th>
-                                <th scope="col" className="px-3 py-3">Receiver Name</th>
                                 <th scope="col" className="px-3 py-3">Date & Time</th>
                                 <th scope="col" className="px-3 py-3">Payment ID</th>
                                 <th scope="col" className="px-3 py-3">Service</th>
@@ -102,7 +100,6 @@ const Payments = () => {
                                         {index + 1}
                                     </th>
                                     <td className="px-4 py-4 text-gray-600 whitespace-nowrap dark:text-gray-600">{transaction.patientName}</td>
-                                    <td className="px-4 py-4 text-gray-600 whitespace-nowrap dark:text-gray-600">{transaction.receiverName}</td>
                                     <td className="px-4 py-4 text-gray-600 whitespace-nowrap dark:text-gray-600">{transaction.dateTime}</td>
                                     <td className="px-4 py-4 text-gray-600 whitespace-nowrap dark:text-gray-600">{transaction.paymentId}</td>
                                     <td className={`px-4 py-4 whitespace-nowrap ${getServiceColorClass(transaction.service)}`}>{transaction.service}</td>
@@ -141,4 +138,4 @@ const Payments = () => {
     );
 };
 
-export default Payments;
+export default Invoices;

@@ -12,7 +12,7 @@ const CancelledAppointment = () => {
             <div>
                 <p className="font-bold mt-7 mb-10 text-xl px-7 text-red-500" >Cancelled Appointments </p>
             </div>
-            <div className="bg-blue-100 p-4 rounded-lg shadow-lg flex flex-col md:flex-row items-center space-y-4 md:space-y-0 md:space-x-4 ml-14 mr-14">
+            <div className="bg-blue-100 p-4 rounded-lg shadow-lg flex flex-col md:flex-row items-center space-y-4 md:space-y-0 md:space-x-4 mx-auto max-w-4xl">
 
                 <img className="w-12 h-12 sm:w-16 sm:h-16 rounded-full object-cover" src={doctor} alt="Doctor's Name" />
 
