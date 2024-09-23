@@ -43,7 +43,7 @@ const NewAppointment = () => {
   };
   const handleConfirmClick = () => {
     // Redirect to the payments page on confirm
-    navigate('/payments');
+    navigate('/paymentpage'); 
   };
 
   const handleCancelClick = () => {
@@ -57,7 +57,6 @@ const NewAppointment = () => {
       <div className="sm:w-1/2 mt-0">
         <img src={calendar} alt="Calendar" className="w-auto h-auto lg:mx-0" />
       </div>
-
       {/* Calendar and Time Slots Container */}
       <div className="p-3 bg-white sm:w-1/ rounded-lg shadow-lg">
         {/* Calendar */}
@@ -116,8 +115,9 @@ const NewAppointment = () => {
           </div>
         </div>
       </div>
+    
       {isPopupOpen && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center mb-4">
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center">
           <div className="bg-white p-6 rounded-lg shadow-lg  sm:w-1/4 sm:h-1/4">
             <h2 className="text-lg font-bold mb-4">Confirm Your Booking</h2>
             <p className="mb-4">
@@ -125,11 +125,12 @@ const NewAppointment = () => {
             </p>
               
             <div className="flex space-x-4 justify-center">
-              <button
+              <button  
                 onClick={handleConfirmClick}
                 className="text-white bg-green-600 hover:bg-green-700 px-5 py-2.5 rounded-lg"
               >
                 Confirm
+
               </button>
               <button
                 onClick={handleCancelClick}

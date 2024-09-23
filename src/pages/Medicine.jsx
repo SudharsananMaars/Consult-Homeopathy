@@ -1,17 +1,22 @@
 import React, { useState } from "react";
 import Layout from "../components/Layout";
 import delivery from "../assets/images/delivery.png"
+import { useNavigate } from "react-router-dom";
 
 const Medicine = () => {
     const [activeTab,setActiveTab]= useState("orders");
     const handleTabSwitch = (tab) => {
         setActiveTab(tab);
     };
+   const navigate = useNavigate();
+   const handleTracking = () => {
+   navigate('/track')
+   }
 
     return (  
         <div>      
         <Layout>
-        <div>
+        <div className="p-6">
             <h1 className="font-bold text-2xl pl-8 pt-8">Your Orders</h1>
             <div className="flex space-x-4 mb-6 p-8">
                     <button
@@ -149,7 +154,9 @@ const Medicine = () => {
       
           {/* Product Description */}
             <p className="text-blue-500 font-semibold">3 Products</p>
-            <button className="px-4 py-2 rounded-md bg-blue-200 hover">Track Delivery</button>
+            <button 
+            onClick={handleTracking}
+            className="px-4 py-2 rounded-md bg-blue-500 text-white hover:bg-blue-400 hover:text-white">Track Delivery</button>
       
         </div>
       

@@ -7,7 +7,9 @@ const Appointments = () =>{
 
     return( 
             <Layout>
-                 <AppointmentBooking />  
+                <div className="mt-5 rounded-2xl">
+                 <AppointmentBooking /> 
+                 </div> 
                 
             </Layout>
     )

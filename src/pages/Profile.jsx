@@ -49,8 +49,9 @@ const Profile = () => {
 
   return (
     <Layout>
-      <h1 className="text-2xl font-bold mb-4 ml-12">Profile</h1>
-      <div className="max-w-4xl mx-auto w-full p-6 shadow"> 
+      <div className="p-6">
+      <h1 className="text-2xl font-bold mb-4">Profile</h1>
+      <div className="max-w-2/3 mx-auto w-full p-6 shadow bg-white"> 
         <div className="flex flex-col md:flex-row items-center space-y-4 md:space-y-0 md:space-x-6 mb-6">
           {/* Profile Photo */} 
           <div className="flex-shrink-0 w-24 h-24 rounded-full border-3 border-gray-100 overflow-hidden bg-gray-200">
@@ -269,6 +270,7 @@ const Profile = () => {
         {/* Blood Group Section */}
         
       </div>
+    </div>
     </Layout>
   );
 };

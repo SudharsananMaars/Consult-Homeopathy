@@ -14,7 +14,7 @@ const Home = () =>{
         datasets: [
             {
                   label: 'Dosage Taken each meal',
-                  data: [1,1],
+                  data: [1,2,2],
                   backgroundColor: [
                       'rgba(255, 149, 172)',
                       'rgba(54, 162, 235)',
@@ -62,7 +62,7 @@ const Home = () =>{
     return(
         <div>
             <Layout>    
-            <div className="min-h-screen bg-gray-100 flex">
+            <div className="min-h-screen flex">
             {/* Sidebar */}
            
 
@@ -70,7 +70,7 @@ const Home = () =>{
             <main className="flex-1 p-6">
                 {/* Header */}
                 <div className="flex items-center justify-between mb-6">
-                    <h1 className="text-2xl font-bold text-gray-800">Patient Management Dashboard</h1>
+                    <h1 className="text-xl font-bold text-gray-800">Patient Management Dashboard</h1>
                     <div className="flex items-center space-x-4">
                         <BsSearch className="text-xl text-gray-500" />
                         <input
@@ -84,7 +84,7 @@ const Home = () =>{
 
                 {/* Dashboard Cards */}
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-6">
-                    <div className="bg-purple-300 shadow-lg rounded-lg p-4 flex flex-col items-center justify-center">
+                    <div className="bg-purple-300 shadow-md rounded-lg p-4 flex flex-col items-center justify-center">
                         <div className="flex items-center space-x-2">
                             <div className="bg-white rounded-full p-2">
                                 <BsClipboard className="text-2xl text-violet-400" />
@@ -123,7 +123,7 @@ const Home = () =>{
 
                 {/* Appointment Details */}
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 mb-6">
-                    <div className="bg-white shadow-lg rounded-lg p-4 flex flex-col">
+                    <div className="bg-white shadow-md rounded-lg p-4 flex flex-col">
                     <div className="flex items-center mb-4">
     <img
         className="w-12 h-12 sm:w-16 sm:h-16 rounded-full object-cover mr-4"
@@ -194,9 +194,11 @@ const Home = () =>{
                 <div className="mt-6">
                
                 <div className="mt-6 grid grid-cols-1 lg:grid-cols-3 gap-6 w-ful">
-                    <div className="bg-white shadow-lg rounded-lg p-4 flex justify-center items-center style={{ width: '15rem', height: '15rem' }}">
+                    <div className="p-4 bg-white rounded-lg shadow-lg ">
                     <h2 className="text-base font-semibold text-gray-800 mb-4 ">Medicine Dosage </h2>
-                        <Pie data={data} />
+                    <div className="w-48 h-48 mx-auto"> {/* Set width and height of the chart */}
+                        <Pie data={data}  />
+                        </div>
                     </div>
 
                     <div className="bg-white shadow-lg rounded-lg p-4 ">

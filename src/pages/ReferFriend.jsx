@@ -47,7 +47,7 @@ const ReferFriend = () => {
     return (
 
             <Layout>
-                <div className="space-y-0">
+                <div className="space-y-0 p-6">
                 <div className="flex flex-col lg:flex-row justify-center max-h-screen p-4 space-y-6 lg:space-y-0 lg:space-x-12 mt-6">
                     <div className="lg:w-1/3">
                         <img src={referfrnd} alt="Refer a Friend" className="w-full h-auto mx-auto lg:mx-0" />

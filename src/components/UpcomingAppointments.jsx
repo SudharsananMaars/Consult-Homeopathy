@@ -1,35 +1,63 @@
 import React from 'react'; 
 import doctor from '../assets/images/doctor.jpeg';
+import { FaClock } from "react-icons/fa6";
+import { IoVideocam } from "react-icons/io5";
 
 const UpcomingAppointments = () => {
-  return (
-    <div>
-      <div>
-        <p className="font-bold mt-7 mb-10 pl-5 text-xl text-left">Upcoming Appointments</p>
-      </div>
-      
-      {/* Center the entire container */}
-      <div className="bg-blue-100 p-4 rounded-lg shadow-lg flex flex-col md:flex-row items-center justify-center space-y-4 md:space-y-0 md:space-x-4 mx-auto max-w-4xl">
-        {/* Doctor's Image */}
-        <img className="w-12 h-12 sm:w-16 sm:h-16 rounded-full object-cover" src={doctor} alt="Doctor's Name" />
+  // Dummy data for appointments (you can replace this with dynamic data)
+  const appointments = [
+    {
+      id: '#Apt0004',
+      name: 'Anderea',
+      date: '05 Nov 2024',
+      time: '11:00 AM',
+      callType: 'Video Call',
+      image: doctor,
+    },
+    {
+      id: '#Apt0005',
+      name: 'Robert',
+      date: '07 Nov 2024',
+      time: '11:00 AM',
+      callType: 'Video Call',
+      image: doctor,
+    },
+  ];
 
-        {/* Appointment Details */}
-        <div className="flex-1 text-center md:text-left">
-          <p className="text-sm sm:text-base md:text-lg text-gray-600 font-semibold">Monday, August 30, 2024</p>
-          <p className="text-sm sm:text-base md:text-lg text-gray-600 font-semibold">3:00 PM</p>
-          <p className="text-lg sm:text-xl font-bold text-gray-800">Dr. Jane Doe</p>
+  return (
+    <div className="p-5">
+      <p className="font-bold mb-5 text-xl text-left">Upcoming Appointments</p>
+      {appointments.map((appointment, index) => (
+        <div key={index} className="bg-white p-4 rounded-lg shadow-md mb-5 flex items-center justify-between max-w-4xl mx-auto">
+          {/* Image */}
+          <div className="flex items-center space-x-4">
+            <img className="w-10 h-10 rounded-full object-cover" src={appointment.image} alt={appointment.name} />
+            <div>
+              <p className="text-sm text-blue-500 font-semibold">{appointment.id}</p>
+              <p className="text-lg font-bold">{appointment.name}</p>
+            </div>
+          </div>
+
+          {/* Date and Time */}
+          <div className=" flex text-center space-x-2">
+            <div className="text-gray-700 pt-1"><FaClock/> </div>
+            <p className="font-semibold text-gray-500">{appointment.date} {appointment.time}</p>
+          </div>
+
+          {/* Call Type */}
+          <div className="flex text-center space-x-2">
+          <div className="text-blue-600 pt-1"><IoVideocam/> </div>
+            <p className="font-semibold text-gray-500">{appointment.callType}</p>
+          </div>
+
+          {/* Action Buttons */}
+          <div className="flex space-x-2">
+            <button className="text-green-500 hover:text-green-600 font-semibold">Join</button>
+            <span>|</span>
+            <button className="text-red-500 hover:text-red-600 font-semibold">Cancel</button>
+          </div>
         </div>
-        
-        {/* Buttons */}
-        <div className="flex space-x-2">
-          <button className="bg-blue-500 hover:bg-blue-600 text-white font-semibold py-2 px-6 rounded">
-            Join
-          </button>
-          <button className="bg-blue-500 hover:bg-blue-600 text-white font-semibold py-2 px-6 rounded">
-            Cancel
-          </button>
-        </div>
-      </div>
+      ))}
     </div>
   );
 };

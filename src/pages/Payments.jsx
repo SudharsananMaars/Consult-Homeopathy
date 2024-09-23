@@ -1,143 +1,251 @@
 import React, { useState } from "react";
 import Layout from "../components/Layout";
-import { useNavigate } from 'react-router-dom';
 import { FiDownload } from "react-icons/fi";
+import { useNavigate } from "react-router-dom";
 
-
-const Payments = () => {
+const Payments =() => {
     const navigate = useNavigate();
+    const [dropdownVisible, setDropdownVisible]=useState(null);
 
-    const [searchQuery, setSearchQuery] = useState("");
+    const [patients, setPatients] = useState([
+        { patientname: "John Doe",receivername: "Dr.Shilfa", date: "2024-09-12 10:30 AM",paymentid:"id1", service: "Consultation", amount: "Rs.500", method: "G Pay", status: "Unpaid" },
+        { patientname: "Jane Smith",receivername: "Dr.Shilfa", date: "2024-09-11 2:00 PM", paymentid:"id1",service: "Workshop", amount: "Rs.300", method: "PhonePe",status: "Success" },
+        { patientname: "Emily Johnson",receivername: "Dr.Shilfa", date: "2024-09-10 3:45 PM", paymentid:"id1",service: "Medicine", amount: "Rs.600", method: "Amazon Pay",status: "Unpaid" },
+        { patientname: "John Doe",receivername: "Dr.Shilfa", date: "2024-09-12 10:30 AM",paymentid:"id1", service: "Consultation", amount: "Rs.500", method: "G Pay",status: "Success" },
+        { patientname: "Jane Smith",receivername: "Dr.Shilfa", date: "2024-09-11 2:00 PM", paymentid:"id1",service: "Workshop", amount: "Rs.300", method: "PhonePe",status: "Unpaid"},
+        
+        // Add more patients as needed
+           ]);
 
-    const confirm = () => {
-        // Handle the booking confirmation logic here
-        navigate('/pay'); // Redirect to the Pay.jsx page
+
+    const [filters, setFilters] = useState({
+        status: "",
+        service: "",
+        method: "",
+    });
+
+    const [currentPage, setCurrentPage] = useState(1); // Tracks the current page
+    const [entriesPerPage, setEntriesPerPage] = useState(10); // Tracks number of entries per page
+
+    const handleFilterChange = (e) => {
+        const { name, value } = e.target;
+        setFilters({ ...filters, [name]: value });
+        setCurrentPage(1); // Reset to first page on filter change
     };
 
-    // Sample data for the table
-    const transactions = [
-        { id: 1, patientName: "Rita", receiverName: "Dr.Shilfa", dateTime: "14 Aug 10:00 AM", paymentId: "id1", service: "Workshop", amount: "Rs.400", method: "GPay", status: "Unpaid", coupons: "no", invoice: "" },
-        { id: 2, patientName: "Rita", receiverName: "Dr.Shilfa", dateTime: "14 Aug 10:00 AM", paymentId: "id2", service: "Medicine", amount: "Rs.400", method: "GPay", status: "Unpaid", coupons: "no", invoice: "" },
-        { id: 3, patientName: "Rita", receiverName: "Dr.Shilfa", dateTime: "17 july 11:00 AM", paymentId: "id3", service: "Consultation", amount: "Rs.600", method: "Debit Card", status: "Success", coupons: "no", invoice: "" },
-        { id: 4, patientName: "Riya", receiverName: "Dr.Shilfa", dateTime: "17 june 6:00 PM", paymentId: "id4", service: "Consultation", amount: "Rs.700", method: "GPay", status: "Success", coupons: "yes", invoice: "" },
-       
-    ];
+    const handleEntriesPerPageChange = (e) => {
+        setEntriesPerPage(Number(e.target.value));
+        setCurrentPage(1); // Reset to first page on entries change
+    };
 
-    const getStatusColorClass = (status) => {
-      switch (status) {
-          case "Unpaid":
-              return "text-red-400"; // Red for Unpaid
-          case "Success":
-              return "text-green-400"; // Green for Paid
-          default:
-              return "text-gray-600"; // Default color
-      }
-  };
-
-  const getServiceColorClass = (service) => {
-    switch (service) {
-        case "Consultation":
-            return "text-blue-400"; 
-        case "Medicine":
-            return "text-green-400"; 
-        case "Workshop":
-            return "text-purple-400";
-        default:
-            return "text-gray-600"; 
-    }
-};
-
-    // Filter the transactions based on the search query
-    const filteredTransactions = transactions.filter(transaction =>
-        transaction.patientName.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        transaction.receiverName.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        transaction.dateTime.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        transaction.paymentId.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        transaction.service.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        transaction.amount.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        transaction.method.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        transaction.status.toLowerCase().includes(searchQuery.toLowerCase())
+    // Search by Patient ID and apply other filters
+    const filteredPatients = patients.filter((patient) =>
+        (filters.status === "" || patient.status.toLowerCase().includes(filters.status.toLowerCase())) &&
+        (filters.service === "" || patient.service.toLowerCase().includes(filters.service.toLowerCase())) &&
+        (filters.method === "" || patient.method.toLowerCase().includes(filters.method.toLowerCase()))
     );
 
-    return (
-        <div>
-            <Layout>
-                <div>
-                    <p className="font-bold mt-7 mb-7 text-xl px-5">Payments</p>
-                </div>
+    // Pagination logic
+    const indexOfLastEntry = currentPage * entriesPerPage;
+    const indexOfFirstEntry = indexOfLastEntry - entriesPerPage;
+    const currentPatients = filteredPatients.slice(indexOfFirstEntry, indexOfLastEntry);
+    const totalPages = Math.ceil(filteredPatients.length / entriesPerPage);
 
-                {/* Search Input */}
-                <div className="mb-4 rounded-md p-4 ">
+    const paginate = (pageNumber) => setCurrentPage(pageNumber);
+
+    // Function to assign background color based on status
+    const getStatusBgColor = (service) => {
+        switch (service) {
+            case "Consultation":
+                return "bg-green-100 text-green-700";
+            case "Workshop":
+                return "bg-blue-100 text-blue-700";
+            case "Medicine":
+                return "bg-yellow-100 text-yellow-700";
+            default:
+                return "";
+        }
+    };
+
+    const handleViewDetails = (id) => {
+        navigate(`/payments/viewdetails/${id}`);
+    };
+    const toggleDropdown = (id) => {
+        setDropdownVisible(dropdownVisible === id ? null : id);
+    };
+
+
+    return (
+        <Layout>
+            <div className="p-6 mt-5">
+                <h1 className="text-2xl font-bold mb-4">Payments</h1>
+
+                {/* Filters */}
+                <div className="flex space-x-4 mb-6">
                     <input
                         type="text"
-                        placeholder="Search..."
-                        className="sm:w-3/4 md:w-1/2 lg:w-1/4 p-2 border-2 border-gray-400 rounded-md"
-                        value={searchQuery}
-                        onChange={(e) => setSearchQuery(e.target.value)}
+                        name="patientId"
+                        placeholder="Search by Patient ID"
+                        onChange={handleFilterChange}
+                        className="p-2 border border-gray-300 rounded-md hover:bg-gray-100"
                     />
+                    <select
+                        name="dateRange"
+                        value={filters.dateRange}
+                        onChange={handleFilterChange}
+                        className="p-2 border border-gray-300 rounded-md bg-white hover:bg-gray-100"
+                    >
+                        <option value="">Select Date Range</option>
+                        <option value="today">Today</option>
+                        <option value="lastWeek">Last Week</option>
+                        <option value="lastMonth">Last Month</option>
+                        <option value="last3Months">Last 3 Months</option>
+                        <option value="last6Months">Last 6 Months</option>
+                        <option value="lastYear">Last Year</option>
+                    </select>
+                    <select
+                        name="service"
+                        value={filters.service}
+                        onChange={handleFilterChange}
+                        className="p-2 w-1/6 border border-gray-300 rounded-md bg-white hover:bg-gray-100"
+                    >
+                        <option value="">All Services</option>
+                        <option value="Consultation">Consultation</option>
+                        <option value="Workshop">Workshop</option>
+                        <option value="Medicine">Medicine</option>
+                    </select>
+                    <select
+                        name="method"
+                        value={filters.method}
+                        onChange={handleFilterChange}
+                        className="p-2 w-1/6 border border-gray-300 rounded-md bg-white hover:bg-gray-100"
+                    >
+                        <option value="">All Methods</option>
+                        <option value="G Pay">G Pay</option>
+                        <option value="PhonePe">PhonePe</option>
+                        <option value="Amazon Pay">Amazon Pay</option>
+                    </select>
+                    <select
+                        name="method"
+                        value={filters.status}
+                        onChange={handleFilterChange}
+                        className="p-2 w-1/6 border border-gray-300 rounded-md bg-white hover:bg-gray-100"
+                    >
+                        <option value="">All Statuses</option>
+                        <option value="Unpaid">Unpaid</option>
+                        <option value="Success">Success</option>
+                       
+                    </select>
                 </div>
 
-                <div className="relative overflow-x-auto pt-2 pl-3 shadow-lg">
-                    <table className="w-full text-md text-left rtl:text-right text-white-500 dark:text-gray-100">
-                        <thead className="text-md text-gray-600 bg-blue-100 dark:bg-blue-200 dark:text-gray-700">
-                            <tr>
-                                <th scope="col" className="px-3 py-3">S.No</th>
-                                <th scope="col" className="px-3 py-3">Patient Name</th>
-                                <th scope="col" className="px-3 py-3">Receiver Name</th>
-                                <th scope="col" className="px-3 py-3">Date & Time</th>
-                                <th scope="col" className="px-3 py-3">Payment ID</th>
-                                <th scope="col" className="px-3 py-3">Service</th>
-                                <th scope="col" className="px-3 py-3">Amount</th>
-                                <th scope="col" className="px-3 py-3">Method</th>
-                                <th scope="col" className="px-3 py-3">Status</th>
-                                <th scope="col" className="px-3 py-3">Coupons</th>
-                                <th scope="col" className="px-3 py-3">Actions</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                          {filteredTransactions.length > 0 ? (
-                            filteredTransactions.map((transaction, index) => (
-                                <tr key={transaction.id} className="bg-white border-b dark:bg-white-200 dark:border-gray-100">
-                                    <th scope="row" className="px-6 py-4 font-medium text-gray-600 whitespace-nowrap dark:text-gray-600">
-                                        {index + 1}
-                                    </th>
-                                    <td className="px-4 py-4 text-gray-600 whitespace-nowrap dark:text-gray-600">{transaction.patientName}</td>
-                                    <td className="px-4 py-4 text-gray-600 whitespace-nowrap dark:text-gray-600">{transaction.receiverName}</td>
-                                    <td className="px-4 py-4 text-gray-600 whitespace-nowrap dark:text-gray-600">{transaction.dateTime}</td>
-                                    <td className="px-4 py-4 text-gray-600 whitespace-nowrap dark:text-gray-600">{transaction.paymentId}</td>
-                                    <td className={`px-4 py-4 whitespace-nowrap ${getServiceColorClass(transaction.service)}`}>{transaction.service}</td>
-                                    <td className="px-4 py-4 text-gray-600 whitespace-nowrap dark:text-gray-600">{transaction.amount}</td>
-                                    <td className="px-4 py-4 text-gray-600 whitespace-nowrap dark:text-gray-600">{transaction.method}</td>
-                                    <td className={`px-4 py-4 whitespace-nowrap ${getStatusColorClass(transaction.status)}`}>{transaction.status}</td>
-                                    <td className="px-4 py-4 text-gray-600 whitespace-nowrap dark:text-gray-600">{transaction.coupons}</td>
-                                    <td className="px-4 py-4 text-blue-600 whitespace-nowrap dark:text-gray-600">{transaction.invoice}
-                                    {transaction.status === "Unpaid" ? (
-                                    <button
-                                    onClick={confirm}
-                                    className="bg-blue-500 hover:bg-blue-600 text-white py-1 px-5 ml-4 rounded-md"
-                                    >
-                                    Pay
-                                    </button>
-                                    ) : (
-                                        <a href="#" className="flex items-center space-x-1">
-                                        <FiDownload className="mr-2" />
-                                        <span>Download</span>
-                                        </a>
-                                    )}
+                {/* Patient Table */}
+                <table className="w-full table-auto border-collapse">
+                    <thead>
+                        <tr className="bg-gray-100 text-left">
+                            <th className="px-4 py-2">Patient Name</th>
+                            <th className="px-4 py-2">Receiver Name</th>
+                            <th className="px-4 py-2">Date & Time</th>
+                            <th className="px-4 py-2">Payment ID</th>
+                            <th className="px-4 py-2">Service</th>
+                            <th className="px-4 py-2">Amount</th>
+                            <th className="px-4 py-2">Methods</th>
+                            <th className="px-4 py-2">Status</th>
+                            <th className="px-4 py-2">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {currentPatients.length > 0 ? (
+                            currentPatients.map((patient) => (
+                                <tr key={patient.id} className="border-b">
+                                    <td className="px-4 py-4">{patient.patientname}</td>
+                                    <td className="px-4 py-4">{patient.receivername}</td>
+                                    <td className="px-4 py-4">{patient.date}</td>
+                                    <td className="px-4 py-4">{patient.paymentid}</td>
+                                    <td className="px-4 py-4">
+                                        <span
+                                            className={`px-2 py-1 rounded-full text-sm font-semibold ${getStatusBgColor(
+                                                patient.service
+                                            )}`}
+                                        >
+                                            {patient.service}
+                                        </span>
+                                    </td>
+                                    <td className="px-4 py-4">{patient.amount}</td>
+                                    <td className="px-4 py-4">{patient.method}</td>
+                                    <td className="px-4 py-4">{patient.status}</td>
+                                    <td className="px-4 py-4 relative">
+                                    {patient.status === "Unpaid" ? (
+                                                <button
+                                                    onClick={confirm}
+                                                    className="bg-blue-500 hover:bg-blue-600 text-white py-1 px-5 ml-4 rounded-md"
+                                                >
+                                                    Pay
+                                                </button>
+                                            ) : (
+                                                <a href="#" className="flex items-center space-x-1">
+                                                    <FiDownload className="mr-2" />
+                                                    <span>Download</span>
+                                                </a>
+                                            )}
+
+                
                                     </td>
                                 </tr>
-                            )) 
-                          ) : (
+                            ))
+                        ) : (
                             <tr>
-                              <td colSpan="10" className="px-6 py-4 text-center text-gray-600">No matching Transactions found</td>
+                                <td colSpan="7" className="text-center p-4">
+                                    No matching patients found.
+                                </td>
                             </tr>
-                          )
-                        }
-                        </tbody>
-                    </table>
+                        )}
+                    </tbody>
+                </table>
+
+                {/* Pagination controls */}
+                <div className="flex justify-between items-center mt-4">
+                    <div>
+                        <label>
+                            Show{" "}
+                            <select value={entriesPerPage} onChange={handleEntriesPerPageChange} className="border p-2 rounded-md">
+                                <option value={5}>5</option>
+                                <option value={10}>10</option>
+                                <option value={15}>15</option>
+                                <option value={20}>20</option>
+                            </select>{" "}
+                            entries per page
+                        </label>
+                    </div>
+                    <div>
+                        <button
+                            onClick={() => paginate(currentPage - 1)}
+                            disabled={currentPage === 1}
+                            className="px-3 py-1 border rounded-md mx-1 hover:bg-blue-200"
+                        >
+                            Previous
+                        </button>
+                        {[...Array(totalPages)].map((_, index) => (
+                            <button
+                                key={index}
+                                onClick={() => paginate(index + 1)}
+                                className={`px-3 py-1 border rounded-md mx-1 ${
+                                    currentPage === index + 1 ? "bg-blue-300" : "hover:bg-blue-200"
+                                }`}
+                            >
+                                {index + 1}
+                            </button>
+                        ))}
+                        <button
+                            onClick={() => paginate(currentPage + 1)}
+                            disabled={currentPage === totalPages}
+                            className="px-3 py-1 border rounded-md mx-1 hover:bg-blue-200"
+                        >
+                            Next
+                        </button>
+                    </div>
                 </div>
-            </Layout>
-        </div>
+            </div>
+        </Layout>
     );
 };
 

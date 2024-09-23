@@ -1,46 +1,67 @@
-import React from "react";
-import { GoBell } from "react-icons/go";
+import React, { useState } from "react";
+import { CgProfile } from "react-icons/cg";
 import { BiMessageRoundedDetail } from "react-icons/bi";
-import { useNavigate } from 'react-router-dom';
-import profile from "C:/Users/Mahima Sharon J R/Desktop/website_pro/website/src/assets/images/profile.jpg";
+import { MdOutlineNotificationsNone } from "react-icons/md";
+import { useNavigate } from "react-router-dom";
+import Notification from "../components/Notification";
+import Messenger from "../components/Messenger";
+import logo from "../assets/images/logo.png";
 
 const Header = () => {
-    const navigate = useNavigate();
+  const navigate = useNavigate();
+  const [isMessageActive, setIsMessageActive] = useState(false);
+  const [isNotifyActive, setIsNotifyActive] = useState(false);
+  const [isProfileActive, setIsProfileActive] = useState(false);
 
-    const handleNotify = () => {
-        navigate("/notification");
-    };
+  const [showNotification, setShowNotification] = useState(false);
+  const [showMessenger, setShowMessenger] = useState(false);
+  const handleNotify = () => {
+    setIsNotifyActive(!isNotifyActive);
+    setShowNotification(!showNotification);
+    setShowMessenger(false);
+  };
 
-    const handleProfile = () => {
-        navigate("/profile");
-    };
+  const handleProfile = () => {
+    setIsProfileActive(!isProfileActive);
+    navigate("/profile");
+  };
 
-    const name = "Rita";
+  const handleMessage = () => {
+    setIsMessageActive(!isMessageActive);
+    setShowMessenger(!showMessenger); 
+    setShowNotification(false);
+  };
 
-    return (
-        <div className="flex justify-between items-center px-5 py-10 ml-2 mr-2 mt-2 h-16 bg-blue-200 shadow-lg rounded-md">
-            <div>
-                <h1 className="text-md font-bold text-gray-700">WELCOME BACK!</h1>
-                <p className="text-xl font-bold text-gray-800">{name}</p>
-            </div>
-            <div className="flex items-center space-x-5">
-                <button className="">
-                    <BiMessageRoundedDetail size={30}/>
-                </button>
-                <button className="relative text-2xl text-blue-950" onClick={handleNotify}>
-                    <GoBell size={26} />
-                    <span className="absolute top-0 right-0 -mt-1 -mr-1 flex justify-center items-center bg-white text-gray-700 font-semibold text-sm w-4 h-4 rounded-full border-2 border-blue-900">4</span>
-                </button>
-                <button onClick={handleProfile}>
-                    <img
-                        className="w-8 h-8 rounded-full border-2 border-blue-900"
-                        src={profile}
-                        alt="Profile"
-                    />
-                </button>
-            </div>
-        </div>
-    );
+  const name = "Rita";
+
+  return (
+    <div className="flex justify-between items-center px-5 py-3 fixed w-full top-0 bg-indigo-200 shadow-lg z-50">
+      <div className="flex pt-1 ">
+      <img src={logo} alt="Logo" className="w-11"/>
+      <span className="ml-4 text-2xl font-bold text-gray-800 custom-font">Katyayani Clinic</span>
+      </div>
+      <div className="flex items-center space-x-5">
+        <button onClick={handleMessage}>
+          <div className={`shadow-lg rounded-full p-2 ${isMessageActive ? "bg-purple-400 text-white" : "bg-white text-purple-700 hover:text-white hover:bg-purple-400"}`}>
+            <BiMessageRoundedDetail size={25} />
+          </div>
+        </button>
+        <button onClick={handleNotify}>
+          <div className={`shadow-lg rounded-full p-2 ${isNotifyActive ? "bg-blue-400 text-white" : "bg-white text-blue-600 hover:text-white hover:bg-blue-400"}`}>
+            <MdOutlineNotificationsNone size={23} />
+          </div>
+        </button>
+        <button onClick={handleProfile}>
+          <div className={`shadow-lg rounded-full p-2 ${isProfileActive ? "bg-indigo-400 text-white" : "bg-white text-indigo-600 hover:text-white hover:bg-indigo-400"}`}>
+            <CgProfile size={23} />
+          </div>
+        </button>
+      </div>
+
+      {showMessenger && <Messenger toggleMessenger={handleMessage} isVisible={showMessenger} />}
+      {showNotification && <Notification togglePopup={handleNotify} />}
+    </div>
+  );
 };
 
 export default Header;
