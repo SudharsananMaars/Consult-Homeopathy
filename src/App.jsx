@@ -23,6 +23,7 @@ import NeedHelp from './pages/NeedHelp.jsx';
 import Track from './pages/Track.jsx';
 import PaymentPage from './pages/PaymentPage.jsx';
 import Messenger from './components/Messenger.jsx';
+import HomePage from './pages/HomePage.jsx';
 
 function App() {
   return (
@@ -35,6 +36,7 @@ function App() {
           <Route path="/form" element={<Form />} />
           <Route path="/firstform" element={<FirstForm />} />
           <Route path="/home" element={<Home/>}/>
+          <Route path="/homepage" element={<HomePage/>}/>
           
           <Route path="/appointments" element={<Appointments/>} >
             <Route path="/appointments/recent" element={<RecentAppointments />} />

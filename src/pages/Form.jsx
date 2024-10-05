@@ -1,9 +1,6 @@
 import React, { useState } from 'react';
 import Select from 'react-select';
 import { useNavigate } from 'react-router-dom';
-import 'C:/Users/Mahima Sharon J R/Desktop/website_pro/website/src/index.css'; 
-
-
 
 const Form= () => {
   const feetOptions = [...Array(10).keys()].map(i => ({ value: i+1, label: `${i+1} feet` }));

@@ -1,4 +1,4 @@
-import React from "react";
+import React , {useState} from "react";
 import Layout from "../components/Layout";
 import { BsBell, BsSearch } from 'react-icons/bs';
 import { BsClipboard, BsWallet, BsHourglassSplit, BsTicketPerforated,BsFileEarmarkText, BsDownload } from 'react-icons/bs';
@@ -9,6 +9,8 @@ import doctor from '../assets/images/doctor.jpeg';
 ChartJS.register(Title, Tooltip, Legend, ArcElement, CategoryScale, LinearScale, BarElement,LineElement, PointElement);
 
 const Home = () =>{
+    const [activeTab, setActiveTab] = useState("Live");
+
     const data = {
         labels: ['Morning','Afternoon','night'], // Days of the week
         datasets: [
@@ -83,43 +85,92 @@ const Home = () =>{
                 </div>
 
                 {/* Dashboard Cards */}
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-6">
-                    <div className="bg-purple-300 shadow-md rounded-lg p-4 flex flex-col items-center justify-center">
-                        <div className="flex items-center space-x-2">
-                            <div className="bg-white rounded-full p-2">
-                                <BsClipboard className="text-2xl text-violet-400" />
-                            </div>
-                            <h3 className="text-lg font-medium text-gray-600">Upcoming Appointment</h3>
-                        </div>
-                        <p className="text-4xl font-bold text-gray-800">1</p>
-                    </div>
+                <div className="bg-gray-50 p-3">
 
-                    <div className="bg-blue-300 shadow-lg rounded-lg p-4 flex flex-col items-center justify-center">
-                        <div className="flex items-center space-x-2">
-                            <div className="bg-white rounded-full p-2">
-                                <BsWallet className="text-2xl text-blue-400" />
-                            </div>
-                            <h3 className="text-lg font-medium text-gray-600">Transactions</h3>
-                        </div>
-                        <p className="text-4xl font-bold text-gray-800">5</p>
-                    </div>
+      {/* Tabs for Live and Past */}
+      <div className="mb-6 flex justify-center">
+        <button
+          className={`px-6 py-2 font-bold ${
+            activeTab === "Live" ? "text-white bg-blue-500" : "text-gray-600 bg-gray-200"
+          } rounded-l-lg`}
+          onClick={() => setActiveTab("Live")}
+        >
+          Live
+        </button>
+        <button
+          className={`px-6 py-2 font-bold ${
+            activeTab === "Past" ? "text-white bg-blue-500" : "text-gray-600 bg-gray-200"
+          } rounded-r-lg`}
+          onClick={() => setActiveTab("Past")}
+        >
+          Past
+        </button>
+      </div>
 
-                    <div className="bg-pink-200 shadow-lg rounded-lg p-4 flex flex-col items-center justify-center">
-                        <div className="bg-white rounded-full p-2">
-                            <BsHourglassSplit className="text-2xl text-pink-400" />
-                        </div>
-                        <h3 className="text-lg font-medium text-gray-600">Pending Transaction</h3>
-                        <p className="text-4xl font-bold text-gray-800">1</p>
-                    </div>
+      {/* Live Tab Content */}
+      {activeTab === "Live" && (
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 mb-6">
+          <div className="bg-purple-300 shadow-md rounded-lg p-4 flex flex-col items-center justify-center">
+            <div className="flex items-center space-x-2">
+              <div className="bg-white rounded-full p-2">
+                <BsClipboard className="text-2xl text-violet-400" />
+              </div>
+              <h3 className="text-lg font-medium text-gray-600">Upcoming Appointment</h3>
+            </div>
+            <p className="text-4xl font-bold text-gray-800">1</p>
+          </div>
 
-                    <div className="bg-green-200 shadow-lg rounded-lg p-4 flex flex-col items-center justify-center">
-                        <div className="bg-white rounded-full p-2">
-                            <BsTicketPerforated className="text-2xl text-green-400" />
-                        </div>
-                        <h3 className="text-lg font-medium text-gray-600">Coupons</h3>
-                        <p className="text-4xl font-bold text-gray-800">3</p>
-                    </div>
-                </div>
+          <div className="bg-pink-200 shadow-lg rounded-lg p-4 flex flex-col items-center justify-center">
+            <div className="bg-white rounded-full p-2">
+              <BsHourglassSplit className="text-2xl text-pink-400" />
+            </div>
+            <h3 className="text-lg font-medium text-gray-600">Pending Transaction</h3>
+            <p className="text-4xl font-bold text-gray-800">1</p>
+          </div>
+
+          <div className="bg-green-200 shadow-lg rounded-lg p-4 flex flex-col items-center justify-center">
+            <div className="bg-white rounded-full p-2">
+              <BsTicketPerforated className="text-2xl text-green-400" />
+            </div>
+            <h3 className="text-lg font-medium text-gray-600">Coupons</h3>
+            <p className="text-4xl font-bold text-gray-800">3</p>
+          </div>
+        </div>
+      )}
+
+      {/* Past Tab Content */}
+      {activeTab === "Past" && (
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 mb-6">
+          <div className="bg-blue-300 shadow-lg rounded-lg p-4 flex flex-col items-center justify-center">
+            <div className="flex items-center space-x-2">
+              <div className="bg-white rounded-full p-2">
+                <BsWallet className="text-2xl text-blue-400" />
+              </div>
+              <h3 className="text-lg font-medium text-gray-600">Transactions</h3>
+            </div>
+            <p className="text-4xl font-bold text-gray-800">5</p>
+          </div>
+
+          <div className="bg-purple-300 shadow-md rounded-lg p-4 flex flex-col items-center justify-center">
+            <div className="flex items-center space-x-2">
+              <div className="bg-white rounded-full p-2">
+                <BsClipboard className="text-2xl text-violet-400" />
+              </div>
+              <h3 className="text-lg font-medium text-gray-600">Consultations</h3>
+            </div>
+            <p className="text-4xl font-bold text-gray-800">2</p>
+          </div>
+
+          <div className="bg-green-200 shadow-lg rounded-lg p-4 flex flex-col items-center justify-center">
+            <div className="bg-white rounded-full p-2">
+              <BsTicketPerforated className="text-2xl text-green-400" />
+            </div>
+            <h3 className="text-lg font-medium text-gray-600">Used Coupons</h3>
+            <p className="text-4xl font-bold text-gray-800">3</p>
+          </div>
+        </div>
+      )}
+    </div>
 
                 {/* Appointment Details */}
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 mb-6">

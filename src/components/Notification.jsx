@@ -7,7 +7,7 @@ const Notification = ({ togglePopup }) => {
     { id: 1, type: "medicine", message: "Patient John missed taking medicine.", icon: FaPills, time: "2 mins ago" },
     { id: 2, type: "assistant", message: "Assistant Dr.Smith prepared medicines.", icon: FaClipboard, time: "10 mins ago" },
     { id: 3, type: "inventory", message: "Low inventory alert: Ibuprofen stock is low.", icon: FaPills, time: "1 hour ago" },
-    { id: 4, type: "education", message: "Education session 'Patient Care' starts in 30 minutes.", icon: FaUsers, time: "2 hours ago" },
+    { id: 4, type: "education", message: "Workshop on Healthy Lifestyle is going to held on 25 Aug", icon: FaUsers, time: "2 hours ago" },
     { id: 5, type: "meeting", message: "Meeting with patient Doe in 15 minutes.", icon: FaBell, time: "3 hours ago" },
     { id: 6, type: "medicine", message: "Patient John missed taking medicine.", icon: FaPills, time: "2 mins ago" },
     { id: 7, type: "assistant", message: "Assistant Dr.Smith prepared medicines.", icon: FaClipboard, time: "10 mins ago" },

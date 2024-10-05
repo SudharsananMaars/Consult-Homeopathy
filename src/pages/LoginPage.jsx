@@ -1,20 +1,16 @@
 import React, { useState, useEffect } from 'react';
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faEye, faEyeSlash } from '@fortawesome/free-solid-svg-icons';
+import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
-import homeo from 'C:/Users/Mahima Sharon J R/Desktop/website_pro/website/src/assets/images/homeo.png'; // Ensure this path is correct
-import 'C:/Users/Mahima Sharon J R/Desktop/website_pro/website/src/index.css';
+import homeo from '../assets/images/homeo.png'; // Ensure this path is correct
+import '../index.css';
 
 const LoginPage = () => {
   const [role, setRole] = useState(''); // 'doctor' or 'patient'
   const [mobileNumber, setMobileNumber] = useState('');
-  const [password, setPassword] = useState('');
   const [otp, setOtp] = useState('');
-  const [rememberMe, setRememberMe] = useState(false);
-  const [loginWithOTP, setLoginWithOTP] = useState(false);
-  const [showPassword, setShowPassword] = useState(false);
-  const [errors, setErrors] = useState({ mobileNumber: '', password: '', otp: '' });
-  const [showPopup, setShowPopup] = useState(false);
+  const [errors, setErrors] = useState({ mobileNumber: '', otp: '' });
+  const [showOtpInput, setShowOtpInput] = useState(false); // Controls when OTP field is shown
+  const [otpSent, setOtpSent] = useState(false);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -30,28 +26,20 @@ const LoginPage = () => {
 
   const validateFields = () => {
     let isValid = true;
-    const newErrors = { mobileNumber: '', password: '', otp: '' };
+    const newErrors = { mobileNumber: '', otp: '' };
 
     if (!mobileNumber) {
       newErrors.mobileNumber = 'This field is required';
       isValid = false;
-    } else if (!/^\d{10}$/.test(mobileNumber)) {
-      newErrors.mobileNumber = 'Enter a valid 10-digit mobile number';
+    } else if (!/^\+91\d{10}$/.test(mobileNumber)) {
+      newErrors.mobileNumber = 'Enter a valid 10-digit mobile number starting with +91';
       isValid = false;
     }
-
-    if (!loginWithOTP && !password) {
-      newErrors.password = 'This field is required';
-      isValid = false;
-    } else if (!loginWithOTP && !/^(?=.*[A-Za-z])(?=.*\d)(?=.*[@$!%*?&])(?=\S)(?!.*\s)[A-Za-z\d@$!%*?&]{8,15}$/.test(password)) {
-      newErrors.password = 'Password must be 8-15 characters long and include a mix of letters, numbers, and special characters without spaces';
-      isValid = false;
-    }
-
-    if (loginWithOTP && !otp) {
+    
+    if (showOtpInput && !otp) {
       newErrors.otp = 'This field is required';
       isValid = false;
-    } else if (!password && !/^\d{6}$/.test(otp)) {
+    } else if (showOtpInput && !/^\d{6}$/.test(otp)) {
       newErrors.otp = 'OTP must be exactly 6 numeric digits';
       isValid = false;
     }
@@ -60,34 +48,54 @@ const LoginPage = () => {
     return isValid;
   };
 
-  const handleLogin = () => {
+  const sendOtp = async () => {
     if (validateFields()) {
-      // Handle login logic here
-      console.log(`Role: ${role}, Mobile Number: ${mobileNumber}, Password: ${password}, OTP: ${otp}, Remember Me: ${rememberMe}, Login with OTP: ${loginWithOTP}`);
-      setShowPopup(true);
+      try {
+        const response = await axios.post('http://localhost:8000/api/otp/send-otp', { 
+          phone: mobileNumber,
+          role: role === 'patient' ? 'Patient' : 'Doctor',
+        });
+        if (response.data.success) {
+          setOtpSent(true);
+          setShowOtpInput(true); // Show OTP input after OTP is sent
+          alert('OTP sent successfully!');
+        } else {
+          alert('Failed to send OTP: ' + response.data.message);
+        }
+      } catch (error) {
+        console.error('Error sending OTP:', error);
+        alert('Error sending OTP.');
+      }
     }
   };
 
-  const closePopup = () => {
-    setShowPopup(false);
-    navigate('/form');
+  const verifyOtp = async () => {
+    if (validateFields()) {
+      try {
+        const response = await axios.post('http://localhost:8000/api/otp/verifyOtp', {
+          phone: mobileNumber,
+          userOTP: otp,
+        });
+        if (response.data.success) {
+          setShowOtpInput(false);
+          localStorage.setItem('accessToken', response.data.accessToken); // Save token
+          alert('OTP verified successfully!');
+          navigate('/form');
+        } else {
+          alert('Invalid or expired OTP');
+        }
+      } catch (error) {
+        console.error('Error verifying OTP:', error);
+        alert('Error verifying OTP.');
+      }
+    }
   };
 
   const handleRoleSwitch = () => {
-    // Update the role in local storage
     const newRole = role === 'doctor' ? 'patient' : 'doctor';
     localStorage.setItem('userRole', newRole);
-    
-    // Update the role state
     setRole(newRole);
-    
-    // Refresh the page
     window.location.reload();
-  };
-
-  const handleLoginWithOTPChange = (e) => {
-    setLoginWithOTP(e.target.checked);
-    setPassword(''); // Clear password field when switching to OTP
   };
 
   return (
@@ -108,44 +116,34 @@ const LoginPage = () => {
               Mobile Number
             </label>
             <input
-              type="text"
-              id="mobileNumber"
-              value={mobileNumber}
-              onChange={(e) => setMobileNumber(e.target.value.replace(/\D/, '').slice(0, 10))}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
-              placeholder="Enter your mobile number"
-            />
+            type="text"
+            id="mobileNumber"
+            value={mobileNumber}
+            onChange={(e) => {
+              // Remove non-numeric characters except "+"
+              let value = e.target.value.replace(/[^\d+]/g, '');
+
+              // Ensure the value starts with "+91"
+              if (!value.startsWith('+91')) {
+                value = '+91' + value.replace(/^\+91/, ''); // Remove duplicate "+91" if typed manually
+              }
+
+              // Limit the input to 10 digits after "+91"
+              if (value.length > 13) {
+                value = value.slice(0, 13);
+              }
+
+              setMobileNumber(value);
+            }}
+            className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+            placeholder="Enter your mobile number"
+          />
+
             {errors.mobileNumber && <p className="text-red-500 text-xs mt-1">{errors.mobileNumber}</p>}
           </div>
-          {!loginWithOTP ? (
-            <>
-              <div className="mb-6">
-                <label className="block text-gray-700 mb-1" htmlFor="password">
-                  Password
-                </label>
-                <div className="relative">
-                  <input
-                    type={showPassword ? 'text' : 'password'}
-                    id="password"
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    className={`w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm`}
-                    placeholder="Enter your password"
-                    disabled={loginWithOTP}
-                  />
-                  <button
-                    type="button"
-                    onClick={() => setShowPassword(!showPassword)}
-                    className="absolute inset-y-0 right-0 flex items-center pr-3"
-                  >
-                    <FontAwesomeIcon icon={showPassword ? faEye : faEyeSlash} className="text-gray-500" />
-                  </button>
-                </div>
-                {errors.password && <p className="text-red-500 text-xs mt-1">{errors.password}</p>}
-              </div>
-            </>
-          ) : (
-            <div className="mb-6">
+
+          {showOtpInput && (
+            <div className="mb-4">
               <label className="block text-gray-700 mb-1" htmlFor="otp">
                 OTP
               </label>
@@ -153,53 +151,32 @@ const LoginPage = () => {
                 type="text"
                 id="otp"
                 value={otp}
-                onChange={(e) => setOtp(e.target.value.replace(/\D/, '').slice(0,6))}
+                onChange={(e) => setOtp(e.target.value.replace(/\D/, '').slice(0, 6))}
                 className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
                 placeholder="Enter your OTP"
-                disabled={password}
               />
               {errors.otp && <p className="text-red-500 text-xs mt-1">{errors.otp}</p>}
             </div>
           )}
-          <div className="flex items-center mb-4 justify-between">
-            <div className="flex items-center">
-              <input
-                type="checkbox"
-                id="rememberMe"
-                checked={rememberMe}
-                onChange={(e) => setRememberMe(e.target.checked)}
-                className="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded"
-              />
-              <label htmlFor="rememberMe" className="ml-2 block text-sm text-gray-900">
-                Remember Me
-              </label>
-            </div>
-            <a href="#" className="text-indigo-600 hover:text-indigo-700 text-sm">
-              Forgot Password?
-            </a>
-          </div>
-          <div className="flex items-center mb-4">
-            <input
-              type="checkbox"
-              id="loginWithOTP"
-              checked={loginWithOTP}
-              onChange={handleLoginWithOTPChange}
-              className="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded"
-            />
-            <label htmlFor="loginWithOTP" className="ml-2 block text-sm text-gray-900">
-              Login with OTP instead of password
-            </label>
-          </div>
+
           <div className="flex justify-center mb-4">
-          
-            <button
-              onClick={handleLogin}
-              className="bg-blue-600 text-white py-2 px-4 rounded-md shadow-sm hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
-            >
-              Login
-            </button>
-            
+            {!showOtpInput ? (
+              <button
+                onClick={sendOtp}
+                className="bg-blue-600 text-white py-2 px-4 rounded-md shadow-sm hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+              >
+                Send OTP
+              </button>
+            ) : (
+              <button
+                onClick={verifyOtp}
+                className="bg-green-600 text-white py-2 px-4 rounded-md shadow-sm hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500"
+              >
+                Verify OTP
+              </button>
+            )}
           </div>
+
           <div className="text-center">
             <button
               onClick={handleRoleSwitch}
@@ -208,31 +185,10 @@ const LoginPage = () => {
               {role === 'doctor' ? 'Switch to Patient Login' : 'Switch to Doctor Login'}
             </button>
           </div>
-
-          {/* Popup Modal */}
-          {showPopup && (
-            <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50">
-              <div className="bg-gray-100 p-8 rounded-lg shadow-lg w-full max-w-sm">
-                <h2 className="text-xl font-semibold mb-4">Login Successful</h2>
-                <p>Your login was successful!</p>
-                <div className="flex justify-center mt-4">
-                
-                  <button
-                    onClick={closePopup}
-                    className="bg-blue-600 text-white py-2 px-4 rounded-md shadow-sm hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500" 
-                  >
-                  Continue
-                    
-                  </button>
-               
-                </div>
-              </div>
-            </div>
-          )}
         </div>
       </div>
     </div>
   );
-}
+};
 
 export default LoginPage;
