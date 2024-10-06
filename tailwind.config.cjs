@@ -8,5 +8,8 @@ module.exports = {
   colors: {
     "custom-blue": "rgba(11, 143, 172, 1)",
   },
+  font: {
+    'custom-font': 'roboto',
+  },
   plugins: [],
 };
