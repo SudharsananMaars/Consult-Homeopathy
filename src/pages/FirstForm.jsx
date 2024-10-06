@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import Select from 'react-select';
 import axios from 'axios';
-import 'C:/Users/Mahima Sharon J R/Desktop/website_pro/website/src/index.css';
+//import 'C:/Users/Mahima Sharon J R/Desktop/website_pro/website/src/index.css';
 
 const countries = [
   { code: 'IN', name: 'India', dialCode: '+91' },

@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import Select from 'react-select';
 import { useNavigate } from 'react-router-dom';
-import 'C:/Users/Mahima Sharon J R/Desktop/website_pro/website/src/index.css'; 
+//import 'C:/Users/Mahima Sharon J R/Desktop/website_pro/website/src/index.css'; 
 
 
 
