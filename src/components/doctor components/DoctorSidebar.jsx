@@ -1,12 +1,14 @@
 import React, { useEffect, useState } from "react";
 import { useNavigate, Link, useLocation } from "react-router-dom";
-import { LuBox, LuCalendar, LuWallet } from "react-icons/lu";
-import { MdOutlineOndemandVideo } from "react-icons/md";
+import { LuBox, LuCalendar, LuWallet,LuSettings } from "react-icons/lu";
+import { MdOutlineOndemandVideo, MdOutlineDashboardCustomize } from "react-icons/md";
 import { CiLogout } from "react-icons/ci";
 import { FaUserFriends, FaStethoscope } from "react-icons/fa";
 import { AiOutlineMedicineBox } from "react-icons/ai";
 import { MdAccountBalance } from "react-icons/md";
 import { FaPhotoVideo } from "react-icons/fa";
+import { RiAdminLine } from "react-icons/ri";
+import { FaUserDoctor } from "react-icons/fa6";
 import SidebarProfile from "./DoctorSidebarProfile";
 
 const Sidebar = () => {
@@ -57,6 +59,10 @@ const Sidebar = () => {
     { id: 7, path: "/workshoppage", name: "Workshops", icon: MdOutlineOndemandVideo },
     { id: 8, path: "/content", name: "Content", icon: FaPhotoVideo },
     { id: 9, path: "/accounts", name: "Accounts", icon: MdAccountBalance },
+    { id: 10, path: "/admin-dashboard", name: "Admin CRM", icon: RiAdminLine },
+    { id: 10, path: "/doctor-dashboard", name: "Doctor CRM", icon: FaUserDoctor },
+    { id: 11, path: "/allocation", name: "Doctor Allocation", icon: MdOutlineDashboardCustomize },
+    { id: 11, path: "/docsettings", name: "Settings", icon: LuSettings },
   ];
 
   const toggleSubMenu = (linkId) => {

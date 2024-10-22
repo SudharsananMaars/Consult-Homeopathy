@@ -5,7 +5,7 @@ import { MdOutlineNotificationsNone } from "react-icons/md";
 import { useNavigate } from "react-router-dom";
 import Notification from "./Notification";
 import Messenger from "./Messenger";
-import logo from "/src/assets/images/patient images/logo.png";
+import homeologo from "/src/assets/images/patient images/homeologo.png";
 
 const Header = () => {
   const navigate = useNavigate();
@@ -37,8 +37,8 @@ const Header = () => {
   return (
     <div className="flex justify-between items-center px-5 py-3 fixed w-full top-0 bg-indigo-200 shadow-lg z-50">
       <div className="flex pt-1 ">
-      <img src={logo} alt="Logo" className="w-11"/>
-      <span className="ml-4 text-2xl font-bold text-gray-800 custom-font">Katyayani Clinic</span>
+      <img src={homeologo} alt="Logo" className="w-20" />
+      <span className="ml-4 text-2xl font-bold text-gray-800 custom-font">Consult Homeopathy</span>
       </div>
       <div className="flex items-center space-x-5">
         <button onClick={handleMessage}>

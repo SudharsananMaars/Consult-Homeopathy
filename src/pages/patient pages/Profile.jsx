@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import Layout from "../../components/patient components/Layout";
+import axios from "axios";
 
 const Profile = () => {
   const [profilePhoto, setProfilePhoto] = useState(null);
@@ -15,7 +16,41 @@ const Profile = () => {
   const [pincode, setPincode] = useState("");
   const [gender, setGender] = useState("");
   const [bgrp, setBgrp] = useState("");
-  const [isEditing, setIsEditing] = useState(true);
+  const [isEditing, setIsEditing] = useState(false);
+
+  useEffect(() => {
+    const fetchPatientProfile = async () => {
+      try {
+        const token = localStorage.getItem('accessToken');
+        const response = await fetch(`http://localhost:8000/api/patient/profile`, {
+          method: 'GET',
+          headers: {
+            Authorization: `Bearer ${token}`, // Assuming you're using localStorage to store the token
+          },
+        });
+        const patientData = await response.json();
+        
+        // Set the state with fetched data
+        setName(patientData.name);
+        setEmail(patientData.email);
+        setMobile(patientData.phone);
+        setGender(patientData.gender);
+        // Set other fields to empty or default if not provided
+        setDob(patientData.dob || "");
+        setAddress(patientData.address || "");
+        setLocality(patientData.locality || "");
+        setCity(patientData.city || "");
+        setState(patientData.state || "");
+        setCountry(patientData.country || "");
+        setPincode(patientData.pincode || "");
+      } catch (error) {
+        console.error("Error fetching patient profile:", error);
+      }
+    };
+
+    fetchPatientProfile();
+  }, []);
+
 
   const states = [
     "Andhra Pradesh", "Arunachal Pradesh", "Assam", "Bihar", "Chhattisgarh", "Goa", "Gujarat", "Haryana", "Himachal Pradesh", "Jharkhand",
@@ -36,11 +71,33 @@ const Profile = () => {
       reader.readAsDataURL(file);
     }
   };
-  const handleSubmit = () =>{
-    window.alert("Profile has been Updated!");
+  const handleSubmit = async () =>{
+    try {
+      const token = localStorage.getItem('accessToken');
+      const response = await axios.put(`http://localhost:8000/api/patient/profile`, {
+        name,
+        email,
+        phone: mobile,
+        gender,
+        dob,
+        address,
+        locality,
+        city,
+        state,
+        country,
+        pincode,
+        // Add other fields you want to update
+      }, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
 
-    // (Optional) You can also log the saved values to verify
-    setIsEditing(false);
+      console.log("Profile updated:", response.data);
+      setIsEditing(false); // Exit editing mode
+    } catch (error) {
+      console.error("Error updating profile:", error);
+    }
   };
 
   const handleEditClick = () => {

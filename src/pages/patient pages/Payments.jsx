@@ -3,16 +3,17 @@ import Layout from "../../components/patient components/Layout";
 import { FiDownload } from "react-icons/fi";
 import { useNavigate } from "react-router-dom";
 
+
 const Payments =() => {
     const navigate = useNavigate();
     const [dropdownVisible, setDropdownVisible]=useState(null);
 
     const [patients, setPatients] = useState([
         { patientname: "John Doe",receivername: "Dr.Shilfa", date: "2024-09-12 10:30 AM",paymentid:"id1", service: "Consultation", amount: "Rs.500", method: "G Pay", status: "Unpaid" },
-        { patientname: "Jane Smith",receivername: "Dr.Shilfa", date: "2024-09-11 2:00 PM", paymentid:"id1",service: "Workshop", amount: "Rs.300", method: "PhonePe",status: "Success" },
-        { patientname: "Emily Johnson",receivername: "Dr.Shilfa", date: "2024-09-10 3:45 PM", paymentid:"id1",service: "Medicine", amount: "Rs.600", method: "Amazon Pay",status: "Unpaid" },
+        { patientname: "Jane Smith",receivername: "Dr.Shilfa", date: "2024-09-11 2:00 PM", paymentid:"id1",service: "Workshop", amount: "Rs.300", method: "PhonePe",status: "Unpaid" },
+        { patientname: "Emily Johnson",receivername: "Dr.Shilfa", date: "2024-09-10 3:45 PM", paymentid:"id1",service: "Medicine", amount: "Rs.600", method: "Amazon Pay",status: "Success" },
         { patientname: "John Doe",receivername: "Dr.Shilfa", date: "2024-09-12 10:30 AM",paymentid:"id1", service: "Consultation", amount: "Rs.500", method: "G Pay",status: "Success" },
-        { patientname: "Jane Smith",receivername: "Dr.Shilfa", date: "2024-09-11 2:00 PM", paymentid:"id1",service: "Workshop", amount: "Rs.300", method: "PhonePe",status: "Unpaid"},
+        { patientname: "Jane Smith",receivername: "Dr.Shilfa", date: "2024-09-11 2:00 PM", paymentid:"id1",service: "Workshop", amount: "Rs.300", method: "PhonePe",status: "Success"},
         
         // Add more patients as needed
            ]);
@@ -36,6 +37,10 @@ const Payments =() => {
     const handleEntriesPerPageChange = (e) => {
         setEntriesPerPage(Number(e.target.value));
         setCurrentPage(1); // Reset to first page on entries change
+    };
+
+    const confirm = () => {
+        navigate('/paymentpage');
     };
 
     // Search by Patient ID and apply other filters
@@ -182,7 +187,7 @@ const Payments =() => {
                                                     Pay
                                                 </button>
                                             ) : (
-                                                <a href="#" className="flex items-center space-x-1">
+                                                <a href="#" className="flex items-center space-x-1 text-blue-400 hover:text-blue-500">
                                                     <FiDownload className="mr-2" />
                                                     <span>Download</span>
                                                 </a>

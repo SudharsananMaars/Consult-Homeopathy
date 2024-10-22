@@ -204,7 +204,7 @@ const Home = () =>{
                             <button className="text-blue-500 hover:underline">See All</button>
                         </div>
                         <div className="flex flex-col flex-grow">
-                            <p className="text-md font-semibold text-gray-700">Medicine Bill</p>
+                            <p className="text-md font-semibold text-gray-700">Medical Bill</p>
                             <div className="flex items-center justify-between mb-2">
                                 <p className="text-md text-gray-700">Ratna</p>
                                 <p className="text-md text-gray-700">15 June 2024</p>
@@ -299,9 +299,10 @@ const Home = () =>{
                   
                         </div>
                     </div>
+                    
                  </div>
-                
                 </div>
+                
             </main>
         </div>
  
