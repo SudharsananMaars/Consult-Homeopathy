@@ -2,11 +2,12 @@ import React, { useEffect, useState, useRef } from 'react';
 import axios from 'axios';
 import { FaCheckCircle, FaTimesCircle, FaSearch, FaFilter, FaPhoneAlt, FaRecordVinyl, FaEye, FaDownload, FaPencilAlt, FaChevronRight, FaChevronLeft } from 'react-icons/fa';
 import CallInterface from './CallInterface';
-import RecordingsInterface from './RecordingsInterface';
+import RecordingsInterface from './RecordingsButton';
 // import '../css/AssistantDashboard.css';
 import config from '../../config';
 import CommentCell from './CommentCell';
-
+import DoctorAllocationCell from './DoctorAllocationComponent';
+import RecordingsButton from './RecordingsButton';
 const PatientsTable = () => {
   const [patients, setPatients] = useState([]);
   const [searchTerm, setSearchTerm] = useState('');
@@ -19,8 +20,9 @@ const PatientsTable = () => {
   const [showFilters, setShowFilters] = useState(false);
   const [patientFormsStatus, setPatientFormsStatus] = useState({});
   const [visibleSections, setVisibleSections] = useState([1]);
-  const [doctorNames, setDoctorNames] = useState({});
   const [searchQuery, setSearchQuery] = useState(''); 
+  const [allocations, setAllocations] = useState([]);
+  const [individualAllocations, setIndividualAllocations] = useState({});
 
   const API_URL = config.API_URL;
 
@@ -35,6 +37,7 @@ const PatientsTable = () => {
             : patient.diseaseType || { name: '', isEdited: false }
         }));
         
+        const allocationsResponse = await axios.get(`http://${API_URL}:5000/api/assign/allocations-with-doctors`);
         
         const followUpPromises = patientsData.map(patient => 
           axios.get(`http://${API_URL}:5000/api/log/follow-up/${patient._id}`)
@@ -54,24 +57,11 @@ const PatientsTable = () => {
         formStatusResponses.forEach((res, index) => {
           formStatusObj[patientsData[index]._id] = res.data.message;
         });
-
-        const doctorIds = patientsData.map(patient => patient.currentAllocDoc).filter(Boolean);
-        const uniqueDoctorIds = [...new Set(doctorIds)];
-        const doctorPromises = uniqueDoctorIds.map(id => 
-          axios.get(`http://${API_URL}:5000/api/doctor/byId/${id}`)
-        );
-        const doctorResponses = await Promise.all(doctorPromises);
-        const doctorNamesObj = {};
-        doctorResponses.forEach(res => {
-          if (res.data && res.data.name) {
-            doctorNamesObj[res.data._id] = res.data.name;
-          }
-        });
         
         setPatients(patientsData);
+        setAllocations(allocationsResponse.data);
         setFollowUpStatuses(followUpStatusObj);
         setPatientFormsStatus(formStatusObj);
-        setDoctorNames(doctorNamesObj);
 
       } catch (error) {
         console.error('Error fetching data:', error.response ? error.response.data : error.message);
@@ -80,6 +70,49 @@ const PatientsTable = () => {
     
     fetchPatientsAndFormStatus();
   }, []);
+
+  const handleIndividualAllocation = async (patientId, doctorId) => {
+    try {
+      const response = await axios.post(`http://${API_URL}:5000/api/assign/individual-allocation`, {
+        patientId,
+        doctorId
+      });
+      
+      if (response.status === 200) {
+        setIndividualAllocations(prev => ({
+          ...prev,
+          [patientId]: response.data.doctor
+        }));
+      }
+    } catch (error) {
+      console.error('Error allocating doctor:', error);
+    }
+  };
+
+  const getDoctorForPatient = (patient) => {
+    // First check if there's an individual allocation
+    if (individualAllocations[patient._id]) {
+      return individualAllocations[patient._id].name;
+    }
+  
+    // If no individual allocation, fall back to role-based allocation
+    if (!patient.follow || !allocations.length) return '---';
+  
+    let requiredFollowUpType = patient.follow;
+  
+    if (patient.follow === 'Follow up-C') {
+      const diseaseType = patient.diseaseType?.name || '';
+      const patientType = patient.newExisting || '';
+      
+      if (diseaseType && patientType) {
+        requiredFollowUpType = `Follow up-${diseaseType}-${patientType}`;
+      }
+    }
+  
+    const allocation = allocations.find(a => a.followUpType === requiredFollowUpType);
+    return allocation ? allocation.doctor.name : '---';
+  };
+  
 
   const prioritizePatients = (patientsList) => {
     return patientsList.sort((a, b) => {
@@ -108,15 +141,15 @@ const PatientsTable = () => {
 
     const matchesFilter =
       filterOption === 'all' ||
-      (filterOption === 'pending' && patient.callFromApp === 'pending') ||
-      (filterOption === 'done' && patient.callFromApp !== 'pending');
+      (filterOption === 'pending' && patient.appointmentFixed === 'No') ||
+      (filterOption === 'done' && patient.appointmentFixed === 'Yes');
 
     return matchesSearchTerm && matchesFilter;
   }));
 
   const makeCall = async (patient) => {
     try {
-      const callResponse = await axios.post('https://f9ea-122-15-77-226.ngrok-free.app/make-call', {
+      const callResponse = await axios.post('https://41f4-122-15-77-226.ngrok-free.app/make-call', {
         to: patient.phone,
       });
       
@@ -439,12 +472,15 @@ const PatientsTable = () => {
         );
       case "Recordings":
         return (
-          <button
-            onClick={() => viewRecordings(patient)}
-            className="inline-flex items-center px-3 py-2 border border-transparent text-sm leading-4 font-medium rounded-md text-white bg-[#1a237e] hover:bg-[#000051] focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#534bae] transition-all duration-300"
-          >
-            <FaRecordVinyl className="mr-2 -ml-0.5 h-4 w-4" /> View Recordings
-          </button>
+          // <button
+          //   onClick={() => viewRecordings(patient)}
+          //   className="inline-flex items-center px-3 py-2 border border-transparent text-sm leading-4 font-medium rounded-md text-white bg-[#1a237e] hover:bg-[#000051] focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#534bae] transition-all duration-300"
+          // >
+          //   <FaRecordVinyl className="mr-2 -ml-0.5 h-4 w-4" /> View Recordings
+          // </button>
+          <div>
+                  <RecordingsButton patient={patient} />
+          </div>
         );
       case "Follow up Comments":
         return <CommentCell 
@@ -473,7 +509,18 @@ const PatientsTable = () => {
       case "Medicine & Shipping Payment confirmation":
         return patient.medicalPayment === 'Yes' ? <FaCheckCircle className='green' /> : <FaTimesCircle className='red' />;
       case "Role Allocation":
-        return patient.currentAllocDoc ? doctorNames[patient.currentAllocDoc] || 'Loading...' : '---';
+        return (
+          <DoctorAllocationCell 
+            patient={patient}
+            currentDoctor={getDoctorForPatient(patient)}
+            onAllocationChange={(newDoctor) => {
+              setIndividualAllocations(prev => ({
+                ...prev,
+                [patient._id]: newDoctor
+              }));
+            }}
+          />
+        );
       default:
         return '---';
     }

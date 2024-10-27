@@ -2,7 +2,7 @@ import React, { useEffect, useState, useRef } from 'react';
 import axios from 'axios';
 import { FaCheckCircle, FaTimesCircle, FaSearch, FaFilter, FaPhoneAlt, FaRecordVinyl, FaEye, FaDownload, FaPencilAlt, FaChevronRight, FaChevronLeft } from 'react-icons/fa';
 import CallInterface from './CallInterface';
-import RecordingsInterface from './RecordingsInterface';
+import RecordingsInterface from './RecordingsButton';
 import config from '../../config';
 import CommentCell from './CommentCell';
 

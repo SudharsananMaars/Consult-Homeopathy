@@ -9,7 +9,7 @@ import AttemptBucket from './AttemptBucket';
 import { FaCalendarAlt, FaChevronDown } from 'react-icons/fa';
 import config from '../../config';
 
-const MainContentComponent = ({ activeTab, handleTabClick }) => {
+const AssistantMainCom = ({ activeTab, handleTabClick }) => {
   const [dashboardData, setDashboardData] = useState({
     totalPatients: 0,
     chronicPatients: 0,
@@ -43,10 +43,8 @@ const MainContentComponent = ({ activeTab, handleTabClick }) => {
     switch (activeTab) {
       case 'all':
         return <PatientsTable />;
-      case 'inProgress':
-        return <InProgressTable />;
-      case 'completed':
-        return <StatusCompleteTable />;
+      case 'myAllocation':
+        return <WorkTable />;
       case 'lost':
         return <LostTable />;
       case 'attemptBucket':
@@ -106,7 +104,7 @@ const MainContentComponent = ({ activeTab, handleTabClick }) => {
           </button>
           {isDropdownOpen && (
             <div className="absolute z-10 mt-1 w-full bg-white shadow-lg rounded-md py-1">
-              {['all', 'inProgress', 'completed', 'lost', 'attemptBucket'].map((tab) => (
+              {['all', 'myAllocation', 'lost', 'attemptBucket'].map((tab) => (
                 <a
                   key={tab}
                   href="#"
@@ -118,8 +116,7 @@ const MainContentComponent = ({ activeTab, handleTabClick }) => {
                   }}
                 >
                   {tab === 'all' ? 'All'
-                    : tab === 'inProgress' ? 'In Progress'
-                    : tab === 'completed' ? 'Completed'
+                    : tab === 'myAllocation' ? 'My Allocation'
                     : tab === 'lost' ? 'Lost'
                     : 'Attempt Bucket'}
                 </a>
@@ -130,7 +127,7 @@ const MainContentComponent = ({ activeTab, handleTabClick }) => {
 
         {/* Desktop View - Tabs */}
         <div className="hidden md:flex space-x-2 bg-gray-200 p-2 rounded-lg shadow">
-          {['all', 'inProgress', 'completed', 'lost', 'attemptBucket'].map((tab) => (
+          {['all', 'myAllocation', 'lost', 'attemptBucket'].map((tab) => (
             <button
               key={tab}
               onClick={() => handleTabClick(tab)}
@@ -141,8 +138,7 @@ const MainContentComponent = ({ activeTab, handleTabClick }) => {
               }`}
             >
               {tab === 'all' ? 'All'
-                : tab === 'inProgress' ? 'In Progress'
-                : tab === 'completed' ? 'Completed'
+                : tab === 'myAllocation' ? 'My Allocation'
                 : tab === 'lost' ? 'Lost'
                 : 'Attempt Bucket'}
             </button>
@@ -158,4 +154,4 @@ const MainContentComponent = ({ activeTab, handleTabClick }) => {
   );
 };
 
-export default MainContentComponent;
+export default AssistantMainCom;

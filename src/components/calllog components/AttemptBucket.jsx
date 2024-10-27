@@ -3,21 +3,23 @@ import axios from 'axios';
 import { FaCheckCircle, FaTimesCircle, FaSearch, FaFilter, FaPhoneAlt, FaRecordVinyl, FaEye, FaDownload, FaPencilAlt, FaChevronRight, FaChevronLeft } from 'react-icons/fa';
 import CallInterface from './CallInterface';
 import RecordingsInterface from './RecordingsButton';
-import config from '../../config';
 import CommentCell from './CommentCell';
+import config from '../../config';
 
-const LostTable = () => {
+const AttemptBucket = () => {
   const [patients, setPatients] = useState([]);
   const [searchTerm, setSearchTerm] = useState('');
-  const [filterOption, setFilterOption] = useState('all');
+  const [filterOption, setFilterOption] = useState('attempt1');
   const [showCallInterface, setShowCallInterface] = useState(false);
   const [currentCall, setCurrentCall] = useState(null);
   const [currentRecordings, setCurrentRecordings] = useState(null);
   const [showRecordingsInterface, setShowRecordingsInterface] = useState(false);
   const [followUpStatuses, setFollowUpStatuses] = useState({});
-  const [showFilters, setShowFilters] = useState(false);
   const [patientFormsStatus, setPatientFormsStatus] = useState({});
-  const [visibleSections, setVisibleSections] = useState([1]);
+  const [doctorNames, setDoctorNames] = useState({});
+  const [activeSection, setActiveSection] = useState(1);
+  const tableRef = useRef(null);
+
   const API_URL = config.API_URL;
 
   useEffect(() => {
@@ -25,14 +27,16 @@ const LostTable = () => {
       try {
         const response = await axios.get(`http://${API_URL}:5000/api/log/list`);
         const patientsData = response.data
-          .filter(patient => patient.enquiryStatus == 'Not Interested') 
+          .filter(patient => patient.appointmentFixed !== 'Yes') // Only get patients without fixed appointments
           .map(patient => ({
             ...patient,
+            callCount: patient.callCount || 0, // Ensure callCount exists
             diseaseType: typeof patient.diseaseType === 'string' 
               ? { name: patient.diseaseType, isEdited: false }
               : patient.diseaseType || { name: '', isEdited: false }
           }));
-        
+
+        // Fetch follow-up statuses
         const followUpPromises = patientsData.map(patient => 
           axios.get(`http://${API_URL}:5000/api/log/follow-up/${patient._id}`)
         );
@@ -41,28 +45,60 @@ const LostTable = () => {
         followUpResponses.forEach((res, index) => {
           followUpStatusObj[patientsData[index]._id] = res.data.followUpStatus;
         });
-        
+
+        // Fetch form statuses
         const formStatusPromises = patientsData.map(patient => 
           axios.get(`http://${API_URL}:5000/api/log/patientProfile/${patient.phone}`)
         );
-        
         const formStatusResponses = await Promise.all(formStatusPromises);
         const formStatusObj = {};
         formStatusResponses.forEach((res, index) => {
           formStatusObj[patientsData[index]._id] = res.data.message;
         });
-        
+
+        // Fetch doctor names
+        const doctorIds = patientsData.map(patient => patient.currentAllocDoc).filter(Boolean);
+        const uniqueDoctorIds = [...new Set(doctorIds)];
+        const doctorPromises = uniqueDoctorIds.map(id => 
+          axios.get(`http://${API_URL}:5000/api/doctor/byId/${id}`)
+        );
+        const doctorResponses = await Promise.all(doctorPromises);
+        const doctorNamesObj = {};
+        doctorResponses.forEach(res => {
+          if (res.data && res.data.name) {
+            doctorNamesObj[res.data._id] = res.data.name;
+          }
+        });
+
         setPatients(patientsData);
         setFollowUpStatuses(followUpStatusObj);
         setPatientFormsStatus(formStatusObj);
-        
+        setDoctorNames(doctorNamesObj);
+
       } catch (error) {
-        console.error('Error fetching data:', error.response ? error.response.data : error.message);
+        console.error('Error fetching data:', error);
       }
     };
-    
+
     fetchPatientsAndFormStatus();
   }, []);
+
+  // Updated filtering logic
+  const filteredPatients = patients.filter(patient => {
+    const searchMatch = 
+      patient.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      patient.phone?.toString().includes(searchTerm);
+
+    const callCount = patient.callCount || 0;
+    
+    // Updated attempt filtering logic
+    const attemptMatch = 
+      (filterOption === 'attempt1' && callCount === 1) ||
+      (filterOption === 'attempt2' && callCount === 2) ||
+      (filterOption === 'attempt3' && callCount >= 3);
+
+    return searchMatch && attemptMatch;
+  });
 
   const prioritizePatients = (patientsList) => {
     return patientsList.sort((a, b) => {
@@ -84,18 +120,6 @@ const LostTable = () => {
     });
   };
 
-  const filteredPatients = patients.filter(patient => {
-    const matchesSearchTerm =
-      patient.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      (patient.mobileNumber && String(patient.mobileNumber).includes(searchTerm));
-
-    const matchesFilter =
-      filterOption === 'all' ||
-      (filterOption === 'pending' && patient.callFromApp === 'pending') ||
-      (filterOption === 'done' && patient.callFromApp !== 'pending');
-
-    return matchesSearchTerm && matchesFilter;
-  });
 
   const makeCall = async (patient) => {
     try {
@@ -247,8 +271,36 @@ const LostTable = () => {
     }
   ];
 
+  const TableHeader = () => (
+    <div className="flex justify-between items-center mb-6 bg-white p-3 rounded-lg shadow-md">
+      <h2 className="text-2xl font-bold text-[#1a237e]">Attempt Bucket</h2>
+      <div className="flex items-center space-x-4">
+        <div className="relative flex items-center">
+          <div className="flex items-center bg-white rounded-l-lg border-2 border-r-0 border-[#1a237e] focus-within:border-[#534bae] transition-colors duration-300">
+            <FaSearch className="ml-3 text-[#1a237e]" />
+            <input
+              type="text"
+              placeholder="Search patients..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="p-2 pl-2 w-64 outline-none text-[#212121]"
+            />
+          </div>
+        </div>
+        <select
+          className="p-2 border-2 border-[#1a237e] rounded-lg outline-none text-[#212121] bg-white hover:border-[#534bae] transition-colors duration-300 cursor-pointer"
+          value={filterOption}
+          onChange={(e) => setFilterOption(e.target.value)}
+        >
+          <option value="attempt1">Attempt 1</option>
+          <option value="attempt2">Attempt 2</option>
+          <option value="attempt3">Attempt 3 or more</option>
+        </select>
+      </div>
+    </div>
+  );
+
   const [activeTab, setActiveTab] = useState(1);
-  const tableRef = useRef(null);
   
   const toggleSection = (sectionId) => {
     if (sectionId === activeTab) {
@@ -262,7 +314,6 @@ const LostTable = () => {
     }
   };
 
-  const [activeSection, setActiveSection] = useState(1);
   const scrollToSection = (sectionId) => {
     const sectionIndex = sections.findIndex(section => section.id === sectionId);
     if (sectionIndex !== -1 && tableRef.current) {
@@ -292,10 +343,13 @@ const LostTable = () => {
   );
 
   const renderTableHeader = () => (
-    <thead className="sticky top-0 z-10 bg-blue-500">
+    <thead className="bg-gray-50">
       <tr>
-        {sections.flatMap(section => section.columns).map(column => (
-          <th key={column} className="p-3 text-sm font-semibold text-left text-white whitespace-nowrap">
+        {sections.flatMap(section => section.columns).map((column, index) => (
+          <th
+            key={index}
+            className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+          >
             {column}
           </th>
         ))}
@@ -456,69 +510,54 @@ const LostTable = () => {
       case "Medicine & Shipping Payment confirmation":
         return patient.medicalPayment === 'Yes' ? <FaCheckCircle className='green' /> : <FaTimesCircle className='red' />;
       case "Role Allocations":
-        return "-";
+        return patient.currentAllocDoc ? doctorNames[patient.currentAllocDoc] || 'Loading...' : '---';
       default:
         return '---';
     }
   };
 
   return (
-    <div className="space-y-6">
-      <div className="flex justify-between items-center mb-6 bg-white p-3 rounded-lg shadow-md">
-        <h2 className="text-2xl font-bold text-[#1a237e]">Status Complete Patients</h2>
-        <div className="flex items-center space-x-4">
-          <div className="relative flex items-center">
-            <div className="flex items-center bg-white rounded-l-lg border-2 border-r-0 border-[#1a237e] focus-within:border-[#534bae] transition-colors duration-300">
-              <FaSearch className="ml-3 text-[#1a237e]" />
-              <input
-                type="text"
-                placeholder="Search patients..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="p-2 pl-2 w-64 outline-none text-[#212121]"
-              />
+    <div className="px-4 sm:px-6 lg:px-8">
+      <div className="sm:flex sm:items-center">
+        <div className="sm:flex-auto">
+          <h1 className="text-xl font-semibold text-gray-900">Attempt Bucket</h1>
+        </div>
+        <div className="mt-4 sm:mt-0 sm:ml-16 sm:flex-none space-x-4">
+          <input
+            type="text"
+            placeholder="Search patients..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            className="rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+          />
+          <select
+            value={filterOption}
+            onChange={(e) => setFilterOption(e.target.value)}
+            className="rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+          >
+            <option value="attempt1">Attempt 1</option>
+            <option value="attempt2">Attempt 2</option>
+            <option value="attempt3">Attempt 3 or more</option>
+          </select>
+        </div>
+      </div>
+      <div className="mt-8 flex flex-col">
+        <div className="-my-2 -mx-4 overflow-x-auto sm:-mx-6 lg:-mx-8">
+          <div className="inline-block min-w-full py-2 align-middle md:px-6 lg:px-8">
+            <div className="overflow-hidden shadow ring-1 ring-black ring-opacity-5 md:rounded-lg">
+              <table className="min-w-full divide-y divide-gray-300">
+                {renderTableHeader()}
+                {renderTableBody()}
+              </table>
             </div>
-            <button 
-              className="p-3 bg-[#1a237e] text-white rounded-r-lg hover:bg-[#000051] transition-all duration-300 border-2 border-[#1a237e] hover:border-[#000051] shadow-sm"
-              onClick={() => setShowFilters(!showFilters)}
-            >
-              <FaFilter className="w-4 h-4" />
-            </button>
           </div>
-          {showFilters && (
-            <select
-              className="p-2 border-2 border-[#1a237e] rounded-lg outline-none text-[#212121] bg-white hover:border-[#534bae] transition-colors duration-300 cursor-pointer"
-              value={filterOption}
-              onChange={(e) => setFilterOption(e.target.value)}
-            >
-              <option value="all">All Patients</option>
-              <option value="pending">Pending Calls</option>
-              <option value="done">Completed Calls</option>
-            </select> 
-          )}
         </div>
       </div>
       
-      <TabSwitcher />
-
-      <div className="bg-white rounded-lg shadow-md overflow-hidden">
-        <div className="overflow-x-auto" ref={tableRef}>
-          <div className="inline-block min-w-full align-middle">
-            <div className="overflow-hidden border-b border-gray-200">
-              <div className="max-h-[calc(100vh-280px)] overflow-y-auto">
-                <table className="min-w-full mx-2 divide-y divide-gray-200">
-                  {renderTableHeader()}
-                  {renderTableBody()}
-                </table>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
       {showCallInterface && <CallInterface patient={currentCall} onClose={endCall} />}
       {showRecordingsInterface && <RecordingsInterface recordings={currentRecordings} onClose={closeRecordings} />}
     </div>
   );
 };
 
-export default LostTable;
+export default AttemptBucket;

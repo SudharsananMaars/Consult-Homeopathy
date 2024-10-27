@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios";
 import { Plus, Save, AlertTriangle, Check, Loader2, RotateCcw, ChevronDown, ChevronRight, Users, UserCheck, UserX } from "lucide-react";
-
+import AllocationSummary from "../../components/calllog components/AllocationSummary";
 import config from "../../config";
 
 const API_URL = config.API_URL;
@@ -384,7 +384,7 @@ const Allocation = () => {
         </div>
       </div>
 
-      <div className="mb-6 bg-gray-50 p-4 rounded-lg">
+      {/* <div className="mb-6 bg-gray-50 p-4 rounded-lg">
         <h3 className="text-lg font-semibold mb-2 flex items-center gap-2">
           <Users className="w-5 h-5" />
           Allocation Summary
@@ -414,8 +414,13 @@ const Allocation = () => {
           </button>
         </div>
         </div>
-      </div>
-      
+      </div> */}
+
+      <AllocationSummary 
+        doctors={doctors} 
+        allocations={allocations}
+        allocationSummary={allocationSummary}
+      />      
       {error && (
         <div className="flex items-center gap-2 bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-md mb-4">
           <AlertTriangle className="w-5 h-5 flex-shrink-0" />
