@@ -21,12 +21,13 @@ const LoginPage = () => {
       if (response.data.accessToken) {
         // Store the access token using a consistent key
         localStorage.setItem('token', response.data.accessToken);
+        localStorage.setItem('role', role); 
         
         // Redirect based on the role
         if (role === 'admin') {
           window.location.href = '/admin-dashboard';
         } else {
-          window.location.href = '/doctor-dashboard';
+          window.location.href = '/dashboard';
         }
       } else {
         setError('Login failed. Token not received.');
@@ -44,23 +45,32 @@ const LoginPage = () => {
         </div>
         <h1 className="text-2xl font-bold mb-5">Welcome Back</h1>
         <div className="flex justify-center mb-5">
-          <button
-            className={`mx-2 py-2 text-sm font-semibold ${
-              role === 'admin' ? 'font-bold border-b-2 border-black' : ''
-            }`}
-            onClick={() => setRole('admin')}
-          >
-            Admin
-          </button>
-          <button
-            className={`mx-2 py-2 text-sm ${
-              role === 'doctor' ? 'font-bold border-b-2 border-black' : ''
-            }`}
-            onClick={() => setRole('doctor')}
-          >
-            Doctor
-          </button>
-        </div>
+  <button
+    className={`mx-2 py-2 text-sm ${
+      role === 'admin' ? 'font-bold border-b-2 border-black' : ''
+    }`}
+    onClick={() => setRole('admin')}
+  >
+    Admin
+  </button>
+  <button
+    className={`mx-2 py-2 text-sm ${
+      role === 'admin-doctor' ? 'font-bold border-b-2 border-black' : ''
+    }`}
+    onClick={() => setRole('admin-doctor')}
+  >
+    Admin Doctor
+  </button>
+  <button
+    className={`mx-2 py-2 text-sm ${
+      role === 'assistant-doctor' ? 'font-bold border-b-2 border-black' : ''
+    }`}
+    onClick={() => setRole('assistant-doctor')}
+  >
+    Assistant Doctor
+  </button>
+</div>
+
         {error && <p className="text-red-500 mb-4">{error}</p>}
         <LoginForm onLogin={handleLogin} />
       </div>

@@ -210,7 +210,7 @@ const cityOptions = cities.map(city => ({
   
         // Make API request
         const response = await axios.post(
-          'http://localhost:8000/api/patient/sendChronicForm',
+          'http://localhost:5000/api/patient/sendChronicForm',
           dataToSend,
           {
             headers: {

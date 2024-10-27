@@ -100,10 +100,18 @@ const LoginPage = () => {
   const sendOtp = async () => {
     if (validateFields()) {
       try {
-        const response = await axios.post('http://localhost:8000/api/otp/send-otp', { 
+        const token = localStorage.getItem('accessToken'); // Assuming token is stored in localStorage
+        const response = await axios.post('http://localhost:5000/api/otp/send-otp', { 
           phone: mobileNumber,
           role: role === 'patient' ? 'Patient' : 'Doctor',
-        });
+        },
+        {
+          headers: {
+            Authorization: `Bearer ${token}`, // Include the token in the Authorization header
+          },
+        }
+      );
+        
         if (response.data.success) {
           setOtpSent(true); // Set OTP sent to true
           setShowOtpInput(true); // Show OTP input after OTP is sent
@@ -121,7 +129,7 @@ const LoginPage = () => {
   const verifyOtp = async () => {
     if (validateFields()) {
       try {
-        const response = await axios.post('http://localhost:8000/api/otp/verifyOtp', {
+        const response = await axios.post('http://localhost:5000/api/otp/verifyOtp', {
           phone: mobileNumber,
           userOTP: otp,
           userType: role === 'patient' ? 'Patient' : 'Doctor',
@@ -180,7 +188,6 @@ const LoginPage = () => {
           <h1 className="text-2xl font-semibold text-center mb-6">
             {role === 'doctor' ? 'Doctor Login' : 'Patient Login'}
           </h1>
-
           {/* Render Mobile Number and OTP Checkbox only if OTP is not sent */}
           {!otpSent && (
             <>

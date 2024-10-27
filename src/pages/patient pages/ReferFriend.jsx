@@ -48,14 +48,15 @@ const ReferFriend = () => {
       try {
         const token = localStorage.getItem('accessToken');
         const response = await axios.post(
-          "http://localhost:8000/api/patient/referFriend", // Replace with your backend URL
+          `http://localhost:5000/api/patient/referFriend`,
           {
-            friendName: name,
-            friendPhone: phone,
+            friendName: name, // Use "name" state variable here
+            friendPhone: phone, // Use "phone" state variable here
           },
           {
             headers: {
-                Authorization: `Bearer ${token}`, // Ensure JWT token is added for authentication
+              Authorization: `Bearer ${token}`, // Ensure JWT token is added for authentication
+              'Content-Type': 'application/json',
             },
           }
         );
@@ -63,13 +64,13 @@ const ReferFriend = () => {
         setErrorMessage("");
         console.log(response.data); // Handle success response
       } catch (error) {
-        console.error(error);
+        console.error("Error response:", error.response.data); // Log full error response
         setErrorMessage("Failed to send referral. Try again.");
         setSuccessMessage("");
       }
     }
   };
-
+  
   return (
     <Layout>
       <div className="space-y-0 p-6">

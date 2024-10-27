@@ -11,7 +11,7 @@ import { RiAdminLine } from "react-icons/ri";
 import { FaUserDoctor } from "react-icons/fa6";
 import SidebarProfile from "./DoctorSidebarProfile";
 
-const Sidebar = () => {
+const Sidebar = ({ role }) => {
   const location = useLocation();
   const [activeLink, setActiveLink] = useState(null);
   const [expandedItems, setExpandedItems] = useState({});
@@ -24,7 +24,8 @@ const Sidebar = () => {
     setActiveLink(activeIndex);
   }, [location.pathname]);
 
-  const SIDEBAR_LINKS = [
+  
+  const SIDEBAR_LINKS = role === "admin-doctor" ? [
     { id: 1, path: "/dashboard", name: "Home", icon: LuBox },
     {
       id: 2,
@@ -59,11 +60,27 @@ const Sidebar = () => {
     { id: 7, path: "/workshoppage", name: "Workshops", icon: MdOutlineOndemandVideo },
     { id: 8, path: "/content", name: "Content", icon: FaPhotoVideo },
     { id: 9, path: "/accounts", name: "Accounts", icon: MdAccountBalance },
-    { id: 10, path: "/admin-dashboard", name: "Admin CRM", icon: RiAdminLine },
     { id: 10, path: "/doctor-dashboard", name: "Doctor CRM", icon: FaUserDoctor },
     { id: 11, path: "/allocation", name: "Doctor Allocation", icon: MdOutlineDashboardCustomize },
-    { id: 11, path: "/docsettings", name: "Settings", icon: LuSettings },
-  ];
+    { id: 12, path: "/docsettings", name: "Settings", icon: LuSettings },
+  ] : role === "assistant-doctor" ? [
+    { id: 1, path: "/dashboard", name: "Home", icon: LuBox },
+    {
+      id: 2,
+      name: "Appointments",
+      icon: LuCalendar,
+      sublinks: [
+        { id: 21, path: "/appointments/calender", name: "Calender" },
+        { id: 22, path: "/appointments/list", name: "Appointment List" },
+      ],
+    },
+    { id: 3, path: "/docpayments", name: "Payments", icon: LuWallet },
+    { id: 4, path: "/inventory", name: "Inventory", icon: AiOutlineMedicineBox },
+    { id: 5, path: "/content", name: "Content", icon: FaPhotoVideo },
+    { id: 6, path: "/doctor-dashboard", name: "Doctor CRM", icon: FaUserDoctor },
+    { id: 7, path: "/assistleave", name: "Leave", icon: FaUserDoctor },
+    { id: 8, path: "/docsettings", name: "Settings", icon: LuSettings },
+  ] : [];
 
   const toggleSubMenu = (linkId) => {
     setExpandedItems((prev) => ({

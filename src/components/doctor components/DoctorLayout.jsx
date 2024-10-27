@@ -1,8 +1,15 @@
-import React, { useState } from "react";
+import React, {useState,useEffect} from "react";
 import Sidebar from "./DoctorSidebar";
 import Header from "./DoctorHeader";
 
 const Layout = ({ children }) => {
+  const [role, setRole] = useState('');
+
+  useEffect(() => {
+    const storedRole = localStorage.getItem('role'); // Retrieve role from localStorage
+    setRole(storedRole);
+  }, []);
+
   return (
     <div className="bg-gray-50 min-h-screen">
       {/* Fixed header at the top */}
@@ -11,7 +18,7 @@ const Layout = ({ children }) => {
       <div className="flex mt-16"> {/* Add margin to push content below header */}
       <div className="w-1/5 bg-indigo-50 mt-8 ml-8 min-h-screen rounded-3xl shadow-2xl border-2 flex-shrink-0">
         {/* Sidebar width fixed at 64 and spans full screen height */}
-        <Sidebar />
+        <Sidebar role={role} />
         </div>
 
         {/* Main content takes remaining space */}

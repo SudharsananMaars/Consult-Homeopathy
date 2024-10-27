@@ -30,14 +30,16 @@ const NewAppointment = () => {
       if (startDate) {
         try {
           const token = localStorage.getItem('accessToken');
+          const appointmentDate = dayjs(startDate).format('YYYY-MM-DD');
     
           // Using the native fetch API
-          const response = await fetch(`http://localhost:8000/api/patient/checkSlots`, {
-            method: 'GET', // Specify the request method
+          const response = await fetch(`http://localhost:5000/api/patient/checkSlots`, {
+            method: 'POST', // Specify the request method
             headers: {
               Authorization: `Bearer ${token}`, // Authorization header
               'Content-Type': 'application/json', // Specify content type
             },
+            body: JSON.stringify({ appointmentDate }), // Send appointmentDate in the body
           });
     
           // Check if the response is successful
@@ -89,7 +91,7 @@ const NewAppointment = () => {
 
       // Make the API request to book the appointment
       const response = await axios.post(
-        'http://localhost:8000/api/patient/bookAppointment',  // Adjust API endpoint as necessary
+        'http://localhost:5000/api/patient/bookAppointment',  // Adjust API endpoint as necessary
         { appointmentDate, timeSlot },
         {
           headers: {
