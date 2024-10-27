@@ -8,6 +8,8 @@ import { jwtDecode } from 'jwt-decode';
 
 const WorkTable = () => {
   const [patients, setPatients] = useState([]);
+  const [specialAllocationPatients, setSpecialAllocationPatients] = useState([]);
+  const [currentDoctorId, setCurrentDoctorId] = useState('');
   const [searchTerm, setSearchTerm] = useState('');
   const [followTypes, setFollowTypes] = useState([]);
   const [selectedFollowType, setSelectedFollowType] = useState('');
@@ -35,10 +37,34 @@ const WorkTable = () => {
     if (token) {
       const decodedToken = jwtDecode(token);
       setUserRole(decodedToken.role); // Setting user role based on token
+      setCurrentDoctorId(decodedToken.id);
+      if (decodedToken.id) {
+        fetchSpecialAllocations(decodedToken.id);
+      }
     }
     fetchDoctorFollowTypes();
     fetchPatients();
   }, []);  
+
+  const fetchSpecialAllocations = async (doctorId) => {
+    try {
+      const response = await axios.get(`http://${API_URL}:5000/api/assign/special/${doctorId}`);
+      const allocations = response.data;
+      
+      // Fetch complete patient details for each allocation
+      const patientDetailsPromises = allocations.map(allocation => 
+        axios.get(`http://${API_URL}:5000/api/patient/${allocation.patientId}`)
+      );
+      
+      const patientResponses = await Promise.all(patientDetailsPromises);
+      const completePatientDetails = patientResponses.map(response => response.data);
+      
+      setSpecialAllocationPatients(completePatientDetails);
+    } catch (error) {
+      console.error("Error fetching special allocations:", error);
+      setError("Failed to load special allocations");
+    }
+  };
 
   const handleDoctorChange = async (patientId, doctorId) => {
     try {
@@ -78,6 +104,8 @@ const WorkTable = () => {
         const index = followTypesArray.indexOf('Follow up-C');
         followTypesArray.splice(index, 1, 'Follow up-C-New', 'Follow up-C-Existing');
       }
+
+      followTypesArray.push('Special Allocation');
   
       if (userRole === 'admin-doctor') {
         followTypesArray.push('View All');
@@ -530,6 +558,92 @@ const WorkTable = () => {
           </div>,
         ]),
       };
+      case 'Special Allocation':
+        return {
+          head: [
+            'S.no',
+            'Omni channel',
+            'Patient Type',
+            'Who is the Consultation for',
+            'Name',
+            'Phone Number',
+            'Whatsapp Number',
+            'Email',
+            'Consulting For',
+            'If diseaseType is not available',
+            'Age',
+            'Gender',
+            'Current location',
+            'Message sent',
+            'Time stamp',
+            'Acute/Chronic',
+            'Follow',
+            'Follow comment',
+            'Out of network',
+            'Patient profile',
+            'Enquiry status',
+            'App downloaded status',
+            'Consultation payment',
+            'Appointment fixed',
+            'Medicine Payment confirmation',
+            'Call attempted tracking',
+            'Comments',
+            'View Drafts',
+            'Video Call',
+            'Voice call',
+            'Recordings',
+            'Mark Done',
+          ],
+          data: specialAllocationPatients.length > 0 ? 
+            specialAllocationPatients.map((item, index) => [
+              index + 1,
+              item.patientEntry || '---',
+              item.newExisting || '',
+              item.consultingFor || '',
+              item.name || '',
+              item.phone || '',
+              item.whatsappNumber || '',
+              item.email || '',
+              item.diseaseName || '',
+              item.diseaseTypeAvailable ? 'Yes' : 'No',
+              item.age || '',
+              item.gender || '',
+              item.currentLocation || '',
+              item.messageSent?.message || '---',
+              item.messageSent?.timeStamp || '---',
+              item.diseaseType?.name || '',
+              item.follow || '',
+              item.followComment || '',
+              '--',
+              item.patientProfile || 'No',
+              item.enquiryStatus || '',
+              item.appDownload != '0' ? 'Yes' : 'No',
+              item.appointmentFixed || '',
+              item.appointmentFixed || '',
+              item.medicinePaymentConfirmation ? 'Confirmed' : 'Pending',
+              item.callCount || '0',
+              item.comments?.text || '--',
+              <div className="action-buttons">
+                {renderButton('View draft', () => handleAction('ViewDraft', item))}
+              </div>,
+              <div className="action-buttons">
+                {renderButton('Make video call', () => handleAction('VideoCall', item))}
+              </div>,
+              <div className="action-buttons">
+                {renderButton('Make Voice Call', () => handleAction('VoiceCall', item))}
+              </div>,
+              <div className="action-buttons">
+                {renderButton('Recordings', () => handleAction('Recordings', item))}
+              </div>,
+              <div className="action-buttons">
+                {renderButton('Mark Done', () => handleAction('MarkDone', item))}
+              </div>,
+            ]) : [[
+              <td colSpan="31" className="text-center py-4">
+                No special allocations found
+              </td>
+            ]]
+        };
         default:
         return { head: [], data: [] };
     }
