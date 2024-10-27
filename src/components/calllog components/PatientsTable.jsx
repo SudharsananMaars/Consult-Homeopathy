@@ -2,12 +2,12 @@ import React, { useEffect, useState, useRef } from 'react';
 import axios from 'axios';
 import { FaCheckCircle, FaTimesCircle, FaSearch, FaFilter, FaPhoneAlt, FaRecordVinyl, FaEye, FaDownload, FaPencilAlt, FaChevronRight, FaChevronLeft } from 'react-icons/fa';
 import CallInterface from './CallInterface';
-import RecordingsInterface from './RecordingsInterface';
+import RecordingsInterface from './RecordingsButton';
 // import '../css/AssistantDashboard.css';
 import config from '../../config';
 import CommentCell from './CommentCell';
 import DoctorAllocationCell from './DoctorAllocationComponent';
-
+import RecordingsButton from './RecordingsButton';
 const PatientsTable = () => {
   const [patients, setPatients] = useState([]);
   const [searchTerm, setSearchTerm] = useState('');
@@ -149,7 +149,7 @@ const PatientsTable = () => {
 
   const makeCall = async (patient) => {
     try {
-      const callResponse = await axios.post('https://f9ea-122-15-77-226.ngrok-free.app/make-call', {
+      const callResponse = await axios.post('https://41f4-122-15-77-226.ngrok-free.app/make-call', {
         to: patient.phone,
       });
       
@@ -472,12 +472,15 @@ const PatientsTable = () => {
         );
       case "Recordings":
         return (
-          <button
-            onClick={() => viewRecordings(patient)}
-            className="inline-flex items-center px-3 py-2 border border-transparent text-sm leading-4 font-medium rounded-md text-white bg-[#1a237e] hover:bg-[#000051] focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#534bae] transition-all duration-300"
-          >
-            <FaRecordVinyl className="mr-2 -ml-0.5 h-4 w-4" /> View Recordings
-          </button>
+          // <button
+          //   onClick={() => viewRecordings(patient)}
+          //   className="inline-flex items-center px-3 py-2 border border-transparent text-sm leading-4 font-medium rounded-md text-white bg-[#1a237e] hover:bg-[#000051] focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#534bae] transition-all duration-300"
+          // >
+          //   <FaRecordVinyl className="mr-2 -ml-0.5 h-4 w-4" /> View Recordings
+          // </button>
+          <div>
+                  <RecordingsButton patient={patient} />
+          </div>
         );
       case "Follow up Comments":
         return <CommentCell 
