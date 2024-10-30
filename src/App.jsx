@@ -25,6 +25,7 @@ import PaymentPage from './pages/patient pages/PaymentPage.jsx';
 import Messenger from './components/patient components/Messenger.jsx';
 import HomePage from './pages/patient pages/HomePage.jsx';
 import RazorScreen from './pages/patient pages/RazorScreen.jsx';
+import FamilyTree from './pages/patient pages/FamilyTree.jsx';
 
 // import doctor website
 import DoctorLayout from './components/doctor components/DoctorLayout.jsx';
@@ -99,6 +100,8 @@ function App() {
           <Route path="/needhelp" element={<NeedHelp/>} />
           <Route path="/razor" element={<RazorScreen/>} />
           <Route path="/layout" element={<Layout />}></Route>
+          <Route path="/family" element={<FamilyTree/>} />
+
 
           {/* doctor website routing */}
         <Route path="/layout" element={<DoctorLayout />}></Route>

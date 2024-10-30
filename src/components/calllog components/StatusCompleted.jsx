@@ -297,7 +297,7 @@ const StatusCompleteTable = () => {
           onClick={() => scrollToSection(section.id)}
         className={`flex-grow px-4 py-2 rounded-lg transition-colors duration-200 text-center whitespace-nowrap ${
             activeSection === section.id
-              ? 'bg-blue-500 text-white'
+              ? 'bg-indigo-400 text-white'
               : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
           }`}
         >
@@ -308,7 +308,7 @@ const StatusCompleteTable = () => {
   );
 
   const renderTableHeader = () => (
-    <thead className="sticky top-0 z-10 bg-blue-500">
+    <thead className="sticky top-0 z-10 bg-indigo-400">
       <tr>
         {sections.flatMap(section => section.columns).map(column => (
           <th key={column} className="p-3 text-sm font-semibold text-left text-white whitespace-nowrap">
@@ -431,7 +431,7 @@ const StatusCompleteTable = () => {
         return (
           <button 
             onClick={() => makeCall(patient)}
-            className="inline-flex items-center px-3 py-2 border border-transparent text-sm leading-4 font-medium rounded-md text-white bg-[#1a237e] hover:bg-[#000051] focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#534bae] transition-all duration-300"
+            className="inline-flex items-center px-3 py-2 border border-transparent text-sm leading-4 font-medium rounded-md text-white bg-indigo-300 hover:bg-indigo-400 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#534bae] transition-all duration-300"
           >
             <FaPhoneAlt className="mr-2 -ml-0.5 h-4 w-4" /> Make Call
           </button>
@@ -440,7 +440,7 @@ const StatusCompleteTable = () => {
         return (
           <button
             onClick={() => viewRecordings(patient)}
-            className="inline-flex items-center px-3 py-2 border border-transparent text-sm leading-4 font-medium rounded-md text-white bg-[#1a237e] hover:bg-[#000051] focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#534bae] transition-all duration-300"
+            className="inline-flex items-center px-3 py-2 border border-transparent text-sm leading-4 font-medium rounded-md text-white bg-indigo-300 hover:bg-indigo-400 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#534bae] transition-all duration-300"
           >
             <FaRecordVinyl className="mr-2 -ml-0.5 h-4 w-4" /> View Recordings
           </button>
@@ -495,7 +495,7 @@ const StatusCompleteTable = () => {
               />
             </div>
             <button 
-              className="p-3 bg-[#1a237e] text-white rounded-r-lg hover:bg-[#000051] transition-all duration-300 border-2 border-[#1a237e] hover:border-[#000051] shadow-sm"
+              className="p-3 bg-[#a89bf0] text-white rounded-r-lg hover:bg-[#ac9efa] transition-all duration-300 border-2 border-[#a89bf0] hover:border-[#ac9efa] shadow-sm"
               onClick={() => setShowFilters(!showFilters)}
             >
               <FaFilter className="w-4 h-4" />
@@ -503,7 +503,7 @@ const StatusCompleteTable = () => {
           </div>
           {showFilters && (
             <select
-              className="p-2 border-2 border-[#1a237e] rounded-lg outline-none text-[#212121] bg-white hover:border-[#534bae] transition-colors duration-300 cursor-pointer"
+              className="p-2 border-2 border-[#a89bf0] rounded-lg outline-none text-[#212121] bg-white hover:border-[#ac9efa] transition-colors duration-300 cursor-pointer"
               value={filterOption}
               onChange={(e) => setFilterOption(e.target.value)}
             >

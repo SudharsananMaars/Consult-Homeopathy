@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios";
+import DoctorLayout from "/src/components/doctor components/DoctorLayout.jsx";
 import { Plus, Save, AlertTriangle, Check, Loader2, RotateCcw, ChevronDown, ChevronRight, Users, UserCheck, UserX } from "lucide-react";
 import AllocationSummary from "../../components/calllog components/AllocationSummary";
 import config from "../../config";
@@ -341,6 +342,7 @@ const Allocation = () => {
     if (!isOpen) return null;
     
     return (
+      
       <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
         <div className="bg-white rounded-lg p-6 max-w-4xl w-full max-h-[80vh] overflow-y-auto">
           <h3 className="text-xl font-bold mb-4">{title}</h3>
@@ -357,6 +359,7 @@ const Allocation = () => {
   };
 
   return (
+    <DoctorLayout>
     <div className="p-6 max-w-4xl mx-auto bg-white rounded-lg shadow-lg">
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6">
         <h2 className="text-2xl font-bold text-gray-800 mb-4 sm:mb-0">Doctor Role Allocation</h2>
@@ -578,6 +581,7 @@ const Allocation = () => {
       </div>
     </Modal>
     </div>
+    </DoctorLayout>
   );
 };
 

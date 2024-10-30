@@ -46,7 +46,7 @@ const AssistantDoctorDashboard = () => {
   const today = new Date();
   const options = { day: 'numeric', month: 'long', year: 'numeric' };
   const date = today.toLocaleDateString('en-US', options);
-
+ 
   const renderMainContent = () => {
     switch (activeNav) {
       case 'home':
@@ -61,8 +61,9 @@ const AssistantDoctorDashboard = () => {
   };
 
   return (
+    
     <div className="dashboard-container">
-      <div className={`bg-blue-900 text-white w-30   min-h-screen ${isSidebarOpen ? '' : 'hidden'} md:block transition-all duration-300`}>
+      {/* <div className={`bg-blue-900 text-white w-30   min-h-screen ${isSidebarOpen ? '' : 'hidden'} md:block transition-all duration-300`}>
         <div className="p-4">
           <div className="flex items-center space-x-2 mb-8">
             <div className="w-8 h-8 bg-white rounded-md"></div>
@@ -105,7 +106,7 @@ const AssistantDoctorDashboard = () => {
             </a>
           ))}
         </div>
-      </div>
+      </div> */}
 
       <div className="main-content">
         <div className="header">
@@ -133,6 +134,7 @@ const AssistantDoctorDashboard = () => {
         {renderMainContent()}
       </div>
     </div>
+   
   );
 };
 

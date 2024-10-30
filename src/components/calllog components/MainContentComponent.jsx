@@ -76,7 +76,7 @@ const MainContentComponent = ({ activeTab, handleTabClick }) => {
       
       {/* Status Boxes */}
       <div className="grid grid-cols-1 md:grid-cols-5 gap-6 mb-8 bg-white p-6 rounded-lg shadow">
-        <div className="flex items-center justify-center bg-blue-600 text-white p-3 rounded-lg">
+        <div className="flex items-center justify-center bg-indigo-400 text-white p-3 rounded-lg">
           <FaCalendarAlt size={18} className="mr-2" />
           <span className="font-semibold">Today</span>
         </div>
@@ -136,7 +136,7 @@ const MainContentComponent = ({ activeTab, handleTabClick }) => {
               onClick={() => handleTabClick(tab)}
               className={`flex-1 py-3 px-6 text-sm font-medium rounded-md text-center transition-colors duration-300 ${
                 activeTab === tab
-                  ? 'bg-blue-600 text-white shadow-lg'
+                  ? 'bg-indigo-400 text-white shadow-lg'
                   : 'bg-white text-gray-700 hover:bg-gray-100 hover:shadow'
               }`}
             >

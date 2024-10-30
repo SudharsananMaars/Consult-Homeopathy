@@ -60,7 +60,7 @@ const AssistantMainCom = ({ activeTab, handleTabClick }) => {
 
   if (isLoading) {
     return <div className="flex justify-center items-center h-screen">
-      <div className="animate-spin rounded-full h-32 w-32 border-t-2 border-b-2 border-blue-500"></div>
+      <div className="animate-spin rounded-full h-32 w-32 border-t-2 border-b-2 border-indigo-300"></div>
     </div>;
   }
 
@@ -74,7 +74,7 @@ const AssistantMainCom = ({ activeTab, handleTabClick }) => {
       
       {/* Status Boxes */}
       <div className="grid grid-cols-1 md:grid-cols-5 gap-6 mb-8 bg-white p-6 rounded-lg shadow">
-        <div className="flex items-center justify-center bg-blue-600 text-white p-3 rounded-lg">
+        <div className="flex items-center justify-center bg-indigo-400 text-white p-3 rounded-lg">
           <FaCalendarAlt size={18} className="mr-2" />
           <span className="font-semibold">Today</span>
         </div>
@@ -97,7 +97,7 @@ const AssistantMainCom = ({ activeTab, handleTabClick }) => {
         <div className="relative md:hidden">
           <button
             onClick={toggleDropdown}
-            className="w-full bg-white border border-gray-300 rounded-md py-2 px-4 flex items-center justify-between text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+            className="w-full bg-white border border-gray-300 rounded-md py-2 px-4 flex items-center justify-between text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-300"
           >
             {activeTab.charAt(0).toUpperCase() + activeTab.slice(1)}
             <FaChevronDown className={`ml-2 transition-transform duration-200 ${isDropdownOpen ? 'transform rotate-180' : ''}`} />
@@ -133,7 +133,7 @@ const AssistantMainCom = ({ activeTab, handleTabClick }) => {
               onClick={() => handleTabClick(tab)}
               className={`flex-1 py-3 px-6 text-sm font-medium rounded-md text-center transition-colors duration-300 ${
                 activeTab === tab
-                  ? 'bg-blue-600 text-white shadow-lg'
+                  ? 'bg-indigo-400 text-white shadow-lg'
                   : 'bg-white text-gray-700 hover:bg-gray-100 hover:shadow'
               }`}
             >

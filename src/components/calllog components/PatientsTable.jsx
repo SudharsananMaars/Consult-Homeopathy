@@ -331,8 +331,8 @@ const PatientsTable = () => {
           onClick={() => scrollToSection(section.id)}
         className={`flex-grow px-4 py-2 rounded-lg transition-colors duration-200 text-center whitespace-nowrap ${
             activeSection === section.id
-              ? 'bg-blue-500 text-white'
-              : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+              ? 'bg-indigo-400 text-white'
+              : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
           }`}
         >
           {section.title}
