@@ -1,107 +1,77 @@
-import React, { useEffect, useRef, useState } from "react";
-import { useParams } from "react-router-dom";
-import { ZegoUIKitPrebuilt } from "@zegocloud/zego-uikit-prebuilt";
-import axios from "axios"; // Import Axios
+import React, { useEffect, useState } from "react";
+import { gapi } from "gapi-script";
 
-const VideoCall = () => {
-    const { patientId } = useParams(); // Get patientId from URL parameters
-    const meetingRef = useRef(null);
-    const [draft, setDraft] = useState(""); // State to manage the draft text
+const CLIENT_ID = "167368098853-dsfqf6639dj4vh37u4mb1g7ocjco3181.apps.googleusercontent.com";
+const API_KEY = "AIzaSyDziOUEp7O1JGpEBxo_I7gLhB0ORRc0wR8";
+const SCOPES = "https://www.googleapis.com/auth/calendar.events";
 
-    useEffect(() => {
-        const myMeeting = async (element) => {
-            const appID = 909999327; // Your Zego appID
-            const serverSecret = "93f3b67ec1b69b2022c023ed58556cfd"; // Your server secret - make sure to store securely
+function GoogleMeetIntegration() {
+  const [isSignedIn, setIsSignedIn] = useState(false);
 
-            // Generate a unique room ID using patientId or other identifier (avoiding "12345")
-            const uniqueRoomId = `room-${patientId}-${Date.now()}`;
+  useEffect(() => {
+    function initClient() {
+      gapi.client
+        .init({
+          apiKey: API_KEY,
+          clientId: CLIENT_ID,
+          scope: SCOPES,
+        })
+        .then(() => {
+          const authInstance = gapi.auth2.getAuthInstance();
+          setIsSignedIn(authInstance.isSignedIn.get());
+          authInstance.isSignedIn.listen(setIsSignedIn);
+        });
+    }
 
-            // Generate a unique user ID using Date.now()
-            const userId = `user-${Date.now()}`;
+    gapi.load("client:auth2", initClient);
+  }, []);
 
-            // Generate the Kit Token using the updated unique room ID and user ID
-            const kitToken = ZegoUIKitPrebuilt.generateKitTokenForTest(
-                appID, 
-                serverSecret, 
-                uniqueRoomId, // Unique room ID
-                userId,       // Unique user ID
-                "User Name"   // Optional user name
-            );
+  const signIn = () => gapi.auth2.getAuthInstance().signIn();
+  const signOut = () => gapi.auth2.getAuthInstance().signOut();
 
-            // Create Zego instance and join the room
-            const zp = ZegoUIKitPrebuilt.create(kitToken);
-
-            try {
-                await zp.joinRoom({
-                    container: element,
-                    sharedLinks: [
-                        {
-                            name: "Copy Link",
-                            url: window.location.href, // Current URL as the room link
-                        },
-                    ],
-                    scenario: {
-                        mode: ZegoUIKitPrebuilt.OneONoneCall,
-                    },
-                    showScreenSharingButton: false,
-                });
-
-                console.log("Joined room successfully");
-            } catch (error) {
-                console.error("Failed to join the room:", error); // Improved error handling
-            }
-
-            // Listen for the end of the call, trigger note save on call end
-            zp.on("roomEnded", async () => {
-                await saveNote(); // Save the note when the room ends
-            });
-        };
-
-        if (meetingRef.current) {
-            myMeeting(meetingRef.current);
-        }
-    }, [patientId]);
-
-    // Function to handle text area change
-    const handleDraftChange = (event) => {
-        setDraft(event.target.value);
+  const createMeetEvent = () => {
+    const event = {
+      summary: "Google Meet Video Conference",
+      description: "Meeting via Google Meet",
+      start: {
+        dateTime: new Date().toISOString(),
+        timeZone: "America/Los_Angeles",
+      },
+      end: {
+        dateTime: new Date(new Date().getTime() + 30 * 60000).toISOString(),
+        timeZone: "America/Los_Angeles",
+      },
+      conferenceData: {
+        createRequest: { requestId: "sample123", conferenceSolutionKey: { type: "hangoutsMeet" } },
+      },
     };
 
-    // Function to save the note to the database
-    const saveNote = async () => {
-        window.alert("Saving note...");
-        try {
-            await axios.post('http://localhost:5000/api/notes', {
-                patientId,
-                content: draft,
-            });
-            console.log("Note saved successfully.");
-            setDraft(""); // Clear the draft after saving
-        } catch (error) {
-            console.error("Failed to save note:", error);
-        }
-    };
+    gapi.client.calendar.events
+      .insert({
+        calendarId: "primary",
+        resource: event,
+        conferenceDataVersion: 1,
+      })
+      .then((response) => {
+        const meetLink = response.result.hangoutLink;
+        alert(`Google Meet Link: ${meetLink}`);
+      })
+      .catch((error) => console.error("Error creating event", error));
+  };
 
-    return (
-        <div className="video-call-container">
-            <div ref={meetingRef} className="meeting" />
-            <div className="draft-container">
-                <textarea
-                    className="draft-textarea"
-                    value={draft}
-                    onChange={handleDraftChange}
-                    placeholder="Write your notes here..."
-                    className="w-full h-32 p-2 border rounded-md" // TailwindCSS styling
-                />
-                <button 
-                    onClick={saveNote} 
-                    className="bg-blue-500 text-white px-4 py-2 rounded-md mt-2"
-                >
-                    Submit
-                </button>
-            </div>
-        </div>
-    );
-};
+  return (
+    <div>
+      <h1>Google Meet Integration</h1>
+      {isSignedIn ? (
+        <>
+          <button onClick={signOut}>Sign Out</button>
+          <button onClick={createMeetEvent}>Create Google Meet Event</button>
+        </>
+      ) : (
+        <button onClick={signIn}>Sign In with Google</button>
+      )}
+    </div>
+  );
+}
 
-export default VideoCall;
+export default GoogleMeetIntegration;
