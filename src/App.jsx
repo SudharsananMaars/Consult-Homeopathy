@@ -130,7 +130,7 @@ function App() {
         <Route path="/workshoppage" element={<WorkshopPage/>}></Route>
         <Route path="/newworkshop" element={<NewWorkshop/>}></Route>
         <Route path="/allocation" element={<Allocation/>}></Route>
-        <Route path="/videocall/:patientId" element={<VideoCall/>}></Route>
+        <Route path="/videocall" element={<VideoCall/>}></Route>
         <Route path="/doclogin" element={<DocLogin />} />
         <Route path="/admin-dashboard" element={<AdminDashboard />} />
         <Route path="/doctor-dashboard" element={<AssistantDoctorDashboard />} />
