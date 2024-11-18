@@ -38,8 +38,10 @@ const WorkTable = () => {
       const decodedToken = jwtDecode(token);
       setUserRole(decodedToken.role); // Setting user role based on token
       setCurrentDoctorId(decodedToken.id);
-      if (decodedToken.id) {
-        fetchSpecialAllocations(decodedToken.id);
+      console.log("This is current doctor id: ", decodedToken.id);
+      const decodedToken_id = "66faef2467d2c448c05a29ef";
+      if (decodedToken_id) {
+        fetchSpecialAllocations(decodedToken_id);
       }
     }
     fetchDoctorFollowTypes();
@@ -49,23 +51,13 @@ const WorkTable = () => {
   const fetchSpecialAllocations = async (doctorId) => {
     try {
       const response = await axios.get(`http://${API_URL}:5000/api/assign/special/${doctorId}`);
-      const allocations = response.data;
-      
-      // Fetch complete patient details for each allocation
-      const patientDetailsPromises = allocations.map(allocation => 
-        axios.get(`http://${API_URL}:5000/api/patient/${allocation.patientId}`)
-      );
-      
-      const patientResponses = await Promise.all(patientDetailsPromises);
-      const completePatientDetails = patientResponses.map(response => response.data);
-      
-      setSpecialAllocationPatients(completePatientDetails);
+      setSpecialAllocationPatients(response.data);
     } catch (error) {
       console.error("Error fetching special allocations:", error);
       setError("Failed to load special allocations");
     }
   };
-
+  
   const handleDoctorChange = async (patientId, doctorId) => {
     try {
       await axios.post(`http://${API_URL}:5000/api/assign/allocations`, {

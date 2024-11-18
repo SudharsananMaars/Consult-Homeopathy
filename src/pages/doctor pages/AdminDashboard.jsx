@@ -7,6 +7,7 @@ import {
 import MainContentComponent from '/src/components/calllog components/MainContentComponent.jsx';
 import AddDoctor from './AddDoctor';
 import Appointments from './Appointments';
+import DashboardStatus from '../../components/calllog components/DashboardStatus';
 import '/src/css/AdminDashboard.css';
 import config from '../../config';
 const AdminDashboard = () => {
@@ -162,7 +163,8 @@ const AdminDashboard = () => {
           </div>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8 bg-white p-6 rounded-lg shadow">
+        {/* Status component content */}
+        {/* <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8 bg-white p-6 rounded-lg shadow">
           <div className="flex flex-col items-center justify-center p-4 border-r last:border-none">
             <h3 className="text-lg font-bold mb-2 text-gray-800">Call Completion</h3>
             <div className="grid grid-cols-3 gap-4 w-full">
@@ -239,7 +241,9 @@ const AdminDashboard = () => {
               </div>
             </div>
           </div>
-        </div>
+        </div> */}
+
+        <DashboardStatus dashboardData={dashboardData} />
 
         {renderMainContent()}
       </div>
