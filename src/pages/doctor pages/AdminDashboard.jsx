@@ -94,7 +94,7 @@ const AdminDashboard = () => {
 
   return (
     <div className="dashboard-container">
-      <div className={`bg-indigo-400 text-white w-30   min-h-screen ${isSidebarOpen ? '' : 'hidden'} md:block transition-all duration-300`}>
+      {/* <div className={`bg-indigo-400 text-white w-30   min-h-screen ${isSidebarOpen ? '' : 'hidden'} md:block transition-all duration-300`}>
         <div className="p-4">
           <div className="flex items-center space-x-2 mb-8">
             <div className="w-8 h-8 bg-white rounded-md"></div>
@@ -137,7 +137,7 @@ const AdminDashboard = () => {
             </a>
           ))}
         </div>
-      </div>
+      </div> */}
 
       <div className="main-content">
         <div className="header">

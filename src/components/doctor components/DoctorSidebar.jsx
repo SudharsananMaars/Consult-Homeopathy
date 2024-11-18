@@ -60,9 +60,10 @@ const Sidebar = ({ role }) => {
     { id: 7, path: "/workshoppage", name: "Workshops", icon: MdOutlineOndemandVideo },
     { id: 8, path: "/content", name: "Content", icon: FaPhotoVideo },
     { id: 9, path: "/accounts", name: "Accounts", icon: MdAccountBalance },
-    { id: 10, path: "/doctor-dashboard", name: "Doctor CRM", icon: FaUserDoctor },
-    { id: 11, path: "/allocation", name: "Doctor Allocation", icon: MdOutlineDashboardCustomize },
-    { id: 12, path: "/docsettings", name: "Settings", icon: LuSettings },
+    { id: 10, path: "/leavemgt", name: "Leave Management", icon: MdAccountBalance },
+    { id: 11, path: "/doctor-dashboard", name: "Doctor CRM", icon: FaUserDoctor },
+    { id: 12, path: "/allocation", name: "Doctor Allocation", icon: MdOutlineDashboardCustomize },
+    { id: 13, path: "/docsettings", name: "Settings", icon: LuSettings },
   ] : role === "assistant-doctor" ? [
     { id: 1, path: "/dashboard", name: "Home", icon: LuBox },
     {
