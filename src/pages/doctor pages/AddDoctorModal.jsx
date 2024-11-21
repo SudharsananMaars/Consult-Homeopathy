@@ -1,6 +1,9 @@
 import React, { useState } from 'react';
 
 const AddDoctorModal = ({ isOpen, onClose }) => {
+  const [uploadedDocuments, setUploadedDocuments] = useState([]);
+  const [error, setError] = useState(null);
+
   const [formData, setFormData] = useState({
     // Personal Information
     fullName: '',
@@ -16,40 +19,79 @@ const AddDoctorModal = ({ isOpen, onClose }) => {
     emergencyContactName: '',
     emergencyContactRelationship: '',
     emergencyContactNumber: '',
-    // Job Details
-    employeeID: '',
-    jobTitle: '',
-    department: '',
-    dateOfJoining: '',
-    employmentType: '',
-    workLocation: '',
-    reportingManager: '',
-    workShift: '',
-    // Compensation Details
-    basicSalary: '',
-    allowances: '',
-    deductions: '',
-    bankAccountNumber: '',
-    bankName: '',
-    ifscCode: '',
-    paymentFrequency: '',
-    pfNumber: '',
-    esiNumber: '',
-    taxDeductionPreferences: ''
-    
+// Job Details
+employeeID: '',
+jobTitle: '',
+department: '',
+dateOfJoining: '',
+employmentType: '',
+workLocation: '',
+reportingManager: '',
+workShift: '',
+// Compensation Details
+basicSalary: '',
+allowances: '',
+deductions: '',
+bankAccountNumber: '',
+bankName: '',
+ifscCode: '',
+paymentFrequency: '',
+pfNumber: '',
+esiNumber: '',
+taxDeductionPreferences: '',
+usernameSystemAccess: '',
+    temporaryPassword: '',
+    accessLevel: '',
+    digitalSignature: null,
+    highestQualification: '',
+    specialization: '',
+    yearOfGraduation: '',
+    previousEmployer: '',
+    previousDuration: '',
+    previousJobRole: '',
+    totalExperience: '',
+    certifications: '',
+    medicalRegistrationNumber: '',
+    documents: []
   });
-
-  const [error, setError] = useState(null);
 
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
+  const handleFileChange = (e) => {
+    setFormData({ ...formData, [e.target.name]: e.target.files[0] });
+  };
+
+  const handleDocumentUpload = (e) => {
+    const files = Array.from(e.target.files);
+    const newDocuments = files.map((file) => ({
+      name: file.name,
+      uploaded: false, // Initially set to false
+    }));
+    
+    // Update the state with the new documents
+    setUploadedDocuments((prev) => [...prev, ...newDocuments]);
+  };
+  
+  // Handle document removal
+  const handleRemoveDocument = (index) => {
+    const updatedDocuments = [...uploadedDocuments];
+    updatedDocuments.splice(index, 1); // Remove the document at the given index
+    setUploadedDocuments(updatedDocuments);
+  };
+  
+  // Update upload status for a document
+  const markDocumentAsUploaded = (index) => {
+    const updatedDocuments = [...uploadedDocuments];
+    updatedDocuments[index].uploaded = true; // Set uploaded status to true
+    setUploadedDocuments(updatedDocuments);
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
-
     try {
-      const response = await fetch('http://localhost:5000/api/addDoctor', {
+      const response = await fetch('http://localhost:5000/api/employees/add', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -61,13 +103,11 @@ const AddDoctorModal = ({ isOpen, onClose }) => {
 
       if (response.ok) {
         console.log('Doctor added successfully:', result);
-        onClose(); // Close the modal on success
+        onClose();
       } else {
-        setError(result.message || 'Error adding doctor');
         console.error('Error:', result);
       }
     } catch (error) {
-      setError('Failed to add doctor');
       console.error('Error:', error);
     }
   };
@@ -77,10 +117,12 @@ const AddDoctorModal = ({ isOpen, onClose }) => {
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-gray-900 bg-opacity-50 p-4">
       <div className="container max-h-[80vh] overflow-y-auto mx-auto p-6 bg-white rounded-lg shadow-lg relative">
-        <h2 className="text-2xl font-bold mb-6">Add Doctor</h2>
+        <h2 className="text-2xl font-bold mb-6">Add Employee</h2>
         <form onSubmit={handleSubmit}>
-            {/* Personal Information */}
-            <h2 className="text-xl font-semibold mb-3">Personal Information</h2>
+          
+            {/* Other fields from the previous sections */}
+             {/* Personal Information */}
+             <h2 className="text-xl font-semibold mb-3">Personal Information</h2>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div>
               <label className="block text-sm font-medium">Full Name *</label>
@@ -106,7 +148,6 @@ const AddDoctorModal = ({ isOpen, onClose }) => {
                 required
               />
             </div>
-
             <div>
               <label className="block text-sm font-medium">Gender *</label>
               <select
@@ -160,7 +201,6 @@ const AddDoctorModal = ({ isOpen, onClose }) => {
                 required
               />
             </div>
-
             <div>
               <label className="block text-sm font-medium">Secondary Contact</label>
               <input
@@ -236,7 +276,6 @@ const AddDoctorModal = ({ isOpen, onClose }) => {
                 required
               />
             </div>
-
             <div>
               <label className="block text-sm font-medium">Emergency Contact Number *</label>
               <input
@@ -329,7 +368,6 @@ const AddDoctorModal = ({ isOpen, onClose }) => {
                 
               </select>
             </div>
-
             <div>
               <label className="block text-sm font-medium">Work Location</label>
               <select
@@ -358,7 +396,6 @@ const AddDoctorModal = ({ isOpen, onClose }) => {
                 required
               />
             </div>
-
             <div>
               <label className="block text-sm font-medium">Work Shift/Hours</label>
               <select
@@ -417,7 +454,6 @@ const AddDoctorModal = ({ isOpen, onClose }) => {
     required
   />
 </div>
-
 <div>
   <label className="block text-sm font-medium">Bank Account Number *</label>
   <input
@@ -457,23 +493,9 @@ const AddDoctorModal = ({ isOpen, onClose }) => {
   />
 </div>
 
-<div>
-              <label className="block text-sm font-medium">Payment Frequency *</label>
-              <select
-                name="paymentFrequency"
-                value={formData.paymentFrequency}
-                onChange={handleChange}
-                className="w-full mt-1 p-2 border border-gray-300 rounded-md"
-                required
-              >
-                <option value="">Select Payment Frequency</option>
-                <option value="Monthly">Monthly</option>
-                <option value="Bi-weekly">Bi-weekly</option>
-              </select>
-            </div>
 
 <div>
-  <label className="block text-sm font-medium">Payment Frequency *</label>
+<label className="block text-sm font-medium">Payment Frequency *</label>
   <select
     name="paymentFrequency"
     value={formData.paymentFrequency}
@@ -524,28 +546,253 @@ const AddDoctorModal = ({ isOpen, onClose }) => {
 </div>
 </div>
 
-            {/* Add other job and compensation fields similarly... */}
+   
 
-            <div className="flex justify-end mt-6">
-              <button
-                type="button"
-                onClick={onClose}
-                className="px-4 py-2 mr-4 bg-gray-500 text-white rounded-md"
-              >
-                Cancel
-              </button>
-              <button
-                type="submit"
-                className="px-4 py-2 bg-blue-600 text-white rounded-md"
-              >
-                Submit
-              </button>
+  
+            {/* Educational and Professional Background */}
+            <h3 className="col-span-2 text-xl font-semibold mt-6 mb-6">Educational and Professional Background</h3>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            {/* Educational fields */}
+            <div>
+              <label className="block text-sm font-medium">Highest Qualification *</label>
+              <input
+                type="text"
+                name="highestQualification"
+                value={formData.highestQualification}
+                onChange={handleChange}
+                className="w-full mt-1 p-2 border border-gray-300 rounded-md"
+                placeholder="Enter Highest Qualification"
+                required
+              />
             </div>
-          {error && <div className="text-red-500 mt-4">{error}</div>}
+
+            <div>
+              <label className="block text-sm font-medium">Specialization (if any)</label>
+              <input
+                type="text"
+                name="specialization"
+                value={formData.specialization}
+                onChange={handleChange}
+                className="w-full mt-1 p-2 border border-gray-300 rounded-md"
+                placeholder="Enter Specialization"
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium">Year of Graduation *</label>
+              <input
+                type="text"
+                name="yearOfGraduation"
+                value={formData.yearOfGraduation}
+                onChange={handleChange}
+                className="w-full mt-1 p-2 border border-gray-300 rounded-md"
+                placeholder="Enter Year of Graduation"
+                required
+              />
+            </div>
+
+            {/* Previous Employer Details */}
+            <h4 className="col-span-2 text-sm font-semibold mt-6 mb-6">Previous Employer Details</h4>
+
+            <div>
+              <label className="block text-sm font-medium">Company Name</label>
+              <input
+                type="text"
+                name="previousEmployer"
+                value={formData.previousEmployer}
+                onChange={handleChange}
+                className="w-full mt-1 p-2 border border-gray-300 rounded-md"
+                placeholder="Enter Company Name"
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium">Duration</label>
+              <input
+                type="text"
+                name="previousDuration"
+                value={formData.previousDuration}
+                onChange={handleChange}
+                className="w-full mt-1 p-2 border border-gray-300 rounded-md"
+                placeholder="Enter Duration"
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium">Job Role</label>
+              <input
+                type="text"
+                name="previousJobRole"
+                value={formData.previousJobRole}
+                onChange={handleChange}
+                className="w-full mt-1 p-2 border border-gray-300 rounded-md"
+                placeholder="Enter Job Role"
+              />
+            </div>
+
+            <div>
+            <label className="block text-sm font-medium">Total Years of Experience *</label>
+            <input
+              type="number"
+              name="totalExperience"
+              value={formData.totalExperience}
+              onChange={handleChange}
+              className="w-full mt-1 p-2 border border-gray-300 rounded-md"
+              placeholder="Enter Total Years of Experience"
+              required
+            />
+          </div>
+  
+          <div>
+            <label className="block text-sm font-medium">Professional Certifications</label>
+            <input
+              type="text"
+              name="certifications"
+              value={formData.certifications}
+              onChange={handleChange}
+              className="w-full mt-1 p-2 border border-gray-300 rounded-md"
+              placeholder="Enter Certifications"
+            />
+          </div>
+  
+          <div>
+            <label className="block text-sm font-medium">Medical Registration Number (for medical staff)</label>
+            <input
+              type="text"
+              name="medicalRegistrationNumber"
+              value={formData.medicalRegistrationNumber}
+              onChange={handleChange}
+              className="w-full mt-1 p-2 border border-gray-300 rounded-md"
+              placeholder="Enter Registration Number"
+            />
+          </div>
+          </div>
+
+            {/* Documents Upload Section */}
+      
+
+<div className="col-span-2">
+  <label className="block text-lg font-medium">Documents Upload</label>
+  <input
+    type="file"
+    name="documents"
+    multiple
+    onChange={handleDocumentUpload}
+    className="w-full mt-1 p-2 border border-gray-300 rounded-md"
+  />
+</div>
+
+{/* Display Uploaded Documents */}
+<div className="col-span-2 mt-2">
+  {uploadedDocuments.length > 0 && (
+    <ul className="space-y-2">
+      {uploadedDocuments.map((doc, index) => (
+        <li key={index} className="flex items-center justify-between p-2 border border-gray-300 rounded-lg">
+          <span className="flex items-center">
+            {doc.uploaded && <span className="text-green-500 mr-2">✓</span>} {/* Tick mark */}
+            {doc.name}
+          </span>
+          <div className="flex items-center">
+            <button
+              type="button"
+              className="text-blue-500 hover:text-blue-700 mr-4"
+              onClick={() => markDocumentAsUploaded(index)} // Mark as uploaded
+            >
+              Upload
+            </button>
+            <button
+              type="button"
+              className="text-red-500 hover:text-red-700"
+              onClick={() => handleRemoveDocument(index)}
+            >
+              Remove
+            </button>
+          </div>
+        </li>
+      ))}
+    </ul>
+  )}
+</div>
+
+            {/* System Access and Credentials */}
+            <h3 className="col-span-2 text-xl font-semibold mt-6 mb-6">System Access and Credentials</h3>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div>
+                <label className="block text-sm font-medium">Username(System Access) *</label>
+                <input
+                  type="text"
+                  name="usernameSystemAccess"
+                  value={formData.usernameSystemAccess}
+                  onChange={handleChange}
+                  className="w-full mt-1 p-2 border border-gray-300 rounded-md"
+                  placeholder="Enter Username"
+                  required
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium">Temporary Password *</label>
+                <input
+                  type="password"
+                  name="temporaryPassword"
+                  value={formData.temporaryPassword}
+                  onChange={handleChange}
+                  className="w-full mt-1 p-2 border border-gray-300 rounded-md"
+                  placeholder="Enter Temporary Password"
+                  required
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium">Role-based Access Level *</label>
+                <select
+                  name="accessLevel"
+                  value={formData.accessLevel}
+                  onChange={handleChange}
+                  className="w-full mt-1 p-2 border border-gray-300 rounded-md"
+                  required
+                >
+                  <option>Select Access Level</option>
+                  <option>Admin</option>
+                  <option>Doctor</option>
+                  <option>Assistant Doctor</option>
+                  <option>Support Staff</option>
+                </select>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium">Digital Signature</label>
+                <input
+                  type="file"
+                  name="digitalSignature"
+                  onChange={handleFileChange}
+                  className="w-full mt-1 p-2 border border-gray-300 rounded-md"
+                />
+              </div>
+            </div>
+         
+
+          <div className="flex justify-end mt-6">
+            <button
+              type="button"
+              onClick={onClose}
+              className="px-4 py-2 mr-4 bg-gray-500 text-white rounded-md"
+            >
+              Cancel
+            </button>
+            <button
+              type="submit"
+              onClick={handleSubmit}
+              className="px-4 py-2 bg-blue-600 text-white rounded-md"
+            >
+              Create Profile
+            </button>
+          </div>
         </form>
       </div>
     </div>
   );
 };
 
-export default AddDoctorModal;
+export default AddDoctorModal;

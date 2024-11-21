@@ -27,6 +27,10 @@ const LoginPage = () => {
         if (role === 'admin') {
           window.location.href = '/admin-dashboard';
         } else {
+          // If the user is a doctor, trigger clock-in
+          if (role === 'admin-doctor' || role === 'assistant-doctor') {
+            await clockInDoctor(response.data.accessToken); // Trigger clock-in
+          }
           window.location.href = '/dashboard';
         }
       } else {
@@ -36,6 +40,24 @@ const LoginPage = () => {
       setError('Invalid credentials');
     }
   };
+
+  // Function to trigger clock-in for doctors
+const clockInDoctor = async (token) => {
+  try {
+    await axios.post(
+      `http://${API_URL}:5000/api/work-hours/check-in`,
+      {},
+      {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      }
+    );
+    console.log('Clock-in recorded successfully');
+  } catch (err) {
+    console.error('Failed to record clock-in:', err);
+  }
+};
 
   return (
     <div className="flex justify-center items-center min-h-screen bg-white">

@@ -10,12 +10,43 @@ import { FaPhotoVideo } from "react-icons/fa";
 import { RiAdminLine } from "react-icons/ri";
 import { FaUserDoctor } from "react-icons/fa6";
 import SidebarProfile from "./DoctorSidebarProfile";
+import axios from 'axios';
+import config from '../../config';
 
 const Sidebar = ({ role }) => {
   const location = useLocation();
   const [activeLink, setActiveLink] = useState(null);
   const [expandedItems, setExpandedItems] = useState({});
   const navigate = useNavigate();
+  const API_URL = config.API_URL;
+  
+  const handleLogout = async () => {
+    try {
+      // Get the token from localStorage
+      const token = localStorage.getItem('token');
+
+      if (token) {
+        // Call the check-out endpoint
+        await axios.post(
+          `http://${API_URL}:5000/api/work-hours/check-out`,
+          {},
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          }
+        );
+        console.log('Clock-out recorded successfully');
+      }
+    } catch (err) {
+      console.error('Failed to record clock-out:', err);
+    }
+
+    // Clear the session and redirect
+    localStorage.removeItem('token');
+    localStorage.removeItem('role');
+    window.location.href = '/doclogin'; // Redirect to the login page
+  };
 
   useEffect(() => {
     const activeIndex = SIDEBAR_LINKS.findIndex(
@@ -60,9 +91,28 @@ const Sidebar = ({ role }) => {
     { id: 7, path: "/workshoppage", name: "Workshops", icon: MdOutlineOndemandVideo },
     { id: 8, path: "/content", name: "Content", icon: FaPhotoVideo },
     { id: 9, path: "/accounts", name: "Accounts", icon: MdAccountBalance },
-    { id: 10, path: "/doctor-dashboard", name: "Doctor CRM", icon: FaUserDoctor },
-    { id: 11, path: "/allocation", name: "Doctor Allocation", icon: MdOutlineDashboardCustomize },
-    { id: 12, path: "/docsettings", name: "Settings", icon: LuSettings },
+    // { id: 10, 
+    //   name: "Leave Management", path: "/leavemgt", name: "Leave Management", icon: MdAccountBalance },
+    {
+      id: 10,
+      name: "Leave Management",
+      icon: FaUserDoctor,
+      sublinks: [
+        { id: 101, path: "/leavemgt", name: "Leave Request" }, 
+        { id: 102, path: "/leavesettings", name: "LeaveSettingsForm" },
+      ],
+    },
+    { id: 11, path: "/doctor-dashboard", name: "Doctor CRM", icon: FaUserDoctor },
+    { id: 12, path: "/allocation", name: "Doctor Allocation", icon: MdOutlineDashboardCustomize },
+    { id: 13, path: "/docsettings", name: "Settings", icon: LuSettings },
+    { id: 14, 
+      name: "PayrollManagement", 
+      icon:LuWallet,
+      sublinks:[
+        { id: 141, path: "/payrollsetting", name: "PayrollSettings" },
+        { id: 142, path: "/payroll", name: "Payroll" },
+      ],
+    },
   ] : role === "assistant-doctor" ? [
     { id: 1, path: "/dashboard", name: "Home", icon: LuBox },
     {
@@ -151,7 +201,9 @@ const Sidebar = ({ role }) => {
           <span>Need Help</span>
         </button>
 
-        <button className="flex items-center justify-center space-x-2 text-xs text-white py-2 px-4 bg-red-500 hover:bg-red-600 rounded-full">
+        <button className="flex items-center justify-center space-x-2 text-xs text-white py-2 px-4 bg-red-500 hover:bg-red-600 rounded-full"
+          onClick={handleLogout}
+        >
           <CiLogout className="text-sm" />
           <span>Logout</span>
         </button>
