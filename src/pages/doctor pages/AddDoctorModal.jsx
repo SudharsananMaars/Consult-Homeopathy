@@ -91,7 +91,7 @@ usernameSystemAccess: '',
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      const response = await fetch('http://localhost:5000/api/addDoctor', {
+      const response = await fetch('http://localhost:5000/api/employees/add', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -493,20 +493,6 @@ usernameSystemAccess: '',
   />
 </div>
 
-<div>
-              <label className="block text-sm font-medium">Payment Frequency *</label>
-              <select
-                name="paymentFrequency"
-                value={formData.paymentFrequency}
-                onChange={handleChange}
-                className="w-full mt-1 p-2 border border-gray-300 rounded-md"
-                required
-              >
-                <option value="">Select Payment Frequency</option>
-                <option value="Monthly">Monthly</option>
-                <option value="Bi-weekly">Bi-weekly</option>
-              </select>
-            </div>
 
 <div>
 <label className="block text-sm font-medium">Payment Frequency *</label>
@@ -797,6 +783,7 @@ usernameSystemAccess: '',
             </button>
             <button
               type="submit"
+              onClick={handleSubmit}
               className="px-4 py-2 bg-blue-600 text-white rounded-md"
             >
               Create Profile

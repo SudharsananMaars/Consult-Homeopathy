@@ -10,46 +10,115 @@ function AssistLeave() {
   const [endDate, setEndDate] = useState(new Date());
   const [reason, setReason] = useState('');
   const [leaveRequests, setLeaveRequests] = useState([]);
+  const [totalDays, setTotalDays] = useState(0);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [fetching, setFetching] = useState(true);
+  const [leaveBalance, setLeaveBalance] = useState({
+    sickLeave: 0,
+    casualLeave: 0,
+    paidLeave: 0,
+    maternityLeave: 0,
+  });
+  const [activeTab, setActiveTab] = useState('leaveRequest'); // state to track active tab
 
   // Fetch leave requests for this assistant doctor
   useEffect(() => {
-    axios
-      .get('https://5000/api/leaves/my-requests')
-      .then((response) => {
+    const fetchLeaveRequests = async () => {
+      setFetching(true);
+      
+        const token = localStorage.getItem('token'); // Get token from localStorage
+        if (!token) {
+          setError('Authentication token is missing');
+          setFetching(false);
+          return;
+        }
+      try {
+        const leaveBalanceResponse = await axios.get('http://localhost:5000/api/leaves/leave-balance', {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        });
+        const response = await axios.get('http://localhost:5000/api/leaves/my-requests', {
+          headers: {
+            Authorization: `Bearer ${token}`, // Include the token in the headers
+          },
+        });
+        setLeaveBalance(leaveBalanceResponse.data);
         if (Array.isArray(response.data)) {
           setLeaveRequests(response.data);
         } else {
           console.error('Expected an array for leave requests, got:', response.data);
           setLeaveRequests([]);
         }
-        setFetching(false);
-      })
-      .catch((error) => {
+      } catch (error) {
         setError('Failed to fetch leave requests');
         console.error('Error fetching leave requests:', error);
+      } finally {
         setFetching(false);
-      });
+      }
+    };
+  
+    fetchLeaveRequests();
   }, []);
-
+  
+  const handleStartDateChange = (date) => {
+    setStartDate(date);
+    if (date && endDate) {
+      const diffTime = Math.abs(new Date(endDate) - new Date(date));
+      const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24)) + 1; // Include both start and end dates
+      setTotalDays(diffDays);
+    }
+  };
+  
+  const handleEndDateChange = (date) => {
+    setEndDate(date);
+    if (date && startDate) {
+      const diffTime = Math.abs(new Date(date) - new Date(startDate));
+      const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24)) + 1; // Include both start and end dates
+      setTotalDays(diffDays);
+    }
+  };
+  
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError('');
+    
+    // Validate dates
     if (startDate > endDate) {
       setError('Start date cannot be after end date.');
       return;
     }
-
+  
     setLoading(true);
     try {
-      const response = await axios.post('https://5000/api/leaves/request', {
-        leaveType,
-        startDate,
-        endDate,
-        reason,
-      });
+      const token = localStorage.getItem('token'); // Retrieve the token from local storage
+      if (!token) {
+        setError('You are not authenticated. Please log in again.');
+        setLoading(false);
+        return;
+      }
+
+      const totalDays = Math.ceil(
+        (new Date(endDate) - new Date(startDate)) / (1000 * 60 * 60 * 24)
+      ) + 1; // Include both start and end dates
+  
+      const response = await axios.post(
+        'http://localhost:5000/api/leaves/request',
+        {
+          leaveType,
+          startDate,
+          endDate,
+          reason,
+          totalDays,
+        },
+        {
+          headers: {
+            Authorization: `Bearer ${token}`, // Add the token here
+          },
+        }
+      );
+  
       alert('Leave request submitted successfully');
       setLeaveRequests([...leaveRequests, response.data]);
       setLeaveType('');
@@ -57,17 +126,48 @@ function AssistLeave() {
       setEndDate(new Date());
       setReason('');
     } catch (error) {
-      setError('Failed to submit leave request. Please try again.');
+      if (error.response && error.response.status === 401) {
+        setError('Unauthorized. Please log in again.');
+      } else {
+        setError('Failed to submit leave request. Please try again.');
+      }
       console.error('Error submitting leave request:', error);
     } finally {
       setLoading(false);
     }
   };
+  
+  const switchTab = (tab) => {
+    setActiveTab(tab);
+  };
 
   return (
     <DoctorLayout>
     <div className="max-w-4xl mt-4 mx-auto p-6 bg-gray-50 space-y-6">
-      <h2 className="text-2xl font-bold text-gray-700">Request Leave</h2>
+    <div className="flex space-x-4 mb-6">
+          <button
+            onClick={() => switchTab('leaveRequest')}
+            className={`text-lg font-semibold py-2 px-4 rounded-lg ${activeTab === 'leaveRequest' ? 'bg-blue-400 text-white' : 'bg-white text-blue-400'}`}
+          >
+            Leave Requests
+          </button>
+          <button
+            onClick={() => switchTab('leaveStatus')}
+            className={`text-lg font-semibold py-2 px-4 rounded-lg ${activeTab === 'leaveStatus' ? 'bg-blue-400 text-white' : 'bg-white text-blue-400'}`}
+          >
+            Leave Status
+          </button>
+          <button
+            onClick={() => switchTab('leaveBalance')}
+            className={`text-lg font-semibold py-2 px-4 rounded-lg ${activeTab === 'leaveBalance' ? 'bg-blue-400 text-white' : 'bg-white text-blue-400'}`}
+          >
+            Leave Balance
+          </button>
+        </div>
+
+        {activeTab === 'leaveRequest' && (
+          <div className="p-6 bg-white space-y-6">
+      <h2 className="text-2xl font-bold text-gray-700 border-b pb-2">Request Leave</h2>
       {error && <p className="text-red-500">{error}</p>}
 
       <form onSubmit={handleSubmit} className="space-y-6">
@@ -81,11 +181,11 @@ function AssistLeave() {
             required
             className="block w-full border rounded-lg p-2 bg-white focus:outline-none focus:ring focus:ring-blue-200"
           >
-            <option value="">Select Leave Type</option>
+            <option value="choose">Choose Leave Type</option>
             <option value="Sick Leave">Sick Leave</option>
             <option value="Casual Leave">Casual Leave</option>
             <option value="Paid Leave">Paid Leave</option>
-            <option value="Casual Leave">Casual Leave</option>
+            <option value="Maternity">Maternity</option>
             
           </select>
         </div>
@@ -95,7 +195,7 @@ function AssistLeave() {
           </label>
           <DatePicker
             selected={startDate}
-            onChange={(date) => setStartDate(date)}
+            onChange={handleStartDateChange}
             className="block w-full border rounded-lg p-2 bg-white focus:outline-none focus:ring focus:ring-blue-200"
           />
         </div>
@@ -105,10 +205,20 @@ function AssistLeave() {
           </label>
           <DatePicker
             selected={endDate}
-            onChange={(date) => setEndDate(date)}
+            onChange={handleEndDateChange}
             className="block w-full border rounded-lg p-2 bg-white focus:outline-none focus:ring focus:ring-blue-200"
           />
         </div>
+
+        <div>
+        <label className="block text-sm font-medium text-gray-600 mb-1">
+          Total Leaves Requested
+        </label>
+        <p className="text-gray-700 font-semibold">
+          {totalDays > 0 ? `${totalDays} day(s)` : 'Select start and end dates'}
+        </p>
+      </div>
+
         <div>
           <label className="block text-sm font-medium text-gray-600 mb-1">
             Reason
@@ -132,8 +242,12 @@ function AssistLeave() {
           {loading ? 'Submitting...' : 'Submit Leave Request'}
         </button>
       </form>
+      </div>
+    )}
 
-      <h2 className="text-2xl font-bold text-gray-700 mt-8">My Leave Requests</h2>
+    {activeTab === 'leaveStatus' && (
+          <div className="p-6 bg-white space-y-6">
+      <h2 className="text-2xl font-bold text-gray-700 border-b pb-2">My Leave Requests</h2>
       {fetching ? (
         <p className="text-gray-600">Loading leave requests...</p>
       ) : leaveRequests.length === 0 ? (
@@ -157,9 +271,9 @@ function AssistLeave() {
               </div>
               <span
                 className={`px-3 py-1 text-sm font-medium rounded-lg ${
-                  request.status === 'Approved'
+                  request.status === 'approved'
                     ? 'bg-green-100 text-green-700'
-                    : request.status === 'Rejected'
+                    : request.status === 'rejected'
                     ? 'bg-red-100 text-red-700'
                     : 'bg-yellow-100 text-yellow-700'
                 }`}
@@ -170,6 +284,38 @@ function AssistLeave() {
           ))}
         </ul>
       )}
+      </div>
+    )}
+   
+
+   {activeTab === 'leaveBalance' && (
+  <div className="p-6 bg-white space-y-6">
+    <h2 className="text-2xl font-bold text-gray-700 border-b pb-2">Leave Balance</h2>
+    {fetching ? (
+      <p className="text-center text-gray-500 text-lg">Loading leave balance...</p>
+    ) : (
+      <div className="grid grid-cols-2 gap-6">
+        <div className="p-4 bg-blue-50 rounded-xl shadow-md">
+          <h3 className="text-lg font-semibold text-gray-700">Sick Leave</h3>
+          <p className="text-gray-600 text-base font-bold">{leaveBalance.sickLeave} days</p>
+        </div>
+        <div className="p-4 bg-blue-50 rounded-xl shadow-md">
+          <h3 className="text-lg font-semibold text-gray-700">Casual Leave</h3>
+          <p className="text-gray-600 text-base font-bold">{leaveBalance.casualLeave} days</p>
+        </div>
+        <div className="p-4 bg-blue-50 rounded-xl shadow-md">
+          <h3 className="text-lg font-semibold text-gray-700">Paid Leave</h3>
+          <p className="text-gray-600 text-base font-bold">{leaveBalance.paidLeave} days</p>
+        </div>
+        <div className="p-4 bg-blue-50 rounded-xl shadow-md">
+          <h3 className="text-lg font-semibold text-gray-700">Maternity Leave</h3>
+          <p className="text-gray-600 text-base font-bold">{leaveBalance.maternityLeave} days</p>
+        </div>
+      </div>
+    )}
+  </div>
+)}
+
     </div>
     </DoctorLayout>
   );

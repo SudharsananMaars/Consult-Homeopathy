@@ -62,6 +62,9 @@ import AddDoctor from '/src/pages/doctor pages/AddDoctor.jsx';
 import AssistLeave from '/src/pages/doctor pages/AssistLeave.jsx';
 import VideoSettings from '/src/pages/doctor pages/VideoSettings.jsx';
 import AdminLeaveManagement from './pages/doctor pages/AdminLeaveManagement.jsx';
+import LeaveSettingsForm from './pages/doctor pages/LeaveSettingsForm.jsx';
+import PayrollSettings from './pages/doctor pages/payrollsettings.jsx';
+import Payroll from './pages/doctor pages/payroll.jsx';
 import '@fortawesome/fontawesome-free/css/all.min.css';
 
 
@@ -138,8 +141,10 @@ function App() {
         <Route path="/add-doctor" element={<AddDoctor />} />
         <Route path="/assistleave" element={<AssistLeave />} />
         <Route path="/leavemgt" element={<AdminLeaveManagement />} />
+        <Route path="/leavesettings" element={<LeaveSettingsForm />} />
         <Route path="/videosettings" element={<VideoSettings />} />
-
+        <Route path="/payrollsetting" element={<PayrollSettings/>}></Route>
+        <Route path="/payroll" element={<Payroll/>}></Route>
         </Routes>
       
     </Router>
