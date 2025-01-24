@@ -34,7 +34,7 @@ const AdminDashboard = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
   const API_URL = config.API_URL;
-
+  console.log("This is a testing" + localStorage.getItem("token"));
   useEffect(() => {
     const handleResize = () => {
       setIsMobile(window.innerWidth <= 768);

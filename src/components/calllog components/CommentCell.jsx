@@ -7,8 +7,8 @@ const CommentCell = ({ patient, API_URL, onCommentAdded }) => {
   const [showHistory, setShowHistory] = useState(false);
   const [newComment, setNewComment] = useState('');
 
-  const latestComment = patient.comments && patient.comments.length > 0 
-    ? patient.comments[patient.comments.length - 1].text 
+  const latestComment = patient.medicalDetails.comments && patient.medicalDetails.comments.length > 0 
+    ? patient.medicalDetails.comments[patient.medicalDetails.comments.length - 1].text 
     : 'No comments';
 
   const handleAddComment = async () => {
@@ -108,7 +108,7 @@ const CommentCell = ({ patient, API_URL, onCommentAdded }) => {
         title="Comment History"
       >
         <div className="space-y-2">
-          {patient.comments && patient.comments.map((comment, index) => (
+          {patient.medicalDetails.comments && patient.medicalDetails.comments.map((comment, index) => (
             <div key={index} className="p-2 bg-gray-50 rounded">
               <p>{comment.text}</p>
               <span className="text-xs text-gray-500">

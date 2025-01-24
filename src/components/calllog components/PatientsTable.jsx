@@ -32,9 +32,9 @@ const PatientsTable = () => {
         const response = await axios.get(`http://${API_URL}:5000/api/log/list`);
         const patientsData = response.data.map(patient => ({
           ...patient,
-          diseaseType: typeof patient.diseaseType === 'string' 
-            ? { name: patient.diseaseType, isEdited: false }
-            : patient.diseaseType || { name: '', isEdited: false }
+          diseaseType: typeof patient.medicalDetails.diseaseType === 'string' 
+            ? { name: patient.medicalDetails.diseaseType, isEdited: false }
+            : patient.medicalDetails.diseaseType || { name: '', isEdited: false }
         }));
         
         const allocationsResponse = await axios.get(`http://${API_URL}:5000/api/assign/allocations-with-doctors`);
@@ -205,13 +205,13 @@ const PatientsTable = () => {
   };
   
   const getCallStatus = (patient) => {
-    if (!patient || typeof patient.enquiryStatus === 'undefined') {
+    if (!patient || typeof patient.medicalDetails.enquiryStatus === 'undefined') {
       return 'Unknown';
     }
 
-    const enquiryStatus = patient.enquiryStatus ? patient.enquiryStatus.trim() : '';
+    const enquiryStatus = patient.medicalDetails.enquiryStatus ? patient.medicalDetails.enquiryStatus.trim() : '';
     const appointmentFixed = patient.appointmentFixed === 'Yes';
-    const medicalPayment = patient.medicalPayment === 'Yes';
+    const medicalPayment = patient.medicalDetails.medicalPayment === 'Yes';
 
     console.log('Patient ID:', patient._id);
     console.log('Enquiry Status:', enquiryStatus);
@@ -263,7 +263,7 @@ const PatientsTable = () => {
 
         if (response.data.success) {
             setPatients(prevPatients => prevPatients.map(p =>
-                p._id === patientId ? { ...p, diseaseType: response.data.patient.diseaseType } : p
+                p._id === patientId ? { ...p, diseaseType: response.data.patient.medicalDetails.diseaseType } : p
             ));
             setEditingDiseaseType(null);
         } else {
@@ -375,7 +375,7 @@ const PatientsTable = () => {
       case "Patient Type":
         return patient.newExisting || '---';
       case "Who is the Consultation for":
-        return patient.consultingFor || '---';
+        return patient.medicalDetails.consultingFor || '---';
       case "Name":
         return patient.name;
       case "Phone Number":
@@ -391,15 +391,15 @@ const PatientsTable = () => {
       case "Current Location":
         return patient.currentLocation || '---';
       case "Consulting For":
-        return patient.diseaseName || '---';
+        return patient.medicalDetails.diseaseName || '---';
       case "If disease type is not available":
-        return patient.diseaseName || '---';
+        return patient.medicalDetails.diseaseName || '---';
       case "Acute / Chronic":
         return (
           <div>
             {editingDiseaseType === patient._id ? (
               <select
-                value={patient.diseaseType?.name || ''}
+                value={patient.medicalDetails?.diseaseType?.name || ''}  // Optional chaining here
                 onChange={(e) => handleEditDiseaseType(patient._id, e.target.value)}
                 onBlur={() => setEditingDiseaseType(null)}
                 autoFocus
@@ -411,8 +411,8 @@ const PatientsTable = () => {
               </select>
             ) : (
               <div className="flex items-center space-x-2">
-                <span className={`font-medium ${patient.diseaseType?.edit ? 'text-blue-600' : 'text-gray-700'}`}>
-                  {patient.diseaseType?.name || 'Not specified'}
+                <span className={`font-medium ${patient.medicalDetails?.diseaseType?.edit ? 'text-blue-600' : 'text-gray-700'}`}>
+                  {patient.medicalDetails?.diseaseType?.name || 'Not specified'}  {/* Optional chaining */}
                 </span>
                 <button 
                   onClick={() => setEditingDiseaseType(patient._id)}
@@ -428,13 +428,13 @@ const PatientsTable = () => {
               </div>
             )}
           </div>
-        );        
+        );   
       case "Patient Profile":
         return patientFormsStatus[patient._id] || 'Loading...';
       case "Enquiry Status":
         return (
           <select
-            value={patient.enquiryStatus || ''}
+            value={patient.medicalDetails.enquiryStatus || ''}
             onChange={(e) => handleEnquiryStatusChange(patient._id, e.target.value)}
             className="border border-gray-300 rounded px-2 py-1 text-sm"
           >
@@ -445,22 +445,25 @@ const PatientsTable = () => {
           </select>
         );
       case "Role and Activity Status":
-        return patient.follow || '---';
+        return patient.medicalDetails.follow || '---';
       case "Messenger Comment":
-        return patient.followComment || '---';
+        return patient.medicalDetails.followComment || '---';
       case "Omni Channel":
         return patient.patientEntry || '---';
       case "Message Sent":
         // return patient.messageSent?.status ? 'Yes' : 'No';
-        return patient.messageSent.status ? (
+        return patient.medicalDetails.messageSent?.status ? (
           "Sent"
         ) : (
-          <button className="send-message-button" onClick={() => sendMessage(patient)}>
+          <button
+            className="send-message-button"
+            onClick={() => sendMessage(patient)}
+          >
             Send Message
           </button>
         );
       case "Time Stamp":
-        return patient.messageSent.timeStamp;
+        return patient.medicalDetails.messageSent?.timeStamp;
       case "Make a Call":
         return (
           <button 
@@ -499,7 +502,7 @@ const PatientsTable = () => {
       case "Call Status":
         return getCallStatus(patient);
       case "Call Attempted tracking":
-        return patient.callCount || 0;
+        return patient.medicalDetails.callCount || 0;
       case "Conversion Status":
         return patient.appointmentFixed === 'Yes' ? <FaCheckCircle className='green' /> : <FaTimesCircle className='red' />;
       case "Consultation payment":

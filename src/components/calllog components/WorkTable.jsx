@@ -5,7 +5,7 @@ import {FaUserInjured, FaUserPlus, FaFileMedical, FaPhoneAlt, FaRecordVinyl, FaC
 import config from '../../config';
 import { useNavigate } from 'react-router-dom';
 import { jwtDecode } from 'jwt-decode';
-
+import CommentCell from './CommentCell';
 const WorkTable = () => {
   const [patients, setPatients] = useState([]);
   const [specialAllocationPatients, setSpecialAllocationPatients] = useState([]);
@@ -149,10 +149,10 @@ const WorkTable = () => {
         // (selectedFollowType === 'Follow up-C-Existing' && patient.follow === 'Follow up-C' && patient.newExisting === 'Existing') ||
         // (selectedFollowType !== 'Follow up-C-New' && selectedFollowType !== 'Follow up-C-Existing' && patient.follow === selectedFollowType);
       
-        (selectedFollowType === 'Follow up-Chronic-New' && patient.diseaseType.name === 'Chronic' && patient.follow === 'Follow up-C' && patient.newExisting === 'New') ||
-        (selectedFollowType === 'Follow up-Chronic-Existing' && patient.diseaseType.name === 'Chronic' && patient.follow === 'Follow up-C' && patient.newExisting === 'Existing') ||
-        (selectedFollowType === 'Follow up-Acute-New' && patient.diseaseType.name === 'Acute'  && patient.follow === 'Follow up-C' && patient.newExisting === 'New') ||
-        (selectedFollowType === 'Follow up-Acute-Existing' && patient.diseaseType.name === 'Acute'  && patient.follow === 'Follow up-C' && patient.newExisting === 'Existing') ||
+        (selectedFollowType === 'Follow up-Chronic-New' && patient.medicalDetails.diseaseType.name === 'Chronic' && patient.medicalDetails.follow === 'Follow up-C' && patient.newExisting === 'New') ||
+        (selectedFollowType === 'Follow up-Chronic-Existing' && patient.medicalDetails.diseaseType.name === 'Chronic' && patient.medicalDetails.follow === 'Follow up-C' && patient.newExisting === 'Existing') ||
+        (selectedFollowType === 'Follow up-Acute-New' && patient.medicalDetails.diseaseType.name === 'Acute'  && patient.medicalDetails.follow === 'Follow up-C' && patient.newExisting === 'New') ||
+        (selectedFollowType === 'Follow up-Acute-Existing' && patient.medicalDetails.diseaseType.name === 'Acute'  && patient.medicalDetails.follow === 'Follow up-C' && patient.newExisting === 'Existing') ||
         (selectedFollowType !== 'Follow up-Chronic-New' && selectedFollowType !== 'Follow up-Chronic-Existing' && selectedFollowType !== 'Follow up-Acute-New' && selectedFollowType !== 'Follow up-Acute-Existing' && patient.follow === selectedFollowType);
 
       return isMatchingFollowType &&
@@ -270,31 +270,31 @@ const WorkTable = () => {
             index + 1,
             item.patientEntry || '---',
             item.newExisting || '',
-            item.consultingFor || '',
+            item.medicalDetails.consultingFor || '',
             item.name || '',
             item.phone || '',
             item.whatsappNumber || '',
             item.email || '',
-            item.diseaseName || '',
-            item.diseaseTypeAvailable ? 'Yes' : 'No',
+            item.medicalDetails.diseaseName || '',
+            item.medicalDetails.diseaseTypeAvailable ? 'Yes' : 'No',
             item.age || '',
             item.gender || '',
             item.currentLocation || '',
-            item.messageSent.message || '---',
-            item.messageSent.timeStamp || '---',
-            item.diseaseType.name || '',
-            item.follow || '',
-            item.followComment || '',
+            item.medicalDetails.messageSent.message || '---',
+            item.medicalDetails.messageSent.timeStamp || '---',
+            item.medicalDetails.diseaseType.name || '',
+            item.medicalDetails.follow || '',
+            item.medicalDetails.followComment || '',
             '--',
             item.patientProfile || 'No',
-            item.enquiryStatus || '',
+            item.medicalDetails.enquiryStatus || '',
             item.appDownload != '0' ? 'Yes' : 'No',
             item.appointmentFixed || '',
             item.appointmentFixed || '',
             item.medicinePaymentConfirmation ? 'Confirmed' : 'Pending',
             // item.callStatus || '',
             // item.conversionStatus || '',
-            item.callCount || '0',
+            item.medicalDetails.callCount || '0',
             item.comments.text || '--',
             <div className="action-buttons">
               {renderButton('View draft', () => handleAction('ViewDraft', item))}
@@ -341,22 +341,22 @@ const WorkTable = () => {
           ],
           data: filteredPatients.map((item, index) => [
             index + 1,
-            item.consultingFor || '',
+            item.medicalDetails.consultingFor || '',
             item.name || '',
             item.newExisting || '',
             item.phone || '',
             item.email || '',
-            item.consultingFor || '',
-            item.consultingFor || '',
+            item.medicalDetails.consultingFor || '',
+            item.medicalDetails.consultingFor || '',
             // item.diseaseTypeAvailable ? 'Yes' ? <FaCheckCircle /> : <FaTimesCircle /> : 'No',
             item.age || '',
             item.gender || '',
-            item.diseaseType.name || '',
-            item.follow || '',
-            item.followComment || '',
+            item.medicalDetails.diseaseType.name || '',
+            item.medicalDetails.follow || '',
+            item.medicalDetails.followComment || '',
             item.medicinePaymentConfirmation ? 'Confirmed' : 'Pending',
             // item.conversionStatus || '',
-            item.callCount || '',
+            item.medicalDetails.callCount || '',
             '--',// item.comments.text || '--',
             
             <div className="action-buttons">
@@ -403,21 +403,21 @@ const WorkTable = () => {
           ],
           data: filteredPatients.map((item, index) => [
             index + 1,
-            item.consultingFor || '',
+            item.medicalDetails.consultingFor || '',
             item.name || '',
             item.newExisting || '',
             item.phone || '',
             item.email || '',
-            item.consultingFor || '',
-            item.diseaseTypeAvailable ? 'Yes' : 'No',
+            item.medicalDetails.consultingFor || '',
+            item.medicalDetails.diseaseTypeAvailable ? 'Yes' : 'No',
             item.age || '',
             item.gender || '',
-            item.diseaseType.name || '',
-            item.follow || '',
-            item.followComment || '',
+            item.medicalDetails.diseaseType.name || '',
+            item.medicalDetails.follow || '',
+            item.medicalDetails.followComment || '',
             item.medicinePaymentConfirmation ? 'Confirmed' : 'Pending',
-            item.callCount || '',
-            item.comments.text || '',
+            item.medicalDetails.callCount || '',
+            item.medicalDetails.comments.text || '',
             <div className="action-buttons">
               {renderButton('View draft', () => handleAction('ViewDraft', item))}
             </div>,
@@ -447,21 +447,31 @@ const WorkTable = () => {
           ],
           data: filteredPatients.map((item, index) => [
             index + 1,
-            item.consultingFor || '',
+            item.medicalDetails.consultingFor || '',
             item.name || '',
             item.newExisting || '',
             item.phone || '',
             item.email || '',
-            item.consultingFor || '',
-            item.diseaseTypeAvailable ? 'Yes' : 'No',
+            item.medicalDetails.consultingFor || '',
+            item.medicalDetails.diseaseTypeAvailable ? 'Yes' : 'No',
             item.age || '',
             item.gender || '',
-            item.diseaseType.name || '',
-            item.follow || '',
-            item.followComment || '',
+            item.medicalDetails.diseaseType.name || '',
+            item.medicalDetails.follow || '',
+            item.medicalDetails.followComment || '',
             item.medicinePaymentConfirmation ? 'Confirmed' : 'Pending',
-            item.callCount || '',
-            item.comments.text || '--',
+            item.medicalDetails.callCount || '',
+            // item.comments.text || '--',
+            // <CommentCell patient={item} onCommentAdded={handleCommentAdded} />,
+            <CommentCell 
+              patient={item} 
+              API_URL={API_URL}
+              onCommentAdded={(updatedPatient) => {
+                setPatients(prevPatients => 
+                  prevPatients.map(p => p._id === updatedPatient._id ? updatedPatient : p)
+                );
+              }} 
+            />,
             ...getActionButtons(item)
           ]),
         };
@@ -506,32 +516,32 @@ const WorkTable = () => {
           index + 1,
           item.patientEntry || '---',
           item.newExisting || '',
-          item.consultingFor || '',
+          item.medicalDetails.consultingFor || '',
           item.name || '',
           item.phone || '',
           item.whatsappNumber || '',
           item.email || '',
-          item.diseaseName || '',
-          item.diseaseTypeAvailable ? 'Yes' : 'No',
+          item.medicalDetails.diseaseName || '',
+          item.medicalDetails.diseaseTypeAvailable ? 'Yes' : 'No',
           item.age || '',
           item.gender || '',
           item.currentLocation || '',
-          item.messageSent.message || '---',
-          item.messageSent.timeStamp || '---',
-          item.diseaseType.name || '',
-          item.follow || '',
-          item.followComment || '',
+          item.medicalDetails.messageSent.message || '---',
+          item.medicalDetails.messageSent.timeStamp || '---',
+          item.medicalDetails.diseaseType.name || '',
+          item.medicalDetails.follow || '',
+          item.medicalDetails.followComment || '',
           '--',
           item.patientProfile || 'No',
-          item.enquiryStatus || '',
+          item.medicalDetails.enquiryStatus || '',
           item.appDownload != '0' ? 'Yes' : 'No',
           item.appointmentFixed || '',
           item.appointmentFixed || '',
-          item.medicinePaymentConfirmation ? 'Confirmed' : 'Pending',
+          item.medicalDetails.medicalPayment ? 'Confirmed' : 'Pending',
           // item.callStatus || '',
           // item.conversionStatus || '',
-          item.callCount || '0',
-          item.comments.text || '--',
+          item.medicalDetails.callCount || '0',
+          item.medicalDetails.comments.text || '--',
           doctorDropdown(item),
           <div className="action-buttons">
             {renderButton('View draft', () => handleAction('ViewDraft', item))}
@@ -591,30 +601,30 @@ const WorkTable = () => {
               index + 1,
               item.patientEntry || '---',
               item.newExisting || '',
-              item.consultingFor || '',
+              item.medicalDetails.consultingFor || '',
               item.name || '',
               item.phone || '',
               item.whatsappNumber || '',
               item.email || '',
-              item.diseaseName || '',
-              item.diseaseTypeAvailable ? 'Yes' : 'No',
+              item.medicalDetails.diseaseName || '',
+              item.medicalDetails.diseaseTypeAvailable ? 'Yes' : 'No',
               item.age || '',
               item.gender || '',
               item.currentLocation || '',
-              item.messageSent?.message || '---',
-              item.messageSent?.timeStamp || '---',
-              item.diseaseType?.name || '',
-              item.follow || '',
-              item.followComment || '',
+              item.medicalDetails.messageSent?.message || '---',
+              item.medicalDetails.messageSent?.timeStamp || '---',
+              item.medicalDetails.diseaseType?.name || '',
+              item.medicalDetails.follow || '',
+              item.medicalDetails.followComment || '',
               '--',
               item.patientProfile || 'No',
-              item.enquiryStatus || '',
+              item.medicalDetails.enquiryStatus || '',
               item.appDownload != '0' ? 'Yes' : 'No',
               item.appointmentFixed || '',
               item.appointmentFixed || '',
-              item.medicinePaymentConfirmation ? 'Confirmed' : 'Pending',
-              item.callCount || '0',
-              item.comments?.text || '--',
+              item.medicalDetails.medicalPayment ? 'Confirmed' : 'Pending',
+              item.medicalDetails.callCount || '0',
+              item.medicalDetails.comments?.text || '--',
               <div className="action-buttons">
                 {renderButton('View draft', () => handleAction('ViewDraft', item))}
               </div>,
@@ -722,7 +732,7 @@ const WorkTable = () => {
   const tableConfig = getTableConfig();
 
   return (
-    <div className="container mx-auto px-4 py-6">
+    <div className="container mx-auto px-0 py-6">
       <div className="mb-6 flex flex-col sm:flex-row justify-between items-center gap-4">
         <div className="relative flex-1 w-full sm:w-auto">
           <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">

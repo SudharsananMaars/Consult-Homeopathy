@@ -3,9 +3,11 @@ import axios from 'axios';
 import { FaCheckCircle, FaTimesCircle, FaSearch, FaFilter, FaPhoneAlt, FaRecordVinyl, FaEye, FaDownload, FaPencilAlt, FaChevronRight, FaChevronLeft } from 'react-icons/fa';
 import CallInterface from './CallInterface';
 import RecordingsInterface from './RecordingsButton';
-import CommentCell from './CommentCell';
+// import '../css/AssistantDashboard.css';
 import config from '../../config';
-
+import CommentCell from './CommentCell';
+import DoctorAllocationCell from './DoctorAllocationComponent';
+import RecordingsButton from './RecordingsButton';
 const AttemptBucket = () => {
   const [patients, setPatients] = useState([]);
   const [searchTerm, setSearchTerm] = useState('');
@@ -30,10 +32,10 @@ const AttemptBucket = () => {
           .filter(patient => patient.appointmentFixed !== 'Yes') // Only get patients without fixed appointments
           .map(patient => ({
             ...patient,
-            callCount: patient.callCount || 0, // Ensure callCount exists
-            diseaseType: typeof patient.diseaseType === 'string' 
-              ? { name: patient.diseaseType, isEdited: false }
-              : patient.diseaseType || { name: '', isEdited: false }
+            callCount: patient.medicalDetails.callCount || 0, // Ensure callCount exists
+            diseaseType: typeof patient.medicalDetails.diseaseType === 'string' 
+              ? { name: patient.medicalDetails.diseaseType, isEdited: false }
+              : patient.medicalDetails.diseaseType || { name: '', isEdited: false }
           }));
 
         // Fetch follow-up statuses
@@ -89,7 +91,7 @@ const AttemptBucket = () => {
       patient.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
       patient.phone?.toString().includes(searchTerm);
 
-    const callCount = patient.callCount || 0;
+    const callCount = patient.medicalDetails.callCount || 0;
     
     // Updated attempt filtering logic
     const attemptMatch = 
@@ -179,13 +181,13 @@ const AttemptBucket = () => {
   };
   
   const getCallStatus = (patient) => {
-    if (!patient || typeof patient.enquiryStatus === 'undefined') {
+    if (!patient || typeof patient.medicalDetails.enquiryStatus === 'undefined') {
       return 'Unknown';
     }
 
-    const enquiryStatus = patient.enquiryStatus ? patient.enquiryStatus.trim() : '';
+    const enquiryStatus = patient.medicalDetails.enquiryStatus ? patient.medicalDetails.enquiryStatus.trim() : '';
     const appointmentFixed = patient.appointmentFixed === 'Yes';
-    const medicalPayment = patient.medicalPayment === 'Yes';
+    const medicalPayment = patient.medicalDetails.medicalPayment === 'Yes';
 
     console.log('Patient ID:', patient._id);
     console.log('Enquiry Status:', enquiryStatus);
@@ -237,7 +239,7 @@ const AttemptBucket = () => {
 
         if (response.data.success) {
             setPatients(prevPatients => prevPatients.map(p =>
-                p._id === patientId ? { ...p, diseaseType: response.data.patient.diseaseType } : p
+                p._id === patientId ? { ...p, diseaseType: response.data.patient.medicalDetails.diseaseType } : p
             ));
             setEditingDiseaseType(null);
         } else {
@@ -379,7 +381,7 @@ const AttemptBucket = () => {
       case "Patient Type":
         return patient.newExisting || '---';
       case "Who is the Consultation for":
-        return patient.consultingFor || '---';
+        return patient.medicalDetails.consultingFor || '---';
       case "Name":
         return patient.name;
       case "Phone Number":
@@ -395,15 +397,15 @@ const AttemptBucket = () => {
       case "Current Location":
         return patient.currentLocation || '---';
       case "Consulting For":
-        return patient.diseaseName || '---';
+        return patient.medicalDetails.diseaseName || '---';
       case "If disease type is not available":
-        return patient.diseaseName || '---';
+        return patient.medicalDetails.diseaseName || '---';
       case "Acute / Chronic":
         return (
           <div>
             {editingDiseaseType === patient._id ? (
               <select
-                value={patient.diseaseType?.name || ''}
+                value={patient.medicalDetails?.diseaseType?.name || ''}  // Optional chaining here
                 onChange={(e) => handleEditDiseaseType(patient._id, e.target.value)}
                 onBlur={() => setEditingDiseaseType(null)}
                 autoFocus
@@ -415,8 +417,8 @@ const AttemptBucket = () => {
               </select>
             ) : (
               <div className="flex items-center space-x-2">
-                <span className={`font-medium ${patient.diseaseType?.edit ? 'text-blue-600' : 'text-gray-700'}`}>
-                  {patient.diseaseType?.name || 'Not specified'}
+                <span className={`font-medium ${patient.medicalDetails?.diseaseType?.edit ? 'text-blue-600' : 'text-gray-700'}`}>
+                  {patient.medicalDetails?.diseaseType?.name || 'Not specified'}  {/* Optional chaining */}
                 </span>
                 <button 
                   onClick={() => setEditingDiseaseType(patient._id)}
@@ -432,13 +434,13 @@ const AttemptBucket = () => {
               </div>
             )}
           </div>
-        );        
+        );   
       case "Patient Profile":
         return patientFormsStatus[patient._id] || 'Loading...';
       case "Enquiry Status":
         return (
           <select
-            value={patient.enquiryStatus || ''}
+            value={patient.medicalDetails.enquiryStatus || ''}
             onChange={(e) => handleEnquiryStatusChange(patient._id, e.target.value)}
             className="border border-gray-300 rounded px-2 py-1 text-sm"
           >
@@ -449,22 +451,25 @@ const AttemptBucket = () => {
           </select>
         );
       case "Role and Activity Status":
-        return patient.follow || '---';
+        return patient.medicalDetails.follow || '---';
       case "Messenger Comment":
-        return patient.followComment || '---';
+        return patient.medicalDetails.followComment || '---';
       case "Omni Channel":
         return patient.patientEntry || '---';
       case "Message Sent":
         // return patient.messageSent?.status ? 'Yes' : 'No';
-        return patient.messageSent.status ? (
+        return patient.medicalDetails.messageSent?.status ? (
           "Sent"
         ) : (
-          <button className="send-message-button" onClick={() => sendMessage(patient)}>
+          <button
+            className="send-message-button"
+            onClick={() => sendMessage(patient)}
+          >
             Send Message
           </button>
         );
       case "Time Stamp":
-        return patient.messageSent.timeStamp;
+        return patient.medicalDetails.messageSent?.timeStamp;
       case "Make a Call":
         return (
           <button 
@@ -476,12 +481,15 @@ const AttemptBucket = () => {
         );
       case "Recordings":
         return (
-          <button
-            onClick={() => viewRecordings(patient)}
-            className="inline-flex items-center px-3 py-2 border border-transparent text-sm leading-4 font-medium rounded-md text-white bg-[#1a237e] hover:bg-[#000051] focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#534bae] transition-all duration-300"
-          >
-            <FaRecordVinyl className="mr-2 -ml-0.5 h-4 w-4" /> View Recordings
-          </button>
+          // <button
+          //   onClick={() => viewRecordings(patient)}
+          //   className="inline-flex items-center px-3 py-2 border border-transparent text-sm leading-4 font-medium rounded-md text-white bg-[#1a237e] hover:bg-[#000051] focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#534bae] transition-all duration-300"
+          // >
+          //   <FaRecordVinyl className="mr-2 -ml-0.5 h-4 w-4" /> View Recordings
+          // </button>
+          <div>
+                  <RecordingsButton patient={patient} />
+          </div>
         );
       case "Follow up Comments":
         return <CommentCell 
@@ -500,7 +508,7 @@ const AttemptBucket = () => {
       case "Call Status":
         return getCallStatus(patient);
       case "Call Attempted tracking":
-        return patient.callCount || 0;
+        return patient.medicalDetails.callCount || 0;
       case "Conversion Status":
         return patient.appointmentFixed === 'Yes' ? <FaCheckCircle className='green' /> : <FaTimesCircle className='red' />;
       case "Consultation payment":
@@ -509,13 +517,23 @@ const AttemptBucket = () => {
         return patient.appointmentFixed === 'Yes' ? <FaCheckCircle className='green' /> : <FaTimesCircle className='red' />;
       case "Medicine & Shipping Payment confirmation":
         return patient.medicalPayment === 'Yes' ? <FaCheckCircle className='green' /> : <FaTimesCircle className='red' />;
-      case "Role Allocations":
-        return patient.currentAllocDoc ? doctorNames[patient.currentAllocDoc] || 'Loading...' : '---';
+      case "Role Allocation":
+        return (
+          <DoctorAllocationCell 
+            patient={patient}
+            currentDoctor={getDoctorForPatient(patient)}
+            onAllocationChange={(newDoctor) => {
+              setIndividualAllocations(prev => ({
+                ...prev,
+                [patient._id]: newDoctor
+              }));
+            }}
+          />
+        );
       default:
         return '---';
     }
   };
-
   return (
     <div className="px-4 sm:px-6 lg:px-8">
       <div className="sm:flex sm:items-center">
