@@ -1,19 +1,24 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
-import DoctorLayout from "/src/components/doctor components/DoctorLayout.jsx";
 import DatePicker from 'react-datepicker';
+import DoctorLayout from "/src/components/doctor components/DoctorLayout.jsx";
 import 'react-datepicker/dist/react-datepicker.css';
 
 function AssistLeave() {
   const [leaveType, setLeaveType] = useState('');
   const [startDate, setStartDate] = useState(new Date());
   const [endDate, setEndDate] = useState(new Date());
+  const [startShift, setStartShift] = useState(""); // Shift for the start date
+  const [endShift, setEndShift] = useState(""); // Shift for the end date
   const [reason, setReason] = useState('');
   const [leaveRequests, setLeaveRequests] = useState([]);
   const [totalDays, setTotalDays] = useState(0);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [fetching, setFetching] = useState(true);
+  const [shiftDetails, setShiftDetails] = useState([]);
+  const [selectedShift, setSelectedShift] = useState('');
+  const [shift, setShift] = useState(''); // Shift (Full Day, First Half, Second Half)
   const [leaveBalance, setLeaveBalance] = useState({
     sickLeave: 0,
     casualLeave: 0,
@@ -21,6 +26,40 @@ function AssistLeave() {
     maternityLeave: 0,
   });
   const [activeTab, setActiveTab] = useState('leaveRequest'); // state to track active tab
+
+  const calculateTotalDays = () => {
+    if (!startDate || !endDate) return 0;
+  
+    const diffInMs = new Date(endDate) - new Date(startDate);
+    const diffInDays = Math.ceil(diffInMs / (1000 * 60 * 60 * 24)) + 1;
+  
+    let totalDays = 0;
+  
+    // Handle single-day leave scenario
+    if (diffInDays === 1) {
+      if (startShift === "Full Day") totalDays += 1;
+      else if (startShift === "First Half" || startShift === "Second Half") totalDays += 0.5;
+    } else {
+      // Add leave for the start date
+      if (startShift === "Full Day") totalDays += 1;
+      else if (startShift === "First Half" || startShift === "Second Half") totalDays += 0.5;
+  
+      // Add leave for the end date
+      if (endShift === "Full Day") totalDays += 1;
+      else if (endShift === "First Half" || endShift === "Second Half") totalDays += 0.5;
+  
+      // Add full days in between
+      if (diffInDays > 2) totalDays += diffInDays - 2;
+    }
+  
+    return totalDays;
+  };
+  
+  // Recalculate total days whenever relevant fields change
+  useEffect(() => {
+    setTotalDays(calculateTotalDays());
+  }, [startDate, endDate, startShift, endShift]);
+  
 
   // Fetch leave requests for this assistant doctor
   useEffect(() => {
@@ -62,22 +101,24 @@ function AssistLeave() {
     fetchLeaveRequests();
   }, []);
   
+  useEffect(() => {
+    const fetchShifts = async () => {
+      try {
+        const response = await axios.get("http://localhost:5000/api/shift/getShiftDetails");
+        setShiftDetails(response.data);
+      } catch (error) {
+        console.error("Error fetching shifts:", error);
+      }
+    };
+    fetchShifts();
+  }, []);
+
   const handleStartDateChange = (date) => {
     setStartDate(date);
-    if (date && endDate) {
-      const diffTime = Math.abs(new Date(endDate) - new Date(date));
-      const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24)) + 1; // Include both start and end dates
-      setTotalDays(diffDays);
-    }
   };
   
   const handleEndDateChange = (date) => {
     setEndDate(date);
-    if (date && startDate) {
-      const diffTime = Math.abs(new Date(date) - new Date(startDate));
-      const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24)) + 1; // Include both start and end dates
-      setTotalDays(diffDays);
-    }
   };
   
   const handleSubmit = async (e) => {
@@ -99,9 +140,9 @@ function AssistLeave() {
         return;
       }
 
-      const totalDays = Math.ceil(
-        (new Date(endDate) - new Date(startDate)) / (1000 * 60 * 60 * 24)
-      ) + 1; // Include both start and end dates
+      // const totalDays = Math.ceil(
+      //   (new Date(endDate) - new Date(startDate)) / (1000 * 60 * 60 * 24)
+      // ) + 1; // Include both start and end dates
   
       const response = await axios.post(
         'http://localhost:5000/api/leaves/request',
@@ -147,19 +188,19 @@ function AssistLeave() {
     <div className="flex space-x-4 mb-6">
           <button
             onClick={() => switchTab('leaveRequest')}
-            className={`text-lg font-semibold py-2 px-4 rounded-lg ${activeTab === 'leaveRequest' ? 'bg-blue-400 text-white' : 'bg-white text-blue-400'}`}
+            className={`text-lg font-semibold py-2 px-4 rounded-lg ${activeTab === 'leaveRequest' ? 'bg-blue-500 text-white' : 'bg-white text-blue-400'}`}
           >
             Leave Requests
           </button>
           <button
             onClick={() => switchTab('leaveStatus')}
-            className={`text-lg font-semibold py-2 px-4 rounded-lg ${activeTab === 'leaveStatus' ? 'bg-blue-400 text-white' : 'bg-white text-blue-400'}`}
+            className={`text-lg font-semibold py-2 px-4 rounded-lg ${activeTab === 'leaveStatus' ? 'bg-blue-500 text-white' : 'bg-white text-blue-400'}`}
           >
             Leave Status
           </button>
           <button
             onClick={() => switchTab('leaveBalance')}
-            className={`text-lg font-semibold py-2 px-4 rounded-lg ${activeTab === 'leaveBalance' ? 'bg-blue-400 text-white' : 'bg-white text-blue-400'}`}
+            className={`text-lg font-semibold py-2 px-4 rounded-lg ${activeTab === 'leaveBalance' ? 'bg-blue-500 text-white' : 'bg-white text-blue-400'}`}
           >
             Leave Balance
           </button>
@@ -167,7 +208,7 @@ function AssistLeave() {
 
         {activeTab === 'leaveRequest' && (
           <div className="p-6 bg-white space-y-6">
-      <h2 className="text-2xl font-bold text-gray-700 border-b pb-2">Request Leave</h2>
+      {/* <h2 className="text-2xl font-bold text-gray-700 border-b pb-2">Request Leave</h2> */}
       {error && <p className="text-red-500">{error}</p>}
 
       <form onSubmit={handleSubmit} className="space-y-6">
@@ -181,7 +222,7 @@ function AssistLeave() {
             required
             className="block w-full border rounded-lg p-2 bg-white focus:outline-none focus:ring focus:ring-blue-200"
           >
-            <option value="choose">Choose Leave Type</option>
+            <option value="" disabled>Choose Leave Type</option>
             <option value="Sick Leave">Sick Leave</option>
             <option value="Casual Leave">Casual Leave</option>
             <option value="Paid Leave">Paid Leave</option>
@@ -189,17 +230,43 @@ function AssistLeave() {
             
           </select>
         </div>
-        <div>
-          <label className="block text-sm font-medium text-gray-600 mb-1">
-            Start Date
-          </label>
-          <DatePicker
-            selected={startDate}
-            onChange={handleStartDateChange}
-            className="block w-full border rounded-lg p-2 bg-white focus:outline-none focus:ring focus:ring-blue-200"
-          />
-        </div>
-        <div>
+        <div className="flex flex-wrap items-start gap-4">
+  {/* Start Date */}
+  <div className="flex-1 min-w-[200px]">
+    <label className="block text-sm font-medium text-gray-600 mb-1">
+      Start Date
+    </label>
+    <DatePicker
+      selected={startDate}
+      onChange={handleStartDateChange}
+      className="block w-full border rounded-lg p-2 bg-white focus:outline-none focus:ring focus:ring-blue-200"
+    />
+  </div>
+
+  {/* Start Shift */}
+  <div className="flex-1 min-w-[200px]">
+    <label className="block text-sm font-medium text-gray-600 mb-1">
+      Start Shift
+    </label>
+    <select
+      value={startShift}
+      onChange={(e) => setStartShift(e.target.value)}
+      required
+      className="block w-full border rounded-lg p-2 bg-white focus:outline-none focus:ring focus:ring-blue-200"
+    >
+      <option value="">Select Shift</option>
+      {shiftDetails.map((shift) => (
+        <optgroup key={shift._id} label={shift.name}>
+          <option value="Full Day">{shift.fullDay} (Full Day)</option>
+          <option value="First Half">{shift.firstHalf} (Half Day - First Session)</option>
+          <option value="Second Half">{shift.secondHalf} (Half Day - Second Session)</option>
+        </optgroup>
+      ))}
+    </select>
+  </div>
+</div>
+<div className="flex flex-wrap items-center gap-4">
+        <div className="flex-1 min-w-[200px]">
           <label className="block text-sm font-medium text-gray-600 mb-1">
             End Date
           </label>
@@ -209,15 +276,32 @@ function AssistLeave() {
             className="block w-full border rounded-lg p-2 bg-white focus:outline-none focus:ring focus:ring-blue-200"
           />
         </div>
-
+        <div className="flex-1 min-w-[200px]">
+          <label className="block text-sm font-medium text-gray-600 mb-1">End Shift</label>
+          <select
+            value={endShift}
+            onChange={(e) => setEndShift(e.target.value)} // Update selectedShift state
+            className="block w-full border rounded-lg p-2 bg-white focus:outline-none focus:ring focus:ring-blue-200"
+          >
+            <option value="">Select Shift</option>
+            {shiftDetails.map((shift) => (
+              <optgroup key={shift._id} label={shift.name}>
+                <option value="Full Day">{shift.fullDay} (Full Day)</option>
+                <option value="First Half">{shift.firstHalf} (Half Day - First Session)</option>
+                <option value="Second Half">{shift.secondHalf} (Half Day - Second Session)</option>
+              </optgroup>
+            ))}
+          </select>
+          </div>
+          </div>
         <div>
-        <label className="block text-sm font-medium text-gray-600 mb-1">
-          Total Leaves Requested
-        </label>
-        <p className="text-gray-700 font-semibold">
-          {totalDays > 0 ? `${totalDays} day(s)` : 'Select start and end dates'}
-        </p>
-      </div>
+          <label className="block text-sm font-medium text-gray-600 mb-1">
+            Total Leaves Requested
+          </label>
+          <p className="text-gray-700 font-semibold">
+            {totalDays > 0 ? `${totalDays} day(s)` : 'Select start and end dates'}
+          </p>
+        </div>
 
         <div>
           <label className="block text-sm font-medium text-gray-600 mb-1">
@@ -287,38 +371,46 @@ function AssistLeave() {
       </div>
     )}
    
-
    {activeTab === 'leaveBalance' && (
-  <div className="p-6 bg-white space-y-6">
-    <h2 className="text-2xl font-bold text-gray-700 border-b pb-2">Leave Balance</h2>
-    {fetching ? (
-      <p className="text-center text-gray-500 text-lg">Loading leave balance...</p>
-    ) : (
-      <div className="grid grid-cols-2 gap-6">
-        <div className="p-4 bg-blue-50 rounded-xl shadow-md">
-          <h3 className="text-lg font-semibold text-gray-700">Sick Leave</h3>
-          <p className="text-gray-600 text-base font-bold">{leaveBalance.sickLeave} days</p>
-        </div>
-        <div className="p-4 bg-blue-50 rounded-xl shadow-md">
-          <h3 className="text-lg font-semibold text-gray-700">Casual Leave</h3>
-          <p className="text-gray-600 text-base font-bold">{leaveBalance.casualLeave} days</p>
-        </div>
-        <div className="p-4 bg-blue-50 rounded-xl shadow-md">
-          <h3 className="text-lg font-semibold text-gray-700">Paid Leave</h3>
-          <p className="text-gray-600 text-base font-bold">{leaveBalance.paidLeave} days</p>
-        </div>
-        <div className="p-4 bg-blue-50 rounded-xl shadow-md">
-          <h3 className="text-lg font-semibold text-gray-700">Maternity Leave</h3>
-          <p className="text-gray-600 text-base font-bold">{leaveBalance.maternityLeave} days</p>
-        </div>
+  <div className="p-6 space-y-6">
+  {/* <h2 className="text-2xl font-bold text-gray-800 border-b pb-3">Leave Balance</h2> */}
+  {fetching ? (
+    <p className="text-center text-gray-500 text-lg">Loading leave balance...</p>
+  ) : (
+    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+      {/* Sick Leave */}
+      <div className="p-6 bg-gradient-to-r from-blue-100 via-blue-50 to-blue-100 rounded-xl shadow-lg hover:shadow-xl transition-shadow duration-300">
+        <h3 className="text-lg font-semibold text-blue-900 mb-2">Sick Leave</h3>
+        <p className="text-gray-700 text-xl font-bold">{leaveBalance.sickLeave} days</p>
       </div>
-    )}
-  </div>
+      
+      {/* Casual Leave */}
+      <div className="p-6 bg-gradient-to-r from-green-100 via-green-50 to-green-100 rounded-xl shadow-lg hover:shadow-xl transition-shadow duration-300">
+        <h3 className="text-lg font-semibold text-green-900 mb-2">Casual Leave</h3>
+        <p className="text-gray-700 text-xl font-bold">{leaveBalance.casualLeave} days</p>
+      </div>
+
+      {/* Paid Leave */}
+      <div className="p-6 bg-gradient-to-r from-yellow-100 via-yellow-50 to-yellow-100 rounded-xl shadow-lg hover:shadow-xl transition-shadow duration-300">
+        <h3 className="text-lg font-semibold text-yellow-900 mb-2">Paid Leave</h3>
+        <p className="text-gray-700 text-xl font-bold">{leaveBalance.paidLeave} days</p>
+      </div>
+
+      {/* Maternity Leave */}
+      <div className="p-6 bg-gradient-to-r from-pink-100 via-pink-50 to-pink-100 rounded-xl shadow-lg hover:shadow-xl transition-shadow duration-300">
+        <h3 className="text-lg font-semibold text-pink-900 mb-2">Maternity Leave</h3>
+        <p className="text-gray-700 text-xl font-bold">{leaveBalance.maternityLeave} days</p>
+      </div>
+    </div>
+  )}
+</div>
+
 )}
+
 
     </div>
     </DoctorLayout>
   );
 }
 
-export default AssistLeave;
+export default AssistLeave;

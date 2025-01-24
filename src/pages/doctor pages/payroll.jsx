@@ -1,276 +1,380 @@
-import React, { useState } from "react";
-import DoctorLayout from "/src/components/doctor components/DoctorLayout.jsx";
-import { FaDownload } from "react-icons/fa";
+import React, { useEffect,useState } from "react";
+import axios from "axios";
 
-const HRPayrollModule = () => {
+const PayrollManagement = () => {
+  const [activeTab, setActiveTab] = useState("payroll");
   const [formData, setFormData] = useState({
     employeeID: "",
-    employeeName: "",
-    baseSalary: 50000, // Fixed base salary
-    bonus: 0,
-    allowances: 10000, // Fixed allowances
-    deductions: 0,
+    name: "",
+    baseSalary: "",
+    totalAllowances: "",
+    totalDeductions: "",
     paymentMode: "Bank Transfer",
     paymentDate: "",
+    allowances: [],
+    deductions:[],
+    bonus: "",
+   
   });
+ 
+  const [historyData, setHistoryData] = useState([]);
+  useEffect(() => {
+    fetchHistory();
+  }, []);
 
-  const [payrollRecords, setPayrollRecords] = useState([]);
-  const [editIndex, setEditIndex] = useState(null);
-
+  const [errorMessage, setErrorMessage] = useState("");
+  const [isFetched, setIsFetched] = useState(false);
+  const [allowances, setAllowances] = useState([]);
+  const [deductions, setDeductions] = useState([]);
+  const [downloadUrl, setDownloadUrl] = useState(null);
+   // Handle tab switching
+   const handleTabSwitch = (tabName) => {
+    setActiveTab(tabName);
+  };
+  // Handle input changes
   const handleChange = (e) => {
     const { name, value } = e.target;
-    setFormData({ ...formData, [name]: value });
+    setFormData((prevState) => ({ ...prevState, [name]: value }));
   };
+  // Handle input changes for history form
+  const handleHistoryChange = (e) => {
+    const { name, value } = e.target;
+    setHistoryForm((prevState) => ({ ...prevState, [name]: value }));
+  };
+ 
+ 
 
-  const handleSubmit = (e) => {
-    e.preventDefault();
-
-    const grossPay =
-      Number(formData.baseSalary) +
-      Number(formData.bonus) +
-      Number(formData.allowances);
-    const netPay = grossPay - Number(formData.deductions);
-
-    const newRecord = {
-      ...formData,
-      grossPay,
-      netPay,
-    };
-
-    if (editIndex !== null) {
-      const updatedRecords = [...payrollRecords];
-      updatedRecords[editIndex] = newRecord;
-      setPayrollRecords(updatedRecords);
-      setEditIndex(null);
-    } else {
-      setPayrollRecords([...payrollRecords, newRecord]);
+  // Fetch employee details by Employee ID
+  const fetchEmployeeDetails = async () => {
+    if (!formData.employeeID) {
+      setErrorMessage("Please enter a valid Employee ID.");
+      return;
     }
+    try {
+      const response = await axios.get(
+        `http://localhost:5000/api/payslip/employee/${formData.employeeID}`
+      );
+      const employee = response.data;
 
-    setFormData({
-      employeeID: "",
-      employeeName: "",
-      baseSalary: 50000, // Reset fixed value
-      bonus: 0,
-      allowances: 10000, // Reset fixed value
-      deductions: 0,
-      paymentMode: "Bank Transfer",
-      paymentDate: "",
-    });
+      setFormData((prevState) => ({
+        ...prevState,
+        baseSalary: employee.baseSalary || "",
+        totalAllowances: employee.totalAllowances || "",
+        totalDeductions: employee.totalDeductions || "",
+        name:employee.name ||"",
+       
+      }));
+
+      // Set allowances and deductions
+      setAllowances(employee.allowances || []);
+      setDeductions(employee.deductions || []);
+      setErrorMessage("");
+      setIsFetched(true);
+    } catch (error) {
+      setErrorMessage("Employee not found.");
+      setIsFetched(false);
+    }
+  };
+ 
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    if (!formData.name || !formData.bonus || !formData.paymentDate) {
+      setErrorMessage("name, Bonus, and Payment Date are required.");
+      return;
+    }
+    try {
+      const dataToSubmit = {
+        ...formData,
+        allowances: allowances.length ? allowances : formData.allowances, // Ensure allowances are included       
+        deductions: deductions.length ? deductions : formData.deductions, // Ensure deductions are included
+      };
+      
+      await axios.post("http://localhost:5000/api/payslip/payroll",dataToSubmit);
+      alert("Payroll record added successfully.");
+      // Automatically generate payslip after submission
+      const response = await axios.get(
+        `http://localhost:5000/api/payslip/generate/${formData.employeeID}`,
+        { responseType: "blob" } // Fetch the payslip as a Blob for download
+      );
+
+      // Create download link for payslip
+      const blob = new Blob([response.data], { type: "application/pdf" });
+      const url = URL.createObjectURL(blob);
+      setDownloadUrl(url);
+      window.open(url, "_blank");
+
+      // Set payslip data for display (if needed)
+      // setPaySlipData(await response.data.text());
+
+      // Reset form
+      setFormData({
+        employeeID: "",
+        name: "",
+        baseSalary: "",
+        totalAllowances: "",
+        totalDeductions: "",
+        paymentMode: "Bank Transfer",
+        paymentDate: "",
+        allowances: [],
+        deductions: [],
+        bonus: "",
+      });
+      setIsFetched(false);
+    } catch (error) {
+      alert("Error adding payroll record.");
+    }
+  };
+  const fetchHistory = async () => {
+    try {
+      const response = await axios.get("http://localhost:5000/api/payslip/history");
+      console.log(response.data);
+      if (response.status === 200) {
+        setHistoryData(response.data);
+      } else {
+        setErrorMessage("Failed to fetch payment history.");
+      }
+    } catch (error) {
+      console.error("Error fetching payment history:", error);
+      setErrorMessage("Error fetching data. Please try again.");
+    }
   };
 
-  const handleEdit = (index) => {
-    const recordToEdit = payrollRecords[index];
-    setFormData(recordToEdit);
-    setEditIndex(index);
-  };
 
-  const generateSalarySlip = (record) => {
-    const salarySlipContent = `
-      Salary Slip
-      Employee ID: ${record.employeeID}
-      Employee Name: ${record.employeeName}
-      -------------------------
-      Base Salary: ${record.baseSalary}
-      Allowances: ${record.allowances}
-      Bonus: ${record.bonus}
-      Gross Pay: ${record.grossPay}
-      Deductions: ${record.deductions}
-      Net Pay: ${record.netPay}
-      -------------------------
-      Payment Mode: ${record.paymentMode}
-      Payment Date: ${record.paymentDate}
-    `;
-
-    const blob = new Blob([salarySlipContent], { type: "text/plain" });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = `${record.employeeName}_SalarySlip.txt`;
-    a.click();
-    URL.revokeObjectURL(url);
-  };
 
   return (
-    <DoctorLayout>
-    <div className="max-w-5xl mx-auto mt-10 p-6 bg-gray-100 shadow-lg rounded-lg">
-      <h2 className="text-3xl font-bold text-center mb-6">Payroll Management</h2>
-
-      {/* Payroll Form */}
-      <form onSubmit={handleSubmit} className="bg-white p-6 rounded-lg shadow">
-        {/* Employee ID */}
-        <div className="mb-4">
-          <label className="block text-gray-700 font-medium mb-2">Employee ID</label>
-          <input
-            type="text"
-            name="employeeID"
-            value={formData.employeeID}
-            onChange={handleChange}
-            className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-            placeholder="Enter Employee ID"
-            required
-          />
-        </div>
-
-        {/* Employee Name */}
-        <div className="mb-4">
-          <label className="block text-gray-700 font-medium mb-2">Employee Name</label>
-          <input
-            type="text"
-            name="employeeName"
-            value={formData.employeeName}
-            onChange={handleChange}
-            className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-            placeholder="Enter Employee Name"
-            required
-          />
-        </div>
-
-        {/* Base Salary (Fixed) */}
-        <div className="mb-4">
-          <label className="block text-gray-700 font-medium mb-2">Base Salary</label>
-          <input
-            type="number"
-            name="baseSalary"
-            value={formData.baseSalary}
-            readOnly
-            className="w-full px-4 py-2 border rounded-lg bg-gray-200"
-          />
-        </div>
-
-        {/* Allowances (Fixed) */}
-        <div className="mb-4">
-          <label className="block text-gray-700 font-medium mb-2">Allowances</label>
-          <input
-            type="number"
-            name="allowances"
-            value={formData.allowances}
-            readOnly
-            className="w-full px-4 py-2 border rounded-lg bg-gray-200"
-          />
-        </div>
-
-        {/* Bonus */}
-        <div className="mb-4">
-          <label className="block text-gray-700 font-medium mb-2">Bonus</label>
-          <input
-            type="number"
-            name="bonus"
-            value={formData.bonus}
-            onChange={handleChange}
-            className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-            placeholder="Enter Bonus"
-          />
-        </div>
-
-        {/* Deductions */}
-        <div className="mb-4">
-          <label className="block text-gray-700 font-medium mb-2">Deductions</label>
-          <input
-            type="number"
-            name="deductions"
-            value={formData.deductions}
-            onChange={handleChange}
-            className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-            placeholder="Enter Deductions"
-          />
-        </div>
-
-        {/* Payment Mode */}
-        <div className="mb-4">
-          <label className="block text-gray-700 font-medium mb-2">Payment Mode</label>
-          <select
-            name="paymentMode"
-            value={formData.paymentMode}
-            onChange={handleChange}
-            className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-          >
-            <option>Bank Transfer</option>
-            <option>Cheque</option>
-            <option>Cash</option>
-          </select>
-        </div>
-
-        {/* Payment Date */}
-        <div className="mb-4">
-          <label className="block text-gray-700 font-medium mb-2">Payment Date</label>
-          <input
-            type="date"
-            name="paymentDate"
-            value={formData.paymentDate}
-            onChange={handleChange}
-            className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-          />
-        </div>
-
-        {/* Submit Button */}
+    <div>
+    
+      <div className="flex gap-4 mb-4">
         <button
-          type="submit"
-          className="w-full bg-blue-500 text-white font-medium py-2 px-4 rounded-lg hover:bg-blue-600 transition"
+          onClick={() => handleTabSwitch("payroll")}
+          className={`px-4 py-2 ${
+            activeTab === "payroll" ? "bg-blue-500 text-white" : "bg-gray-200"
+          } rounded-md`}
         >
-          {editIndex !== null ? "Update Record" : "Add Payroll Record"}
+          Payroll
         </button>
-      </form>
+        <button
+          onClick={() => handleTabSwitch("history")}
+          className={`px-4 py-2 ${
+            activeTab === "history" ? "bg-blue-500 text-white" : "bg-gray-200"
+          } rounded-md`}
+        >
+          History
+        </button>
+      </div>
 
-      {/* Payroll Records Table */}
-      <div className="mt-10">
-        <h3 className="text-2xl font-bold text-center mb-4">Payroll Records</h3>
-        {payrollRecords.length > 0 ? (
-          <table className="w-full bg-white shadow-lg rounded-lg">
-            <thead className="bg-gray-200 text-gray-600">
-              <tr>
-                <th className="p-4 text-left">Employee ID</th>
-                <th className="p-4 text-left">Employee Name</th>
-                <th className="p-4 text-left">Base Salary</th>
-                <th className="p-4 text-left">Allowances</th>
-                <th className="p-4 text-left">Bonus</th>
-                <th className="p-4 text-left">Gross Pay</th>
-                <th className="p-4 text-left">Deductions</th>
-                <th className="p-4 text-left">Net Pay</th>
-                <th className="p-4 text-left">Payment Mode</th>
-                <th className="p-4 text-left">Payment Date</th>
-                <th className="p-4 text-left">Actions</th>
+      {/* Payroll Tab */}
+      {activeTab === "payroll" && (
+        <form onSubmit={handleSubmit}>
+          {/* Employee ID and Fetch Button */}
+          <div className="mb-4 flex gap-4">
+            <div className="flex-1">
+              <label className="block text-gray-700 font-bold mb-2">Employee ID</label>
+              <input
+                type="text"
+                name="employeeID"
+                value={formData.employeeID}
+                onChange={handleChange}
+                className="w-full px-3 py-2 border rounded-md"
+              />
+            </div>
+                      {/* Employee Name */}
+         
+        </div>
+
+
+        {/* Fetch Employee Details Button */}
+        <div className="mb-4">
+          <button
+            type="button"
+            onClick={fetchEmployeeDetails}
+            className="mt-2 px-4 py-2 bg-blue-500 text-white rounded-md"
+          >
+            Fetch Details
+          </button>
+          {errorMessage && <p className="text-red-500 mt-2">{errorMessage}</p>}
+        </div>
+
+        {isFetched && (
+          <>
+           <div className="flex-1">
+            <label className="block text-gray-700 font-bold mb-2">Employee Name</label>
+            <input
+              type="text"
+              name="name"
+              value={formData.name}
+              onChange={handleChange}
+              className="w-full px-3 py-2 border rounded-md"
+              readOnly
+            />
+          </div>
+            {/* Base Salary */}
+            <div className="mb-4">
+              <label className="block text-gray-700 font-bold mb-2">Base Salary</label>
+              <input
+                type="number"
+                name="baseSalary"
+                value={formData.baseSalary}
+                className="w-full px-3 py-2 border rounded-md"
+                readOnly
+              />
+            </div>
+
+
+
+                {/* Allowances */}
+          <div className="mb-4">
+            <label className="block text-gray-700 font-bold mb-2">Allowances</label>
+            {allowances.map((allowance, index) => (
+              <div key={index} className="mb-2">
+                <label className="block text-gray-700">{allowance.name}</label>
+                <input
+                  type="number"
+                  value={allowance.value}
+                  className="w-full px-3 py-2 border rounded-md"
+                  readOnly
+                />
+              </div>
+            ))}
+          </div>
+
+          {/* Deductions */}
+          <div className="mb-4">
+            <label className="block text-gray-700 font-bold mb-2">Deductions</label>
+            {deductions.map((deduction, index) => (
+              <div key={index} className="mb-2">
+                <label className="block text-gray-700">{deduction.name}</label>
+                <input
+                  type="number"
+                  value={deduction.value}
+                  className="w-full px-3 py-2 border rounded-md"
+                  readOnly
+                />
+              </div>
+            ))}
+          </div>
+
+          {/* Bonus */}
+          <div className="mb-4">
+            <label className="block text-gray-700 font-bold mb-2">Bonus</label>
+            <input
+              type="number"
+              name="bonus"
+              value={formData.bonus}
+              onChange={handleChange}
+              className="w-full px-3 py-2 border rounded-md"
+            />
+          </div>
+
+          {/* Payment Mode and Date */}
+          <div className="mb-4 flex flex-row gap-4">
+            <div className="flex-1">
+              <label className="block text-gray-700 font-bold mb-2">Payment Mode</label>
+              <select
+                name="paymentMode"
+                value={formData.paymentMode}
+                onChange={handleChange}
+                className="w-full px-3 py-2 border rounded-md"
+              >
+                <option value="Bank Transfer">Bank Transfer</option>
+                <option value="Cheque">Cheque</option>
+                <option value="Cash">Cash</option>
+              </select>
+            </div>
+            <div className="flex-1">
+              <label className="block text-gray-700 font-bold mb-2">Payment Date</label>
+              <input
+                type="date"
+                name="paymentDate"
+                value={formData.paymentDate}
+                onChange={handleChange}
+                className="w-full px-3 py-2 border rounded-md"
+              />
+            </div>
+          </div>
+              <button
+                type="submit"
+                onClick={handleSubmit}
+                className="w-full px-4 py-2 bg-green-500 text-white rounded-md"
+              >
+                Submit Payroll
+              </button>
+                 {/* {payslipData && (
+        <div className="mt-8">
+          <h3 className="text-xl font-bold mb-4">Generated Payslip</h3>
+     
+          <Payslip payslipData={payslipData} />
+        </div>
+             )} */}
+             {/* {downloadUrl && (
+        <div className="mt-4">
+          <a
+            href={downloadUrl}
+            download={Payslip_`${formData.employeeID}`.pdf}
+            className="px-4 py-2 bg-blue-500 text-white rounded-md"
+          >
+            Download Payslip
+          </a>
+     </div>
+             )} */}
+
+            </>
+          )}
+        </form>
+      )}
+
+      {/* History Tab */}
+      {activeTab === "history" && (
+  <div className="overflow-x-auto">
+    <div className="inline-block min-w-full py-2 align-middle">
+      <div className="overflow-hidden border-b border-gray-200 shadow sm:rounded-lg">
+       
+        {errorMessage && <p className="text-red-500">{errorMessage}</p>}
+
+        {historyData.length > 0 ? (
+          <table className="w-full table-auto border-collapse">
+            <thead>
+              <tr className="bg-gray-100 text-left">
+                <th className="  px-4 py-2">Employee Id</th>
+                <th className=" px-4 py-2">Name</th>
+                <th className="  px-4 py-2">Net Pay</th>
+                <th className=" px-4 py-2">Payment Date</th>
+                 <th className=" px-4 py-2">ACTIONS</th> 
               </tr>
             </thead>
             <tbody>
-              {payrollRecords.map((record, index) => (
+              {historyData.map((item, index) => (
                 <tr key={index} className="border-b">
-                  <td className="p-4">{record.employeeID}</td>
-                  <td className="p-4">{record.employeeName}</td>
-                  <td className="p-4">{record.baseSalary}</td>
-                  <td className="p-4">{record.allowances}</td>
-                  <td className="p-4">{record.bonus}</td>
-                  <td className="p-4">{record.grossPay}</td>
-                  <td className="p-4">{record.deductions}</td>
-                  <td className="p-4">{record.netPay}</td>
-                  <td className="p-4">{record.paymentMode}</td>
-                  <td className="p-4">{record.paymentDate}</td>
-                  <td className="p-4">
-                    <button
-                      onClick={() => handleEdit(index)}
-                      className="bg-yellow-500 text-white px-4 py-2 rounded-lg mr-2 hover:bg-yellow-600"
-                    >
-                      Edit
-                    </button>
-                    <button
-  onClick={() => generateSalarySlip(record)}
-  className="flex items-center bg-green-500 text-white px-4 py-2 rounded-lg hover:bg-green-600"
->
-  <FaDownload className="mr-2" /> {/* Simple Download Icon */}
-  Download Slip
-</button>
+                  <td className=" px-4 py-4">{item.employeeID}</td>
+                  <td className=" px-4 py-4">{item.name}</td>
+                  <td className=" px-4 py-4">₹{item.netPay}</td>
+                  <td className=" px-4 py-4">
+                    {new Date(item.paymentDate).toISOString().split('T')[0]}
                   </td>
+                  <td className="px-4 py-4">
+        {/* Link to download the PDF */}
+        <a
+          href={`http://localhost:5000${item.pdfUrl}`}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="text-blue-600 hover:underline"
+        >
+          Download
+        </a>
+      </td>
                 </tr>
               ))}
             </tbody>
           </table>
         ) : (
-          <p className="text-center text-gray-600">No payroll records found.</p>
+          <p className="text-gray-500">Payment History not available.</p>
         )}
       </div>
     </div>
-    </DoctorLayout>
+  </div>
+)}
+</div>
   );
 };
 
-
-export default HRPayrollModule;
+export default PayrollManagement;
