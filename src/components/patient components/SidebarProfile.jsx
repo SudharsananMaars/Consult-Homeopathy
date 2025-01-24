@@ -15,9 +15,9 @@ const SidebarProfile = () => {
       </div>
       {/* Name and Degree */}
       <div className="text-center">
-        <h2 className="text-lg font-bold text-gray-800">John Doe</h2>
+        <h2 className="text-lg font-bold text-gray-800">Alice Smith</h2>
         <p className="text-sm text-gray-600">Patient ID : P001</p>
-        <p className="text-sm text-gray-600">Male : 32 yrs</p>
+        <p className="text-sm text-gray-600">Female : 28 yrs</p>
       </div>
       {/* Specialization */}
     </div>

@@ -8,7 +8,8 @@ import { AiOutlineMedicineBox } from "react-icons/ai";
 import { MdAccountBalance } from "react-icons/md";
 import { FaPhotoVideo } from "react-icons/fa";
 import { RiAdminLine } from "react-icons/ri";
-import { FaUserDoctor } from "react-icons/fa6";
+import { FaUserDoctor,FaPeopleGroup } from "react-icons/fa6";
+
 import SidebarProfile from "./DoctorSidebarProfile";
 import axios from 'axios';
 import config from '../../config';
@@ -91,28 +92,10 @@ const Sidebar = ({ role }) => {
     { id: 7, path: "/workshoppage", name: "Workshops", icon: MdOutlineOndemandVideo },
     { id: 8, path: "/content", name: "Content", icon: FaPhotoVideo },
     { id: 9, path: "/accounts", name: "Accounts", icon: MdAccountBalance },
-    // { id: 10, 
-    //   name: "Leave Management", path: "/leavemgt", name: "Leave Management", icon: MdAccountBalance },
-    {
-      id: 10,
-      name: "Leave Management",
-      icon: FaUserDoctor,
-      sublinks: [
-        { id: 101, path: "/leavemgt", name: "Leave Request" }, 
-        { id: 102, path: "/leavesettings", name: "LeaveSettingsForm" },
-      ],
-    },
-    { id: 11, path: "/doctor-dashboard", name: "Doctor CRM", icon: FaUserDoctor },
-    { id: 12, path: "/allocation", name: "Doctor Allocation", icon: MdOutlineDashboardCustomize },
-    { id: 13, path: "/docsettings", name: "Settings", icon: LuSettings },
-    { id: 14, 
-      name: "PayrollManagement", 
-      icon:LuWallet,
-      sublinks:[
-        { id: 141, path: "/payrollsetting", name: "PayrollSettings" },
-        { id: 142, path: "/payroll", name: "Payroll" },
-      ],
-    },
+    { id: 10, path: "/doctor-dashboard", name: "Doctor CRM", icon: FaUserDoctor },
+    { id: 11, path: "/allocation", name: "Doctor Allocation", icon: MdOutlineDashboardCustomize },
+    { id: 12, path: "/docsettings", name: "Settings", icon: LuSettings },
+    { id: 13, path: "/hrm", name: "HR Management", icon: FaPeopleGroup },
   ] : role === "assistant-doctor" ? [
     { id: 1, path: "/dashboard", name: "Home", icon: LuBox },
     {
@@ -147,69 +130,71 @@ const Sidebar = ({ role }) => {
     }
   };
 
-  return (
-    <div className="h-full flex flex-col justify-between p-8 space-y-1">
-      {/* Scrollable section for links */}
-      <div className="">
-        <SidebarProfile />
-        </div>
-        <ul className="space-y-4">
-          {SIDEBAR_LINKS.map((link, index) => (
-            <div key={index}>
-              <li
-                className={`font-medium rounded-md py-2 px-5 hover:bg-indigo-200 hover:text-indigo-500 ${
-                  activeLink === index ? "bg-indigo-300 text-indigo-500" : ""
-                }`}
-                onClick={() => handleLinkClick(link)}
-              >
-                <div className="flex justify-center md:justify-start items-center space-x-5 ">
-                  <span
-                    className={`text-gray-800 text-2xl ${
-                      activeLink === index ? "text-indigo-500" : ""
-                    }`}
-                  >
-                    {React.createElement(link.icon)}
-                  </span>
-                  <span className="text-md text-gray-600">{link.name}</span>
-                </div>
-              </li>
-
-              {/* Render sublinks if they exist and the parent link is clicked */}
-              {expandedItems[link.id] && link.sublinks && (
-                <ul className="pl-6 space-y-2 pt-2">
-                  {link.sublinks.map((sublink) => (
-                    <li key={sublink.id} className="font-medium py-2 px-5 hover:bg-indigo-200 rounded-md">
-                      <span className="mr-2 text-gray-600">•</span>
-                      <Link to={sublink.path} className="text-gray-600">
-                        {sublink.name}
-                      </Link>
-                    </li>
-                  ))}
-                </ul>
-              )}
-            </div>
-          ))}
-        </ul>
-
-      {/* Static section for help and logout */}
-      <div className="flex flex-col items-center space-y-4 pt-6">
-        <button
-          onClick={() => navigate("/needhelp")}
-          className="flex items-center justify-center space-x-2 text-xs text-white py-2 px-4 bg-blue-500 hover:bg-blue-600 rounded-full"
-        >
-          <span>?</span>
-          <span>Need Help</span>
-        </button>
-
-        <button className="flex items-center justify-center space-x-2 text-xs text-white py-2 px-4 bg-red-500 hover:bg-red-600 rounded-full"
-          onClick={handleLogout}
-        >
-          <CiLogout className="text-sm" />
-          <span>Logout</span>
-        </button>
-      </div>
+return (
+  <div className="h-full flex flex-col justify-between p-8 space-y-2 fixed top-8 left-1 w-64 bg-indigo-50 shadow-lg">
+    {/* Scrollable section for links */}
+    <div>
+      <SidebarProfile />
     </div>
-  );
+    <ul className="space-y-4 overflow-auto">
+      {SIDEBAR_LINKS.map((link, index) => (
+        <div key={index}>
+          <li
+            className={`font-medium rounded-md py-2 px-5 hover:bg-indigo-200 hover:text-indigo-500 ${
+              activeLink === index ? "bg-indigo-300 text-indigo-500" : ""
+            }`}
+            onClick={() => handleLinkClick(link)}
+          >
+            <div className="flex justify-center md:justify-start items-center space-x-5">
+              <span
+                className={`text-gray-800 text-2xl ${
+                  activeLink === index ? "text-indigo-500" : ""
+                }`}
+              >
+                {React.createElement(link.icon)}
+              </span>
+              <span className="text-md text-gray-600">{link.name}</span>
+            </div>
+          </li>
+
+          {/* Render sublinks if they exist and the parent link is clicked */}
+          {expandedItems[link.id] && link.sublinks && (
+            <ul className="pl-6 space-y-2 pt-2">
+              {link.sublinks.map((sublink) => (
+                <li key={sublink.id} className="font-medium py-2 px-5 hover:bg-indigo-200 rounded-md">
+                  <span className="mr-2 text-gray-600">•</span>
+                  <Link to={sublink.path} className="text-gray-600">
+                    {sublink.name}
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          )}
+        </div>
+      ))}
+    </ul>
+
+    {/* Static section for help and logout */}
+    <div className="flex flex-col items-center space-y-4 pt-6">
+      <button
+        onClick={() => navigate("/needhelp")}
+        className="flex items-center justify-center space-x-2 text-xs text-white py-2 px-4 bg-blue-500 hover:bg-blue-600 rounded-full"
+      >
+        <span>?</span>
+        <span>Need Help</span>
+      </button>
+
+      <button
+        className="flex items-center justify-center space-x-2 text-xs text-white py-2 px-4 bg-red-500 hover:bg-red-600 rounded-full"
+        onClick={handleLogout}
+      >
+        <CiLogout className="text-sm" />
+        <span>Logout</span>
+      </button>
+    </div>
+  </div>
+);
+
 };
 
 export default Sidebar;

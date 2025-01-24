@@ -65,6 +65,12 @@ import AdminLeaveManagement from './pages/doctor pages/AdminLeaveManagement.jsx'
 import LeaveSettingsForm from './pages/doctor pages/LeaveSettingsForm.jsx';
 import PayrollSettings from './pages/doctor pages/payrollsettings.jsx';
 import Payroll from './pages/doctor pages/payroll.jsx';
+import SalaryStructure from './pages/doctor pages/salarystructure.jsx';
+import HRPage from './pages/doctor pages/HRPage.jsx';
+import BreakTimer from './pages/doctor pages/BreakTimer.jsx';
+import Payslip from './pages/doctor pages/payslip.jsx';
+
+
 import '@fortawesome/fontawesome-free/css/all.min.css';
 
 
@@ -145,6 +151,13 @@ function App() {
         <Route path="/videosettings" element={<VideoSettings />} />
         <Route path="/payrollsetting" element={<PayrollSettings/>}></Route>
         <Route path="/payroll" element={<Payroll/>}></Route>
+        <Route path="/salarystructure" element={<SalaryStructure/>}></Route>
+        <Route path="/hrm" element={<HRPage />}></Route>
+        <Route path="/break" element={<BreakTimer/>}></Route>
+        <Route path="/payslip" element={<Payslip/>}></Route>
+       
+
+
         </Routes>
       
     </Router>

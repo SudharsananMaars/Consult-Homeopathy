@@ -1,5 +1,4 @@
 import React, { useState, useEffect } from 'react';
-import DoctorLayout from "/src/components/doctor components/DoctorLayout.jsx";
 import axios from 'axios';
 
 const LeaveSettingsForm = () => {
@@ -77,7 +76,7 @@ const LeaveSettingsForm = () => {
   };
 
   return (
-    <DoctorLayout>
+    
     <div className="max-w-md mx-auto p-6 mt-10 bg-white rounded-lg shadow-md">
       <h2 className="text-2xl font-semibold text-center mb-4">Leave Settings</h2>
       {message && <p className="text-green-500 mb-4">{message}</p>}
@@ -136,7 +135,7 @@ const LeaveSettingsForm = () => {
         </button>
       </form>
     </div>
-    </DoctorLayout>
+  
   );
 };
 

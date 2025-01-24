@@ -11,27 +11,41 @@ const CalendarEmbed = () => {
   const [calendarEmbedLink, setCalendarEmbedLink] = useState("");
 
   useEffect(() => {
-    // Load the GAPI client and initiate authentication
-    function initClient() {
-      gapi.client.init({
-        apiKey: API_KEY,
-        clientId: CLIENT_ID,
-        scope: SCOPES,
-        discoveryDocs: [
-          "https://www.googleapis.com/discovery/v1/apis/calendar/v3/rest",
-        ],
-      }).then(() => {
-        const authInstance = gapi.auth2.getAuthInstance();
-        setIsSignedIn(authInstance.isSignedIn.get());
-        authInstance.isSignedIn.listen(setIsSignedIn);
-      }).catch(error => console.error("Error initializing GAPI client:", error));
-    }
-
-    gapi.load("client:auth2", initClient);
+    const initClient = () => {
+      gapi.load("client:auth2", () => {
+        gapi.client
+          .init({
+            apiKey: API_KEY,
+            clientId: CLIENT_ID,
+            scope: SCOPES,
+            discoveryDocs: [
+              "https://www.googleapis.com/discovery/v1/apis/calendar/v3/rest",
+            ],
+          })
+          .then(() => {
+            const authInstance = gapi.auth2.getAuthInstance();
+            setIsSignedIn(authInstance.isSignedIn.get());
+            authInstance.isSignedIn.listen(setIsSignedIn);
+          })
+          .catch((error) => {
+            console.error("Error initializing GAPI client:", error);
+          });
+      });
+    };
+    initClient();
   }, []);
-
+  
   // Sign in the user
-  const signIn = () => gapi.auth2.getAuthInstance().signIn();
+  const signIn = async () => {
+    try {
+      console.log("Signing in...");
+      await gapi.auth2.getAuthInstance().signIn();
+      console.log("Sign-in successful");
+      loadUserCalendar(); // Call your calendar loading logic after sign-in
+    } catch (error) {
+      console.error("Error during sign-in:", error);
+    }
+  };   
 
   // Sign out the user
   const signOut = () => {

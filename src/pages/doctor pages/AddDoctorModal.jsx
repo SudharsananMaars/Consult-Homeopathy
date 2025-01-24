@@ -1,17 +1,143 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 
-const AddDoctorModal = ({ isOpen, onClose }) => {
+const AddDoctorModal = ({ isOpen, onClose, employeeID, refreshDoctors, doctor }) => {
   const [uploadedDocuments, setUploadedDocuments] = useState([]);
   const [error, setError] = useState(null);
+  const [documents, setDocuments] = useState([]);
+  const [showPassword, setShowPassword] = useState(false); // State to toggle password visibility
+
+  const togglePasswordVisibility = () => {
+    setShowPassword((prev) => !prev);
+  };
 
   const [formData, setFormData] = useState({
     // Personal Information
-    fullName: '',
+    name: "",
+    dateOfBirth: "",
+    gender: "",
+    maritalStatus: "",
+    nationality: "",
+    phone: "",
+    secondaryContact: "",
+    personalEmail: "",
+    currentAddress: "",
+    permanentAddress: "",
+    emergencyContactName: "",
+    emergencyContactRelationship: "",
+    emergencyContactNumber: "",
+    // Job Details
+    employeeID: "",
+    role: "",
+    department: "",
+    dateOfJoining: "",
+    employmentType: "",
+    workLocation: "",
+    reportingManager: "",
+    workShift: "",
+    // Compensation Details
+    basicSalary: "",
+    allowances: "",
+    deductions: "",
+    bankAccountNumber: "",
+    bankName: "",
+    ifscCode: "",
+    paymentFrequency: "",
+    pfNumber: "",
+    esiNumber: "",
+    taxDeductionPreferences: "",
+    usernameSystemAccess: "",
+    temporaryPassword: "",
+    accessLevel: "",
+    digitalSignature: null,
+    highestQualification: "",
+    specialization: "",
+    yearOfGraduation: "",
+    previousEmployer: "",
+    previousDuration: "",
+    previousJobRole: "",
+    totalExperience: "",
+    certifications: "",
+    medicalRegistrationNumber: "",
+    documents: [],
+});
+
+// Fetch the generated Employee ID when adding a new doctor (not in edit mode)
+useEffect(() => {
+  if (!doctor) {  // Only fetch employee ID if doctor is not provided (i.e., new employee)
+    async function fetchemployeeID() {
+      try {
+        const response = await fetch("http://localhost:5000/api/employees/generate-employee-id");
+        const data = await response.json();
+        if (data.success) {
+          setFormData((prevFormData) => ({
+            ...prevFormData,
+            employeeID: data.employeeID, // Set the generated ID
+          }));
+        }
+      } catch (error) {
+        console.error("Failed to fetch Employee ID:", error);
+      }
+    }
+    fetchemployeeID();
+  }
+}, [doctor]); // This will run when doctor is null or undefined (i.e., when adding a new doctor)
+
+// Update form data when doctor changes
+useEffect(() => {
+    if (doctor) {
+        setFormData((prevState) => ({
+            ...prevState,
+            ...doctor,
+            digitalSignature: doctor.digitalSignature || null,
+            documents: doctor.documents || [],
+        }));
+    }
+}, [doctor]);
+
+const formatDateToDDMMYYYY = (dateString) => {
+  const date = new Date(dateString);
+  const day = String(date.getDate()).padStart(2, "0");
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const year = date.getFullYear();
+  return `${day}-${month}-${year}`;
+};
+
+   // Fetch employee data when editing
+   useEffect(() => {
+    if (doctor) {
+      const fetchEmployeeData = async () => {
+        try {
+          const response = await fetch(`http://localhost:5000/api/employees/getEmployeeById/${doctor.employeeID}`);
+          const data = await response.json();
+          if (data.success) {
+            const employee = data.data;
+            setFormData((prevFormData) => ({
+              ...prevFormData,
+              ...employee,
+              dateOfBirth: employee.dateOfBirth
+                ? new Date(employee.dateOfBirth).toISOString().split("T")[0] // Format to yyyy-mm-dd
+                : "",
+              dateOfJoining: employee.dateOfJoining
+                ? new Date(employee.dateOfJoining).toISOString().split("T")[0] // Format to yyyy-mm-dd
+                : "",
+            }));
+          }
+        } catch (error) {
+                console.error("Error fetching employee details:", error);
+            }
+        };
+
+        fetchEmployeeData();
+    } else {
+        // Reset form for adding a new employee
+        setFormData({
+             // Personal Information
+    name: '',
     dateOfBirth: '',
     gender: '',
     maritalStatus: '',
     nationality: '',
-    primaryContact: '',
+    phone: '',
     secondaryContact: '',
     personalEmail: '',
     currentAddress: '',
@@ -21,7 +147,7 @@ const AddDoctorModal = ({ isOpen, onClose }) => {
     emergencyContactNumber: '',
 // Job Details
 employeeID: '',
-jobTitle: '',
+role: '',
 department: '',
 dateOfJoining: '',
 employmentType: '',
@@ -52,16 +178,23 @@ usernameSystemAccess: '',
     totalExperience: '',
     certifications: '',
     medicalRegistrationNumber: '',
-    documents: []
-  });
+    documents: []  
+        });
+    }
+}, [doctor, employeeID]);
 
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
   const handleFileChange = (e) => {
-    setFormData({ ...formData, [e.target.name]: e.target.files[0] });
-  };
+    const { name, files } = e.target;
+    if (name === "documents") {
+      setFormData({ ...formData, documents: files });
+    } else if (name === "digitalSignature") {
+      setFormData({ ...formData, digitalSignature: files[0] });
+    }
+  };
 
   const handleDocumentUpload = (e) => {
     const files = Array.from(e.target.files);
@@ -89,32 +222,76 @@ usernameSystemAccess: '',
   };
 
   const handleSubmit = async (e) => {
-    e.preventDefault();
-    try {
-      const response = await fetch('http://localhost:5000/api/employees/add', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(formData),
-      });
+    e.preventDefault(); // Prevent the default form submission behavior
 
-      const result = await response.json();
+    // Create a new FormData object
+    const formDataToSend = new FormData();
 
-      if (response.ok) {
-        console.log('Doctor added successfully:', result);
-        onClose();
-      } else {
-        console.error('Error:', result);
-      }
-    } catch (error) {
-      console.error('Error:', error);
+    // Append text fields (formData) to FormData
+    Object.keys(formData).forEach((key) => {
+        // Skip files here, they'll be appended separately
+        if (key !== "documents" && key !== "digitalSignature") {
+            formDataToSend.append(key, formData[key]);
+        }
+    });
+
+    // Append the digital signature (if provided)
+    if (formData.digitalSignature) {
+        formDataToSend.append("digitalSignature", formData.digitalSignature);
     }
-  };
+
+    // Append the documents (if any)
+    if (formData.documents && formData.documents.length > 0) {
+        Array.from(formData.documents).forEach((doc) => {
+            formDataToSend.append(documents, doc); // Append as 'documents[]'
+        });
+    }
+
+      // Append employee data as a stringified JSON
+    formDataToSend.append("employeeData", JSON.stringify(formData));
+
+    console.log("FormData to send:", formDataToSend);
+
+    try {
+        // Determine if it's an add or update operation
+        const isUpdate = doctor && doctor.employeeID; // Check if 'doctor' object and ID exist
+
+        const url = isUpdate
+            ? `http://localhost:5000/api/employees/updateEmployee/${doctor.employeeID}`
+            : `http://localhost:5000/api/employees/add`;
+
+        const method = isUpdate ? "PUT" : "POST";
+
+        // Make the API request
+        const response = await fetch(url, {
+            method,
+            body: formDataToSend, // FormData auto-handles headers for file uploads
+        });
+
+        if (response.ok) {
+            const data = await response.json();
+            alert(isUpdate ? "Profile updated successfully!" : "Profile created successfully!");
+            console.log(data);
+
+            // Optionally refresh the form/UI after success
+            resetForm();
+        } else {
+            // Handle server errors
+            const errorData = await response.json();
+            alert( `Error: ${errorData.message || "Something went wrong!"}`);
+        }
+    } catch (error) {
+        console.error("Error in form submission:", error);
+        alert("An unexpected error occurred. Please try again.");
+    }
+};
+
+
 
   if (!isOpen) return null;
 
   return (
+
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-gray-900 bg-opacity-50 p-4">
       <div className="container max-h-[80vh] overflow-y-auto mx-auto p-6 bg-white rounded-lg shadow-lg relative">
         <h2 className="text-2xl font-bold mb-6">Add Employee</h2>
@@ -128,8 +305,8 @@ usernameSystemAccess: '',
               <label className="block text-sm font-medium">Full Name *</label>
               <input
                 type="text"
-                name="fullName"
-                value={formData.fullName}
+                name="name"
+                value={formData.name}
                 onChange={handleChange}
                 className="w-full mt-1 p-2 border border-gray-300 rounded-md"
                 placeholder="Enter Full Name"
@@ -170,6 +347,7 @@ usernameSystemAccess: '',
                 value={formData.maritalStatus}
                 onChange={handleChange}
                 className="w-full mt-1 p-2 border border-gray-300 rounded-md"
+                required
               >
                 <option value="">Select Status</option>
                 <option value="Single">Single</option>
@@ -186,6 +364,7 @@ usernameSystemAccess: '',
                 onChange={handleChange}
                 className="w-full mt-1 p-2 border border-gray-300 rounded-md"
                 placeholder="Enter Nationality"
+                required
               />
             </div>
 
@@ -193,8 +372,8 @@ usernameSystemAccess: '',
               <label className="block text-sm font-medium">Primary Contact *</label>
               <input
                 type="tel"
-                name="primaryContact"
-                value={formData.primaryContact}
+                name="phone"
+                value={formData.phone}
                 onChange={handleChange}
                 className="w-full mt-1 p-2 border border-gray-300 rounded-md"
                 placeholder="Enter Primary Contact"
@@ -210,6 +389,7 @@ usernameSystemAccess: '',
                 onChange={handleChange}
                 className="w-full mt-1 p-2 border border-gray-300 rounded-md"
                 placeholder="Enter Secondary Contact"
+                
               />
             </div>
 
@@ -248,6 +428,7 @@ usernameSystemAccess: '',
                 onChange={handleChange}
                 className="w-full mt-1 p-2 border border-gray-300 rounded-md"
                 placeholder="Enter Permanent Address"
+                required
               />
             </div>
 
@@ -300,24 +481,24 @@ usernameSystemAccess: '',
                 type="text"
                 name="employeeID"
                 value={formData.employeeID}
-                onChange={handleChange}
+                readOnly
                 className="w-full mt-1 p-2 border border-gray-300 rounded-md"
-                placeholder="Enter Employee ID"
               />
             </div>
 
             <div>
               <label className="block text-sm font-medium">Designation Job Title</label>
               <select
-                name="jobTitle"
-                value={formData.jobTitle}
+                name="role"
+                value={formData.role}
                 onChange={handleChange}
                 className="w-full mt-1 p-2 border border-gray-300 rounded-md"
+                required
               >
                 <option value="">Select Designation</option>
                 <option value="Senior Doctor">Senior Doctor</option>
                 <option value="Doctor">Doctor</option>
-                <option value="Assistant Doctor">Assistant Doctor</option>
+                <option value="assistant-doctor">assistant-doctor</option>
                 <option value="Executive">Executive</option>
                 <option value="Admin- Clinic">Admin- Clinic</option>
                 <option value="Admin- Operations">Admin- Operations</option>
@@ -332,6 +513,7 @@ usernameSystemAccess: '',
                 value={formData.department}
                 onChange={handleChange}
                 className="w-full mt-1 p-2 border border-gray-300 rounded-md"
+                required
               >
                 <option value="">Select Department</option>
                 <option value="Medical">Medical</option>
@@ -342,7 +524,7 @@ usernameSystemAccess: '',
             </div>
             
             <div>
-              <label className="block text-sm font-medium">Date of Birth *</label>
+              <label className="block text-sm font-medium">Date of Joining *</label>
               <input
                 type="date"
                 name="dateOfJoining"
@@ -360,6 +542,7 @@ usernameSystemAccess: '',
                 value={formData.employmentType}
                 onChange={handleChange}
                 className="w-full mt-1 p-2 border border-gray-300 rounded-md"
+                required
               >
                 <option value="">Select Employment Type</option>
                 <option value="Full-time">Full-time</option>
@@ -375,6 +558,7 @@ usernameSystemAccess: '',
                 value={formData.workLocation}
                 onChange={handleChange}
                 className="w-full mt-1 p-2 border border-gray-300 rounded-md"
+                required
               >
                 <option value="">Select Work Location</option>
                 <option value="Remote">Remote</option>
@@ -403,10 +587,12 @@ usernameSystemAccess: '',
                 value={formData.workShift}
                 onChange={handleChange}
                 className="w-full mt-1 p-2 border border-gray-300 rounded-md"
+                required
               >
                 <option value="">Select Work Shift</option>
-                <option value="Day Shift">Day Shift</option>
-                <option value="Night Shift">Night Shift</option>
+                <option value="Morning Shift">Morning</option>
+                <option value="Evening Shift">Evening</option>
+                <option value="Night Shift">Night</option>
                 <option value=" Flexible Hours"> Flexible Hours</option>
                 
               </select>
@@ -471,8 +657,8 @@ usernameSystemAccess: '',
   <label className="block text-sm font-medium">Bank Name & Branch *</label>
   <input
     type="text"
-    name="bankNameBranch"
-    value={formData.bankNameBranch}
+    name="bankName"
+    value={formData.bankName}
     onChange={handleChange}
     className="w-full mt-1 p-2 border border-gray-300 rounded-md"
     placeholder="Enter Bank Name and Branch"
@@ -518,6 +704,7 @@ usernameSystemAccess: '',
     onChange={handleChange}
     className="w-full mt-1 p-2 border border-gray-300 rounded-md"
     placeholder="Enter PF Number"
+    required
   />
 </div>
 
@@ -530,6 +717,7 @@ usernameSystemAccess: '',
     onChange={handleChange}
     className="w-full mt-1 p-2 border border-gray-300 rounded-md"
     placeholder="Enter ESI Number"
+    required
   />
 </div>
 
@@ -542,14 +730,12 @@ usernameSystemAccess: '',
     onChange={handleChange}
     className="w-full mt-1 p-2 border border-gray-300 rounded-md"
     placeholder="Enter Tax Deduction Preferences"
+    required
   />
 </div>
 </div>
 
-   
-
-  
-            {/* Educational and Professional Background */}
+   {/* Educational and Professional Background */}
             <h3 className="col-span-2 text-xl font-semibold mt-6 mb-6">Educational and Professional Background</h3>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             {/* Educational fields */}
@@ -575,6 +761,7 @@ usernameSystemAccess: '',
                 onChange={handleChange}
                 className="w-full mt-1 p-2 border border-gray-300 rounded-md"
                 placeholder="Enter Specialization"
+                required
               />
             </div>
 
@@ -603,6 +790,7 @@ usernameSystemAccess: '',
                 onChange={handleChange}
                 className="w-full mt-1 p-2 border border-gray-300 rounded-md"
                 placeholder="Enter Company Name"
+                required
               />
             </div>
 
@@ -615,6 +803,7 @@ usernameSystemAccess: '',
                 onChange={handleChange}
                 className="w-full mt-1 p-2 border border-gray-300 rounded-md"
                 placeholder="Enter Duration"
+                required
               />
             </div>
 
@@ -627,6 +816,7 @@ usernameSystemAccess: '',
                 onChange={handleChange}
                 className="w-full mt-1 p-2 border border-gray-300 rounded-md"
                 placeholder="Enter Job Role"
+                required
               />
             </div>
 
@@ -652,6 +842,7 @@ usernameSystemAccess: '',
               onChange={handleChange}
               className="w-full mt-1 p-2 border border-gray-300 rounded-md"
               placeholder="Enter Certifications"
+              required
             />
           </div>
   
@@ -664,6 +855,7 @@ usernameSystemAccess: '',
               onChange={handleChange}
               className="w-full mt-1 p-2 border border-gray-300 rounded-md"
               placeholder="Enter Registration Number"
+              required
             />
           </div>
           </div>
@@ -676,8 +868,9 @@ usernameSystemAccess: '',
   <input
     type="file"
     name="documents"
+    accept='application/pdf'
     multiple
-    onChange={handleDocumentUpload}
+    onChange={handleFileChange}
     className="w-full mt-1 p-2 border border-gray-300 rounded-md"
   />
 </div>
@@ -714,85 +907,97 @@ usernameSystemAccess: '',
   )}
 </div>
 
-            {/* System Access and Credentials */}
-            <h3 className="col-span-2 text-xl font-semibold mt-6 mb-6">System Access and Credentials</h3>
+ {/* System Access and Credentials */}
+ <h3 className="col-span-2 text-xl font-semibold mt-6 mb-6">System Access and Credentials</h3>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <div>
-                <label className="block text-sm font-medium">Username(System Access) *</label>
-                <input
-                  type="text"
-                  name="usernameSystemAccess"
-                  value={formData.usernameSystemAccess}
-                  onChange={handleChange}
-                  className="w-full mt-1 p-2 border border-gray-300 rounded-md"
-                  placeholder="Enter Username"
-                  required
-                />
-              </div>
+<div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+  <div>
+    <label className="block text-sm font-medium">Username(System Access) *</label>
+    <input
+      type="text"
+      name="usernameSystemAccess"
+      value={formData.usernameSystemAccess}
+      onChange={handleChange}
+      className="w-full mt-1 p-2 border border-gray-300 rounded-md"
+      placeholder="Enter Username"
+      required
+    />
+  </div>
 
-              <div>
-                <label className="block text-sm font-medium">Temporary Password *</label>
-                <input
-                  type="password"
-                  name="temporaryPassword"
-                  value={formData.temporaryPassword}
-                  onChange={handleChange}
-                  className="w-full mt-1 p-2 border border-gray-300 rounded-md"
-                  placeholder="Enter Temporary Password"
-                  required
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium">Role-based Access Level *</label>
-                <select
-                  name="accessLevel"
-                  value={formData.accessLevel}
-                  onChange={handleChange}
-                  className="w-full mt-1 p-2 border border-gray-300 rounded-md"
-                  required
-                >
-                  <option>Select Access Level</option>
-                  <option>Admin</option>
-                  <option>Doctor</option>
-                  <option>Assistant Doctor</option>
-                  <option>Support Staff</option>
-                </select>
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium">Digital Signature</label>
-                <input
-                  type="file"
-                  name="digitalSignature"
-                  onChange={handleFileChange}
-                  className="w-full mt-1 p-2 border border-gray-300 rounded-md"
-                />
-              </div>
-            </div>
-         
-
-          <div className="flex justify-end mt-6">
-            <button
-              type="button"
-              onClick={onClose}
-              className="px-4 py-2 mr-4 bg-gray-500 text-white rounded-md"
-            >
-              Cancel
-            </button>
-            <button
-              type="submit"
-              onClick={handleSubmit}
-              className="px-4 py-2 bg-blue-600 text-white rounded-md"
-            >
-              Create Profile
-            </button>
-          </div>
-        </form>
+  <div>
+      <label className="block text-sm font-medium">Temporary Password *</label>
+      <div className="relative">
+        <input
+          type={showPassword ? "text" : "password"} // Toggle input type
+          name="temporaryPassword"
+          value={formData.temporaryPassword}
+          onChange={handleChange}
+          className="w-full mt-1 p-2 border border-gray-300 rounded-md"
+          placeholder="Enter Temporary Password"
+          required
+        />
+        <button
+          type="button"
+          onClick={togglePasswordVisibility}
+          className="absolute right-2 top-3 text-sm text-gray-600 hover:text-blue-500"
+        >
+          {showPassword ? "Hide" : "Show"}
+        </button>
       </div>
     </div>
-  );
+
+  <div>
+    <label className="block text-sm font-medium">Role-based Access Level *</label>
+    <select
+      name="accessLevel"
+      value={formData.accessLevel}
+      onChange={handleChange}
+      className="w-full mt-1 p-2 border border-gray-300 rounded-md"
+      required
+    >
+      <option>Select Access Level</option>
+      <option>Admin</option>
+      <option>Doctor</option>
+      <option>Assistant Doctor</option>
+      <option>Support Staff</option>
+    </select>
+  </div>
+
+  <div>
+    <label className="block text-sm font-medium">Digital Signature</label>
+    <input
+      type="file"
+      name="digitalSignature"
+        accept='application/pdf'
+      onChange={handleFileChange}
+      className="w-full mt-1 p-2 border border-gray-300 rounded-md"
+    />
+  </div>
+</div>
+
+
+<div className="flex justify-end mt-6">
+<button
+  type="button"
+  onClick={onClose}
+  className="px-4 py-2 mr-4 bg-gray-500 text-white rounded-md"
+>
+  Cancel
+</button>
+<button
+  type="submit"
+  onClick={handleSubmit}
+  className="px-4 py-2 bg-blue-600 text-white rounded-md"
+>
+  {doctor ? "Update Profile" : "Create Profile"}
+</button>
+
+</div>
+</form>
+</div>
+</div>
+
+);
 };
 
 export default AddDoctorModal;
