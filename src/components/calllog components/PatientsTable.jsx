@@ -234,7 +234,7 @@ const PatientsTable = () => {
 
       if (response.status === 200) {
         setPatients(prevPatients => prevPatients.map(p => 
-          p._id === patientId ? { ...p, enquiryStatus: newStatus } : p
+          p._id === patientId ? { ...p, medicalDetails: { ...p.medicalDetails, enquiryStatus: newStatus }, } : p
         ));
         console.log('Enquiry status updated successfully:', newStatus);
       } else {
@@ -260,10 +260,12 @@ const PatientsTable = () => {
                 Authorization: `Bearer ${token}` // Set the bearer token
             }
         });
-
+        console.log(response.data);
         if (response.data.success) {
             setPatients(prevPatients => prevPatients.map(p =>
-                p._id === patientId ? { ...p, diseaseType: response.data.patient.medicalDetails.diseaseType } : p
+                p._id === patientId ? {...p,medicalDetails: {...p.medicalDetails,diseaseType: response.data.medicalDetails.diseaseType, },
+              }
+            : p
             ));
             setEditingDiseaseType(null);
         } else {

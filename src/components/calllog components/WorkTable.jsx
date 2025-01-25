@@ -119,11 +119,12 @@ const WorkTable = () => {
 
   const fetchPatients = async () => {
     try {
-      let url = `http://${API_URL}:5000/api/log/list`;
+      let url = `http://${API_URL}:5000/api/doctor/getAllAppointmentsWithPatientData`;
       if (selectedFollowType === 'View All') {
         url = `http://${API_URL}:5000/api/log/list?appointmentFixed=Yes`;
       }
       const response = await axios.get(url);
+      console.log(response.data);
       setPatients(response.data);
     } catch (error) {
       console.error('Error fetching patients:', error.response ? error.response.data : error.message);
@@ -246,8 +247,8 @@ const WorkTable = () => {
             'Age',
             'Gender',
             'Current location',
-            'Message sent',
-            'Time stamp',
+            // 'Message sent',
+            // 'Time stamp',
             'Acute/Chronic',
             'Follow',
             'Follow comment',
@@ -280,8 +281,8 @@ const WorkTable = () => {
             item.age || '',
             item.gender || '',
             item.currentLocation || '',
-            item.medicalDetails.messageSent.message || '---',
-            item.medicalDetails.messageSent.timeStamp || '---',
+            // item.medicalDetails.messageSent.message || '---',
+            // item.medicalDetails.messageSent.timeStamp || '---',
             item.medicalDetails.diseaseType.name || '',
             item.medicalDetails.follow || '',
             item.medicalDetails.followComment || '',
@@ -295,7 +296,16 @@ const WorkTable = () => {
             // item.callStatus || '',
             // item.conversionStatus || '',
             item.medicalDetails.callCount || '0',
-            item.comments.text || '--',
+            // item.comments.text || '--',
+            <CommentCell 
+              patient={item} 
+              API_URL={API_URL}
+              onCommentAdded={(updatedPatient) => {
+                setPatients(prevPatients => 
+                  prevPatients.map(p => p._id === updatedPatient._id ? updatedPatient : p)
+                );
+              }} 
+            />,
             <div className="action-buttons">
               {renderButton('View draft', () => handleAction('ViewDraft', item))}
             </div>,
@@ -357,7 +367,16 @@ const WorkTable = () => {
             item.medicinePaymentConfirmation ? 'Confirmed' : 'Pending',
             // item.conversionStatus || '',
             item.medicalDetails.callCount || '',
-            '--',// item.comments.text || '--',
+            // '--',// item.comments.text || '--',
+            <CommentCell 
+              patient={item} 
+              API_URL={API_URL}
+              onCommentAdded={(updatedPatient) => {
+                setPatients(prevPatients => 
+                  prevPatients.map(p => p._id === updatedPatient._id ? updatedPatient : p)
+                );
+              }} 
+            />,
             
             <div className="action-buttons">
               {renderButton('View draft', () => handleAction('ViewDraft', item))}
@@ -417,7 +436,16 @@ const WorkTable = () => {
             item.medicalDetails.followComment || '',
             item.medicinePaymentConfirmation ? 'Confirmed' : 'Pending',
             item.medicalDetails.callCount || '',
-            item.medicalDetails.comments.text || '',
+            // item.medicalDetails.comments.text || '',
+            <CommentCell 
+              patient={item} 
+              API_URL={API_URL}
+              onCommentAdded={(updatedPatient) => {
+                setPatients(prevPatients => 
+                  prevPatients.map(p => p._id === updatedPatient._id ? updatedPatient : p)
+                );
+              }} 
+            />,
             <div className="action-buttons">
               {renderButton('View draft', () => handleAction('ViewDraft', item))}
             </div>,
@@ -491,8 +519,8 @@ const WorkTable = () => {
           'Age',
           'Gender',
           'Current location',
-          'Message sent',
-          'Time stamp',
+          // 'Message sent',
+          // 'Time stamp',
           'Acute/Chronic',
           'Follow',
           'Follow comment',
@@ -526,8 +554,8 @@ const WorkTable = () => {
           item.age || '',
           item.gender || '',
           item.currentLocation || '',
-          item.medicalDetails.messageSent.message || '---',
-          item.medicalDetails.messageSent.timeStamp || '---',
+          // item.medicalDetails.messageSent.message || '---',
+          // item.medicalDetails.messageSent.timeStamp || '---',
           item.medicalDetails.diseaseType.name || '',
           item.medicalDetails.follow || '',
           item.medicalDetails.followComment || '',
@@ -541,7 +569,16 @@ const WorkTable = () => {
           // item.callStatus || '',
           // item.conversionStatus || '',
           item.medicalDetails.callCount || '0',
-          item.medicalDetails.comments.text || '--',
+          // item.medicalDetails.comments.text || '--',
+          <CommentCell 
+              patient={item} 
+              API_URL={API_URL}
+              onCommentAdded={(updatedPatient) => {
+                setPatients(prevPatients => 
+                  prevPatients.map(p => p._id === updatedPatient._id ? updatedPatient : p)
+                );
+              }} 
+            />,
           doctorDropdown(item),
           <div className="action-buttons">
             {renderButton('View draft', () => handleAction('ViewDraft', item))}
@@ -576,8 +613,8 @@ const WorkTable = () => {
             'Age',
             'Gender',
             'Current location',
-            'Message sent',
-            'Time stamp',
+            // 'Message sent',
+            // 'Time stamp',
             'Acute/Chronic',
             'Follow',
             'Follow comment',
@@ -611,8 +648,8 @@ const WorkTable = () => {
               item.age || '',
               item.gender || '',
               item.currentLocation || '',
-              item.medicalDetails.messageSent?.message || '---',
-              item.medicalDetails.messageSent?.timeStamp || '---',
+              // item.medicalDetails.messageSent?.message || '---',
+              // item.medicalDetails.messageSent?.timeStamp || '---',
               item.medicalDetails.diseaseType?.name || '',
               item.medicalDetails.follow || '',
               item.medicalDetails.followComment || '',
