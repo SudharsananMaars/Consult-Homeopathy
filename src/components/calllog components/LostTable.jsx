@@ -236,7 +236,7 @@ const LostTable = () => {
 
       if (response.status === 200) {
         setPatients(prevPatients => prevPatients.map(p => 
-          p._id === patientId ? { ...p, enquiryStatus: newStatus } : p
+          p._id === patientId ? { ...p, medicalDetails: { ...p.medicalDetails, enquiryStatus: newStatus }, } : p
         ));
         console.log('Enquiry status updated successfully:', newStatus);
       } else {
@@ -262,10 +262,12 @@ const LostTable = () => {
                 Authorization: `Bearer ${token}` // Set the bearer token
             }
         });
-
+        console.log(response.data);
         if (response.data.success) {
             setPatients(prevPatients => prevPatients.map(p =>
-                p._id === patientId ? { ...p, diseaseType: response.data.patient.medicalDetails.diseaseType } : p
+                p._id === patientId ? {...p,medicalDetails: {...p.medicalDetails,diseaseType: response.data.medicalDetails.diseaseType, },
+              }
+            : p
             ));
             setEditingDiseaseType(null);
         } else {
@@ -487,16 +489,31 @@ const LostTable = () => {
                   <RecordingsButton patient={patient} />
           </div>
         );
-      case "Follow up Comments":
-        return <CommentCell 
-          patient={patient} 
-          API_URL={API_URL}
-          onCommentAdded={(updatedPatient) => {
-            setPatients(prevPatients => 
-              prevPatients.map(p => p._id === updatedPatient._id ? updatedPatient : p)
-            );
-          }} 
-        />;
+        case "Follow up Comments":
+          return (
+              <CommentCell 
+                  patient={patient} 
+                  API_URL={API_URL}
+                  onCommentAdded={(updatedPatient) => {
+                    if (updatedPatient && updatedPatient._id) {
+                      setPatients((prevPatients) =>
+                        prevPatients.map((p) =>
+                          p._id === updatedPatient._id
+                            ? {
+                                ...p,
+                                medicalDetails: {
+                                  ...p.medicalDetails,
+                                  comments: updatedPatient.medicalDetails.comments || [],
+                                },
+                              }
+                            : p
+                        )
+                      );
+                    }
+                  }}
+              />
+          );
+      
       case "Out of network":
         return patient.outOfNetwork || '---';
       case "appDownload":

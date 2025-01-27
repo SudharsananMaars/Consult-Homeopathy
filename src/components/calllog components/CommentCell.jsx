@@ -3,6 +3,7 @@ import { FaPlus, FaEye, FaTimes } from 'react-icons/fa';
 import axios from 'axios';
 
 const CommentCell = ({ patient, API_URL, onCommentAdded }) => {
+  // console.log('Patient:', patient, onCommentAdded);
   const [isAddingComment, setIsAddingComment] = useState(false);
   const [showHistory, setShowHistory] = useState(false);
   const [newComment, setNewComment] = useState('');
@@ -11,23 +12,24 @@ const CommentCell = ({ patient, API_URL, onCommentAdded }) => {
     ? patient.medicalDetails.comments[patient.medicalDetails.comments.length - 1].text 
     : 'No comments';
 
-  const handleAddComment = async () => {
-    if (!newComment.trim()) return;
-    console.log('New comment:', newComment);
-    try {
-        const response = await axios.post(`http://${API_URL}:5000/api/log/comments/${patient._id}`, {
-        text: newComment  // Changed from textMessage to text
-        });
-        
+    const handleAddComment = async () => {
+      if (!newComment.trim()) return;
+      try {
+        const response = await axios.post(
+          `http://${API_URL}:5000/api/log/comments/${patient._id}`,
+          { text: newComment }
+        );
+    
         if (response.data.success) {
-        onCommentAdded(response.data.patient);
-        setNewComment('');
-        setIsAddingComment(false);
+          onCommentAdded(response.data.patient); // Pass the updated patient data to the parent component
+          setNewComment(''); // Reset the comment input field
+          setIsAddingComment(false); // Close the modal
         }
-    } catch (error) {
+      } catch (error) {
         console.error('Error adding comment:', error);
-    }
+      }
     };
+    
 
   const Modal = ({ isOpen, onClose, title, children }) => {
     if (!isOpen) return null;

@@ -487,16 +487,31 @@ const PatientsTable = () => {
                   <RecordingsButton patient={patient} />
           </div>
         );
-      case "Follow up Comments":
-        return <CommentCell 
-          patient={patient} 
-          API_URL={API_URL}
-          onCommentAdded={(updatedPatient) => {
-            setPatients(prevPatients => 
-              prevPatients.map(p => p._id === updatedPatient._id ? updatedPatient : p)
-            );
-          }} 
-        />;
+        case "Follow up Comments":
+          return (
+              <CommentCell 
+                  patient={patient} 
+                  API_URL={API_URL}
+                  onCommentAdded={(updatedPatient) => {
+                    if (updatedPatient && updatedPatient._id) {
+                      setPatients((prevPatients) =>
+                        prevPatients.map((p) =>
+                          p._id === updatedPatient._id
+                            ? {
+                                ...p,
+                                medicalDetails: {
+                                  ...p.medicalDetails,
+                                  comments: updatedPatient.medicalDetails.comments || [],
+                                },
+                              }
+                            : p
+                        )
+                      );
+                    }
+                  }}
+              />
+          );
+      
       case "Out of network":
         return patient.outOfNetwork || '---';
       case "appDownload":

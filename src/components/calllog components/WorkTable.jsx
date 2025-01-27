@@ -769,26 +769,25 @@ const WorkTable = () => {
   const tableConfig = getTableConfig();
 
   return (
-    <div className="container mx-auto px-0 py-6">
-      <div className="mb-6 flex flex-col sm:flex-row justify-between items-center gap-4">
-        <div className="relative flex-1 w-full sm:w-auto">
+    <div className="w-full px-2 py-4">
+      <div className="mb-6 flex flex-col md:flex-row items-center space-y-4 md:space-y-0 md:space-x-4">
+        <div className="relative w-full">
           <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-            <IoIosSearch className="h-5 w-5 text-[#757575]" />
+            <IoIosSearch className="h-5 w-5 text-gray-500" />
           </div>
           <input
             type="text"
             placeholder="Search by name or phone number..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            className="block w-80 pl-10 pr-3 py-2 border border-[#1a237e] rounded-[5px] leading-5 bg-white placeholder-[#757575] 
-                       focus:outline-none focus:ring-2 focus:ring-[#534bae] focus:border-[#534bae] transition-all duration-300 sm:text-sm"
+            className="w-full pl-10 pr-3 py-2 border border-blue-800 rounded-lg"
           />
         </div>
+
         <select
           value={selectedFollowType}
           onChange={(e) => setSelectedFollowType(e.target.value)}
-          className="block w-full sm:w-auto px-3 py-2 border border-[#1a237e] rounded-[5px] leading-5 bg-white text-[#212121]
-                     focus:outline-none focus:ring-2 focus:ring-[#534bae] focus:border-[#534bae] transition-all duration-300 sm:text-sm"
+          className="w-full px-3 py-2 border border-blue-800 rounded-lg"
         >
           {followTypes.map((type) => (
             <option key={type} value={type}>
@@ -798,53 +797,52 @@ const WorkTable = () => {
         </select>
       </div>
 
-      <div className="relative overflow-hidden border border-[#1a237e] rounded-[5px] shadow-[0_2px_4px_rgba(0,0,0,0.1)]">
-        <div className="overflow-x-auto">
-          <div className="overflow-y-auto max-h-80"> {/* Set a max height for scrolling */}
-            <table className="min-w-full divide-y divide-[#1a237e]">
-              <thead className="bg-[#1a237e] sticky top-0 z-10">
-                <tr>
-                  {tableConfig.head.map((header) => (
-                    <th
-                      key={header}
-                      className="px-6 py-3 text-left text-xs font-medium text-[#f5f5f5] uppercase tracking-wider whitespace-nowrap"
+      <div className="w-full overflow-x-auto">
+        <table className="w-full table-auto">
+          <thead className="bg-blue-800 text-white">
+            <tr>
+              {tableConfig.head.map((header) => (
+                <th
+                  key={header}
+                  className="px-4 py-3 text-left text-xs font-semibold uppercase"
+                >
+                  {header}
+                </th>
+              ))}
+            </tr>
+          </thead>
+          <tbody>
+            {tableConfig.data.length > 0 ? (
+              tableConfig.data.map((row, rowIndex) => (
+                <tr 
+                  key={rowIndex} 
+                  className="border-b hover:bg-blue-50"
+                >
+                  {row.map((cell, cellIndex) => (
+                    <td
+                      key={cellIndex}
+                      className="px-4 py-3 text-sm text-gray-900"
                     >
-                      {header}
-                    </th>
+                      {cell}
+                    </td>
                   ))}
                 </tr>
-              </thead>
-              <tbody className="bg-white divide-y divide-[#1a237e]/20">
-                {tableConfig.data.length > 0 ? (
-                  tableConfig.data.map((row, rowIndex) => (
-                    <tr key={rowIndex} className={rowIndex % 2 === 0 ? 'bg-white' : 'bg-[#f5f5f5]'}>
-                      {row.map((cell, cellIndex) => (
-                        <td
-                          key={cellIndex}
-                          className="px-6 py-4 whitespace-nowrap text-sm text-[#212121]"
-                        >
-                          {cell}
-                        </td>
-                      ))}
-                    </tr>
-                  ))
-                ) : (
-                  <tr>
-                    <td
-                      colSpan={tableConfig.head.length}
-                      className="px-6 py-4 whitespace-nowrap text-sm text-[#757575] text-center"
-                    >
-                      No patients found matching your criteria
-                    </td>
-                  </tr>
-                )}
-              </tbody>
-            </table>
-          </div>
-        </div>
+              ))
+            ) : (
+              <tr>
+                <td
+                  colSpan={tableConfig.head.length}
+                  className="px-4 py-3 text-center text-gray-500"
+                >
+                  No patients found matching your criteria
+                </td>
+              </tr>
+            )}
+          </tbody>
+        </table>
       </div>
     </div>
   );
 };
 
-export default WorkTable;
+export default PatientTable;
