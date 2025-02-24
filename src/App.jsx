@@ -26,6 +26,8 @@ import Messenger from './components/patient components/Messenger.jsx';
 import HomePage from './pages/patient pages/HomePage.jsx';
 import RazorScreen from './pages/patient pages/RazorScreen.jsx';
 import FamilyTree from './pages/patient pages/FamilyTree.jsx';
+import ConsultationHistory from './pages/patient pages/ConsultationHistory.jsx';
+import Consultdetail from './pages/patient pages/consultdetail.jsx';
 
 // import doctor website
 import DoctorLayout from './components/doctor components/DoctorLayout.jsx';
@@ -111,6 +113,8 @@ function App() {
           <Route path="/razor" element={<RazorScreen/>} />
           <Route path="/layout" element={<Layout />}></Route>
           <Route path="/family" element={<FamilyTree/>} />
+          <Route path="/consulthistory" element={<ConsultationHistory/>} />
+          <Route path="/consultdetail/consultationNo" element={<Consultdetail/>} />
 
 
           {/* doctor website routing */}

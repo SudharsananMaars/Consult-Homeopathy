@@ -1,5 +1,6 @@
 import React, {useState} from "react";
 import DoctorLayout from "/src/components/doctor components/DoctorLayout.jsx";
+import VideoSettings from "/src/pages/doctor pages/VideoSettings.jsx"
 
 const DocSettings = () => {
     const [activeTab, setActiveTab] = useState("password"); 
@@ -48,6 +49,14 @@ const DocSettings = () => {
                 }`}
               >
                 Notification Settings
+              </button>
+              <button
+                onClick={() => setActiveTab("videosettings")}
+                className={`px-4 py-2 text-sm font-medium ${
+                  activeTab === "videosettings" ? "border-b-2 border-blue-600 text-blue-600" : "text-gray-600"
+                }`}
+              >
+                Video Settings
               </button>
             </div>
   
@@ -156,6 +165,10 @@ const DocSettings = () => {
                   Save Notification Settings
                 </button>
               </div>
+            )}
+
+            {activeTab === "videosettings" && (
+              <VideoSettings/>
             )}
           </div>
         </DoctorLayout>

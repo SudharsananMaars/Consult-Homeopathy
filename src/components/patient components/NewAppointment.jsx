@@ -6,23 +6,92 @@ import dayjs from 'dayjs';
 import calendar from '/src/assets/images/patient images/calender.png';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';  // Import axios for API requests
+import Select from 'react-select';
 
 const NewAppointment = () => {
   const [startDate, setStartDate] = useState(null);
   const [selectedTime, setSelectedTime] = useState(null);
   const [dateError, setDateError] = useState('');
   const [timeError, setTimeError] = useState('');
+  const [consultingForError, setconsultingForError] = useState('');
+  const [fullNameError, setfullNameError] = useState('');
+  const [consultingReasonError, setconsultingReasonError] = useState('');
   const [isPopupOpen, setIsPopupOpen] = useState(false); // Control popup visibility
   const [errorMessage, setErrorMessage] = useState(''); // Error state for API response
   const [successMessage, setSuccessMessage] = useState(''); // Success state for API response
   const [isBooking, setIsBooking] = useState(false); // Button state to avoid duplicate booking
   const [availableSlots, setAvailableSlots] = useState([]); // Store available time slots
+  // Declare state variables
+  const [consultingFor, setConsultingFor] = useState(null);
+  const [fullName, setFullName] = useState('');
+  const [consultingReason, setConsultingReason] = useState(null);
+  const [symptom, setSymptom] = useState('');
+  const [formError, setFormError] = useState({ consultingFor: '', fullName: '', consultingReason: '' });
   const navigate = useNavigate(); // Use for redirection
 
   // Dynamically set min and max dates based on the current date
   const today = dayjs();
   const minDate = today; // Today as the minimum date
   const maxDate = today.add(1, 'month'); // 1 month from today
+  const consultingPersons = [
+    { value: 'Self', label: 'Self' },
+    { value: 'Husband', label: 'Husband' },
+    { value: 'Wife', label: 'Wife' },
+    { value: 'Son', label: 'Son' },
+    { value: 'Daughter', label: 'Daughter' },
+    { value: 'Father', label: 'Father' },
+    { value: 'Mother', label: 'Mother' },
+    { value: 'Father-in-law', label: 'Father-in-law' },
+    { value: 'Mother-in-law', label: 'Mother-in-law' },
+    { value: 'Son-in-law', label: 'Son-in-law' },
+    { value: 'Daughter-in-law', label: 'Daughter-in-law' },
+    { value: 'Friend', label: 'Friend' },
+  ];
+
+  const consultingReasons = [
+    "Accidents", "Acute Back Pain", "Acute Bronchitis", "Acute Contact Dermatitis", "Acute migraine / headache",
+    "Acute Eczema Flare-ups", "Acute Kidney Injury", "Acute viral fever", "Acute Pelvic Inflammatory Disease (PID)",
+    "Acute Sinusitis", "Acute Urticaria", "Alzheimer's Disease", "Allergic cough", "Allergic skin rashes",
+    "Ankylosing Spondylitis", "Asthma", "Atrial Fibrillation", "Bipolar Disorder", "Boils, abscess",
+    "Breast Cancer", "Chronic Bronchitis", "Chronic Hepatitis (B and C)", "Chronic Kidney Disease",
+    "Chronic Migraine", "Chronic Obstructive Pulmonary Disease", "Colorectal Cancer", "Common Cold",
+    "Coronary Artery Disease", "COVID-19", "Crohn's Disease", "Croup", "Dengue Fever",
+    "Diabetes (Type 1 and Type 2)", "Diabetic Nephropathy", "Epilepsy", "Fibromyalgia",
+    "Gastroenteritis", "Generalized Anxiety Disorder", "Glomerulonephritis", "Heart Failure",
+    "Head injury", "Hypertension (High Blood Pressure)", "Hyperthyroidism", "Hypothyroidism",
+    "Injury, cuts, burns, bruise, blow", "Impetigo", "Influenza (Flu)", "Irritable Bowel Syndrome (IBS)",
+    "Leukemia", "Lung Cancer", "Major Depressive Disorder", "Malaria", "Metabolic Syndrome",
+    "Multiple Sclerosis", "Nephrolithiasis (Kidney Stones)", "Non-Alcoholic Fatty Liver Disease",
+    "Osteoarthritis", "Osteoporosis", "Oral Ulcers", "Parkinson's Disease", "Peripheral Artery Disease",
+    "Polycystic Kidney Disease", "Polycystic Ovary Syndrome (PCOS)", "Post-Traumatic Stress Disorder (PTSD)",
+    "Prostate Cancer", "Psoriasis", "Pulmonary Hypertension", "Rheumatoid Arthritis", "Schizophrenia",
+    "Scleroderma", "Sjogren's Syndrome", "Sprains and Strains", "Strep Throat",
+    "Systemic Lupus Erythematosus (SLE)", "Tooth Pain", "Trauma", "Ulcerative Colitis",
+    "Urinary Tract Infection (UTI)", "Other"
+  ];
+
+  const consultingReasonOptions = consultingReasons.map((reason) => ({
+    value: reason,
+    label: reason,
+  }));
+  
+  // Event Handlers
+  const handleInputChange = (e) => {
+    const { name, value } = e.target;
+    if (name === 'fullName') {
+      setFullName(value);
+    } else if (name === 'symptom') {
+      setSymptom(value);
+    }
+  };
+
+  const handleSelectChange = (name, selectedOption) => {
+    if (name === 'consultingFor') {
+      setConsultingFor(selectedOption);
+    } else if (name === 'consultingReason') {
+      setConsultingReason(selectedOption);
+    }
+  };
 
   // Fetch available time slots for the selected date
   useEffect(() => {
@@ -75,6 +144,27 @@ const NewAppointment = () => {
       setTimeError('');
     }
 
+    if (!consultingFor) {
+      setconsultingForError('Please select for whom you are consulting.');
+      hasError = true;
+    } else {
+      setconsultingForError('');
+    }
+
+    if (!fullName) {
+      setfullNameError('Please give the full name.');
+      hasError = true;
+    } else {
+      setfullNameError('');
+    }
+
+    if (!consultingReason) {
+      setconsultingReasonError('Please select the Consulting Reason.');
+      hasError = true;
+    } else {
+      setconsultingReasonError('');
+    }
+
     if (!hasError) {
       setIsPopupOpen(true);
     }
@@ -92,7 +182,7 @@ const NewAppointment = () => {
       // Make the API request to book the appointment
       const response = await axios.post(
         'http://localhost:5000/api/patient/bookAppointment',  // Adjust API endpoint as necessary
-        { appointmentDate, timeSlot },
+        { appointmentDate, timeSlot, consultingFor, fullName, consultingReason, symptom },
         {
           headers: {
             Authorization: `Bearer ${token}`, // Include token in Authorization header
@@ -121,13 +211,104 @@ const NewAppointment = () => {
   };
 
   return (
-    <div className="flex flex-col lg:flex-row items-center justify-center">
+    <div className="flex flex-col lg:flex-row justify-center space-x-6">
       {/* Calendar Image */}
-      <div className="sm:w-1/2 mt-0">
-        <img src={calendar} alt="Calendar" className="w-auto h-auto lg:mx-0" />
-      </div>
+      <div className="sm:w-1/2 space-y-8 p-5 bg-white rounded-lg shadow-md">
+  {/* Consulting Person */}
+  <div>
+  <label
+  className="block text-lg font-bold text-gray-700 mb-10 text-center bg-blue-100 p-4 rounded-lg shadow"
+>
+  Book an Appointment
+</label>
+
+    <label
+      htmlFor="consultingFor"
+      className="block text-base font-semibold text-gray-700 mb-2"
+    >
+      Consulting Person
+    </label>
+    <Select
+      name="consultingFor"
+      options={consultingPersons}
+      value={consultingFor}
+      onChange={(selectedOption) => handleSelectChange('consultingFor', selectedOption)}
+      className="select-input"
+    />
+    {formError.consultingFor && (
+      <div className="text-red-500 text-xs mt-1">{formError.consultingFor}</div>
+    )}
+  </div>
+
+  {/* Full Name */}
+  <div>
+    <label
+      htmlFor="fullName"
+      className="block text-base font-semibold text-gray-700 mb-2"
+    >
+      Full Name
+    </label>
+    <input
+      type="text"
+      id="fullName"
+      name="fullName"
+      value={fullName}
+      onChange={handleInputChange}
+      className="block w-full p-2 border border-gray-300 rounded-lg shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+      placeholder="Enter the full name"
+    />
+    {formError.fullName && (
+      <div className="text-red-500 text-xs mt-1">{formError.fullName}</div>
+    )}
+  </div>
+
+  {/* Consulting Reason */}
+  <div>
+    <label
+      htmlFor="consultingReason"
+      className="block text-base font-semibold text-gray-700 mb-2"
+    >
+      Consulting Reason
+    </label>
+    <Select
+      name="consultingReason"
+      options={consultingReasonOptions}
+      value={consultingReason}
+      onChange={(selectedOption) => handleSelectChange('consultingReason', selectedOption)}
+      className="select-input"
+    />
+    {formError.consultingReason && (
+      <div className="text-red-500 text-xs mt-1">{formError.consultingReason}</div>
+    )}
+  </div>
+
+  {/* Symptom */}
+  {consultingReason?.value === 'Other' && (
+    <div>
+      <label
+        htmlFor="symptom"
+        className="block text-base font-semibold text-gray-700 mb-2"
+      >
+        Symptom
+      </label>
+      <input
+        type="text"
+        id="symptom"
+        name="symptom"
+        value={symptom}
+        onChange={handleInputChange}
+        className="block w-full p-2 border border-gray-300 rounded-lg shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+        placeholder="Describe the symptom"
+      />
+      {formError.symptom && (
+        <div className="text-red-500 text-xs mt-1">{formError.symptom}</div>
+      )}
+    </div>
+  )}
+</div>
+
       {/* Calendar and Time Slots Container */}
-      <div className="p-3 bg-white sm:w-1/ rounded-lg shadow-lg">
+      <div className="p-5 bg-white sm:w- rounded-lg shadow-lg">
         {/* Calendar */}
         <div className="mb-6 border-2">
           <LocalizationProvider dateAdapter={AdapterDayjs}>
@@ -176,6 +357,9 @@ const NewAppointment = () => {
 
           {dateError && <p className="text-red-500 text-sm mt-2">{dateError}</p>}
           {timeError && <p className="text-red-500 text-sm mt-2">{timeError}</p>}
+          {consultingForError && <p className="text-red-500 text-sm mt-2">{consultingForError}</p>}
+          {fullNameError && <p className="text-red-500 text-sm mt-2">{fullNameError}</p>}
+          {consultingReasonError && <p className="text-red-500 text-sm mt-2">{timeError}</p>}
 
           {/* Booking Buttons */}
           <div className="mt-6 flex space-x-4 justify-center">

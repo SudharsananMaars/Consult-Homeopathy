@@ -8,7 +8,7 @@ const AppointmentBooking = () => {
   return (
     <div>
     
-      <AppointmentTabs/>
+      {/* <AppointmentTabs/> */}
       <Outlet/>
     </div>
   );

@@ -26,13 +26,14 @@ const Sidebar = () => {
   }, [location.pathname]);
 
   const SIDEBAR_LINKS = [
-    { id: 1, path: "/home", name: "Home", icon: LuBox },
-    { id: 2, path: "/appointments/newappointment", name: "Appointments", icon: LuCalendar },
-    { id: 3, path: "/payments", name: "Payments", icon: LuWallet },
+    { id: 1, path: "/consulthistory", name: "ConsultationHistory", icon: LuBox },
+    { id: 2, path: "/home", name: "Home", icon: LuBox },
+    { id: 3, path: "/appointments/newappointment", name: "Appointments", icon: LuCalendar },
+    { id: 4, path: "/payments", name: "Payments", icon: LuWallet },
     // { id: 4, path: "/invoices", name: "Invoices", icon: LuFileText },
-    { id: 4, path: "/medicine", name: "Medicine", icon: GiMedicines },
-    { id: 5, path: "/workshops", name: "Workshops", icon: MdOutlineOndemandVideo }, 
-    { id: 6, path: "/settings", name: "Settings", icon: LuSettings },
+    { id: 5, path: "/medicine", name: "Medicine", icon: GiMedicines },
+    { id: 6, path: "/workshops", name: "Workshops", icon: MdOutlineOndemandVideo }, 
+    { id: 7, path: "/settings", name: "Settings", icon: LuSettings },
   ];
 
   return (

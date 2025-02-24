@@ -191,7 +191,8 @@ const AssistDoc = () => {
                         <tr className="bg-gray-100 text-left">
                             <th className="px-4 py-2">Doctor ID</th>
                             <th className="px-4 py-2">Name</th>
-                            <th className="px-4 py-2">Created At</th>
+                            <th className="px-4 py-2">Department</th>
+                            <th className="px-4 py-2">Designation</th>
                             <th className="px-4 py-2">Phone No</th>
                             <th className="px-4 py-2">Email</th>
                             <th className="px-4 py-2">Actions</th>
@@ -203,7 +204,8 @@ const AssistDoc = () => {
                                 <tr key={doctor.employeeID} className="border-b">
                                     <td className="px-4 py-4">{doctor.employeeID}</td>
                                     <td className="px-4 py-4">{doctor.name}</td>
-                                    <td className="px-4 py-4">{doctor.createdAt}</td>
+                                    <td className="px-4 py-4">{doctor.department}</td>
+                                    <td className="px-4 py-4">{doctor.role}</td>
                                     <td className="px-4 py-4">{doctor.phone}</td>
                                     <td className="px-4 py-4">{doctor.personalEmail}</td>
                                     <td className="px-4 py-4 relative">
