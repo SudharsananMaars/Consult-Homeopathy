@@ -6,6 +6,8 @@ import config from '../../config';
 import { useNavigate } from 'react-router-dom';
 import { jwtDecode } from 'jwt-decode';
 import CommentCell from './CommentCell';
+import VideoCall from '../../pages/doctor pages/VideoCall';
+
 const WorkTable = () => {
   const [patients, setPatients] = useState([]);
   const [specialAllocationPatients, setSpecialAllocationPatients] = useState([]);
@@ -165,7 +167,11 @@ const WorkTable = () => {
 
   const navigate = useNavigate();
   const handleJoinRoom = (patient) => {
-    navigate(`/call/${patient._id}`);
+    if (patient && patient.medicalDetails && patient.medicalDetails.meetLink) {
+      navigate("/video-call", { state: { meetLink: patient.medicalDetails.meetLink } });
+    } else {
+      alert("No valid Zoom link found!");
+    }
   }
 
   const isOneHourPassed = (followUpTimestamp) => {
@@ -845,4 +851,4 @@ const WorkTable = () => {
   );
 };
 
-export default PatientTable;
+export default WorkTable;

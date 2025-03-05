@@ -69,8 +69,7 @@ import SalaryStructure from './pages/doctor pages/salarystructure.jsx';
 import HRPage from './pages/doctor pages/HRPage.jsx';
 import BreakTimer from './pages/doctor pages/BreakTimer.jsx';
 import Payslip from './pages/doctor pages/payslip.jsx';
-
-
+import NoteTaking from './pages/doctor pages/NoteTaking.jsx';
 import '@fortawesome/fontawesome-free/css/all.min.css';
 
 
@@ -155,8 +154,8 @@ function App() {
         <Route path="/hrm" element={<HRPage />}></Route>
         <Route path="/break" element={<BreakTimer/>}></Route>
         <Route path="/payslip" element={<Payslip/>}></Route>
-       
-
+        <Route path="/video-call" element={<VideoCall />} />
+        <Route path="/note-taking" element={<NoteTaking />} />
 
         </Routes>
       

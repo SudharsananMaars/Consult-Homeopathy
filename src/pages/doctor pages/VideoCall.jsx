@@ -1,77 +1,133 @@
-import React, { useEffect, useState } from "react";
-import { gapi } from "gapi-script";
+import { useState, useEffect } from "react";
+import { useLocation } from "react-router-dom";
 
-const CLIENT_ID = "167368098853-dsfqf6639dj4vh37u4mb1g7ocjco3181.apps.googleusercontent.com";
-const API_KEY = "AIzaSyDziOUEp7O1JGpEBxo_I7gLhB0ORRc0wR8";
-const SCOPES = "https://www.googleapis.com/auth/calendar.events";
-
-function GoogleMeetIntegration() {
-  const [isSignedIn, setIsSignedIn] = useState(false);
+const VideoCall = () => {
+  const location = useLocation();
+  const [meetLink, setMeetLink] = useState("");
+  const [isNoteTakingOpen, setIsNoteTakingOpen] = useState(false);
+  const [isZoomOpen, setIsZoomOpen] = useState(false);
 
   useEffect(() => {
-    function initClient() {
-      gapi.client
-        .init({
-          apiKey: API_KEY,
-          clientId: CLIENT_ID,
-          scope: SCOPES,
-        })
-        .then(() => {
-          const authInstance = gapi.auth2.getAuthInstance();
-          setIsSignedIn(authInstance.isSignedIn.get());
-          authInstance.isSignedIn.listen(setIsSignedIn);
-        });
+    if (location.state && location.state.meetLink) {
+      setMeetLink(location.state.meetLink);
     }
+  }, [location.state]);
 
-    gapi.load("client:auth2", initClient);
-  }, []);
+  const handleJoinRoom = () => {
+    if (meetLink) {
+      const zoomWindow = window.open(meetLink, "_blank");
+      if (zoomWindow) {
+        setIsZoomOpen(true);
+        zoomWindow.onbeforeunload = () => {
+          setIsZoomOpen(false);
+        };
+      }
+      openNoteTakingPopup();
+    }
+  };
 
-  const signIn = () => gapi.auth2.getAuthInstance().signIn();
-  const signOut = () => gapi.auth2.getAuthInstance().signOut();
+  const openNoteTakingPopup = () => {
+    const noteWindow = window.open(
+      "/note-taking", // Open the /note-taking route
+      "NoteTakingPopup",
+      "width=400,height=500,top=100,left=100"
+    );
 
-  const createMeetEvent = () => {
-    const event = {
-      summary: "Google Meet Video Conference",
-      description: "Meeting via Google Meet",
-      start: {
-        dateTime: new Date().toISOString(),
-        timeZone: "America/Los_Angeles",
-      },
-      end: {
-        dateTime: new Date(new Date().getTime() + 30 * 60000).toISOString(),
-        timeZone: "America/Los_Angeles",
-      },
-      conferenceData: {
-        createRequest: { requestId: "sample123", conferenceSolutionKey: { type: "hangoutsMeet" } },
-      },
-    };
+    if (noteWindow) {
+      setIsNoteTakingOpen(true);
+      noteWindow.onbeforeunload = () => {
+        setIsNoteTakingOpen(false);
+      };
+    } else {
+      alert("Pop-up blocked! Please allow pop-ups in your browser.");
+    }
+  };
 
-    gapi.client.calendar.events
-      .insert({
-        calendarId: "primary",
-        resource: event,
-        conferenceDataVersion: 1,
-      })
-      .then((response) => {
-        const meetLink = response.result.hangoutLink;
-        alert(`Google Meet Link: ${meetLink}`);
-      })
-      .catch((error) => console.error("Error creating event", error));
+  const handleContinueNotes = () => {
+    openNoteTakingPopup();
+  };
+
+  const handleContinueVideoCall = () => {
+    if (meetLink) {
+      window.open(meetLink, "_blank");
+      setIsZoomOpen(true);
+    }
   };
 
   return (
-    <div>
-      <h1>Google Meet Integration</h1>
-      {isSignedIn ? (
+    <div style={styles.container}>
+      <h2 style={styles.title}>Join the Video Call</h2>
+      {meetLink ? (
         <>
-          <button onClick={signOut}>Sign Out</button>
-          <button onClick={createMeetEvent}>Create Google Meet Event</button>
+          <button style={styles.button} onClick={handleJoinRoom}>
+            {isZoomOpen ? "Continue Video Call" : "Join Video Call"}
+          </button>
+          {isNoteTakingOpen && (
+            <button style={styles.notesButton} onClick={handleContinueNotes}>
+              Continue Taking Notes
+            </button>
+          )}
+          <p style={styles.status}>
+            {isZoomOpen ? "Video call in progress..." : "Video call not started"}
+          </p>
+          <p style={styles.status}>
+            {isNoteTakingOpen ? "Note-taking in progress..." : "Note-taking not started"}
+          </p>
         </>
       ) : (
-        <button onClick={signIn}>Sign In with Google</button>
+        <p style={styles.error}>No meeting link found!</p>
       )}
     </div>
   );
-}
+};
 
-export default GoogleMeetIntegration;
+const styles = {
+  container: {
+    display: "flex",
+    flexDirection: "column",
+    alignItems: "center",
+    justifyContent: "center",
+    height: "100vh",
+    backgroundColor: "#f0f0f0",
+    fontFamily: "Arial, sans-serif",
+  },
+  title: {
+    fontSize: "2rem",
+    marginBottom: "20px",
+    color: "#2c3e50",
+  },
+  button: {
+    padding: "15px 30px",
+    backgroundColor: "#1d73b2",
+    color: "white",
+    fontSize: "1.2rem",
+    border: "none",
+    borderRadius: "8px",
+    cursor: "pointer",
+    transition: "background-color 0.3s ease",
+    marginBottom: "10px",
+  },
+  notesButton: {
+    padding: "15px 30px",
+    backgroundColor: "#4CAF50",
+    color: "white",
+    fontSize: "1.2rem",
+    border: "none",
+    borderRadius: "8px",
+    cursor: "pointer",
+    transition: "background-color 0.3s ease",
+    marginBottom: "10px",
+  },
+  error: {
+    color: "red",
+    fontSize: "1rem",
+    marginTop: "20px",
+  },
+  status: {
+    fontSize: "1rem",
+    marginTop: "10px",
+    color: "#555",
+  },
+};
+
+export default VideoCall;
