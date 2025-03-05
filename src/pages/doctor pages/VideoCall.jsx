@@ -1,15 +1,17 @@
 import { useState, useEffect } from "react";
 import { useLocation } from "react-router-dom";
+import axios from "axios";
 
 const VideoCall = () => {
   const location = useLocation();
   const [meetLink, setMeetLink] = useState("");
-  const [isNoteTakingOpen, setIsNoteTakingOpen] = useState(false);
   const [isZoomOpen, setIsZoomOpen] = useState(false);
+  const [appointmentID, setAppointmentID] = useState("");
 
   useEffect(() => {
-    if (location.state && location.state.meetLink) {
+    if (location.state && location.state.meetLink && location.state.appointmentID) {
       setMeetLink(location.state.meetLink);
+      setAppointmentID(location.state.appointmentID);
     }
   }, [location.state]);
 
@@ -27,30 +29,36 @@ const VideoCall = () => {
   };
 
   const openNoteTakingPopup = () => {
-    const noteWindow = window.open(
-      "/note-taking", // Open the /note-taking route
-      "NoteTakingPopup",
-      "width=400,height=500,top=100,left=100"
-    );
-
-    if (noteWindow) {
-      setIsNoteTakingOpen(true);
-      noteWindow.onbeforeunload = () => {
-        setIsNoteTakingOpen(false);
-      };
-    } else {
-      alert("Pop-up blocked! Please allow pop-ups in your browser.");
-    }
+    window.open("/note-taking", "NoteTakingPopup", "width=400,height=500,top=100,left=100");
   };
 
-  const handleContinueNotes = () => {
-    openNoteTakingPopup();
-  };
+  const handleSubmitNotes = async () => {
+    const latestNotes = localStorage.getItem("notes") || ""; // Fetch latest notes before submitting
+    
+    try {
+      const token = localStorage.getItem("token");
+      if (!token) {
+        alert("You are not authenticated. Please log in.");
+        return;
+      }
 
-  const handleContinueVideoCall = () => {
-    if (meetLink) {
-      window.open(meetLink, "_blank");
-      setIsZoomOpen(true);
+      const response = await axios.post(
+        "http://localhost:5000/api/doctor/notes",
+        { appointmentID, notes: latestNotes },
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        }
+      );
+
+      if (response.data.success) {
+        alert("Notes submitted successfully!");
+        localStorage.removeItem("notes"); // Clear notes after submission
+      } else {
+        alert("Failed to submit notes.");
+      }
+    } catch (error) {
+      console.error("Error submitting notes:", error);
+      alert("An error occurred while submitting notes.");
     }
   };
 
@@ -62,16 +70,11 @@ const VideoCall = () => {
           <button style={styles.button} onClick={handleJoinRoom}>
             {isZoomOpen ? "Continue Video Call" : "Join Video Call"}
           </button>
-          {isNoteTakingOpen && (
-            <button style={styles.notesButton} onClick={handleContinueNotes}>
-              Continue Taking Notes
-            </button>
-          )}
+          <button style={styles.notesButton} onClick={handleSubmitNotes}>
+            Submit Notes
+          </button>
           <p style={styles.status}>
             {isZoomOpen ? "Video call in progress..." : "Video call not started"}
-          </p>
-          <p style={styles.status}>
-            {isNoteTakingOpen ? "Note-taking in progress..." : "Note-taking not started"}
           </p>
         </>
       ) : (
@@ -89,12 +92,14 @@ const styles = {
     justifyContent: "center",
     height: "100vh",
     backgroundColor: "#f0f0f0",
-    fontFamily: "Arial, sans-serif",
+    fontFamily: "'Roboto', sans-serif",
+    padding: "20px",
   },
   title: {
-    fontSize: "2rem",
+    fontSize: "2.5rem",
     marginBottom: "20px",
     color: "#2c3e50",
+    fontWeight: "600",
   },
   button: {
     padding: "15px 30px",
@@ -105,26 +110,28 @@ const styles = {
     borderRadius: "8px",
     cursor: "pointer",
     transition: "background-color 0.3s ease",
-    marginBottom: "10px",
+    marginBottom: "20px",
+    boxShadow: "0 4px 6px rgba(0, 0, 0, 0.1)",
   },
   notesButton: {
-    padding: "15px 30px",
+    padding: "10px 20px",
     backgroundColor: "#4CAF50",
     color: "white",
-    fontSize: "1.2rem",
+    fontSize: "1rem",
     border: "none",
     borderRadius: "8px",
     cursor: "pointer",
     transition: "background-color 0.3s ease",
-    marginBottom: "10px",
+    boxShadow: "0 4px 6px rgba(0, 0, 0, 0.1)",
+    marginTop: "10px",
   },
   error: {
     color: "red",
-    fontSize: "1rem",
+    fontSize: "1.2rem",
     marginTop: "20px",
   },
   status: {
-    fontSize: "1rem",
+    fontSize: "1.1rem",
     marginTop: "10px",
     color: "#555",
   },

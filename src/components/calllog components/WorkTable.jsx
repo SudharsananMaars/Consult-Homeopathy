@@ -167,12 +167,15 @@ const WorkTable = () => {
 
   const navigate = useNavigate();
   const handleJoinRoom = (patient) => {
+    const appointmentID = patient.medicalDetails._id;
     if (patient && patient.medicalDetails && patient.medicalDetails.meetLink) {
-      navigate("/video-call", { state: { meetLink: patient.medicalDetails.meetLink } });
+      navigate("/video-call", {
+        state: { meetLink: patient.medicalDetails.meetLink, appointmentID },
+      });
     } else {
       alert("No valid Zoom link found!");
     }
-  }
+  };
 
   const isOneHourPassed = (followUpTimestamp) => {
     if (!followUpTimestamp) return true; // If no timestamp, enable the button
