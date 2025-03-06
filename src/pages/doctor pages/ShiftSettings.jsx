@@ -1,163 +1,368 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useMemo } from "react";
+import Calendar from "react-calendar";
+import "react-calendar/dist/Calendar.css";
+import { FaCalendarAlt } from "react-icons/fa";
+import { format, parseISO, isWithinInterval } from "date-fns";
 
-const ShiftSettings = () => {
-  const [doctors, setDoctors] = useState([]); // List of doctors (to populate Name dropdown)
-  const [formData, setFormData] = useState({
-    name: '',
-    employeeID: '',
-    shift: '',
+const shifts = ["Morning", "Evening", "Night"];
+const shiftColors = {
+  Morning: {
+    background: "bg-green-500",
+    text: "text-green-900"
+  },
+  Evening: {
+    background: "bg-yellow-500", 
+    text: "text-yellow-900"
+  },
+  Night: {
+    background: "bg-blue-500",
+    text: "text-blue-900"
+  }
+};
+
+const initialRoster = [
+  { 
+    id: 1, 
+    name: "Dr. John Doe", 
+    currentShift: "Night", 
+    nextShift: "", 
+    currentFrom: new Date().toISOString().split('T')[0],
+    currentTo: "", 
+    nextFrom: "", 
+    nextTo: "",
+    previousShifts: [] 
+  },
+  { 
+    id: 2, 
+    name: "Dr. Jane Smith", 
+    currentShift: "Evening", 
+    nextShift: "", 
+    currentFrom: new Date().toISOString().split('T')[0],
+    currentTo: "", 
+    nextFrom: "", 
+    nextTo: "",
+    previousShifts: [] 
+  },
+  { 
+    id: 3, 
+    name: "Dr. Mahisha", 
+    currentShift: "Morning", 
+    nextShift: "", 
+    currentFrom: new Date().toISOString().split('T')[0],
+    currentTo: "", 
+    nextFrom: "", 
+    nextTo: "",
+    previousShifts: [] 
+  },
+];
+
+export default function Roster() {
+  const [roster, setRoster] = useState(initialRoster);
+  const [selectedDoctors, setSelectedDoctors] = useState([]);
+  const [bulkAssign, setBulkAssign] = useState({ 
+    shift: "", 
+    from: "", 
+    to: "" 
   });
-  const [loading, setLoading] = useState(true); // Loading state for fetching doctors
-  const [error, setError] = useState(null); // Error state
+  const [showCalendarId, setShowCalendarId] = useState(null);
 
-  // Fetch doctors list when the component mounts
-  useEffect(() => {
-    async function fetchDoctors() {
-      try {
-        const response = await fetch('http://localhost:5000/api/shift/getdoctors'); // Endpoint to get doctor list
-        const data = await response.json();
-
-        if (data.success) {
-          setDoctors(data.doctors); // Assuming the response contains an array of doctors
-        } else {
-          throw new Error(data.message || 'Failed to fetch doctors.');
+  const handleNextShiftAssign = (id, nextShiftDetails) => {
+    setRoster((prev) =>
+      prev.map((doctor) => {
+        if (doctor.id === id) {
+          return {
+            ...doctor,
+            nextShift: nextShiftDetails.shift,
+            nextFrom: nextShiftDetails.from,
+            nextTo: nextShiftDetails.to,
+            // When next shift starts, current shift moves to previous shifts
+            previousShifts: nextShiftDetails.from 
+              ? [
+                  ...doctor.previousShifts,
+                  { 
+                    shift: doctor.currentShift, 
+                    from: doctor.currentFrom, 
+                    to: nextShiftDetails.from 
+                  }
+                ]
+              : doctor.previousShifts
+          };
         }
-      } catch (error) {
-        console.error('Error fetching doctors:', error);
-        setError('Failed to fetch doctors.');
-      } finally {
-        setLoading(false); // End loading
-      }
-    }
-
-    fetchDoctors();
-  }, []);
-
-  // Handle change in form data
-  const handleChange = (e) => {
-    const { name, value } = e.target;
-
-    if (name === 'name') {
-      // Update the formData with selected name and corresponding employeeID
-      const selectedDoctor = doctors.find((doctor) => doctor.name === value);
-      setFormData((prev) => ({
-        ...prev,
-        name: value,
-        employeeID: selectedDoctor ? selectedDoctor.employeeID : '',
-      }));
-    } else {
-      setFormData((prev) => ({
-        ...prev,
-        [name]: value,
-      }));
-    }
+        return doctor;
+      })
+    );
   };
 
-  // Handle form submission
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-
-    try {
-      const response = await fetch('http://localhost:5000/api/shift/addshift', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(formData),
-      });
-
-      if (response.ok) {
-        const data = await response.json();
-        alert('Shift setting saved successfully!');
-        console.log(data);
-
-        // Reset form
-        setFormData({
-          name: '',
-          employeeID: '',
-          shift: '',
-        });
-      } else {
-        const errorData = await response.json();
-        throw new Error(errorData.message || 'Failed to save shift settings.');
-      }
-    } catch (error) {
-      console.error('Error in form submission:', error);
-      alert(error.message);
+  const handleBulkAssign = () => {
+    // Validate bulk assignment
+    if (!bulkAssign.shift || !bulkAssign.from || !bulkAssign.to) {
+      alert("Please fill in all bulk assignment fields");
+      return;
     }
+
+    setRoster((prev) =>
+      prev.map((doctor) => {
+        // Only update selected doctors
+        if (selectedDoctors.includes(doctor.id)) {
+          return {
+            ...doctor,
+            nextShift: bulkAssign.shift,
+            nextFrom: bulkAssign.from,
+            nextTo: bulkAssign.to,
+            // When next shift starts, current shift moves to previous shifts
+            previousShifts: bulkAssign.from 
+              ? [
+                  ...doctor.previousShifts,
+                  { 
+                    shift: doctor.currentShift, 
+                    from: doctor.currentFrom, 
+                    to: bulkAssign.from 
+                  }
+                ]
+              : doctor.previousShifts
+          };
+        }
+        return doctor;
+      })
+    );
+
+    // Reset selection and bulk assign fields
+    setSelectedDoctors([]);
+    setBulkAssign({ shift: "", from: "", to: "" });
+  };
+
+  const toggleDoctorSelection = (id) => {
+    setSelectedDoctors((prev) =>
+      prev.includes(id) ? prev.filter((docId) => docId !== id) : [...prev, id]
+    );
+  };
+
+  const getShiftDetailsForDate = (date) => {
+    const shiftsOnDate = roster.reduce((acc, doctor) => {
+      const matchingShifts = doctor.previousShifts.filter(shift => 
+        shift.from && shift.to && 
+        isWithinInterval(date, {
+          start: parseISO(shift.from),
+          end: parseISO(shift.to)
+        })
+      );
+
+      if (matchingShifts.length > 0) {
+        acc.push(...matchingShifts.map(shift => ({
+          ...shift,
+          doctorName: doctor.name
+        })));
+      }
+
+      return acc;
+    }, []);
+
+    return shiftsOnDate;
   };
 
   return (
-    <div className="max-w-lg mx-auto p-6">
-     
-      {loading && <p>Loading doctors...</p>}
-      {error && <p className="text-red-500">{error}</p>}
+    <div className="p-4">
+      <h2 className="text-xl font-bold mb-4">Doctor Roster</h2>
 
-      {!loading && !error && (
-        <form onSubmit={handleSubmit}>
-          {/* Name Dropdown */}
-          <div className="mb-4">
-            <label className="block text-sm font-medium">Name *</label>
-            <select
-              name="name"
-              value={formData.name}
-              onChange={handleChange}
-              className="w-full p-2 border border-gray-300 rounded-md"
-              required
-            >
-              <option value="">Select Doctor</option>
-              {doctors.map((doctor) => (
-                <option key={doctor.employeeID} value={doctor.name}>
-                  {doctor.name}
-                </option>
-              ))}
-            </select>
-          </div>
+      {/* Bulk Assign */}
+      <div className="flex gap-2 justify-end mb-4">
+        <select
+          className="border p-2"
+          value={bulkAssign.shift}
+          onChange={(e) => setBulkAssign({ ...bulkAssign, shift: e.target.value })}
+        >
+          <option value="">Select Shift</option>
+          {shifts.map((shift) => (
+            <option key={shift} value={shift}>
+              {shift}
+            </option>
+          ))}
+        </select>
+        <input
+          type="date"
+          className="border p-2"
+          value={bulkAssign.from}
+          onChange={(e) => setBulkAssign({ ...bulkAssign, from: e.target.value })}
+        />
+        <input
+          type="date"
+          className="border p-2"
+          value={bulkAssign.to}
+          onChange={(e) => setBulkAssign({ ...bulkAssign, to: e.target.value })}
+        />
+        <button 
+          className="bg-blue-500 text-white px-4 py-2 rounded" 
+          onClick={handleBulkAssign}
+          disabled={selectedDoctors.length === 0}
+        >
+          Assign Next Shift
+        </button>
+      </div>
 
-          {/* EmployeeID (auto-populated based on name selection) */}
-          <div className="mb-4">
-            <label className="block text-sm font-medium">Employee ID *</label>
-            <input
-              type="text"
-              name="employeeID"
-              value={formData.employeeID}
-              readOnly
-              className="w-full p-2 border border-gray-300 rounded-md bg-gray-100"
-            />
-          </div>
+      {/* Roster Table */}
+      <table className="w-full border">
+        <thead>
+          <tr className="bg-gray-200">
+            <th className="p-2">
+              <input 
+                type="checkbox" 
+                onChange={(e) => 
+                  setSelectedDoctors(e.target.checked ? roster.map(d => d.id) : [])
+                } 
+                checked={selectedDoctors.length === roster.length}
+              />
+            </th>
+            <th className="p-2">ID</th>
+            <th className="p-2">Name</th>
+            <th className="p-2">Current Shift</th>
+            <th className="p-2">Next Shift</th>
+            <th className="p-2">Next From</th>
+            <th className="p-2">Next To</th>
+            <th className="p-2">Shifts</th>
+            <th className="p-2">Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          {roster.map((doctor) => (
+            <tr key={doctor.id} className="border">
+              <td className="p-2">
+                <input 
+                  type="checkbox" 
+                  checked={selectedDoctors.includes(doctor.id)} 
+                  onChange={() => toggleDoctorSelection(doctor.id)} 
+                />
+              </td>
+              <td className="p-2">{doctor.id}</td>
+              <td className="p-2">{doctor.name}</td>
+              <td className="p-2">
+                {/* Current shift is now read-only */}
+                {doctor.currentShift}
+              </td>
+              <td className="p-2">
+                <select
+                  className="border p-1"
+                  value={doctor.nextShift}
+                  onChange={(e) => handleNextShiftAssign(doctor.id, {
+                    shift: e.target.value,
+                    from: doctor.nextFrom,
+                    to: doctor.nextTo
+                  })}
+                >
+                  <option value="">Select Next Shift</option>
+                  {shifts.map((shift) => (
+                    <option key={shift} value={shift}>
+                      {shift}
+                    </option>
+                  ))}
+                </select>
+              </td>
+              <td className="p-2">
+                <input
+                  type="date"
+                  className="border p-1"
+                  value={doctor.nextFrom}
+                  onChange={(e) => handleNextShiftAssign(doctor.id, {
+                    shift: doctor.nextShift,
+                    from: e.target.value,
+                    to: doctor.nextTo
+                  })}
+                />
+              </td>
+              <td className="p-2">
+                <input
+                  type="date"
+                  className="border p-1"
+                  value={doctor.nextTo}
+                  onChange={(e) => handleNextShiftAssign(doctor.id, {
+                    shift: doctor.nextShift,
+                    from: doctor.nextFrom,
+                    to: e.target.value
+                  })}
+                />
+              </td>
+              <td className="p-2 relative">
+                <button 
+                  onClick={() => setShowCalendarId(doctor.id === showCalendarId ? null : doctor.id)} 
+                  className="text-blue-500"
+                >
+                  <FaCalendarAlt size={20} />
+                </button>
 
-          {/* Shift Dropdown */}
-          <div className="mb-4">
-            <label className="block text-sm font-medium">Shift *</label>
-            <select
-              name="shift"
-              value={formData.shift}
-              onChange={handleChange}
-              className="w-full p-2 border border-gray-300 rounded-md"
-              required
-            >
-              <option value="">Select Shift</option>
-              <option value="Morning Shift">Morning Shift</option>
-              <option value="Evening Shift">Evening Shift</option>
-              <option value="Night Shift">Night Shift</option>
-            </select>
-          </div>
+                {/* Popover Calendar */}
+                {showCalendarId === doctor.id && (
+                  <div className="absolute bg-white border shadow-lg p-2 rounded z-10 mt-2 w-96">
+                    <Calendar
+                      tileContent={({ date, view }) => {
+                        if (view === 'month') {
+                          const shiftsOnDate = getShiftDetailsForDate(date);
+                          
+                          if (shiftsOnDate.length > 0) {
+                            // If multiple shifts, show the last shift
+                            const lastShift = shiftsOnDate[shiftsOnDate.length - 1];
+                            return (
+                              <div 
+                                className={`absolute bottom-0 left-0 right-0 h-1 ${shiftColors[lastShift.shift].background}`}
+                                title={`${lastShift.doctorName} - ${lastShift.shift} Shift`}
+                              />
+                            );
+                          }
+                        }
+                        return null;
+                      }}
+                      tileClassName={({ date, view }) => {
+                        if (view === 'month') {
+                          const shiftsOnDate = getShiftDetailsForDate(date);
+                          
+                          if (shiftsOnDate.length > 0) {
+                            // If multiple shifts, show the last shift
+                            const lastShift = shiftsOnDate[shiftsOnDate.length - 1];
+                            return `relative ${shiftColors[lastShift.shift].text}`;
+                          }
+                        }
+                        return null;
+                      }}
+                    />
+                    <button
+                      onClick={() => setShowCalendarId(null)}
+                      className="mt-2 bg-red-500 text-white px-2 py-1 rounded w-full"
+                    >
+                      Close
+                    </button>
+                  </div>
+                )}
+              </td>
+              <td className="p-2">
+                <button 
+                  className="bg-green-500 text-white px-3 py-1 rounded" 
+                  onClick={() => {
+                    // When confirmed, move next shift to current shift
+                    setRoster((prev) => 
+                      prev.map((doctor) => 
+                        doctor.id === doctor.id 
+                          ? {
+                              ...doctor,
+                              currentShift: doctor.nextShift,
+                              currentFrom: doctor.nextFrom,
+                              currentTo: doctor.nextTo,
+                              nextShift: "",
+                              nextFrom: "",
+                              nextTo: ""
+                            }
+                          : doctor
+                      )
+                    );
+                  }}
+                  disabled={!doctor.nextShift || !doctor.nextFrom || !doctor.nextTo}
+                >
+                  Confirm Shift
+                </button>
+              </td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
 
-          <button
-            type="submit"
-            className={`w-full py-2 rounded-md ${
-              !formData.name || !formData.shift
-                ? 'bg-blue-400 text-white cursor-not-allowed'
-                : 'bg-blue-500 text-white'
-            }`}
-            disabled={!formData.name || !formData.shift}
-          >
-            Save Shift Settings
-          </button>
-        </form>
-      )}
+      {/* Previous Shifts Display */}
     </div>
   );
-};
-
-export default ShiftSettings;
+}

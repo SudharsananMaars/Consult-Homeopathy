@@ -274,7 +274,16 @@ usernameSystemAccess: '',
             console.log(data);
 
             // Optionally refresh the form/UI after success
-            resetForm();
+            if (isUpdate) {
+              fetchUpdatedEmployeeData(doctor.employeeID); // Fetch updated data
+            } else if (typeof refreshDoctors === "function") {
+              refreshDoctors(); // Refresh list after new entry
+            }
+    
+            if (typeof onClose === "function") {
+              onClose(); // Close modal
+            }
+
         } else {
             // Handle server errors
             const errorData = await response.json();
@@ -285,8 +294,6 @@ usernameSystemAccess: '',
         alert("An unexpected error occurred. Please try again.");
     }
 };
-
-
 
   if (!isOpen) return null;
 

@@ -186,75 +186,316 @@ const AssistDoc = () => {
                 </div>
 
                 {/* Doctors Table */}
-                <table className="w-full table-auto border-collapse">
-                    <thead>
-                        <tr className="bg-gray-100 text-left">
-                            <th className="px-4 py-2">Doctor ID</th>
-                            <th className="px-4 py-2">Name</th>
-                            <th className="px-4 py-2">Department</th>
-                            <th className="px-4 py-2">Designation</th>
-                            <th className="px-4 py-2">Phone No</th>
-                            <th className="px-4 py-2">Email</th>
-                            <th className="px-4 py-2">Actions</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {currentDoctors.length > 0 ? (
-                            currentDoctors.map((doctor) => (
-                                <tr key={doctor.employeeID} className="border-b">
-                                    <td className="px-4 py-4">{doctor.employeeID}</td>
-                                    <td className="px-4 py-4">{doctor.name}</td>
-                                    <td className="px-4 py-4">{doctor.department}</td>
-                                    <td className="px-4 py-4">{doctor.role}</td>
-                                    <td className="px-4 py-4">{doctor.phone}</td>
-                                    <td className="px-4 py-4">{doctor.personalEmail}</td>
-                                    <td className="px-4 py-4 relative">
-                                <button
-                                    ref={buttonRef} // Ref to button for detecting click outside
-                                    onClick={() => toggleDropdown(doctor.employeeID)}
-                                    className="text-gray-600 hover:text-gray-900"
-                                >
-                                    <FaEllipsisV />
-                                </button>
-                                {dropdownVisible === doctor.employeeID && (
-                                    <div
-                                    ref={dropdownRef} // Ref to dropdown for detecting click outside
-                                    className="absolute bg-white shadow-md rounded-lg p-2 mt-2 right-0 z-10"
-                                    >
-                                    <button
-                                        onClick={() => {
-                                        handleEditDoctor(doctor.employeeID);
-                                        handleOptionClick(); // Close dropdown after Edit is clicked
-                                        }}
-                                        className="w-full text-blue-400 text-left p-2 hover:bg-gray-100 flex items-center"
-                                    >
-                                        <FaEye className="mr-2" />
-                                        Edit
-                                    </button>
-                                    <button
-                                        onClick={() => {
-                                        handleDeleteDoctor(doctor.employeeID);
-                                        handleOptionClick(); // Close dropdown after Delete is clicked
-                                        }}
-                                        className="w-full text-red-400 text-left p-2 hover:bg-gray-100 flex items-center"
-                                    >
-                                        <FaTrash className="mr-2" />
-                                        Delete
-                                    </button>
-                                    </div>
-                                )}
-                                </td>
-                                </tr>
-                            ))
-                        ) : (
-                            <tr>
-                                <td colSpan="6" className="text-center p-4">
-                                    No matching doctors found.
-                                </td>
-                            </tr>
-                        )}
-                    </tbody>
-                </table>
+                <div className="relative w-full">
+  {/* Scrollable container */}
+  <div className="overflow-auto" style={{ maxHeight: "500px" }}>
+  <table className="w-full border-collapse min-w-max">
+    <thead className="bg-gray-100 sticky top-0 z-20">
+      <tr>
+        {/* Fixed left columns */}
+        <th
+          className="px-0.5 py-1 text-left sticky left-0 bg-gray-100 z-30 m-0"
+          style={{ minWidth: "100px" }}
+        >
+          Doctor ID
+        </th>
+        <th
+          className="px-0.5 py-1 text-left sticky left-[150px] bg-gray-100 z-30 m-0"
+          style={{ minWidth: "90px" }}
+        >
+          Name
+        </th>
+        <th
+          className="px-0.5 py-1 text-left sticky left-[300px] bg-gray-100 z-30 m-0"
+          style={{ minWidth: "90px" }}
+        >
+          Designation
+        </th>
+
+        {/* Scrollable middle columns */}
+        <th className="px-0.5 py-1 text-left m-0" style={{ minWidth: "90px" }}>
+          Phone No
+        </th>
+        <th className="px-0.5 py-1 text-left m-0" style={{ minWidth: "90px" }}>
+          Email
+        </th>
+        <th className="px-0.5 py-1 text-left m-0" style={{ minWidth: "90px" }}>
+          Date of Birth
+        </th>
+        <th className="px-0.5 py-1 text-left m-0" style={{ minWidth: "90px" }}>
+          Gender
+        </th>
+        <th className="px-0.5 py-1 text-left m-0" style={{ minWidth: "90px" }}>
+          Marital Status
+        </th>
+        <th className="px-0.5 py-1 text-left m-0" style={{ minWidth: "90px" }}>
+          Nationality
+        </th>    
+        <th className="px-0.5 py-1 text-left m-0" style={{ minWidth: "90px" }}>
+          Secondary Contact
+        </th> 
+        <th className="px-0.5 py-1 text-left m-0" style={{ minWidth: "90px" }}>
+          Current Address
+        </th>    
+        <th className="px-0.5 py-1 text-left m-0" style={{ minWidth: "90px" }}>
+          Permanent Address
+        </th> 
+        <th className="px-0.5 py-1 text-left m-0" style={{ minWidth: "90px" }}>
+          Emergency Contact Name
+        </th>  
+        <th className="px-0.5 py-1 text-left m-0" style={{ minWidth: "90px" }}>
+          Emergency Contact Relationship
+        </th>
+        <th className="px-0.5 py-1 text-left m-0" style={{ minWidth: "90px" }}>
+          Emergency Contact Number
+        </th> 
+        <th className="px-0.5 py-1 text-left m-0" style={{ minWidth: "90px" }}>
+          Department
+        </th>     
+        <th className="px-0.5 py-1 text-left m-0" style={{ minWidth: "90px" }}>
+          Date of Joining
+        </th>
+        <th className="px-0.5 py-1 text-left m-0" style={{ minWidth: "90px" }}>
+          Employment Type
+        </th>
+        <th className="px-0.5 py-1 text-left m-0" style={{ minWidth: "90px" }}>
+          Work Location
+        </th>
+        <th className="px-0.5 py-1 text-left m-0" style={{ minWidth: "90px" }}>
+          Reporting Manager
+        </th>
+        <th className="px-0.5 py-1 text-left m-0" style={{ minWidth: "90px" }}>
+          Work Shift
+        </th>
+        <th className="px-0.5 py-1 text-left m-0" style={{ minWidth: "90px" }}>
+          Basic Salary
+        </th>
+        <th className="px-0.5 py-1 text-left m-0" style={{ minWidth: "90px" }}>
+          Allowances
+        </th>
+        <th className="px-0.5 py-1 text-left m-0" style={{ minWidth: "90px" }}>
+          Deductions
+        </th>
+        <th className="px-0.5 py-1 text-left m-0" style={{ minWidth: "90px" }}>
+          Bank Account Number
+        </th>
+        <th className="px-0.5 py-1 text-left m-0" style={{ minWidth: "90px" }}>
+          Bank Name
+        </th>
+        <th className="px-0.5 py-1 text-left m-0" style={{ minWidth: "90px" }}>
+          IFSC Code
+        </th>
+        <th className="px-0.5 py-1 text-left m-0" style={{ minWidth: "90px" }}>
+          Payment Frequency
+        </th>
+        <th className="px-0.5 py-1 text-left m-0" style={{ minWidth: "90px" }}>
+          PF Number
+        </th>
+        <th className="px-0.5 py-1 text-left m-0" style={{ minWidth: "90px" }}>
+          ESI Number
+        </th>
+        <th className="px-0.5 py-1 text-left m-0" style={{ minWidth: "90px" }}>
+          Tax Deduction Preferences
+        </th>
+        <th className="px-0.5 py-1 text-left m-0" style={{ minWidth: "90px" }}>
+        Username System Access
+        </th>
+        <th className="px-0.5 py-1 text-left m-0" style={{ minWidth: "90px" }}>
+        Temporary Password
+        </th>
+        <th className="px-0.5 py-1 text-left m-0" style={{ minWidth: "90px" }}>
+        Access Level
+        </th>
+        <th className="px-0.5 py-1 text-left m-0" style={{ minWidth: "90px" }}>
+        Highest Qualification
+        </th>
+        <th className="px-0.5 py-1 text-left m-0" style={{ minWidth: "90px" }}>
+        Specialization
+        </th>
+        <th className="px-0.5 py-1 text-left m-0" style={{ minWidth: "90px" }}>
+        Year Of Graduation
+        </th>
+        <th className="px-0.5 py-1 text-left m-0" style={{ minWidth: "90px" }}>
+        Previous Employer
+        </th>
+        <th className="px-0.5 py-1 text-left m-0" style={{ minWidth: "90px" }}>
+        Previous Duration
+        </th>
+        <th className="px-0.5 py-1 text-left m-0" style={{ minWidth: "90px" }}>
+        Previous Job Role
+        </th>
+        <th className="px-0.5 py-1 text-left m-0" style={{ minWidth: "90px" }}>
+        Total Experience
+        </th>
+        <th className="px-0.5 py-1 text-left m-0" style={{ minWidth: "90px" }}>
+        Medical Registration Number
+        </th>
+        <th className="px-0.5 py-1 text-left m-0" style={{ minWidth: "90px" }}>
+        
+        </th>
+      </tr>
+    </thead>
+    <tbody>
+      {currentDoctors.length > 0 ? (
+        currentDoctors.map((doctor) => (
+          <tr key={doctor.employeeID} className="border-b">
+            {/* Fixed left columns */}
+            <td
+               className="px-0.5 py-3 text-left sticky left-0 bg-white m-0 cursor-pointer text-blue-500 hover:underline"
+               style={{ minWidth: "150px" }}
+               onClick={() => handleEditDoctor(doctor.employeeID)}
+            >
+              {doctor.employeeID}
+            </td>
+            <td
+              className="px-0.5 py-3 text-left sticky left-[150px] bg-white m-0"
+              style={{ minWidth: "150px" }}
+            >
+              {doctor.name}
+            </td>
+            <td
+              className="px-0.5 py-3 text-left sticky left-[300px] bg-white m-0"
+              style={{ minWidth: "150px" }}
+            >
+              {doctor.role}
+            </td>
+
+            {/* Scrollable middle columns */}
+            <td className="px-0.5 py-3 text-left m-0" style={{ minWidth: "150px" }}>
+              {doctor.phone}
+            </td>
+            <td className="px-0.5 py-3 text-left m-0" style={{ minWidth: "150px" }}>
+              {doctor.personalEmail}
+            </td>
+            <td className="px-0.5 py-3 text-left m-0" style={{ minWidth: "150px" }}>
+              {doctor.dateOfBirth}
+            </td>
+            <td className="px-0.5 py-3 text-left m-0" style={{ minWidth: "150px" }}>
+              {doctor.gender}
+            </td>
+            <td className="px-0.5 py-3 text-left m-0" style={{ minWidth: "150px" }}>
+              {doctor.maritalStatus}
+            </td>
+            <td className="px-0.5 py-3 text-left m-0" style={{ minWidth: "150px" }}>
+              {doctor.nationality}
+            </td>
+            <td className="px-0.5 py-3 text-left m-0" style={{ minWidth: "150px" }}>
+              {doctor.secondaryContact}
+            </td>
+            <td className="px-0.5 py-3 text-left m-0" style={{ minWidth: "150px" }}>
+              {doctor.currentAddress}
+            </td>
+            <td className="px-0.5 py-3 text-left m-0" style={{ minWidth: "150px" }}>
+              {doctor.permanentAddress}
+            </td>
+            <td className="px-0.5 py-3 text-left m-0" style={{ minWidth: "150px" }}>
+              {doctor.emergencyContactName}
+            </td>
+            <td className="px-0.5 py-3 text-left m-0" style={{ minWidth: "150px" }}>
+              {doctor.emergencyContactRelationship}
+            </td>
+            <td className="px-0.5 py-3 text-left m-0" style={{ minWidth: "150px" }}>
+              {doctor.emergencyContactNumber}
+            </td>
+            <td className="px-0.5 py-3 text-left m-0" style={{ minWidth: "150px" }}>
+              {doctor.department}
+            </td>
+            <td className="px-0.5 py-3 text-left m-0" style={{ minWidth: "150px" }}>
+              {doctor.dateOfJoining}
+            </td>
+            <td className="px-0.5 py-3 text-left m-0" style={{ minWidth: "150px" }}>
+              {doctor.employmentType}
+            </td>
+            <td className="px-0.5 py-3 text-left m-0" style={{ minWidth: "150px" }}>
+              {doctor.workLocation}
+            </td>
+            <td className="px-0.5 py-3 text-left m-0" style={{ minWidth: "150px" }}>
+              {doctor.reportingManager}
+            </td>
+            <td className="px-0.5 py-3 text-left m-0" style={{ minWidth: "150px" }}>
+              {doctor.workShift}
+            </td>
+            <td className="px-0.5 py-3 text-left m-0" style={{ minWidth: "150px" }}>
+              {doctor.basicSalary}
+            </td>
+            <td className="px-0.5 py-3 text-left m-0" style={{ minWidth: "150px" }}>
+              {doctor.allowances}
+            </td>
+            <td className="px-0.5 py-3 text-left m-0" style={{ minWidth: "150px" }}>
+              {doctor.deductions}
+            </td>
+            <td className="px-0.5 py-3 text-left m-0" style={{ minWidth: "150px" }}>
+              {doctor.bankAccountNumber}
+            </td>
+            <td className="px-0.5 py-3 text-left m-0" style={{ minWidth: "150px" }}>
+              {doctor.bankName}
+            </td>
+            <td className="px-0.5 py-3 text-left m-0" style={{ minWidth: "150px" }}>
+              {doctor.ifscCode}
+            </td>
+            <td className="px-0.5 py-3 text-left m-0" style={{ minWidth: "150px" }}>
+              {doctor.paymentFrequency}
+            </td>
+            <td className="px-0.5 py-3 text-left m-0" style={{ minWidth: "150px" }}>
+              {doctor.pfNumber}
+            </td>
+            <td className="px-0.5 py-3 text-left m-0" style={{ minWidth: "150px" }}>
+              {doctor.esiNumber}
+            </td>
+            <td className="px-0.5 py-3 text-left m-0" style={{ minWidth: "150px" }}>
+              {doctor.taxDeductionPreferences}
+            </td>
+            <td className="px-0.5 py-3 text-left m-0" style={{ minWidth: "150px" }}>
+              {doctor.usernameSystemAccess}
+            </td>
+            <td className="px-0.5 py-3 text-left m-0" style={{ minWidth: "150px" }}>
+              {doctor.temporaryPassword}
+            </td>
+            <td className="px-0.5 py-3 text-left m-0" style={{ minWidth: "150px" }}>
+              {doctor.accessLevel}
+            </td>
+            <td className="px-0.5 py-3 text-left m-0" style={{ minWidth: "150px" }}>
+              {doctor.highestQualification}
+            </td>
+            <td className="px-0.5 py-3 text-left m-0" style={{ minWidth: "150px" }}>
+              {doctor.specialization}
+            </td>
+            <td className="px-0.5 py-3 text-left m-0" style={{ minWidth: "150px" }}>
+              {doctor.yearOfGraduation}
+            </td>
+            <td className="px-0.5 py-3 text-left m-0" style={{ minWidth: "150px" }}>
+              {doctor.previousEmployer}
+            </td>
+            <td className="px-0.5 py-3 text-left m-0" style={{ minWidth: "150px" }}>
+              {doctor.previousDuration}
+            </td>
+            <td className="px-0.5 py-3 text-left m-0" style={{ minWidth: "150px" }}>
+              {doctor.previousJobRole}
+            </td>
+            <td className="px-0.5 py-3 text-left m-0" style={{ minWidth: "150px" }}>
+              {doctor.totalExperience}
+            </td>
+            <td className="px-0.5 py-3 text-left m-0" style={{ minWidth: "150px" }}>
+              {doctor.medicalRegistrationNumber}
+            </td>
+
+            {/* Fixed right column */}
+            {/* Table Body */}
+
+              </tr>
+            ))
+      ) : (
+        <tr>
+          <td colSpan="12" className="text-center py-3 px-0">
+            No matching doctors found.
+          </td>
+        </tr>
+      )}
+    </tbody>
+  </table>
+</div>
+
+</div>
 
                 {/* Pagination Controls */}
                 <div className="flex justify-between items-center mt-4">

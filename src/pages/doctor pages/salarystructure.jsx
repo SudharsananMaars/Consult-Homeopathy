@@ -23,6 +23,8 @@ const SalaryStructure = () => {
       { name: "Gratuity", value: "" },
       { name: "Professional Tax", value: "" },
     ],
+    kpi: [], // Added KPI as an array (since it has multiple name & amount fields)
+    leaveEncashment: "No",
     totalAllowances: "",
     totalDeductions: "", // Array for deductions
     grossSalary: "",
@@ -131,10 +133,10 @@ const paginate = (pageNumber) => setCurrentPage(pageNumber);
   const addField = (type) => {
     setFormData((prev) => ({
       ...prev,
-      [type]: [...prev[type], { name: "", value: "" }],
+      [type]: prev[type] ? [...prev[type], { name: "", value: "" }] : [{ name: "", value: "" }],
     }));
   };
-
+  
   // Update Allowance or Deduction Value
   const updateField = (type, index, field, value) => {
     const updatedFields = [...formData[type]];
@@ -172,6 +174,8 @@ const paginate = (pageNumber) => setCurrentPage(pageNumber);
           { name: "Gratuity", value: "" },
           { name: "Professional Tax", value: "" },
         ],
+        kpi: [], // Stores KPI bonuses
+        leaveEncashment: "", // Stores Yes/No
         totalAllowances: 0,
         totalDeductions: 0,
         grossSalary: 0,
@@ -265,60 +269,64 @@ const paginate = (pageNumber) => setCurrentPage(pageNumber);
               </thead>
               <tbody>
               {currentDoctors.length > 0 ? (
-                currentDoctors.map((salary) => (
-                  <tr key={salary.employeeID}className="border-b">
-                    <td className="px-4 py-4">{salary.employeeID}</td>
-                    <td className="px-4 py-4">{salary.name}</td>
-                    <td className="px-4 py-4">{salary.baseSalary}</td>
-                    <td className="px-4 py-4">{salary.totalAllowances}</td>
-                    <td className="px-4 py-4">{salary.totalDeductions}</td>
-                    <td className="px-4 py-4">{salary.grossSalary}</td>
-                    <td className="px-4 py-4">{salary.netSalary}</td>
-                    <td className="px-4 py-4 relative">
-                      <button
-                        ref={buttonRef} // Ref to button for detecting click outside
-                        onClick={() => toggleDropdown(salary.employeeID)}
-                        className="text-gray-600 hover:text-gray-900"
-                      >
-                        <FaEllipsisV />
-                      </button>
-                      {dropdownVisible === salary.employeeID && (
-                        <div 
-                        ref={dropdownRef} // Ref to dropdown for detecting click outside
-                        className="absolute bg-white shadow-md rounded-lg p-2 mt-2 right-0 z-10">
-                          <button
-                           onClick={() => {
-                            handleEditDoctor(salary.employeeID);
-                            handleOptionClick();
-                            setIsModalOpen(true);
-                        }}
-                        
-                            className="w-full text-blue-400 text-left p-2 hover:bg-gray-100 flex items-center"
-                          >
-                            <FaEye className="mr-2" />
-                            Edit
-                          </button>
-                          <button
-                            onClick={() => {handleDeleteSalary(salary.employeeID)
-                            handleOptionClick();
-                            }}
-                            className="w-full text-red-400 text-left p-2 hover:bg-gray-100 flex items-center"
-                          >
-                            <FaTrash className="mr-2" />
-                            Delete
-                          </button>
-                        </div>
-                      )}
-                    </td>
-                  </tr>
-                ))
-              ) : (
-                <tr>
-                    <td colSpan="6" className="text-center p-4">
-                        No matching doctors found.
-                    </td>
-                </tr>
-            )}
+  [...currentDoctors] // Create a shallow copy to avoid mutating the original array
+    .sort((a, b) => a.employeeID.localeCompare(b.employeeID)) // Sort by employeeID
+    .map((salary) => (
+      <tr key={salary.employeeID} className="border-b">
+        <td className="px-4 py-4">{salary.employeeID}</td>
+        <td className="px-4 py-4">{salary.name}</td>
+        <td className="px-4 py-4">{salary.baseSalary}</td>
+        <td className="px-4 py-4">{salary.totalAllowances}</td>
+        <td className="px-4 py-4">{salary.totalDeductions}</td>
+        <td className="px-4 py-4">{salary.grossSalary}</td>
+        <td className="px-4 py-4">{salary.netSalary}</td>
+        <td className="px-4 py-4 relative">
+          <button
+            ref={buttonRef}
+            onClick={() => toggleDropdown(salary.employeeID)}
+            className="text-gray-600 hover:text-gray-900"
+          >
+            <FaEllipsisV />
+          </button>
+          {dropdownVisible === salary.employeeID && (
+            <div 
+              ref={dropdownRef}
+              className="absolute bg-white shadow-md rounded-lg p-2 mt-2 right-0 z-10"
+            >
+              <button
+                onClick={() => {
+                  handleEditDoctor(salary.employeeID);
+                  handleOptionClick();
+                  setIsModalOpen(true);
+                }}
+                className="w-full text-blue-400 text-left p-2 hover:bg-gray-100 flex items-center"
+              >
+                <FaEye className="mr-2" />
+                Edit
+              </button>
+              <button
+                onClick={() => {
+                  handleDeleteSalary(salary.employeeID);
+                  handleOptionClick();
+                }}
+                className="w-full text-red-400 text-left p-2 hover:bg-gray-100 flex items-center"
+              >
+                <FaTrash className="mr-2" />
+                Delete
+              </button>
+            </div>
+          )}
+        </td>
+      </tr>
+    ))
+) : (
+  <tr>
+    <td colSpan="6" className="text-center p-4">
+      No matching doctors found.
+    </td>
+  </tr>
+)}
+
               </tbody>
             </table>
             <div className="flex justify-between items-center mt-4">
@@ -389,7 +397,7 @@ const paginate = (pageNumber) => setCurrentPage(pageNumber);
   <div className="grid grid-cols-2 gap-4">
     {/* Employee ID */}
     <div>
-      <label className="block mb-2">Employee ID</label>
+      <label className="block mb-2 font-bold">Employee ID</label>
       <input
         type="text"
         value={formData.employeeID}
@@ -399,7 +407,7 @@ const paginate = (pageNumber) => setCurrentPage(pageNumber);
     </div>
 
     <div>
-      <label className="block mb-2">Name</label>
+      <label className="block mb-2 font-bold">Name</label>
       <input
         type="text"
         value={formData.name}
@@ -410,7 +418,7 @@ const paginate = (pageNumber) => setCurrentPage(pageNumber);
     
     {/* Base Salary */}
     <div>
-      <label className="block mb-2">Base Salary</label>
+      <label className="block mb-2 font-bold">Base Salary</label>
       <input
         type="number"
         value={formData.baseSalary}
@@ -422,7 +430,7 @@ const paginate = (pageNumber) => setCurrentPage(pageNumber);
 </div>
             {/* Allowances */}
             <div className="mb-4">
-              <label className="block mb-2">Allowances</label>
+              <label className="block mb-2 font-bold">Allowances</label>
               {formData.allowances.map((allowances, index) => (
                 <div key={index} className="flex mb-2 items-center">
                   <input
@@ -457,7 +465,7 @@ const paginate = (pageNumber) => setCurrentPage(pageNumber);
 
             {/* Deductions */}
             <div className="mb-4">
-              <label className="block mb-2">Deductions</label>
+              <label className="block mb-2 font-bold">Deductions</label>
               {formData.deductions.map((deductions, index) => (
                 <div key={index} className="flex mb-2 items-center">
                   <input
@@ -489,10 +497,77 @@ const paginate = (pageNumber) => setCurrentPage(pageNumber);
                 Add Deduction
               </button>
             </div>
+            
+            <div className="mb-4">
+  <label className="block mb-2 font-bold">KPI</label>
+  {formData.kpi?.map((kpi, index) => (
+    <div key={index} className="flex mb-2 items-center">
+      <input
+        type="text"
+        placeholder="KPI Name"
+        value={kpi.name}
+        onChange={(e) => updateField("kpi", index, "name", e.target.value)}
+        className="w-1/2 p-2 border rounded mr-2"
+      />
+      <input
+        type="number"
+        placeholder="KPI Bonus Amount"
+        value={kpi.value}
+        onChange={(e) => updateField("kpi", index, "value", e.target.value)}
+        className="w-1/2 p-2 border rounded"
+      />
+      <button
+        onClick={() => removeField("kpi", index)}
+        className="ml-2 text-red-500"
+      >
+        <FaTrash />
+      </button>
+    </div>
+  ))}
+  <button
+  onClick={() => {
+    addField("kpi");
+    console.log("KPI after adding:", formData.kpi); // Debugging log
+  }}
+  className="text-blue-500"
+>
+  Add KPI Bonus
+</button>
 
+</div>
+<div className="mb-4">
+  <label className="block mb-2 font-bold">Leave Encashment Eligibility</label>
+  {formData.leaveEncashment && (
+    <div className="flex items-center space-x-2">
+    <select
+      value={formData.leaveEncashment}
+      onChange={(e) => setFormData((prev) => ({ ...prev, leaveEncashment: e.target.value }))}
+      className="p-1 border rounded w-40 text-sm"
+    >
+      <option value="Yes">Yes</option>
+      <option value="No">No</option>
+    </select>
+    <button
+      onClick={() => setFormData({ ...formData, leaveEncashment: "" })}
+      className="text-red-500 p-1"
+    >
+      <FaTrash size={14} />
+    </button>
+  </div>
+  
+  )}
+  {!formData.leaveEncashment && (
+    <button
+      onClick={() => setFormData({ ...formData, leaveEncashment: "Yes" })}
+      className="text-blue-500"
+    >
+      Add Leave Encashment Eligibility
+    </button>
+  )}
+</div>
             <div className="mb-4 grid grid-cols-2 gap-4">
             <div className="mb-4">
-              <label className="block mb-2">Total Allowance</label>
+              <label className="block mb-2 font-bold">Total Allowance</label>
               <input
                 type="number"
                 value={formData.totalAllowances}
@@ -501,7 +576,7 @@ const paginate = (pageNumber) => setCurrentPage(pageNumber);
               />
             </div>
             <div className="mb-4">
-              <label className="block mb-2">Total Deduction</label>
+              <label className="block mb-2 font-bold">Total Deduction</label>
               <input
                 type="number"
                 value={formData.totalDeductions}
@@ -513,7 +588,7 @@ const paginate = (pageNumber) => setCurrentPage(pageNumber);
 
             {/* Gross Salary and Net Salary */}
             <div className="mb-4">
-              <label className="block mb-2">Gross Salary</label>
+              <label className="block mb-2 font-bold">Gross Salary</label>
               <input
                 type="number"
                 value={formData.grossSalary}
@@ -522,7 +597,7 @@ const paginate = (pageNumber) => setCurrentPage(pageNumber);
               />
             </div>
             <div className="mb-4">
-              <label className="block mb-2">Net Salary</label>
+              <label className="block mb-2 font-bold">Net Salary</label>
               <input
                 type="number"
                 value={formData.netSalary}
