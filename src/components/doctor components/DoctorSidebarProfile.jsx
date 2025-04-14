@@ -13,7 +13,8 @@ const SidebarProfile = () => {
   useEffect(() => {
     const fetchDoctorDetails = async () => {
       try {
-        const token = localStorage.getItem("token"); // Fetch the token from storage
+        const token = localStorage.getItem("accessToken"); // Fetch the token from storage
+        console.log(token);
         const response = await axios.get("http://localhost:5000/api/employees/profile", {
           headers: {
             Authorization: `Bearer ${token}`, // Send the token in headers

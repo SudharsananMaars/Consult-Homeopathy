@@ -20,7 +20,7 @@ const LoginPage = () => {
       // Check if accessToken is returned
       if (response.data.accessToken) {
         // Store the access token using a consistent key
-        localStorage.setItem('token', response.data.accessToken);
+        localStorage.setItem('accessToken', response.data.accessToken);
         localStorage.setItem('role', role); 
         
         // Redirect based on the role
