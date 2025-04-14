@@ -134,9 +134,13 @@ const LoginPage = () => {
           userOTP: otp,
           userType: role === 'patient' ? 'Patient' : 'Doctor',
         });
+        console.log("response", response);
         if (response.data.success) {
           setShowOtpInput(false);
+          // localStorage.removeItem('accessToken');
           localStorage.setItem('accessToken', response.data.accessToken); // Save token
+          localStorage.setItem('userId', response.data.userId); // Save token
+          localStorage.setItem('userType', response.data.userType); // Save token
           alert('OTP verified successfully!');
           if (role === 'doctor') {
             navigate('/dashboard'); // Redirect to Doctor Dashboard

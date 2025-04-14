@@ -70,8 +70,23 @@ import HRPage from './pages/doctor pages/HRPage.jsx';
 import BreakTimer from './pages/doctor pages/BreakTimer.jsx';
 import Payslip from './pages/doctor pages/payslip.jsx';
 import NoteTaking from './pages/doctor pages/NoteTaking.jsx';
+import PrescriptionWriting from './components/calllog components/PrescriptionWriting.jsx';
+import InventoryPage from './components/calllog components/InventoryPage.jsx';
 import '@fortawesome/fontawesome-free/css/all.min.css';
 
+// import '@zoomus/websdk/dist/css/bootstrap.css';
+// import '@zoomus/websdk/dist/css/react-select.css';
+
+// Inventory module
+import InventoryLayout from './components/Inventory/Layout.jsx';
+import InventoryDashboard from './components/Inventory/InventoryDashBoard.jsx';
+import RawMaterialsList from './components/Inventory/RawMaterials/RawMaterialsList.jsx';
+import RawMaterialForm from './components/Inventory/RawMaterials/RawMaterialForm.jsx';
+import RawMaterialDetail from './components/Inventory/RawMaterials/RawMaterialDetail.jsx';
+import MedicinesList from './components/Inventory/Medicine/MedicinesList.jsx';
+import MedicineDetail from './components/Inventory/Medicine/MedicineDetail.jsx';
+import MedicineForm from './components/Inventory/Medicine/MedicineForm.jsx';
+import PriceCalculator from './components/Inventory/Medicine/PriceCalculator.jsx';
 
 function App() {
   return (
@@ -156,7 +171,24 @@ function App() {
         <Route path="/payslip" element={<Payslip/>}></Route>
         <Route path="/video-call" element={<VideoCall />} />
         <Route path="/note-taking" element={<NoteTaking />} />
+        <Route path='/prescription-writing' element={<PrescriptionWriting/>} />
 
+          {/* Inventory Module Routes */}
+          <Route path='/inventory' element={<InventoryDashboard/>} />
+
+          <Route path="/raw-materials" element={<RawMaterialsList />} />
+          <Route path="/raw-materials/new" element={<RawMaterialForm />} />
+          <Route path="/raw-materials/:id" element={<RawMaterialDetail />} />
+          <Route path="/raw-materials/:id/edit" element={<RawMaterialForm isEdit={true} />} />
+
+          {/* Medicines Routes */}
+          <Route path="/medicines" element={<MedicinesList />} />
+          <Route path="/medicines/new" element={<MedicineForm />} />
+          <Route path="/medicines/:id" element={<MedicineDetail />} />
+          <Route path="/medicines/:id/edit" element={<MedicineForm isEdit={true} />} />
+          <Route path="/medicines/calculate-price" element={<PriceCalculator />} />
+          <Route path="/inventoryLayout" element={<InventoryLayout />} />
+          
         </Routes>
       
     </Router>

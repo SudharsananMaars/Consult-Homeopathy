@@ -3,7 +3,6 @@ import { useState, useEffect } from "react";
 const NoteTaking = () => {
   const [notes, setNotes] = useState(localStorage.getItem("notes") || "");
 
-  // Automatically save notes to localStorage whenever they change
   useEffect(() => {
     localStorage.setItem("notes", notes);
   }, [notes]);

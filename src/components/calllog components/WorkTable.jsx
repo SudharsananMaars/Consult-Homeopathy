@@ -7,6 +7,8 @@ import { useNavigate } from 'react-router-dom';
 import { jwtDecode } from 'jwt-decode';
 import CommentCell from './CommentCell';
 import VideoCall from '../../pages/doctor pages/VideoCall';
+import DraftViewModal from './DraftViewModal'; // Make sure the path is correct
+import PrescriptionViewModal from './PrescriptionViewModal';
 
 const WorkTable = () => {
   const [patients, setPatients] = useState([]);
@@ -20,6 +22,12 @@ const WorkTable = () => {
   const [userRole, setUserRole] = useState('');
   const API_URL = config.API_URL;
   const [doctors, setDoctors] = useState([]);
+  const [isDraftModalOpen, setIsDraftModalOpen] = useState(false);
+  const [selectedPatient, setSelectedPatient] = useState(null);
+
+  const [showModal, setShowModal] = useState(false);
+  const [modalContent, setModalContent] = useState(null);
+
   const fetchDoctors = async () => {
     try {
       const response = await axios.get(`http://${API_URL}:5000/api/assign/doctors`);
@@ -30,7 +38,7 @@ const WorkTable = () => {
     }
   };
   const getToken = () => {
-    return localStorage.getItem('token');
+    return localStorage.getItem('accessToken');
   };
   useEffect(() => {
     fetchDoctors();
@@ -156,8 +164,8 @@ const WorkTable = () => {
         (selectedFollowType === 'Follow up-Chronic-Existing' && patient.medicalDetails.diseaseType.name === 'Chronic' && patient.medicalDetails.follow === 'Follow up-C' && patient.newExisting === 'Existing') ||
         (selectedFollowType === 'Follow up-Acute-New' && patient.medicalDetails.diseaseType.name === 'Acute'  && patient.medicalDetails.follow === 'Follow up-C' && patient.newExisting === 'New') ||
         (selectedFollowType === 'Follow up-Acute-Existing' && patient.medicalDetails.diseaseType.name === 'Acute'  && patient.medicalDetails.follow === 'Follow up-C' && patient.newExisting === 'Existing') ||
-        (selectedFollowType !== 'Follow up-Chronic-New' && selectedFollowType !== 'Follow up-Chronic-Existing' && selectedFollowType !== 'Follow up-Acute-New' && selectedFollowType !== 'Follow up-Acute-Existing' && patient.follow === selectedFollowType);
-
+        (selectedFollowType !== 'Follow up-Chronic-New' && selectedFollowType !== 'Follow up-Chronic-Existing' && selectedFollowType !== 'Follow up-Acute-New' && selectedFollowType !== 'Follow up-Acute-Existing' && patient.medicalDetails.follow === selectedFollowType);
+// console.log("Checking patient: ",patient);
       return isMatchingFollowType &&
         (searchTerm === '' ||
           patient.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -167,12 +175,15 @@ const WorkTable = () => {
 
   const navigate = useNavigate();
   const handleJoinRoom = (patient) => {
+    const appointmentID = patient.medicalDetails._id;
     if (patient && patient.medicalDetails && patient.medicalDetails.meetLink) {
-      navigate("/video-call", { state: { meetLink: patient.medicalDetails.meetLink } });
+      navigate("/video-call", {
+        state: { meetLink: patient.medicalDetails.meetLink, appointmentID },
+      });
     } else {
       alert("No valid Zoom link found!");
     }
-  }
+  };
 
   const isOneHourPassed = (followUpTimestamp) => {
     if (!followUpTimestamp) return true; // If no timestamp, enable the button
@@ -368,7 +379,7 @@ const WorkTable = () => {
             item.age || '',
             item.gender || '',
             item.medicalDetails.diseaseType.name || '',
-            item.medicalDetails.follow || '',
+            item.follow || '',
             item.medicalDetails.followComment || '',
             item.medicinePaymentConfirmation ? 'Confirmed' : 'Pending',
             // item.conversionStatus || '',
@@ -388,7 +399,11 @@ const WorkTable = () => {
               {renderButton('View draft', () => handleAction('ViewDraft', item))}
             </div>,
             <div className="action-buttons">
-                {renderButton('Attach prescription', () => handleAction('AttachPrescription', item))}
+              {item.medicalDetails?.prescriptionCreated ? (
+                <button className="btn btn-success" disabled>Prescription written</button>
+              ) : (
+                renderButton('Attach prescription', () => handleAction('AttachPrescription', item))
+              )}
             </div>,
             <div className="action-buttons">
                 {renderButton('Make Voice Call', () => handleAction('VoiceCall', item))}
@@ -476,7 +491,7 @@ const WorkTable = () => {
             'Email', 'Consulting For', 'If diseaseType is not available',
             'Age', 'Gender', 'Acute/Chronic', 'Follow', 'Follow comment',
             'Medicine Payment confirmation', 'Call attempted tracking',
-            'Comments', 'View Drafts', 'Video Call', 'Voice call',
+            'Comments', 'View Prescription', 'Voice call',
             'Recordings', 'Mark Done'
           ],
           data: filteredPatients.map((item, index) => [
@@ -506,7 +521,18 @@ const WorkTable = () => {
                 );
               }} 
             />,
-            ...getActionButtons(item)
+            <div className="action-buttons">
+                {renderButton('View Prescription', () => handleAction('ViewPrescription', item))}
+            </div>,
+            <div className="action-buttons">
+                {renderButton('Make Voice Call', () => handleAction('VoiceCall', item))}
+            </div>,
+            <div className="action-buttons">
+                {renderButton('Recordings', () => handleAction('Recordings', item))}
+            </div>,
+            <div className="action-buttons">
+                {renderButton('Mark Done', () => handleAction('MarkDone', item))} 
+            </div>,
           ]),
         };
       case 'View All':
@@ -721,7 +747,9 @@ const WorkTable = () => {
     }
     switch (action) {
       case 'ViewDraft':
-        alert(`Viewing draft for ${item.name}`);
+        // alert(`Viewing draft for ${item.name}`);
+        setSelectedPatient(item);
+        setIsDraftModalOpen(true);
         break;
       case 'VideoCall':
         alert(`Starting video call with ${item.name}`);
@@ -734,14 +762,29 @@ const WorkTable = () => {
         alert(`Viewing recordings for ${item.name}`);
         break;
       case 'AttachPrescription':
-        alert(`Attaching prescription for ${item.name}`);
+        // alert(`Attaching prescription for ${item.name}`);
+        const d = localStorage.getItem('accessToken');
+        console.log("d", d);
+        navigate('/prescription-writing', { 
+          state: { 
+            patientData: item
+          }
+        });
         break;
       case 'ViewPrescription':
-        alert(`Viewing prescription for ${item.name}`);
+        const appointmentId = item.medicalDetails._id;
+        setModalContent(
+          <PrescriptionViewModal 
+            isOpen={true} 
+            onClose={() => setShowModal(false)}
+            appointmentId={appointmentId}
+          />
+        );
+        setShowModal(true);
         break;
       case 'MarkDone':
         try {
-          const response = await axios.put(`http://${API_URL}:5000/api/patient/updateFollowUp/${item._id}`);
+          const response = await axios.put(`http://${API_URL}:5000/api/patient/updateFollowUp/${item.medicalDetails._id}`);
           alert('Follow-up status updated for ' + item.name);
           fetchPatients();
         } catch (error) {
@@ -847,6 +890,12 @@ const WorkTable = () => {
           </tbody>
         </table>
       </div>
+      <DraftViewModal 
+        isOpen={isDraftModalOpen}
+        onClose={() => setIsDraftModalOpen(false)}
+        patientData={selectedPatient}
+      />
+      {showModal && modalContent}
     </div>
   );
 };

@@ -25,7 +25,8 @@ const PatientsTable = () => {
   const [individualAllocations, setIndividualAllocations] = useState({});
 
   const API_URL = config.API_URL;
-
+const userId = localStorage.getItem('userId');
+console.log("userId", userId);
   useEffect(() => {
     const fetchPatientsAndFormStatus = async () => {
       try {
