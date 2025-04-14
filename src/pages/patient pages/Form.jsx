@@ -1,13 +1,14 @@
 import React, { useState } from 'react';
 import Select from 'react-select';
 import { useNavigate } from 'react-router-dom';
+import axios from 'axios';
+import { Phone } from 'lucide-react';
 
 const Form= () => {
-  const feetOptions = [...Array(10).keys()].map(i => ({ value: i+1, label: `${i+1} feet` }));
-  const inchesOptions = [...Array(10).keys()].map(i => ({ value: i, label: `${i} inches` }));
-   const weightOptions = [...Array(151).keys()].slice(1).map(i => ({ value: i, label: `${i} kg` }));
-   
- 
+  const feetOptions = [...Array(10).keys()].map(i => ({ value: i+1, label: `${i+1} feet `}));
+  const inchesOptions = [...Array(10).keys()].map(i => ({ value: i, label: `${i} inches `}));
+   const weightOptions = [...Array(151).keys()].slice(1).map(i => ({ value: i, label: `${i} kg `}));
+   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const country = ["Afghanistan", "Albania", "Algeria", "Andorra", "Angola", "Antigua and Barbuda", "Argentina", "Armenia", "Australia", "Austria", "Azerbaijan", "Bahamas", "Bahrain", "Bangladesh", "Barbados", "Belarus", "Belgium", "Belize", "Benin", "Bhutan", "Bolivia", 
     "Bosnia and Herzegovina", "Botswana", "Brazil", "Brunei", "Bulgaria", "Burkina Faso", "Burundi", "Cabo Verde", "Cambodia", "Cameroon", "Canada", "Central African Republic", "Chad", "Chile", "China", "Colombia", "Comoros", "Congo, Democratic Republic of the", 
@@ -83,7 +84,7 @@ const cityOptions = cities.map(city => ({
     display: 'none'
 })}
 
-  const bloodTypeOptions = [
+  const bodyTypeOptions = [
     { value: 'lean thin', label: ' Lean-Thin'},
     { value: 'moderate', label: 'Moderate' },
     { value: 'healthy', label: 'Healthy' },
@@ -91,17 +92,16 @@ const cityOptions = cities.map(city => ({
     
   ];
 
-  const options = ["Friend", "Family", "Self", "Instagram", "Facebook", "Google"];
+  const options = ["Friends/Family",   "Instagram", "Facebook", "Google","Self","Other"];
 
   const [formData, setFormData] = useState({
-    feet: null,
-    inches: null,
-    weight:  null,
+    height: '',
+    weight: '',
     occupation: '',
-    country: null,
-    state: null,
-    city: null,
-    disease: null,
+    country: '',
+    state: '',
+    city: '',
+    disease: '',
     symptom:'',
     associatedDisease: '',
     medicineConsuming: '',
@@ -109,7 +109,7 @@ const cityOptions = cities.map(city => ({
     surgeryHistory: '',
     familyHistory: '',
     allergies: '',
-    bloodType: null,
+    bodyType: null,
     clinicSource: [],
   });
 
@@ -130,14 +130,14 @@ const cityOptions = cities.map(city => ({
     if (!formData.state) newErrors.state = 'State is required';
     if (!formData.city) newErrors.city = 'City is required';
     if (!formData.disease) newErrors.disease = 'Disease is required';
-   if (formData.disease?.value === 'Other' && !formData.symptom) newErrors.symptom = 'Symptom is required';
+    if (formData.disease?.value === 'Other' && !formData.symptom) newErrors.symptom = 'Symptom is required';
     if (!formData.associatedDisease) newErrors.associatedDisease = 'Associated disease is required';
     if (!formData.medicineConsuming) newErrors.medicineConsuming = 'Medicine consuming is required';
     if (!formData.diseaseHistory) newErrors.diseaseHistory = 'Disease history is required';
     if (!formData.surgeryHistory) newErrors.surgeryHistory = 'Surgery history is required';
     if (!formData.familyHistory) newErrors.familyHistory = 'Family history is required';
     if (!formData.allergies) newErrors.allergies = 'Allergies are required';
-    if (!formData.bloodType) newErrors.bloodType = 'Blood type is required';
+    if (!formData.bodyType) newErrors.bodyType = 'BodyType  is required';
     if (formData.clinicSource.length === 0) newErrors.clinicSource = 'At least one source is required';
     return newErrors;
   };
@@ -171,25 +171,77 @@ const cityOptions = cities.map(city => ({
     });
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     const newErrors = validate();
     if (Object.keys(newErrors).length > 0) {
       setErrors(newErrors);
     } else {
       setErrors({});
-      console.log(formData);
-      // Handle form submission
+      try {
+        setIsSubmitting(true);
+  
+        // Prepare data to send
+        const dataToSend = {
+          weight: formData.weight.value,
+          height: {
+            feet: Number(formData.feet.value), // Ensure these are numbers
+            inches: Number(formData.inches.value), // Ensure these are numbers
+          },
+          occupation: formData.occupation,
+          country: formData.country.value,
+          state: formData.state.value,
+          city: formData.city.value,
+          complaint: formData.complaint,
+          symptoms: formData.symptoms,
+          associatedDisease: formData.associatedDisease.value,
+          allopathy: formData.allopathy,
+          diseaseHistory: formData.diseaseHistory.value,
+          surgeryHistory: formData.surgeryHistory,
+          allergies: formData.allergies,
+          bodyType: formData.bodyType.value,
+          clinicReferral: formData.clinicSource, // Ensure this is an array or a string as per schema
+        };
+  
+        const token = localStorage.getItem('accessToken'); // Retrieve the token from localStorage
+  
+        console.log("Token", token);
+        console.log('Data to Send:', dataToSend);
+  
+        // Make API request
+        const response = await axios.post(
+          'http://localhost:5000/api/patient/sendChronicForm',
+          dataToSend,
+          {
+            headers: {
+              Authorization: `Bearer ${token}`, // Add the token to the headers
+            },
+          }
+        );
+  
+        // Handle successful response
+        alert(response.data.message);
+        navigate('/home');
+      } catch (error) {
+        console.error('Submission error:', error);
+        if (error.response && error.response.data && error.response.data.message) {
+          alert(`Error: ${error.response.data.message}`);
+        } else {
+          alert('Error submitting form');
+        }
+      } finally {
+        setIsSubmitting(false);
+      }
     }
-    navigate('/home');
   };
+  
+  
 
   return (
     <div className="flex justify-center items-center min-h-screen p-10 bg-gray-50">
-      <form onSubmit={handleSubmit} className="w-2/4 mx-auto p-8 bg-white shadow-2xl rounded">
-        <div className=' flex justify-center items-center text-xl text-gray-700 font-bold'> <label>Chronic Form</label></div>
+        <form onSubmit={handleSubmit} className="w-full max-w-lg mx-auto p-8 bg-white shadow-2xl rounded">
+        <div className=' flex justify-center items-center text-xl text-gray-700 font-bold'>Chronic Form</div>
         <div className="mb-4">
-       
           <label className="block text-gray-700 text-sm  font-bold mb-2">Height</label>
           <div className="flex space-x-4">
             <Select
@@ -266,8 +318,6 @@ const cityOptions = cities.map(city => ({
           {errors.city && <p className="text-red-500 text-xs italic">{errors.city}</p>}
         </div>
         
-       
-
         <div className="mb-4">
           <label className="block text-gray-700 text-sm font-bold mb-2">Disease</label>
           <Select
@@ -366,12 +416,12 @@ const cityOptions = cities.map(city => ({
         <div className="mb-4">
           <label className="block text-gray-700 text-sm font-bold mb-2">Body Type</label>
           <Select
-            options={bloodTypeOptions}
+            options={bodyTypeOptions}
             placeholder="Select Body Type"
             styles={customStyles}
-            onChange={option => handleChange('bloodType', option)}
+            onChange={option => handleChange('bodyType', option)}
           />
-          {errors.bloodType && <p className="text-red-500 text-xs italic">{errors.bloodType}</p>}
+          {errors.bodyType && <p className="text-red-500 text-xs italic">{errors.bodyType}</p>}
         </div>
 
         <div className="mb-4">
@@ -402,6 +452,4 @@ const cityOptions = cities.map(city => ({
   );
 };
 
-export default Form;
-
-
+export default Form;

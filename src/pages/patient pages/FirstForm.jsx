@@ -1,4 +1,5 @@
-import React, { useState, useEffect } from 'react';
+// FirstForm.jsx   
+import React, { useState } from "react";                                                                                                                                                                                   
 import Select from 'react-select';
 import axios from 'axios';
 
@@ -80,6 +81,7 @@ const FirstForm = () => {
     consultingReason: '',
     symptom: '',
     referral: '',
+    location: '',
   });
 
   const [formError, setFormError] = useState({});
@@ -88,6 +90,52 @@ const FirstForm = () => {
   const [isWhatsAppSame, setIsWhatsAppSame] = useState(false);
   const [prediction, setPrediction] = useState(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [loadingLocation, setLoadingLocation] = useState(false);
+
+  const handleGeolocation = () => {
+    setLoadingLocation(true); // Start loading
+    if (navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition(
+        (position) => {
+          const { latitude, longitude } = position.coords;
+          const nominatimUrl = `https://nominatim.openstreetmap.org/reverse?format=json&lat=${latitude}&lon=${longitude}&zoom=10&addressdetails=1`;
+
+          fetch(nominatimUrl)
+            .then((response) => response.json())
+            .then((data) => {
+              const place = data.address.city || data.address.town || data.address.village || "Unknown location";
+              setFormData((prevData) => ({
+                ...prevData,
+                location: place,
+              }));
+              setLoadingLocation(false); // Stop loading
+            })
+            .catch((error) => {
+              console.error('Error with reverse geocoding:', error);
+              setFormError((prevError) => ({
+                ...prevError,
+                location: 'Unable to retrieve location',
+              }));
+              setLoadingLocation(false); // Stop loading
+            });
+        },
+        (error) => {
+          console.error('Error getting geolocation:', error);
+          setFormError((prevError) => ({
+            ...prevError,
+            location: 'Unable to retrieve location',
+          }));
+          setLoadingLocation(false); // Stop loading
+        }
+      );
+    } else {
+      setFormError((prevError) => ({
+        ...prevError,
+        location: 'Geolocation is not supported by this browser',
+      }));
+      setLoadingLocation(false); // Stop loading
+    }
+  };
 
   const ClearIndicator = () => null;
 
@@ -158,7 +206,7 @@ const FirstForm = () => {
         };
 
         // Update the API URL if your Node.js backend runs on a different port or domain
-        const response = await axios.post('http://localhost:8000/api/predict', dataToSend);
+        const response = await axios.post('http://localhost:5000/api/predict', dataToSend);
 
         setPrediction(response.data.message);
 
@@ -174,6 +222,7 @@ const FirstForm = () => {
           consultingReason: '',
           symptom: '',
           referral: '',
+          location: '',
         });
 
         setIsWhatsAppSame(false);
@@ -411,6 +460,27 @@ const FirstForm = () => {
           />
           {formError.referral && <div className="text-red-500 text-sm mt-1">{formError.referral}</div>}
         </div>
+
+        <div className="mb-4">
+        <label htmlFor="location" className="block text-gray-800 font-medium mb-2">Location</label>
+        <input
+          type="text"
+          id="location"
+          value={formData.location}
+          readOnly
+          className="w-full p-2 border border-gray-300 rounded text-gray-600 h-10"
+        />
+        <button
+          type="button"
+          onClick={handleGeolocation}
+          className="bg-blue-500 text-white p-2 mt-2 rounded"
+        >
+          Get Current Location
+        </button>
+        {loadingLocation && <p className="text-sm text-gray-600 mt-1">Fetching location...</p>}
+        {formError.location && <p className="text-red-500 text-sm mt-1">{formError.location}</p>}
+      </div>
+
 
         {/* Submit Button */}
         <div className="flex justify-center">

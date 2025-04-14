@@ -12,7 +12,7 @@ import FirstForm from './pages/patient pages/FirstForm.jsx';
 import Appointments from './pages/patient pages/Appointments.jsx';
 import Home from './pages/patient pages/Home.jsx';
 import Payments from './pages/patient pages/Payments.jsx';
-import Invoices from './pages/patient pages/Invoices.jsx';
+// import Invoices from './pages/patient pages/Invoices.jsx';
 import Medicine from './pages/patient pages/Medicine.jsx';
 import Workshops from './pages/patient pages/Workshops.jsx';
 import Settings from './pages/patient pages/Settings.jsx';
@@ -24,6 +24,8 @@ import Track from './pages/patient pages/Track.jsx';
 import PaymentPage from './pages/patient pages/PaymentPage.jsx';
 import Messenger from './components/patient components/Messenger.jsx';
 import HomePage from './pages/patient pages/HomePage.jsx';
+import RazorScreen from './pages/patient pages/RazorScreen.jsx';
+import FamilyTree from './pages/patient pages/FamilyTree.jsx';
 
 // import doctor website
 import DoctorLayout from './components/doctor components/DoctorLayout.jsx';
@@ -52,6 +54,25 @@ import Content from './pages/doctor pages/Content.jsx';
 import Doctors from './pages/doctor pages/Doctors.jsx';
 import Patientcard from './pages/doctor pages/Patientcard.jsx'; 
 import Allocation from './pages/doctor pages/Allocation.jsx';
+import VideoCall from './pages/doctor pages/VideoCall.jsx';
+import DocLogin from '/src/pages/doctor pages/DocLogin.jsx';
+import AdminDashboard from '/src/pages/doctor pages/AdminDashboard.jsx';
+import AssistantDoctorDashboard from '/src/pages/doctor pages/AssistantDoctorDashboard.jsx';
+import AddDoctor from '/src/pages/doctor pages/AddDoctor.jsx';
+import AssistLeave from '/src/pages/doctor pages/AssistLeave.jsx';
+import VideoSettings from '/src/pages/doctor pages/VideoSettings.jsx';
+import AdminLeaveManagement from './pages/doctor pages/AdminLeaveManagement.jsx';
+import LeaveSettingsForm from './pages/doctor pages/LeaveSettingsForm.jsx';
+import PayrollSettings from './pages/doctor pages/payrollsettings.jsx';
+import Payroll from './pages/doctor pages/payroll.jsx';
+import SalaryStructure from './pages/doctor pages/salarystructure.jsx';
+import HRPage from './pages/doctor pages/HRPage.jsx';
+import BreakTimer from './pages/doctor pages/BreakTimer.jsx';
+import Payslip from './pages/doctor pages/payslip.jsx';
+import NoteTaking from './pages/doctor pages/NoteTaking.jsx';
+import '@fortawesome/fontawesome-free/css/all.min.css';
+
+
 function App() {
   return (
     <div>
@@ -74,9 +95,9 @@ function App() {
 
           <Route path="/payments" element={<Payments/>} />
           <Route path="/paymentpage" element={<PaymentPage/>} />
-          <Route path="/invoices" element={<Invoices/>}>
+          {/* <Route path="/invoices" element={<Invoices/>}>
           <Route path="/invoices/paymentpage" element={<PaymentPage />} />
-          </Route>
+          </Route> */}
           <Route path="/medicine" element={<Medicine/>} />
           <Route path="/track" element={<Track/>} />
           <Route path="/workshops" element={<Workshops/>} />
@@ -86,7 +107,10 @@ function App() {
           <Route path="/refer" element={<ReferFriend/>} />
           <Route path="/messenger" element={<Messenger/>} />
           <Route path="/needhelp" element={<NeedHelp/>} />
+          <Route path="/razor" element={<RazorScreen/>} />
           <Route path="/layout" element={<Layout />}></Route>
+          <Route path="/family" element={<FamilyTree/>} />
+
 
           {/* doctor website routing */}
         <Route path="/layout" element={<DoctorLayout />}></Route>
@@ -110,11 +134,29 @@ function App() {
         <Route path="/patients/viewdetails/:id" element={<ViewDetails/>}></Route>
         <Route path="/docpayments" element={<DocPayments/>}></Route>
         <Route path="/newprofile" element={<NewProfile/>}></Route>
-        <Route path="/settings" element={<DocSettings/>}></Route>
+        <Route path="/docsettings" element={<DocSettings/>}></Route>
         <Route path="/accounts" element={<Accounts/>}></Route>
         <Route path="/workshoppage" element={<WorkshopPage/>}></Route>
         <Route path="/newworkshop" element={<NewWorkshop/>}></Route>
         <Route path="/allocation" element={<Allocation/>}></Route>
+        <Route path="/videocall" element={<VideoCall/>}></Route>
+        <Route path="/doclogin" element={<DocLogin />} />
+        <Route path="/admin-dashboard" element={<AdminDashboard />} />
+        <Route path="/doctor-dashboard" element={<AssistantDoctorDashboard />} />
+        <Route path="/add-doctor" element={<AddDoctor />} />
+        <Route path="/assistleave" element={<AssistLeave />} />
+        <Route path="/leavemgt" element={<AdminLeaveManagement />} />
+        <Route path="/leavesettings" element={<LeaveSettingsForm />} />
+        <Route path="/videosettings" element={<VideoSettings />} />
+        <Route path="/payrollsetting" element={<PayrollSettings/>}></Route>
+        <Route path="/payroll" element={<Payroll/>}></Route>
+        <Route path="/salarystructure" element={<SalaryStructure/>}></Route>
+        <Route path="/hrm" element={<HRPage />}></Route>
+        <Route path="/break" element={<BreakTimer/>}></Route>
+        <Route path="/payslip" element={<Payslip/>}></Route>
+        <Route path="/video-call" element={<VideoCall />} />
+        <Route path="/note-taking" element={<NoteTaking />} />
+
         </Routes>
       
     </Router>
