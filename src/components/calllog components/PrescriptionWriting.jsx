@@ -9,14 +9,14 @@ import config from "../../config";
 
 // Auth helper to check token
 const checkAuth = () => {
-  const token = localStorage.getItem('accessToken');
+  const token = localStorage.getItem('token');
   return !!token;
 };
 // console.log("token", localStorage.getItem('token'));
 // console.log("access token",localStorage.getItem('accessToken'));
 // Create axios instance with auth headers
 const createAuthAxios = () => {
-  const accessToken = localStorage.getItem('accessToken');
+  const accessToken = localStorage.getItem('token');
   console.log(accessToken);
   return axios.create({
     headers: {
@@ -121,7 +121,7 @@ const PrescriptionWriting = () => {
       console.error("Error fetching data:", err);
       if (err.response?.status === 401) {
         toast.error("Session expired. Please login again");
-        localStorage.removeItem('accessToken');
+        localStorage.removeItem('token');
         navigate('/login');
       } else {
         setError("Failed to load prescription data. Please try again.");
@@ -252,7 +252,7 @@ const PrescriptionWriting = () => {
       
       if (err.response?.status === 401) {
         toast.error("Session expired. Please login again");
-        localStorage.removeItem('accessToken');
+        localStorage.removeItem('token');
         navigate('/login');
       } else {
         toast.error("Failed to add new medicine");
@@ -277,7 +277,7 @@ const PrescriptionWriting = () => {
       
       if (err.response?.status === 401) {
         toast.error("Session expired. Please login again");
-        localStorage.removeItem('accessToken');
+        localStorage.removeItem('token');
         navigate('/login');
       } else {
         toast.error("Failed to add new raw material");
@@ -405,7 +405,7 @@ const PrescriptionWriting = () => {
       
       if (err.response?.status === 401) {
         toast.error("Session expired. Please login again");
-        localStorage.removeItem('accessToken');
+        localStorage.removeItem('token');
         navigate('/login');
       } else {
         toast.error("Failed to save prescription");
@@ -867,7 +867,7 @@ export const withAuth = (Component) => {
     
     useEffect(() => {
       const checkAuthentication = () => {
-        const token = localStorage.getItem('accessToken');
+        const token = localStorage.getItem('token');
         if (!token) {
           navigate('/login', { state: { from: location.pathname } });
         }

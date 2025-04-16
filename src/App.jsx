@@ -1,6 +1,7 @@
-import React from 'react';
+import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import './index.css';
-import { BrowserRouter as Router, Routes, Route, Link } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import Layout from './components/patient components/Layout.jsx';
 import RecentAppointments from './components/patient components/RecentAppointments.jsx';
 import UpcomingAppointments from './components/patient components/UpcomingAppointments.jsx';
@@ -88,46 +89,72 @@ import MedicineDetail from './components/Inventory/Medicine/MedicineDetail.jsx';
 import MedicineForm from './components/Inventory/Medicine/MedicineForm.jsx';
 import PriceCalculator from './components/Inventory/Medicine/PriceCalculator.jsx';
 
+// Error Pages
+import NotFound from './pages/AuthPages/NotFound.jsx';
+import Forbidden from './pages/AuthPages/Forbidden.jsx';
+import Unauthorized from './pages/AuthPages/Unauthorized.jsx';
+import ServerError from './pages/AuthPages/InternalServerError.jsx';
+import Maintenance from './pages/AuthPages/MaintenancePage.jsx';
+
+// Auth Context
+import { AuthProvider } from './contexts/AuthContext.jsx';
+import { ErrorBoundary } from 'react-error-boundary';
+
+// Error Fallback Component
+const ErrorFallback = () => <ServerError />;
+
 function App() {
-  return (
-    <div>
-    <Router>
-  
-            {/* patient Routes */}
-        <Routes>
-          <Route path="/login" element={<LoginPage />} />
-          <Route path="/form" element={<Form />} />
-          <Route path="/firstform" element={<FirstForm />} />
-          <Route path="/home" element={<Home/>}/>
-          <Route path="/homepage" element={<HomePage/>}/>
-          
-          <Route path="/appointments" element={<Appointments/>} >
-            <Route path="/appointments/recent" element={<RecentAppointments />} />
-            <Route path="/appointments/upcoming" element={<UpcomingAppointments />} />
-            <Route path="/appointments/newappointment" element={<NewAppointment />} />        
-            <Route path="/appointments/cancelled" element={<CancelledAppointment />} />
-          </Route>
+  // Replace environment variable with a local state or configuration value
+  const [isUnderMaintenance] = useState(false); // Set to true when in maintenance mode
 
-          <Route path="/payments" element={<Payments/>} />
-          <Route path="/paymentpage" element={<PaymentPage/>} />
-          {/* <Route path="/invoices" element={<Invoices/>}>
-          <Route path="/invoices/paymentpage" element={<PaymentPage />} />
-          </Route> */}
-          <Route path="/medicine" element={<Medicine/>} />
-          <Route path="/track" element={<Track/>} />
-          <Route path="/workshops" element={<Workshops/>} />
-          <Route path="/settings" element={<Settings/>} />
-          <Route path="/notification" element={<Notification/>} />
-          <Route path="/profile" element={<Profile/>} />
-          <Route path="/refer" element={<ReferFriend/>} />
-          <Route path="/messenger" element={<Messenger/>} />
-          <Route path="/needhelp" element={<NeedHelp/>} />
-          <Route path="/razor" element={<RazorScreen/>} />
-          <Route path="/layout" element={<Layout />}></Route>
-          <Route path="/family" element={<FamilyTree/>} />
+  // Simple component to check for maintenance mode
+  const MaintenanceCheck = () => {
+    if (isUnderMaintenance) {
+      return <Maintenance />;
+    }
+    
+    return (
+      <Routes>
+        {/* Error Pages Routes */}
+        <Route path="/unauthorized" element={<Unauthorized />} />
+        <Route path="/forbidden" element={<Forbidden />} />
+        <Route path="/server-error" element={<ServerError />} />
+        <Route path="/maintenance" element={<Maintenance />} />
+
+        {/* patient Routes */}
+        <Route path="/login" element={<LoginPage />} />
+        <Route path="/form" element={<Form />} />
+        <Route path="/firstform" element={<FirstForm />} />
+        <Route path="/home" element={<Home/>}/>
+        <Route path="/homepage" element={<HomePage/>}/>
+        
+        <Route path="/appointments" element={<Appointments/>} >
+          <Route path="/appointments/recent" element={<RecentAppointments />} />
+          <Route path="/appointments/upcoming" element={<UpcomingAppointments />} />
+          <Route path="/appointments/newappointment" element={<NewAppointment />} />        
+          <Route path="/appointments/cancelled" element={<CancelledAppointment />} />
+        </Route>
+
+        <Route path="/payments" element={<Payments/>} />
+        <Route path="/paymentpage" element={<PaymentPage/>} />
+        {/* <Route path="/invoices" element={<Invoices/>}>
+        <Route path="/invoices/paymentpage" element={<PaymentPage />} />
+        </Route> */}
+        <Route path="/medicine" element={<Medicine/>} />
+        <Route path="/track" element={<Track/>} />
+        <Route path="/workshops" element={<Workshops/>} />
+        <Route path="/settings" element={<Settings/>} />
+        <Route path="/notification" element={<Notification/>} />
+        <Route path="/profile" element={<Profile/>} />
+        <Route path="/refer" element={<ReferFriend/>} />
+        <Route path="/messenger" element={<Messenger/>} />
+        <Route path="/needhelp" element={<NeedHelp/>} />
+        <Route path="/razor" element={<RazorScreen/>} />
+        <Route path="/layout" element={<Layout />}></Route>
+        <Route path="/family" element={<FamilyTree/>} />
 
 
-          {/* doctor website routing */}
+        {/* doctor website routing */}
         <Route path="/layout" element={<DoctorLayout />}></Route>
         <Route path="/appointments/calender" element={<Calender/>}></Route>
         <Route path="/appointments/list" element={<AppointmentList />}></Route>
@@ -173,27 +200,41 @@ function App() {
         <Route path="/note-taking" element={<NoteTaking />} />
         <Route path='/prescription-writing' element={<PrescriptionWriting/>} />
 
-          {/* Inventory Module Routes */}
-          <Route path='/inventory' element={<InventoryDashboard/>} />
+        {/* Inventory Module Routes */}
+        <Route path='/inventory' element={<InventoryDashboard/>} />
 
-          <Route path="/raw-materials" element={<RawMaterialsList />} />
-          <Route path="/raw-materials/new" element={<RawMaterialForm />} />
-          <Route path="/raw-materials/:id" element={<RawMaterialDetail />} />
-          <Route path="/raw-materials/:id/edit" element={<RawMaterialForm isEdit={true} />} />
+        <Route path="/raw-materials" element={<RawMaterialsList />} />
+        <Route path="/raw-materials/new" element={<RawMaterialForm />} />
+        <Route path="/raw-materials/:id" element={<RawMaterialDetail />} />
+        <Route path="/raw-materials/:id/edit" element={<RawMaterialForm isEdit={true} />} />
 
-          {/* Medicines Routes */}
-          <Route path="/medicines" element={<MedicinesList />} />
-          <Route path="/medicines/new" element={<MedicineForm />} />
-          <Route path="/medicines/:id" element={<MedicineDetail />} />
-          <Route path="/medicines/:id/edit" element={<MedicineForm isEdit={true} />} />
-          <Route path="/medicines/calculate-price" element={<PriceCalculator />} />
-          
-        </Routes>
-      
-    </Router>
+        {/* Medicines Routes */}
+        <Route path="/medicines" element={<MedicinesList />} />
+        <Route path="/medicines/new" element={<MedicineForm />} />
+        <Route path="/medicines/:id" element={<MedicineDetail />} />
+        <Route path="/medicines/:id/edit" element={<MedicineForm isEdit={true} />} />
+        <Route path="/medicines/calculate-price" element={<PriceCalculator />} />
+        
+        {/* Root path redirect */}
+        <Route path="/" element={<Navigate to="/home" replace />} />
+        
+        {/* Wildcard route for 404 - Must be the last route */}
+        <Route path="*" element={<NotFound />} />
+      </Routes>
+    );
+  };
+
+  return (
+    <div>
+      <ErrorBoundary FallbackComponent={ErrorFallback}>
+        <AuthProvider>
+          <Router>
+            <MaintenanceCheck />
+          </Router>
+        </AuthProvider>
+      </ErrorBoundary>
     </div>
   );
 }
-
 
 export default App;

@@ -100,7 +100,7 @@ const LoginPage = () => {
   const sendOtp = async () => {
     if (validateFields()) {
       try {
-        const token = localStorage.getItem('accessToken'); // Assuming token is stored in localStorage
+        const token = localStorage.getItem('token'); // Assuming token is stored in localStorage
         const response = await axios.post('http://localhost:5000/api/otp/send-otp', { 
           phone: mobileNumber,
           role: role === 'patient' ? 'Patient' : 'Doctor',
@@ -138,11 +138,12 @@ const LoginPage = () => {
         if (response.data.success) {
           setShowOtpInput(false);
           // localStorage.removeItem('accessToken');
-          localStorage.setItem('accessToken', response.data.accessToken); // Save token
+          localStorage.setItem('token', response.data.accessToken); // Save token
           localStorage.setItem('userId', response.data.userId); // Save token
           localStorage.setItem('userType', response.data.userType); // Save token
           alert('OTP verified successfully!');
           if (role === 'doctor') {
+            localStorage.setItem('role', response.data.role); 
             navigate('/dashboard'); // Redirect to Doctor Dashboard
           } else if (role === 'patient') {
             navigate('/form'); // Redirect to Patient Dashboard

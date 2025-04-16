@@ -38,7 +38,7 @@ const WorkTable = () => {
     }
   };
   const getToken = () => {
-    return localStorage.getItem('accessToken');
+    return localStorage.getItem('token');
   };
   useEffect(() => {
     fetchDoctors();
