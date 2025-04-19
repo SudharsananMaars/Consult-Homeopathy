@@ -3,7 +3,8 @@ import { useParams } from "react-router-dom";
 import { ZegoUIKitPrebuilt } from "@zegocloud/zego-uikit-prebuilt";
 import axios from "axios"; // Import Axios
 // import '../css/WorkTable.css';
-
+import config from "../../config";
+const API_URL = config.API_URL;
 const VideoCall = () => {
     const { patientId } = useParams();
     const meetingRef = useRef(null);
@@ -62,7 +63,7 @@ const VideoCall = () => {
     const saveNote = async () => {
         window.alert("saving");
         try {
-            await axios.post('http://localhost:5000/api/notes', {
+            await axios.post(`${API_URL}/api/notes`, {
                 patientId,
                 content: draft,
             });

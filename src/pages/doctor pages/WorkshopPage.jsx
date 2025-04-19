@@ -1,58 +1,64 @@
-import React, { useState } from "react";
-import workshop from '/src/assets/images/doctor images/workshop.jpg'; // Updated variable name
-import NewWorkshop from './NewWorkshop'; // Import the modal component
+import React, { useEffect, useState } from "react";
+import axios from "axios";
 import DoctorLayout from "/src/components/doctor components/DoctorLayout.jsx";
 import { PlusIcon } from '@heroicons/react/20/solid';
+import NewWorkshop from './NewWorkshop'; // Modal component
+import config from '../../config';
+const API_URL = config.API_URL;
 
 // WorkshopCard component
-const WorkshopCard = ({ title, description, time, date, amount, image }) => {
+const WorkshopCard = ({ title, description, scheduledDateTime, fee, image }) => {
+  const dateObj = new Date(scheduledDateTime);
+  const formattedDate = dateObj.toLocaleDateString();
+  const formattedTime = dateObj.toLocaleTimeString();
+
   return (
     <div className="p-6 bg-white rounded-lg shadow-lg max-w-sm border-2 border-blue-50">
-      <img className="rounded-lg mb-4" src={workshop} alt={`${title} Workshop`} />
+      <img className="rounded-lg mb-4" src={image || '/src/assets/images/doctor images/workshop.jpg'} alt={`${title} Workshop`} />
       <h2 className="text-xl font-bold mb-2">{title}</h2>
       <p className="text-gray-700 mb-4">{description}</p>
       <div className="text-sm text-gray-500">
-        <p>{time} | {date}</p>
-        <p className="font-semibold">Amount: ${amount}</p>
+        <p>{formattedTime} | {formattedDate}</p>
+        <p className="font-semibold">Fee: ₹{fee}</p>
       </div>
     </div>
   );
 };
 
-// Function to determine the status of the workshop
-const getStatus = (date) => {
-  const today = new Date();
-  const workshopDate = new Date(date);
-  return workshopDate >= today ? 'Upcoming' : 'Expired';
-};
-
 const WorkshopPage = () => {
   const [isModalOpen, setIsModalOpen] = useState(false); // State to handle modal visibility
   const [filter, setFilter] = useState('All'); // State to handle filter selection
+  const [workshops, setWorkshops] = useState([]);
 
-  const workshops = [
-    {
-      title: "Teeth Whitening Offer",
-      description: "Delight patient with Teeth Whitening Offer, visit our clinic for free checkup.",
-      time: "10:00 AM",
-      date: "2024-09-25", // Change format to ISO
-      amount: "50",
-      image: "https://example.com/workshop-image.jpg",
-    },
-    {
-      title: "Expired Workshop Example",
-      description: "This workshop is expired.",
-      time: "2:00 PM",
-      date: "2023-08-15", // Change format to ISO
-      amount: "30",
-      image: "https://example.com/workshop-image.jpg",
-    },
-    // Add more workshops here as needed...
-  ];
+  useEffect(() => {
+    const fetchWorkshops = async () => {
+      const token = localStorage.getItem('token');
+      console.log("Token: ", token);
+      try {
+        const response = await axios.get(`${API_URL}/api/workshop/viewAll`, {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        });
+        setWorkshops(response.data.workshops);
+      } catch (error) {
+        console.error('Error fetching workshops:', error);
+      }
+    };
+
+    fetchWorkshops();
+  }, []);
+
+  // Function to determine the status of the workshop
+  const getStatus = (scheduledDateTime) => {
+    const today = new Date();
+    const workshopDate = new Date(scheduledDateTime);
+    return workshopDate >= today ? 'Upcoming' : 'Expired';
+  };
 
   // Filter workshops based on the selected filter
   const filteredWorkshops = workshops.filter(workshop => 
-    filter === 'All' || getStatus(workshop.date) === filter
+    filter === 'All' || getStatus(workshop.scheduledDateTime) === filter
   );
 
   return (
@@ -64,7 +70,7 @@ const WorkshopPage = () => {
             onClick={() => setIsModalOpen(true)} // Open the modal when clicked
             className="bg-blue-400 text-white px-4 py-2 rounded-lg shadow-lg flex items-center space-x-2"
           >
-            <PlusIcon className="w-5 h-5" /> {/* Add the icon here */}
+            <PlusIcon className="w-5 h-5" />
             <span>New Workshop</span>
           </button>
         </div>
@@ -78,7 +84,7 @@ const WorkshopPage = () => {
             id="filter"
             value={filter}
             onChange={(e) => setFilter(e.target.value)}
-            className="w-40 p-2 border border-gray-300 rounded" // Adjusted width here
+            className="w-40 p-2 border border-gray-300 rounded"
           >
             <option value="All">All Workshops</option>
             <option value="Upcoming">Upcoming</option>
@@ -99,8 +105,8 @@ const WorkshopPage = () => {
         {/* Modal Popup */}
         {isModalOpen && (
           <NewWorkshop 
-            isOpen={isModalOpen} // Pass isOpen prop to the modal
-            onClose={() => setIsModalOpen(false)} // Close modal function
+            isOpen={isModalOpen}
+            onClose={() => setIsModalOpen(false)}
           />
         )}
       </div>
@@ -108,4 +114,4 @@ const WorkshopPage = () => {
   );
 };
 
-export default WorkshopPage;
+export default WorkshopPage;

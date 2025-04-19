@@ -5,6 +5,10 @@ import {FaUserInjured, FaUserPlus, FaFileMedical, FaPhoneAlt, FaRecordVinyl, FaC
 import config from '../../config';
 import { useNavigate } from 'react-router-dom';
 import { jwtDecode } from 'jwt-decode';
+import CommentCell from './CommentCell';
+import VideoCall from '../../pages/doctor pages/VideoCall';
+import DraftViewModal from './DraftViewModal'; // Make sure the path is correct
+import PrescriptionViewModal from './PrescriptionViewModal';
 
 const WorkTable = () => {
   const [patients, setPatients] = useState([]);
@@ -18,9 +22,15 @@ const WorkTable = () => {
   const [userRole, setUserRole] = useState('');
   const API_URL = config.API_URL;
   const [doctors, setDoctors] = useState([]);
+  const [isDraftModalOpen, setIsDraftModalOpen] = useState(false);
+  const [selectedPatient, setSelectedPatient] = useState(null);
+
+  const [showModal, setShowModal] = useState(false);
+  const [modalContent, setModalContent] = useState(null);
+
   const fetchDoctors = async () => {
     try {
-      const response = await axios.get(`http://${API_URL}:5000/api/assign/doctors`);
+      const response = await axios.get(`${API_URL}/api/assign/doctors`);
       setDoctors(response.data);
     } catch (error) {
       console.error("Error fetching doctors:", error);
@@ -38,8 +48,10 @@ const WorkTable = () => {
       const decodedToken = jwtDecode(token);
       setUserRole(decodedToken.role); // Setting user role based on token
       setCurrentDoctorId(decodedToken.id);
-      if (decodedToken.id) {
-        fetchSpecialAllocations(decodedToken.id);
+      console.log("This is current doctor id: ", decodedToken.id);
+      const decodedToken_id = "66faef2467d2c448c05a29ef";
+      if (decodedToken_id) {
+        fetchSpecialAllocations(decodedToken_id);
       }
     }
     fetchDoctorFollowTypes();
@@ -48,27 +60,17 @@ const WorkTable = () => {
 
   const fetchSpecialAllocations = async (doctorId) => {
     try {
-      const response = await axios.get(`http://${API_URL}:5000/api/assign/special/${doctorId}`);
-      const allocations = response.data;
-      
-      // Fetch complete patient details for each allocation
-      const patientDetailsPromises = allocations.map(allocation => 
-        axios.get(`http://${API_URL}:5000/api/patient/${allocation.patientId}`)
-      );
-      
-      const patientResponses = await Promise.all(patientDetailsPromises);
-      const completePatientDetails = patientResponses.map(response => response.data);
-      
-      setSpecialAllocationPatients(completePatientDetails);
+      const response = await axios.get(`${API_URL}/api/assign/special/${doctorId}`);
+      setSpecialAllocationPatients(response.data);
     } catch (error) {
       console.error("Error fetching special allocations:", error);
       setError("Failed to load special allocations");
     }
   };
-
+  
   const handleDoctorChange = async (patientId, doctorId) => {
     try {
-      await axios.post(`http://${API_URL}:5000/api/assign/allocations`, {
+      await axios.post(`${API_URL}/api/assign/allocations`, {
         allocations: [{ role: 'patient', doctorId, patientId }]
       });
       // Refresh the patient list or update the local state
@@ -88,7 +90,7 @@ const WorkTable = () => {
       }
   
       const response = await axios.get( 
-        `http://${API_URL}:5000/api/doctor/getDoctorFollow`,
+        `${API_URL}/api/doctor/getDoctorFollow`,
         {
           headers: {
             Authorization: `Bearer ${token}`,
@@ -127,11 +129,12 @@ const WorkTable = () => {
 
   const fetchPatients = async () => {
     try {
-      let url = `http://${API_URL}:5000/api/log/list`;
+      let url = `${API_URL}/api/doctor/getAllAppointmentsWithPatientData`;
       if (selectedFollowType === 'View All') {
-        url = `http://${API_URL}:5000/api/log/list?appointmentFixed=Yes`;
+        url = `${API_URL}/api/log/list?appointmentFixed=Yes`;
       }
       const response = await axios.get(url);
+      console.log(response.data);
       setPatients(response.data);
     } catch (error) {
       console.error('Error fetching patients:', error.response ? error.response.data : error.message);
@@ -157,12 +160,12 @@ const WorkTable = () => {
         // (selectedFollowType === 'Follow up-C-Existing' && patient.follow === 'Follow up-C' && patient.newExisting === 'Existing') ||
         // (selectedFollowType !== 'Follow up-C-New' && selectedFollowType !== 'Follow up-C-Existing' && patient.follow === selectedFollowType);
       
-        (selectedFollowType === 'Follow up-Chronic-New' && patient.diseaseType.name === 'Chronic' && patient.follow === 'Follow up-C' && patient.newExisting === 'New') ||
-        (selectedFollowType === 'Follow up-Chronic-Existing' && patient.diseaseType.name === 'Chronic' && patient.follow === 'Follow up-C' && patient.newExisting === 'Existing') ||
-        (selectedFollowType === 'Follow up-Acute-New' && patient.diseaseType.name === 'Acute'  && patient.follow === 'Follow up-C' && patient.newExisting === 'New') ||
-        (selectedFollowType === 'Follow up-Acute-Existing' && patient.diseaseType.name === 'Acute'  && patient.follow === 'Follow up-C' && patient.newExisting === 'Existing') ||
-        (selectedFollowType !== 'Follow up-Chronic-New' && selectedFollowType !== 'Follow up-Chronic-Existing' && selectedFollowType !== 'Follow up-Acute-New' && selectedFollowType !== 'Follow up-Acute-Existing' && patient.follow === selectedFollowType);
-
+        (selectedFollowType === 'Follow up-Chronic-New' && patient.medicalDetails.diseaseType.name === 'Chronic' && patient.medicalDetails.follow === 'Follow up-C' && patient.newExisting === 'New') ||
+        (selectedFollowType === 'Follow up-Chronic-Existing' && patient.medicalDetails.diseaseType.name === 'Chronic' && patient.medicalDetails.follow === 'Follow up-C' && patient.newExisting === 'Existing') ||
+        (selectedFollowType === 'Follow up-Acute-New' && patient.medicalDetails.diseaseType.name === 'Acute'  && patient.medicalDetails.follow === 'Follow up-C' && patient.newExisting === 'New') ||
+        (selectedFollowType === 'Follow up-Acute-Existing' && patient.medicalDetails.diseaseType.name === 'Acute'  && patient.medicalDetails.follow === 'Follow up-C' && patient.newExisting === 'Existing') ||
+        (selectedFollowType !== 'Follow up-Chronic-New' && selectedFollowType !== 'Follow up-Chronic-Existing' && selectedFollowType !== 'Follow up-Acute-New' && selectedFollowType !== 'Follow up-Acute-Existing' && patient.medicalDetails.follow === selectedFollowType);
+// console.log("Checking patient: ",patient);
       return isMatchingFollowType &&
         (searchTerm === '' ||
           patient.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -172,8 +175,15 @@ const WorkTable = () => {
 
   const navigate = useNavigate();
   const handleJoinRoom = (patient) => {
-    navigate(`/call/${patient._id}`);
-  }
+    const appointmentID = patient.medicalDetails._id;
+    if (patient && patient.medicalDetails && patient.medicalDetails.meetLink) {
+      navigate("/video-call", {
+        state: { meetLink: patient.medicalDetails.meetLink, appointmentID },
+      });
+    } else {
+      alert("No valid Zoom link found!");
+    }
+  };
 
   const isOneHourPassed = (followUpTimestamp) => {
     if (!followUpTimestamp) return true; // If no timestamp, enable the button
@@ -254,8 +264,8 @@ const WorkTable = () => {
             'Age',
             'Gender',
             'Current location',
-            'Message sent',
-            'Time stamp',
+            // 'Message sent',
+            // 'Time stamp',
             'Acute/Chronic',
             'Follow',
             'Follow comment',
@@ -278,32 +288,41 @@ const WorkTable = () => {
             index + 1,
             item.patientEntry || '---',
             item.newExisting || '',
-            item.consultingFor || '',
+            item.medicalDetails.consultingFor || '',
             item.name || '',
             item.phone || '',
             item.whatsappNumber || '',
             item.email || '',
-            item.diseaseName || '',
-            item.diseaseTypeAvailable ? 'Yes' : 'No',
+            item.medicalDetails.diseaseName || '',
+            item.medicalDetails.diseaseTypeAvailable ? 'Yes' : 'No',
             item.age || '',
             item.gender || '',
             item.currentLocation || '',
-            item.messageSent.message || '---',
-            item.messageSent.timeStamp || '---',
-            item.diseaseType.name || '',
-            item.follow || '',
-            item.followComment || '',
+            // item.medicalDetails.messageSent.message || '---',
+            // item.medicalDetails.messageSent.timeStamp || '---',
+            item.medicalDetails.diseaseType.name || '',
+            item.medicalDetails.follow || '',
+            item.medicalDetails.followComment || '',
             '--',
             item.patientProfile || 'No',
-            item.enquiryStatus || '',
+            item.medicalDetails.enquiryStatus || '',
             item.appDownload != '0' ? 'Yes' : 'No',
             item.appointmentFixed || '',
             item.appointmentFixed || '',
             item.medicinePaymentConfirmation ? 'Confirmed' : 'Pending',
             // item.callStatus || '',
             // item.conversionStatus || '',
-            item.callCount || '0',
-            item.comments.text || '--',
+            item.medicalDetails.callCount || '0',
+            // item.comments.text || '--',
+            <CommentCell 
+              patient={item} 
+              API_URL={API_URL}
+              onCommentAdded={(updatedPatient) => {
+                setPatients(prevPatients => 
+                  prevPatients.map(p => p._id === updatedPatient._id ? updatedPatient : p)
+                );
+              }} 
+            />,
             <div className="action-buttons">
               {renderButton('View draft', () => handleAction('ViewDraft', item))}
             </div>,
@@ -349,29 +368,42 @@ const WorkTable = () => {
           ],
           data: filteredPatients.map((item, index) => [
             index + 1,
-            item.consultingFor || '',
+            item.medicalDetails.consultingFor || '',
             item.name || '',
             item.newExisting || '',
             item.phone || '',
             item.email || '',
-            item.consultingFor || '',
-            item.consultingFor || '',
+            item.medicalDetails.consultingFor || '',
+            item.medicalDetails.consultingFor || '',
             // item.diseaseTypeAvailable ? 'Yes' ? <FaCheckCircle /> : <FaTimesCircle /> : 'No',
             item.age || '',
             item.gender || '',
-            item.diseaseType.name || '',
+            item.medicalDetails.diseaseType.name || '',
             item.follow || '',
-            item.followComment || '',
+            item.medicalDetails.followComment || '',
             item.medicinePaymentConfirmation ? 'Confirmed' : 'Pending',
             // item.conversionStatus || '',
-            item.callCount || '',
-            '--',// item.comments.text || '--',
+            item.medicalDetails.callCount || '',
+            // '--',// item.comments.text || '--',
+            <CommentCell 
+              patient={item} 
+              API_URL={API_URL}
+              onCommentAdded={(updatedPatient) => {
+                setPatients(prevPatients => 
+                  prevPatients.map(p => p._id === updatedPatient._id ? updatedPatient : p)
+                );
+              }} 
+            />,
             
             <div className="action-buttons">
               {renderButton('View draft', () => handleAction('ViewDraft', item))}
             </div>,
             <div className="action-buttons">
-                {renderButton('Attach prescription', () => handleAction('AttachPrescription', item))}
+              {item.medicalDetails?.prescriptionCreated ? (
+                <button className="btn btn-success" disabled>Prescription written</button>
+              ) : (
+                renderButton('Attach prescription', () => handleAction('AttachPrescription', item))
+              )}
             </div>,
             <div className="action-buttons">
                 {renderButton('Make Voice Call', () => handleAction('VoiceCall', item))}
@@ -411,21 +443,30 @@ const WorkTable = () => {
           ],
           data: filteredPatients.map((item, index) => [
             index + 1,
-            item.consultingFor || '',
+            item.medicalDetails.consultingFor || '',
             item.name || '',
             item.newExisting || '',
             item.phone || '',
             item.email || '',
-            item.consultingFor || '',
-            item.diseaseTypeAvailable ? 'Yes' : 'No',
+            item.medicalDetails.consultingFor || '',
+            item.medicalDetails.diseaseTypeAvailable ? 'Yes' : 'No',
             item.age || '',
             item.gender || '',
-            item.diseaseType.name || '',
-            item.follow || '',
-            item.followComment || '',
+            item.medicalDetails.diseaseType.name || '',
+            item.medicalDetails.follow || '',
+            item.medicalDetails.followComment || '',
             item.medicinePaymentConfirmation ? 'Confirmed' : 'Pending',
-            item.callCount || '',
-            item.comments.text || '',
+            item.medicalDetails.callCount || '',
+            // item.medicalDetails.comments.text || '',
+            <CommentCell 
+              patient={item} 
+              API_URL={API_URL}
+              onCommentAdded={(updatedPatient) => {
+                setPatients(prevPatients => 
+                  prevPatients.map(p => p._id === updatedPatient._id ? updatedPatient : p)
+                );
+              }} 
+            />,
             <div className="action-buttons">
               {renderButton('View draft', () => handleAction('ViewDraft', item))}
             </div>,
@@ -450,27 +491,48 @@ const WorkTable = () => {
             'Email', 'Consulting For', 'If diseaseType is not available',
             'Age', 'Gender', 'Acute/Chronic', 'Follow', 'Follow comment',
             'Medicine Payment confirmation', 'Call attempted tracking',
-            'Comments', 'View Drafts', 'Video Call', 'Voice call',
+            'Comments', 'View Prescription', 'Voice call',
             'Recordings', 'Mark Done'
           ],
           data: filteredPatients.map((item, index) => [
             index + 1,
-            item.consultingFor || '',
+            item.medicalDetails.consultingFor || '',
             item.name || '',
             item.newExisting || '',
             item.phone || '',
             item.email || '',
-            item.consultingFor || '',
-            item.diseaseTypeAvailable ? 'Yes' : 'No',
+            item.medicalDetails.consultingFor || '',
+            item.medicalDetails.diseaseTypeAvailable ? 'Yes' : 'No',
             item.age || '',
             item.gender || '',
-            item.diseaseType.name || '',
-            item.follow || '',
-            item.followComment || '',
+            item.medicalDetails.diseaseType.name || '',
+            item.medicalDetails.follow || '',
+            item.medicalDetails.followComment || '',
             item.medicinePaymentConfirmation ? 'Confirmed' : 'Pending',
-            item.callCount || '',
-            item.comments.text || '--',
-            ...getActionButtons(item)
+            item.medicalDetails.callCount || '',
+            // item.comments.text || '--',
+            // <CommentCell patient={item} onCommentAdded={handleCommentAdded} />,
+            <CommentCell 
+              patient={item} 
+              API_URL={API_URL}
+              onCommentAdded={(updatedPatient) => {
+                setPatients(prevPatients => 
+                  prevPatients.map(p => p._id === updatedPatient._id ? updatedPatient : p)
+                );
+              }} 
+            />,
+            <div className="action-buttons">
+                {renderButton('View Prescription', () => handleAction('ViewPrescription', item))}
+            </div>,
+            <div className="action-buttons">
+                {renderButton('Make Voice Call', () => handleAction('VoiceCall', item))}
+            </div>,
+            <div className="action-buttons">
+                {renderButton('Recordings', () => handleAction('Recordings', item))}
+            </div>,
+            <div className="action-buttons">
+                {renderButton('Mark Done', () => handleAction('MarkDone', item))} 
+            </div>,
           ]),
         };
       case 'View All':
@@ -489,8 +551,8 @@ const WorkTable = () => {
           'Age',
           'Gender',
           'Current location',
-          'Message sent',
-          'Time stamp',
+          // 'Message sent',
+          // 'Time stamp',
           'Acute/Chronic',
           'Follow',
           'Follow comment',
@@ -514,32 +576,41 @@ const WorkTable = () => {
           index + 1,
           item.patientEntry || '---',
           item.newExisting || '',
-          item.consultingFor || '',
+          item.medicalDetails.consultingFor || '',
           item.name || '',
           item.phone || '',
           item.whatsappNumber || '',
           item.email || '',
-          item.diseaseName || '',
-          item.diseaseTypeAvailable ? 'Yes' : 'No',
+          item.medicalDetails.diseaseName || '',
+          item.medicalDetails.diseaseTypeAvailable ? 'Yes' : 'No',
           item.age || '',
           item.gender || '',
           item.currentLocation || '',
-          item.messageSent.message || '---',
-          item.messageSent.timeStamp || '---',
-          item.diseaseType.name || '',
-          item.follow || '',
-          item.followComment || '',
+          // item.medicalDetails.messageSent.message || '---',
+          // item.medicalDetails.messageSent.timeStamp || '---',
+          item.medicalDetails.diseaseType.name || '',
+          item.medicalDetails.follow || '',
+          item.medicalDetails.followComment || '',
           '--',
           item.patientProfile || 'No',
-          item.enquiryStatus || '',
+          item.medicalDetails.enquiryStatus || '',
           item.appDownload != '0' ? 'Yes' : 'No',
           item.appointmentFixed || '',
           item.appointmentFixed || '',
-          item.medicinePaymentConfirmation ? 'Confirmed' : 'Pending',
+          item.medicalDetails.medicalPayment ? 'Confirmed' : 'Pending',
           // item.callStatus || '',
           // item.conversionStatus || '',
-          item.callCount || '0',
-          item.comments.text || '--',
+          item.medicalDetails.callCount || '0',
+          // item.medicalDetails.comments.text || '--',
+          <CommentCell 
+              patient={item} 
+              API_URL={API_URL}
+              onCommentAdded={(updatedPatient) => {
+                setPatients(prevPatients => 
+                  prevPatients.map(p => p._id === updatedPatient._id ? updatedPatient : p)
+                );
+              }} 
+            />,
           doctorDropdown(item),
           <div className="action-buttons">
             {renderButton('View draft', () => handleAction('ViewDraft', item))}
@@ -574,8 +645,8 @@ const WorkTable = () => {
             'Age',
             'Gender',
             'Current location',
-            'Message sent',
-            'Time stamp',
+            // 'Message sent',
+            // 'Time stamp',
             'Acute/Chronic',
             'Follow',
             'Follow comment',
@@ -599,30 +670,30 @@ const WorkTable = () => {
               index + 1,
               item.patientEntry || '---',
               item.newExisting || '',
-              item.consultingFor || '',
+              item.medicalDetails.consultingFor || '',
               item.name || '',
               item.phone || '',
               item.whatsappNumber || '',
               item.email || '',
-              item.diseaseName || '',
-              item.diseaseTypeAvailable ? 'Yes' : 'No',
+              item.medicalDetails.diseaseName || '',
+              item.medicalDetails.diseaseTypeAvailable ? 'Yes' : 'No',
               item.age || '',
               item.gender || '',
               item.currentLocation || '',
-              item.messageSent?.message || '---',
-              item.messageSent?.timeStamp || '---',
-              item.diseaseType?.name || '',
-              item.follow || '',
-              item.followComment || '',
+              // item.medicalDetails.messageSent?.message || '---',
+              // item.medicalDetails.messageSent?.timeStamp || '---',
+              item.medicalDetails.diseaseType?.name || '',
+              item.medicalDetails.follow || '',
+              item.medicalDetails.followComment || '',
               '--',
               item.patientProfile || 'No',
-              item.enquiryStatus || '',
+              item.medicalDetails.enquiryStatus || '',
               item.appDownload != '0' ? 'Yes' : 'No',
               item.appointmentFixed || '',
               item.appointmentFixed || '',
-              item.medicinePaymentConfirmation ? 'Confirmed' : 'Pending',
-              item.callCount || '0',
-              item.comments?.text || '--',
+              item.medicalDetails.medicalPayment ? 'Confirmed' : 'Pending',
+              item.medicalDetails.callCount || '0',
+              item.medicalDetails.comments?.text || '--',
               <div className="action-buttons">
                 {renderButton('View draft', () => handleAction('ViewDraft', item))}
               </div>,
@@ -676,7 +747,9 @@ const WorkTable = () => {
     }
     switch (action) {
       case 'ViewDraft':
-        alert(`Viewing draft for ${item.name}`);
+        // alert(`Viewing draft for ${item.name}`);
+        setSelectedPatient(item);
+        setIsDraftModalOpen(true);
         break;
       case 'VideoCall':
         alert(`Starting video call with ${item.name}`);
@@ -689,14 +762,29 @@ const WorkTable = () => {
         alert(`Viewing recordings for ${item.name}`);
         break;
       case 'AttachPrescription':
-        alert(`Attaching prescription for ${item.name}`);
+        // alert(`Attaching prescription for ${item.name}`);
+        const d = localStorage.getItem('accessToken');
+        console.log("d", d);
+        navigate('/prescription-writing', { 
+          state: { 
+            patientData: item
+          }
+        });
         break;
       case 'ViewPrescription':
-        alert(`Viewing prescription for ${item.name}`);
+        const appointmentId = item.medicalDetails._id;
+        setModalContent(
+          <PrescriptionViewModal 
+            isOpen={true} 
+            onClose={() => setShowModal(false)}
+            appointmentId={appointmentId}
+          />
+        );
+        setShowModal(true);
         break;
       case 'MarkDone':
         try {
-          const response = await axios.put(`http://${API_URL}:5000/api/patient/updateFollowUp/${item._id}`);
+          const response = await axios.put(`${API_URL}/api/patient/updateFollowUp/${item.medicalDetails._id}`);
           alert('Follow-up status updated for ' + item.name);
           fetchPatients();
         } catch (error) {
@@ -730,26 +818,25 @@ const WorkTable = () => {
   const tableConfig = getTableConfig();
 
   return (
-    <div className="container mx-auto px-4 py-6">
-      <div className="mb-6 flex flex-col sm:flex-row justify-between items-center gap-4">
-        <div className="relative flex-1 w-full sm:w-auto">
+    <div className="w-full px-2 py-4">
+      <div className="mb-6 flex flex-col md:flex-row items-center space-y-4 md:space-y-0 md:space-x-4">
+        <div className="relative w-full">
           <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-            <IoIosSearch className="h-5 w-5 text-[#757575]" />
+            <IoIosSearch className="h-5 w-5 text-gray-500" />
           </div>
           <input
             type="text"
             placeholder="Search by name or phone number..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            className="block w-80 pl-10 pr-3 py-2 border border-[#1a237e] rounded-[5px] leading-5 bg-white placeholder-[#757575] 
-                       focus:outline-none focus:ring-2 focus:ring-[#534bae] focus:border-[#534bae] transition-all duration-300 sm:text-sm"
+            className="w-full pl-10 pr-3 py-2 border border-blue-800 rounded-lg"
           />
         </div>
+
         <select
           value={selectedFollowType}
           onChange={(e) => setSelectedFollowType(e.target.value)}
-          className="block w-full sm:w-auto px-3 py-2 border border-[#1a237e] rounded-[5px] leading-5 bg-white text-[#212121]
-                     focus:outline-none focus:ring-2 focus:ring-[#534bae] focus:border-[#534bae] transition-all duration-300 sm:text-sm"
+          className="w-full px-3 py-2 border border-blue-800 rounded-lg"
         >
           {followTypes.map((type) => (
             <option key={type} value={type}>
@@ -759,51 +846,56 @@ const WorkTable = () => {
         </select>
       </div>
 
-      <div className="relative overflow-hidden border border-[#1a237e] rounded-[5px] shadow-[0_2px_4px_rgba(0,0,0,0.1)]">
-        <div className="overflow-x-auto">
-          <div className="overflow-y-auto max-h-80"> {/* Set a max height for scrolling */}
-            <table className="min-w-full divide-y divide-[#1a237e]">
-              <thead className="bg-[#1a237e] sticky top-0 z-10">
-                <tr>
-                  {tableConfig.head.map((header) => (
-                    <th
-                      key={header}
-                      className="px-6 py-3 text-left text-xs font-medium text-[#f5f5f5] uppercase tracking-wider whitespace-nowrap"
+      <div className="w-full overflow-x-auto">
+        <table className="w-full table-auto">
+          <thead className="bg-blue-800 text-white">
+            <tr>
+              {tableConfig.head.map((header) => (
+                <th
+                  key={header}
+                  className="px-4 py-3 text-left text-xs font-semibold uppercase"
+                >
+                  {header}
+                </th>
+              ))}
+            </tr>
+          </thead>
+          <tbody>
+            {tableConfig.data.length > 0 ? (
+              tableConfig.data.map((row, rowIndex) => (
+                <tr 
+                  key={rowIndex} 
+                  className="border-b hover:bg-blue-50"
+                >
+                  {row.map((cell, cellIndex) => (
+                    <td
+                      key={cellIndex}
+                      className="px-4 py-3 text-sm text-gray-900"
                     >
-                      {header}
-                    </th>
+                      {cell}
+                    </td>
                   ))}
                 </tr>
-              </thead>
-              <tbody className="bg-white divide-y divide-[#1a237e]/20">
-                {tableConfig.data.length > 0 ? (
-                  tableConfig.data.map((row, rowIndex) => (
-                    <tr key={rowIndex} className={rowIndex % 2 === 0 ? 'bg-white' : 'bg-[#f5f5f5]'}>
-                      {row.map((cell, cellIndex) => (
-                        <td
-                          key={cellIndex}
-                          className="px-6 py-4 whitespace-nowrap text-sm text-[#212121]"
-                        >
-                          {cell}
-                        </td>
-                      ))}
-                    </tr>
-                  ))
-                ) : (
-                  <tr>
-                    <td
-                      colSpan={tableConfig.head.length}
-                      className="px-6 py-4 whitespace-nowrap text-sm text-[#757575] text-center"
-                    >
-                      No patients found matching your criteria
-                    </td>
-                  </tr>
-                )}
-              </tbody>
-            </table>
-          </div>
-        </div>
+              ))
+            ) : (
+              <tr>
+                <td
+                  colSpan={tableConfig.head.length}
+                  className="px-4 py-3 text-center text-gray-500"
+                >
+                  No patients found matching your criteria
+                </td>
+              </tr>
+            )}
+          </tbody>
+        </table>
       </div>
+      <DraftViewModal 
+        isOpen={isDraftModalOpen}
+        onClose={() => setIsDraftModalOpen(false)}
+        patientData={selectedPatient}
+      />
+      {showModal && modalContent}
     </div>
   );
 };

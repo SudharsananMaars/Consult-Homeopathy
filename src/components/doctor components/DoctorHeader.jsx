@@ -8,7 +8,8 @@ import DoctorMessenger from "./DoctorMessenger";
 import homeologo from "/src/assets/images/doctor images/homeologo.png";
 import { FaSearch } from "react-icons/fa";
 import axios from "axios";
-
+import config from "../../config";
+const API_URL = config.API_URL;
 const Header = () => {
   const navigate = useNavigate();
   const [isMessageActive, setIsMessageActive] = useState(false); // State to track active message button
@@ -89,7 +90,7 @@ const handleCheckIn = async () => {
     const pausedTime = parseInt(localStorage.getItem(`${doctorId}_pausedTimer`), 10) || 0;
 
     const response = await axios.post(
-      "http://localhost:5000/api/attendance/checkin",
+      `${API_URL}/api/attendance/checkin`,
       {},
       {
         headers: {
@@ -136,7 +137,7 @@ const handleCheckOut = async () => {
     }
 
     const response = await axios.post(
-      "http://localhost:5000/api/attendance/checkout",
+      `${API_URL}/api/attendance/checkout`,
       {},
       {
         headers: {

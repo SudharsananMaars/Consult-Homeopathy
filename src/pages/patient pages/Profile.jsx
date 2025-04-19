@@ -1,6 +1,8 @@
 import React, { useState } from "react";
 import Layout from "../../components/patient components/Layout";
 import axios from "axios";
+import config from '../../config';
+const API_URL = config.API_URL;
 
 const Profile = () => {
   const [profilePhoto, setProfilePhoto] = useState(null);
@@ -22,7 +24,7 @@ const Profile = () => {
     const fetchPatientProfile = async () => {
       try {
         const token = localStorage.getItem('accessToken');
-        const response = await fetch(`http://localhost:8000/api/patient/profile`, {
+        const response = await fetch(`${API_URL}/api/patient/profile`, {
           method: 'GET',
           headers: {
             Authorization: `Bearer ${token}`, // Assuming you're using localStorage to store the token
@@ -74,7 +76,7 @@ const Profile = () => {
   const handleSubmit = async () =>{
     try {
       const token = localStorage.getItem('accessToken');
-      const response = await axios.put(`http://localhost:8000/api/patient/profile`, {
+      const response = await axios.put(`${API_URL}/api/patient/profile`, {
         name,
         email,
         phone: mobile,

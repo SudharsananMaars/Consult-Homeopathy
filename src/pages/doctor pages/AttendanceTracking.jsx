@@ -1,5 +1,7 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios";
+import config from '../../config';
+const API_URL = config.API_URL;
 
 function AttendanceTracking() {
   const [attendanceData, setAttendanceData] = useState([]);
@@ -20,7 +22,7 @@ function AttendanceTracking() {
       try {
         const token = localStorage.getItem("token"); // Fetch the token from storage
         const response = await axios.get(
-          "http://localhost:5000/api/attendance/getAttendance",
+          `${API_URL}/api/attendance/getAttendance`,
           {
             headers: {
               Authorization: `Bearer ${token}`, // Send the token in headers

@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios";
 import LeaveSettings from "/src/pages/doctor pages/LeaveSettingsForm.jsx"; // Assuming you have this component for settings
+import config from '../../config';
+const API_URL = config.API_URL;
 
 function AdminLeaveManagement() {
   const [leaveRequests, setLeaveRequests] = useState([]);
@@ -11,7 +13,7 @@ function AdminLeaveManagement() {
     const fetchLeaveRequests = async () => {
       try {
         const token = localStorage.getItem("token"); // Adjust based on how you're storing the token
-        const response = await axios.get("http://localhost:5000/api/leaves/pending", {
+        const response = await axios.get(`${API_URL}/api/leaves/pending`, {
           headers: {
             Authorization: `Bearer ${token}`, // Attach token to the request
           },
@@ -29,7 +31,7 @@ function AdminLeaveManagement() {
     try {
       const token = localStorage.getItem("token");
       await axios.put(
-        `http://localhost:5000/api/leaves/approve/${requestId}`,
+        `${API_URL}/api/leaves/approve/${requestId}`,
         {},
         {
           headers: {
@@ -48,7 +50,7 @@ function AdminLeaveManagement() {
     try {
       const token = localStorage.getItem("token");
       await axios.put(
-        `http://localhost:5000/api/leaves/reject/${requestId}`,
+        `${API_URL}/api/leaves/reject/${requestId}`,
         {},
         {
           headers: {

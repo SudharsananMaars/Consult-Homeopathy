@@ -3,9 +3,11 @@ import axios from 'axios';
 import { FaCheckCircle, FaTimesCircle, FaSearch, FaFilter, FaPhoneAlt, FaRecordVinyl, FaEye, FaDownload, FaPencilAlt, FaChevronRight, FaChevronLeft } from 'react-icons/fa';
 import CallInterface from './CallInterface';
 import RecordingsInterface from './RecordingsButton';
+// import '../css/AssistantDashboard.css';
 import config from '../../config';
 import CommentCell from './CommentCell';
-
+import DoctorAllocationCell from './DoctorAllocationComponent';
+import RecordingsButton from './RecordingsButton';
 const LostTable = () => {
   const [patients, setPatients] = useState([]);
   const [searchTerm, setSearchTerm] = useState('');
@@ -18,23 +20,29 @@ const LostTable = () => {
   const [showFilters, setShowFilters] = useState(false);
   const [patientFormsStatus, setPatientFormsStatus] = useState({});
   const [visibleSections, setVisibleSections] = useState([1]);
+  const [searchQuery, setSearchQuery] = useState(''); 
+  const [allocations, setAllocations] = useState([]);
+  const [individualAllocations, setIndividualAllocations] = useState({});
+
   const API_URL = config.API_URL;
 
   useEffect(() => {
     const fetchPatientsAndFormStatus = async () => {
       try {
-        const response = await axios.get(`http://${API_URL}:5000/api/log/list`);
+        const response = await axios.get(`${API_URL}/api/log/list`);
         const patientsData = response.data
-          .filter(patient => patient.enquiryStatus == 'Not Interested') 
+          .filter(patient => patient.medicalDetails.enquiryStatus == 'Not Interested') 
           .map(patient => ({
             ...patient,
-            diseaseType: typeof patient.diseaseType === 'string' 
-              ? { name: patient.diseaseType, isEdited: false }
-              : patient.diseaseType || { name: '', isEdited: false }
+            diseaseType: typeof patient.medicalDetails.diseaseType === 'string' 
+              ? { name: patient.medicalDetails.diseaseType, isEdited: false }
+              : patient.medicalDetails.diseaseType || { name: '', isEdited: false }
           }));
         
+        const allocationsResponse = await axios.get(`${API_URL}/api/assign/allocations-with-doctors`);
+        
         const followUpPromises = patientsData.map(patient => 
-          axios.get(`http://${API_URL}:5000/api/log/follow-up/${patient._id}`)
+          axios.get(`${API_URL}/api/log/follow-up/${patient._id}`)
         );
         const followUpResponses = await Promise.all(followUpPromises);
         const followUpStatusObj = {};
@@ -43,7 +51,7 @@ const LostTable = () => {
         });
         
         const formStatusPromises = patientsData.map(patient => 
-          axios.get(`http://${API_URL}:5000/api/log/patientProfile/${patient.phone}`)
+          axios.get(`${API_URL}/api/log/patientProfile/${patient.phone}`)
         );
         
         const formStatusResponses = await Promise.all(formStatusPromises);
@@ -53,9 +61,10 @@ const LostTable = () => {
         });
         
         setPatients(patientsData);
+        setAllocations(allocationsResponse.data);
         setFollowUpStatuses(followUpStatusObj);
         setPatientFormsStatus(formStatusObj);
-        
+
       } catch (error) {
         console.error('Error fetching data:', error.response ? error.response.data : error.message);
       }
@@ -63,6 +72,49 @@ const LostTable = () => {
     
     fetchPatientsAndFormStatus();
   }, []);
+
+  const handleIndividualAllocation = async (patientId, doctorId) => {
+    try {
+      const response = await axios.post(`${API_URL}/api/assign/individual-allocation`, {
+        patientId,
+        doctorId
+      });
+      
+      if (response.status === 200) {
+        setIndividualAllocations(prev => ({
+          ...prev,
+          [patientId]: response.data.doctor
+        }));
+      }
+    } catch (error) {
+      console.error('Error allocating doctor:', error);
+    }
+  };
+
+  const getDoctorForPatient = (patient) => {
+    // First check if there's an individual allocation
+    if (individualAllocations[patient._id]) {
+      return individualAllocations[patient._id].name;
+    }
+  
+    // If no individual allocation, fall back to role-based allocation
+    if (!patient.follow || !allocations.length) return '---';
+  
+    let requiredFollowUpType = patient.follow;
+  
+    if (patient.follow === 'Follow up-C') {
+      const diseaseType = patient.diseaseType?.name || '';
+      const patientType = patient.newExisting || '';
+      
+      if (diseaseType && patientType) {
+        requiredFollowUpType = `Follow up-${diseaseType}-${patientType}`;
+      }
+    }
+  
+    const allocation = allocations.find(a => a.followUpType === requiredFollowUpType);
+    return allocation ? allocation.doctor.name : '---';
+  };
+  
 
   const prioritizePatients = (patientsList) => {
     return patientsList.sort((a, b) => {
@@ -84,27 +136,27 @@ const LostTable = () => {
     });
   };
 
-  const filteredPatients = patients.filter(patient => {
+  const filteredPatients = prioritizePatients(patients.filter(patient => {
     const matchesSearchTerm =
       patient.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
       (patient.mobileNumber && String(patient.mobileNumber).includes(searchTerm));
 
     const matchesFilter =
       filterOption === 'all' ||
-      (filterOption === 'pending' && patient.callFromApp === 'pending') ||
-      (filterOption === 'done' && patient.callFromApp !== 'pending');
+      (filterOption === 'pending' && patient.appointmentFixed === 'No') ||
+      (filterOption === 'done' && patient.appointmentFixed === 'Yes');
 
     return matchesSearchTerm && matchesFilter;
-  });
+  }));
 
   const makeCall = async (patient) => {
     try {
-      const callResponse = await axios.post('https://f9ea-122-15-77-226.ngrok-free.app/make-call', {
+      const callResponse = await axios.post('https://41f4-122-15-77-226.ngrok-free.app/make-call', {
         to: patient.phone,
       });
       
       if (callResponse.status === 200) {
-        const countResponse = await axios.post(`http://${API_URL}:5000/api/log/increment-call-count/${patient._id}`);
+        const countResponse = await axios.post(`${API_URL}/api/log/increment-call-count/${patient._id}`);
         if (countResponse.status === 200) {
           setPatients(prevPatients => prevPatients.map(p =>
             p._id === patient._id ? countResponse.data.patient : p
@@ -138,7 +190,7 @@ const LostTable = () => {
 
   const sendMessage = async (patient) => {
     try {
-      const response = await axios.post(`http://${API_URL}:5000/api/log/send-message/${patient._id}`);
+      const response = await axios.post(`${API_URL}/api/log/send-message/${patient._id}`);
       if (response.status === 200) {
         setPatients(prevPatients => prevPatients.map(p =>
           p._id === patient._id
@@ -155,13 +207,13 @@ const LostTable = () => {
   };
   
   const getCallStatus = (patient) => {
-    if (!patient || typeof patient.enquiryStatus === 'undefined') {
+    if (!patient || typeof patient.medicalDetails.enquiryStatus === 'undefined') {
       return 'Unknown';
     }
 
-    const enquiryStatus = patient.enquiryStatus ? patient.enquiryStatus.trim() : '';
+    const enquiryStatus = patient.medicalDetails.enquiryStatus ? patient.medicalDetails.enquiryStatus.trim() : '';
     const appointmentFixed = patient.appointmentFixed === 'Yes';
-    const medicalPayment = patient.medicalPayment === 'Yes';
+    const medicalPayment = patient.medicalDetails.medicalPayment === 'Yes';
 
     console.log('Patient ID:', patient._id);
     console.log('Enquiry Status:', enquiryStatus);
@@ -178,13 +230,13 @@ const LostTable = () => {
 
   const handleEnquiryStatusChange = async (patientId, newStatus) => {
     try {
-      const response = await axios.put(`http://${API_URL}:5000/api/log/update-status/${patientId}`, {
+      const response = await axios.put(`${API_URL}/api/log/update-status/${patientId}`, {
         enquiryStatus: newStatus
       });
 
       if (response.status === 200) {
         setPatients(prevPatients => prevPatients.map(p => 
-          p._id === patientId ? { ...p, enquiryStatus: newStatus } : p
+          p._id === patientId ? { ...p, medicalDetails: { ...p.medicalDetails, enquiryStatus: newStatus }, } : p
         ));
         console.log('Enquiry status updated successfully:', newStatus);
       } else {
@@ -200,7 +252,7 @@ const LostTable = () => {
     try {
         const token = localStorage.getItem('token');
         console.log("Token:",token);
-        const response = await axios.put(`http://${API_URL}:5000/api/log/update-disease-type/${patientId}`, {
+        const response = await axios.put(`${API_URL}/api/log/update-disease-type/${patientId}`, {
             diseaseType: {
                 name: newDiseaseTypeName,
                 edit: true,
@@ -210,10 +262,12 @@ const LostTable = () => {
                 Authorization: `Bearer ${token}` // Set the bearer token
             }
         });
-
+        console.log(response.data);
         if (response.data.success) {
             setPatients(prevPatients => prevPatients.map(p =>
-                p._id === patientId ? { ...p, diseaseType: response.data.patient.diseaseType } : p
+                p._id === patientId ? {...p,medicalDetails: {...p.medicalDetails,diseaseType: response.data.medicalDetails.diseaseType, },
+              }
+            : p
             ));
             setEditingDiseaseType(null);
         } else {
@@ -243,7 +297,7 @@ const LostTable = () => {
     {
       id: 4,
       title: "Appointment & Payment",
-      columns: ["Consultation payment","Appointment Fixed", "Medicine & Shipping Payment confirmation", "Role Allocations"]
+      columns: ["Consultation payment","Appointment Fixed", "Medicine & Shipping Payment confirmation", "Role Allocation"]
     }
   ];
 
@@ -281,8 +335,8 @@ const LostTable = () => {
           onClick={() => scrollToSection(section.id)}
         className={`flex-grow px-4 py-2 rounded-lg transition-colors duration-200 text-center whitespace-nowrap ${
             activeSection === section.id
-              ? 'bg-blue-500 text-white'
-              : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+              ? 'bg-indigo-400 text-white'
+              : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
           }`}
         >
           {section.title}
@@ -325,7 +379,7 @@ const LostTable = () => {
       case "Patient Type":
         return patient.newExisting || '---';
       case "Who is the Consultation for":
-        return patient.consultingFor || '---';
+        return patient.medicalDetails.consultingFor || '---';
       case "Name":
         return patient.name;
       case "Phone Number":
@@ -341,15 +395,15 @@ const LostTable = () => {
       case "Current Location":
         return patient.currentLocation || '---';
       case "Consulting For":
-        return patient.diseaseName || '---';
+        return patient.medicalDetails.diseaseName || '---';
       case "If disease type is not available":
-        return patient.diseaseName || '---';
+        return patient.medicalDetails.diseaseName || '---';
       case "Acute / Chronic":
         return (
           <div>
             {editingDiseaseType === patient._id ? (
               <select
-                value={patient.diseaseType?.name || ''}
+                value={patient.medicalDetails?.diseaseType?.name || ''}  // Optional chaining here
                 onChange={(e) => handleEditDiseaseType(patient._id, e.target.value)}
                 onBlur={() => setEditingDiseaseType(null)}
                 autoFocus
@@ -361,8 +415,8 @@ const LostTable = () => {
               </select>
             ) : (
               <div className="flex items-center space-x-2">
-                <span className={`font-medium ${patient.diseaseType?.edit ? 'text-blue-600' : 'text-gray-700'}`}>
-                  {patient.diseaseType?.name || 'Not specified'}
+                <span className={`font-medium ${patient.medicalDetails?.diseaseType?.edit ? 'text-blue-600' : 'text-gray-700'}`}>
+                  {patient.medicalDetails?.diseaseType?.name || 'Not specified'}  {/* Optional chaining */}
                 </span>
                 <button 
                   onClick={() => setEditingDiseaseType(patient._id)}
@@ -378,13 +432,13 @@ const LostTable = () => {
               </div>
             )}
           </div>
-        );        
+        );   
       case "Patient Profile":
         return patientFormsStatus[patient._id] || 'Loading...';
       case "Enquiry Status":
         return (
           <select
-            value={patient.enquiryStatus || ''}
+            value={patient.medicalDetails.enquiryStatus || ''}
             onChange={(e) => handleEnquiryStatusChange(patient._id, e.target.value)}
             className="border border-gray-300 rounded px-2 py-1 text-sm"
           >
@@ -395,22 +449,25 @@ const LostTable = () => {
           </select>
         );
       case "Role and Activity Status":
-        return patient.follow || '---';
+        return patient.medicalDetails.follow || '---';
       case "Messenger Comment":
-        return patient.followComment || '---';
+        return patient.medicalDetails.followComment || '---';
       case "Omni Channel":
         return patient.patientEntry || '---';
       case "Message Sent":
         // return patient.messageSent?.status ? 'Yes' : 'No';
-        return patient.messageSent.status ? (
+        return patient.medicalDetails.messageSent?.status ? (
           "Sent"
         ) : (
-          <button className="send-message-button" onClick={() => sendMessage(patient)}>
+          <button
+            className="send-message-button"
+            onClick={() => sendMessage(patient)}
+          >
             Send Message
           </button>
         );
       case "Time Stamp":
-        return patient.messageSent.timeStamp;
+        return patient.medicalDetails.messageSent?.timeStamp;
       case "Make a Call":
         return (
           <button 
@@ -422,23 +479,41 @@ const LostTable = () => {
         );
       case "Recordings":
         return (
-          <button
-            onClick={() => viewRecordings(patient)}
-            className="inline-flex items-center px-3 py-2 border border-transparent text-sm leading-4 font-medium rounded-md text-white bg-[#1a237e] hover:bg-[#000051] focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#534bae] transition-all duration-300"
-          >
-            <FaRecordVinyl className="mr-2 -ml-0.5 h-4 w-4" /> View Recordings
-          </button>
+          // <button
+          //   onClick={() => viewRecordings(patient)}
+          //   className="inline-flex items-center px-3 py-2 border border-transparent text-sm leading-4 font-medium rounded-md text-white bg-[#1a237e] hover:bg-[#000051] focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#534bae] transition-all duration-300"
+          // >
+          //   <FaRecordVinyl className="mr-2 -ml-0.5 h-4 w-4" /> View Recordings
+          // </button>
+          <div>
+                  <RecordingsButton patient={patient} />
+          </div>
         );
-      case "Follow up Comments":
-        return <CommentCell 
-          patient={patient} 
-          API_URL={API_URL}
-          onCommentAdded={(updatedPatient) => {
-            setPatients(prevPatients => 
-              prevPatients.map(p => p._id === updatedPatient._id ? updatedPatient : p)
-            );
-          }} 
-        />;
+        case "Follow up Comments":
+          return (
+              <CommentCell 
+                  patient={patient} 
+                  API_URL={API_URL}
+                  onCommentAdded={(updatedPatient) => {
+                    if (updatedPatient && updatedPatient._id) {
+                      setPatients((prevPatients) =>
+                        prevPatients.map((p) =>
+                          p._id === updatedPatient._id
+                            ? {
+                                ...p,
+                                medicalDetails: {
+                                  ...p.medicalDetails,
+                                  comments: updatedPatient.medicalDetails.comments || [],
+                                },
+                              }
+                            : p
+                        )
+                      );
+                    }
+                  }}
+              />
+          );
+      
       case "Out of network":
         return patient.outOfNetwork || '---';
       case "appDownload":
@@ -446,7 +521,7 @@ const LostTable = () => {
       case "Call Status":
         return getCallStatus(patient);
       case "Call Attempted tracking":
-        return patient.callCount || 0;
+        return patient.medicalDetails.callCount || 0;
       case "Conversion Status":
         return patient.appointmentFixed === 'Yes' ? <FaCheckCircle className='green' /> : <FaTimesCircle className='red' />;
       case "Consultation payment":
@@ -455,8 +530,19 @@ const LostTable = () => {
         return patient.appointmentFixed === 'Yes' ? <FaCheckCircle className='green' /> : <FaTimesCircle className='red' />;
       case "Medicine & Shipping Payment confirmation":
         return patient.medicalPayment === 'Yes' ? <FaCheckCircle className='green' /> : <FaTimesCircle className='red' />;
-      case "Role Allocations":
-        return "-";
+      case "Role Allocation":
+        return (
+          <DoctorAllocationCell 
+            patient={patient}
+            currentDoctor={getDoctorForPatient(patient)}
+            onAllocationChange={(newDoctor) => {
+              setIndividualAllocations(prev => ({
+                ...prev,
+                [patient._id]: newDoctor
+              }));
+            }}
+          />
+        );
       default:
         return '---';
     }
@@ -465,7 +551,7 @@ const LostTable = () => {
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center mb-6 bg-white p-3 rounded-lg shadow-md">
-        <h2 className="text-2xl font-bold text-[#1a237e]">Status Complete Patients</h2>
+        <h2 className="text-2xl font-bold text-[#1a237e]">Patients List</h2>
         <div className="flex items-center space-x-4">
           <div className="relative flex items-center">
             <div className="flex items-center bg-white rounded-l-lg border-2 border-r-0 border-[#1a237e] focus-within:border-[#534bae] transition-colors duration-300">

@@ -73,12 +73,12 @@ function AssistLeave() {
           return;
         }
       try {
-        const leaveBalanceResponse = await axios.get('http://localhost:5000/api/leaves/leave-balance', {
+        const leaveBalanceResponse = await axios.get(`${API_URL}/api/leaves/leave-balance`, {
           headers: {
             Authorization: `Bearer ${token}`,
           },
         });
-        const response = await axios.get('http://localhost:5000/api/leaves/my-requests', {
+        const response = await axios.get(`${API_URL}/api/leaves/my-requests`, {
           headers: {
             Authorization: `Bearer ${token}`, // Include the token in the headers
           },
@@ -104,7 +104,7 @@ function AssistLeave() {
   useEffect(() => {
     const fetchShifts = async () => {
       try {
-        const response = await axios.get("http://localhost:5000/api/shift/getShiftDetails");
+        const response = await axios.get(`${API_URL}/api/shift/getShiftDetails`);
         setShiftDetails(response.data);
       } catch (error) {
         console.error("Error fetching shifts:", error);
@@ -145,7 +145,7 @@ function AssistLeave() {
       // ) + 1; // Include both start and end dates
   
       const response = await axios.post(
-        'http://localhost:5000/api/leaves/request',
+        `${API_URL}/api/leaves/request`,
         {
           leaveType,
           startDate,

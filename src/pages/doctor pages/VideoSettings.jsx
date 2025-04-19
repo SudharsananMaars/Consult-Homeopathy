@@ -1,5 +1,8 @@
+// DoctorSettings.js
 import React, { useState, useEffect } from "react";
 import axios from "axios";
+import config from '../../config';
+const API_URL = config.API_URL;
 
 const DoctorSettings = () => {
   const [selectedPlatform, setSelectedPlatform] = useState("");
@@ -7,30 +10,31 @@ const DoctorSettings = () => {
   const [successMessage, setSuccessMessage] = useState("");
 
   // useEffect(() => {
+  //   // Fetch the current settings when component mounts
   //   axios
   //     .get("http://localhost:5000/api/doctor/getsettings", {
   //       headers: { Authorization: `Bearer ${localStorage.getItem("accessToken")}` },
   //     })
   //     .then((response) => {
-  //       console.log("Settings fetched:", response.data);
   //       setSelectedPlatform(response.data.videoPlatform);
   //     })
   //     .catch((error) => {
-  //       console.error("Error fetching settings:", error.response?.data || error.message);
-  //       setError(error.response?.data?.error || "Unable to fetch settings. Please try again.");
+  //       console.error("Error fetching settings:", error);
+  //       setError("Unable to fetch settings. Please try again.");
   //     });
   // }, []);
-  
 
   const handlePlatformChange = (platform) => {
     setSelectedPlatform(platform);
-    setError("");
-    setSuccessMessage("");
+    setError(null);
+    setSuccessMessage(null);
   };
 
   const updateSettings = () => {
-    axios.put("http://localhost:5000/api/doctor/updatesettings", // Use PUT method for updating settings
-        { videoPlatform: selectedPlatform }, // Send the videoPlatform only
+    axios
+      .put(
+        `${API_URL}/api/doctor/updatesettings`, // Use PUT method for updating settings
+        { videoPlatform: selectedPlatform },
         {
           headers: { Authorization: `Bearer ${localStorage.getItem("accessToken")}` },
         }
@@ -40,9 +44,15 @@ const DoctorSettings = () => {
       })
       .catch((error) => {
         console.error("Error updating settings:", error.response ? error.response.data : error);
-        setError(error.response?.data?.error || "Failed to save settings. Please try again.");
+        // If error.response exists, it means the backend provided an error response
+        if (error.response && error.response.data) {
+          setError(error.response.data.error || "Failed to save settings. Please try again.");
+        } else {
+          setError("Failed to save settings. Please check your network or try again later.");
+        }
       });
   };
+  
 
   const handleSaveSettings = () => {
     if (!selectedPlatform) {
@@ -50,7 +60,7 @@ const DoctorSettings = () => {
       return;
     }
 
-    updateSettings();
+    updateSettings(); // Save the selected platform to the backend
 
     // Redirect to the OAuth authorization endpoint for the selected platform
     if (selectedPlatform === "GoogleMeet") {
@@ -61,7 +71,7 @@ const DoctorSettings = () => {
   };
 
   return (
-    <div className="flex flex-col items-center min-h-screen py-10 px-4">
+    <div className="flex flex-col items-center min-h-screen bg-gray-100 py-10 px-4">
       <h1 className="text-3xl font-semibold text-gray-800 mb-6">Choose Your Video Platform</h1>
       <div className="flex space-x-4">
         <button
@@ -92,6 +102,7 @@ const DoctorSettings = () => {
       {successMessage && <p className="mt-4 text-green-500">{successMessage}</p>}
     </div>
   );
+  
 };
 
 export default DoctorSettings;

@@ -3,31 +3,33 @@ import { FaPlus, FaEye, FaTimes } from 'react-icons/fa';
 import axios from 'axios';
 
 const CommentCell = ({ patient, API_URL, onCommentAdded }) => {
+  // console.log('Patient:', patient, onCommentAdded);
   const [isAddingComment, setIsAddingComment] = useState(false);
   const [showHistory, setShowHistory] = useState(false);
   const [newComment, setNewComment] = useState('');
 
-  const latestComment = patient.comments && patient.comments.length > 0 
-    ? patient.comments[patient.comments.length - 1].text 
+  const latestComment = patient.medicalDetails.comments && patient.medicalDetails.comments.length > 0 
+    ? patient.medicalDetails.comments[patient.medicalDetails.comments.length - 1].text 
     : 'No comments';
 
-  const handleAddComment = async () => {
-    if (!newComment.trim()) return;
-    console.log('New comment:', newComment);
-    try {
-        const response = await axios.post(`http://${API_URL}:5000/api/log/comments/${patient._id}`, {
-        text: newComment  // Changed from textMessage to text
-        });
-        
+    const handleAddComment = async () => {
+      if (!newComment.trim()) return;
+      try {
+        const response = await axios.post(
+          `${API_URL}/api/log/comments/${patient._id}`,
+          { text: newComment }
+        );
+    
         if (response.data.success) {
-        onCommentAdded(response.data.patient);
-        setNewComment('');
-        setIsAddingComment(false);
+          onCommentAdded(response.data.patient); // Pass the updated patient data to the parent component
+          setNewComment(''); // Reset the comment input field
+          setIsAddingComment(false); // Close the modal
         }
-    } catch (error) {
+      } catch (error) {
         console.error('Error adding comment:', error);
-    }
+      }
     };
+    
 
   const Modal = ({ isOpen, onClose, title, children }) => {
     if (!isOpen) return null;
@@ -108,7 +110,7 @@ const CommentCell = ({ patient, API_URL, onCommentAdded }) => {
         title="Comment History"
       >
         <div className="space-y-2">
-          {patient.comments && patient.comments.map((comment, index) => (
+          {patient.medicalDetails.comments && patient.medicalDetails.comments.map((comment, index) => (
             <div key={index} className="p-2 bg-gray-50 rounded">
               <p>{comment.text}</p>
               <span className="text-xs text-gray-500">

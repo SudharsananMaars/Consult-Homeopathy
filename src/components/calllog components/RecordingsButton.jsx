@@ -1,7 +1,8 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { FaRecordVinyl, FaTimes, FaPlay, FaPause, FaVolumeUp, FaVolumeMute } from 'react-icons/fa';
 import axios from 'axios';
-
+import config from '../../config';
+const API_URL = config.API_URL;
 const AudioPlayer = ({ audioUrl, recordingDate }) => {
   const [isPlaying, setIsPlaying] = useState(false);
   const [duration, setDuration] = useState(0);
@@ -170,7 +171,7 @@ const RecordingsButton = ({ patient }) => {
     setLoading(true);
     setShowModal(true);
     try {
-      const response = await axios.get(`http://localhost:5000/api/recordings/${patient.phone}`);
+      const response = await axios.get(`${API_URL}/api/recordings/${patient.phone}`);
       setRecordings(response.data);
     } catch (error) {
       console.error("Error fetching recordings:", error);

@@ -1,173 +1,715 @@
-import React from 'react';
-import './index.css';
-import { BrowserRouter as Router, Routes, Route, Link } from 'react-router-dom';
-import Layout from './components/patient components/Layout.jsx';
-import RecentAppointments from './components/patient components/RecentAppointments.jsx';
-import UpcomingAppointments from './components/patient components/UpcomingAppointments.jsx';
-import NewAppointment from './components/patient components/NewAppointment.jsx';
-import CancelledAppointment from './components/patient components/CancelledAppointment.jsx';
-import LoginPage from './pages/patient pages/LoginPage.jsx';
-import Form from './pages/patient pages/Form.jsx';
-import FirstForm from './pages/patient pages/FirstForm.jsx';
-import Appointments from './pages/patient pages/Appointments.jsx';
-import Home from './pages/patient pages/Home.jsx';
-import Payments from './pages/patient pages/Payments.jsx';
+import React, { useState } from "react";
+import { useNavigate } from "react-router-dom";
+import "./index.css";
+import {
+  BrowserRouter as Router,
+  Routes,
+  Route,
+  Navigate,
+} from "react-router-dom";
+import Layout from "./components/patient components/Layout.jsx";
+import RecentAppointments from "./components/patient components/RecentAppointments.jsx";
+import UpcomingAppointments from "./components/patient components/UpcomingAppointments.jsx";
+import NewAppointment from "./components/patient components/NewAppointment.jsx";
+import CancelledAppointment from "./components/patient components/CancelledAppointment.jsx";
+import LoginPage from "./pages/patient pages/LoginPage.jsx";
+import Form from "./pages/patient pages/Form.jsx";
+import FirstForm from "./pages/patient pages/FirstForm.jsx";
+import Appointments from "./pages/patient pages/Appointments.jsx";
+import Home from "./pages/patient pages/Home.jsx";
+import Payments from "./pages/patient pages/Payments.jsx";
 // import Invoices from './pages/patient pages/Invoices.jsx';
-import Medicine from './pages/patient pages/Medicine.jsx';
-import Workshops from './pages/patient pages/Workshops.jsx';
-import Settings from './pages/patient pages/Settings.jsx';
-import Notification from './components/patient components/Notification.jsx';
-import Profile from './pages/patient pages/Profile.jsx';
-import ReferFriend from './pages/patient pages/ReferFriend.jsx';
-import NeedHelp from './pages/patient pages/NeedHelp.jsx';
-import Track from './pages/patient pages/Track.jsx';
-import PaymentPage from './pages/patient pages/PaymentPage.jsx';
-import Messenger from './components/patient components/Messenger.jsx';
-import HomePage from './pages/patient pages/HomePage.jsx';
-import RazorScreen from './pages/patient pages/RazorScreen.jsx';
-import FamilyTree from './pages/patient pages/FamilyTree.jsx';
-import ConsultationHistory from './pages/patient pages/ConsultationHistory.jsx';
-import Consultdetail from './pages/patient pages/consultdetail.jsx';
+import Medicine from "./pages/patient pages/Medicine.jsx";
+import Workshops from "./pages/patient pages/Workshops.jsx";
+import Settings from "./pages/patient pages/Settings.jsx";
+import Notification from "./components/patient components/Notification.jsx";
+import Profile from "./pages/patient pages/Profile.jsx";
+import ReferFriend from "./pages/patient pages/ReferFriend.jsx";
+import NeedHelp from "./pages/patient pages/NeedHelp.jsx";
+import Track from "./pages/patient pages/Track.jsx";
+import PaymentPage from "./pages/patient pages/PaymentPage.jsx";
+import Messenger from "./components/patient components/Messenger.jsx";
+import HomePage from "./pages/patient pages/HomePage.jsx";
+import RazorScreen from "./pages/patient pages/RazorScreen.jsx";
+import FamilyTree from "./pages/patient pages/FamilyTree.jsx";
 
 // import doctor website
-import DoctorLayout from './components/doctor components/DoctorLayout.jsx';
-import DocAppointments from './pages/doctor pages/DocAppointments.jsx';
-import Dashboard from './pages/doctor pages/Dashboard.jsx';
-import AssistDoc from './pages/doctor pages/AssistDoc.jsx';
-import WorkshopPage from './pages/doctor pages/WorkshopPage.jsx';
-import Inventry from './pages/doctor pages/Inventry.jsx';
-import DocInvoices from './pages/doctor pages/DocInvoices.jsx';
-import DocMedicine from './pages/doctor pages/DocMedicine.jsx';
-import DoctorMessenger from './components/doctor components/DoctorMessenger.jsx';
-import DoctorNotification from './components/doctor components/DoctorNotification.jsx';
-import Patients from './pages/doctor pages/Patients.jsx';
-import DocPayments from './pages/doctor pages/DocPayments.jsx';
-import NewProfile from './pages/doctor pages/NewProfile.jsx';
-import DocSettings from './pages/doctor pages/DocSettings.jsx';
-import ViewDetails from './pages/doctor pages/ViewDetails.jsx';
-import AddDoctorModal from './pages/doctor pages/AddDoctorModal.jsx';
-import Calender from './pages/doctor pages/Calender.jsx';
-import AppointmentList from './pages/doctor pages/AppointmentList.jsx';
-import Accounts from './pages/doctor pages/Accounts.jsx';
-import Docprofile from './pages/doctor pages/Docprofile.jsx';
-import DoctorProfile from './pages/doctor pages/DoctorProfile.jsx';
-import NewWorkshop from './pages/doctor pages/NewWorkshop.jsx'; 
-import Content from './pages/doctor pages/Content.jsx';
-import Doctors from './pages/doctor pages/Doctors.jsx';
-import Patientcard from './pages/doctor pages/Patientcard.jsx'; 
-import Allocation from './pages/doctor pages/Allocation.jsx';
-import VideoCall from './pages/doctor pages/VideoCall.jsx';
-import DocLogin from '/src/pages/doctor pages/DocLogin.jsx';
-import AdminDashboard from '/src/pages/doctor pages/AdminDashboard.jsx';
-import AssistantDoctorDashboard from '/src/pages/doctor pages/AssistantDoctorDashboard.jsx';
-import AddDoctor from '/src/pages/doctor pages/AddDoctor.jsx';
-import AssistLeave from '/src/pages/doctor pages/AssistLeave.jsx';
-import VideoSettings from '/src/pages/doctor pages/VideoSettings.jsx';
-import AdminLeaveManagement from './pages/doctor pages/AdminLeaveManagement.jsx';
-import LeaveSettingsForm from './pages/doctor pages/LeaveSettingsForm.jsx';
-import PayrollSettings from './pages/doctor pages/payrollsettings.jsx';
-import Payroll from './pages/doctor pages/payroll.jsx';
-import SalaryStructure from './pages/doctor pages/salarystructure.jsx';
-import HRPage from './pages/doctor pages/HRPage.jsx';
-import BreakTimer from './pages/doctor pages/BreakTimer.jsx';
-import Payslip from './pages/doctor pages/payslip.jsx';
+import DoctorLayout from "./components/doctor components/DoctorLayout.jsx";
+import DocAppointments from "./pages/doctor pages/DocAppointments.jsx";
+import Dashboard from "./pages/doctor pages/Dashboard.jsx";
+import AssistDoc from "./pages/doctor pages/AssistDoc.jsx";
+import WorkshopPage from "./pages/doctor pages/WorkshopPage.jsx";
+import Inventry from "./pages/doctor pages/Inventry.jsx";
+import DocInvoices from "./pages/doctor pages/DocInvoices.jsx";
+import DocMedicine from "./pages/doctor pages/DocMedicine.jsx";
+import DoctorMessenger from "./components/doctor components/DoctorMessenger.jsx";
+import DoctorNotification from "./components/doctor components/DoctorNotification.jsx";
+import Patients from "./pages/doctor pages/Patients.jsx";
+import DocPayments from "./pages/doctor pages/DocPayments.jsx";
+import NewProfile from "./pages/doctor pages/NewProfile.jsx";
+import DocSettings from "./pages/doctor pages/DocSettings.jsx";
+import ViewDetails from "./pages/doctor pages/ViewDetails.jsx";
+import AddDoctorModal from "./pages/doctor pages/AddDoctorModal.jsx";
+import Calender from "./pages/doctor pages/Calender.jsx";
+import AppointmentList from "./pages/doctor pages/AppointmentList.jsx";
+import Accounts from "./pages/doctor pages/Accounts.jsx";
+import Docprofile from "./pages/doctor pages/Docprofile.jsx";
+import DoctorProfile from "./pages/doctor pages/DoctorProfile.jsx";
+import NewWorkshop from "./pages/doctor pages/NewWorkshop.jsx";
+import Content from "./pages/doctor pages/Content.jsx";
+import Doctors from "./pages/doctor pages/Doctors.jsx";
+import Patientcard from "./pages/doctor pages/Patientcard.jsx";
+import Allocation from "./pages/doctor pages/Allocation.jsx";
+import VideoCall from "./pages/doctor pages/VideoCall.jsx";
+import DocLogin from "/src/pages/doctor pages/DocLogin.jsx";
+import AdminDashboard from "/src/pages/doctor pages/AdminDashboard.jsx";
+import AssistantDoctorDashboard from "/src/pages/doctor pages/AssistantDoctorDashboard.jsx";
+import AddDoctor from "/src/pages/doctor pages/AddDoctor.jsx";
+import AssistLeave from "/src/pages/doctor pages/AssistLeave.jsx";
+import VideoSettings from "/src/pages/doctor pages/VideoSettings.jsx";
+import AdminLeaveManagement from "./pages/doctor pages/AdminLeaveManagement.jsx";
+import LeaveSettingsForm from "./pages/doctor pages/LeaveSettingsForm.jsx";
+import PayrollSettings from "./pages/doctor pages/payrollsettings.jsx";
+import Payroll from "./pages/doctor pages/payroll.jsx";
+import SalaryStructure from "./pages/doctor pages/salarystructure.jsx";
+import HRPage from "./pages/doctor pages/HRPage.jsx";
+import BreakTimer from "./pages/doctor pages/BreakTimer.jsx";
+import Payslip from "./pages/doctor pages/payslip.jsx";
+import NoteTaking from "./pages/doctor pages/NoteTaking.jsx";
+import PrescriptionWriting from "./components/calllog components/PrescriptionWriting.jsx";
+import InventoryPage from "./components/calllog components/InventoryPage.jsx";
+import "@fortawesome/fontawesome-free/css/all.min.css";
 
+// import '@zoomus/websdk/dist/css/bootstrap.css';
+// import '@zoomus/websdk/dist/css/react-select.css';
 
-import '@fortawesome/fontawesome-free/css/all.min.css';
+// Inventory module
+import InventoryLayout from "./components/Inventory/Layout.jsx";
+import InventoryDashboard from "./components/Inventory/InventoryDashBoard.jsx";
+import RawMaterialsList from "./components/Inventory/RawMaterials/RawMaterialsList.jsx";
+import RawMaterialForm from "./components/Inventory/RawMaterials/RawMaterialForm.jsx";
+import RawMaterialDetail from "./components/Inventory/RawMaterials/RawMaterialDetail.jsx";
+import MedicinesList from "./components/Inventory/Medicine/MedicinesList.jsx";
+import MedicineDetail from "./components/Inventory/Medicine/MedicineDetail.jsx";
+import MedicineForm from "./components/Inventory/Medicine/MedicineForm.jsx";
+import PriceCalculator from "./components/Inventory/Medicine/PriceCalculator.jsx";
 
+// Error Pages
+import NotFound from "./pages/AuthPages/NotFound.jsx";
+import Forbidden from "./pages/AuthPages/Forbidden.jsx";
+import Unauthorized from "./pages/AuthPages/Unauthorized.jsx";
+import ServerError from "./pages/AuthPages/InternalServerError.jsx";
+import Maintenance from "./pages/AuthPages/MaintenancePage.jsx";
+import ProtectedRoute from "./pages/AuthPages/ProtectedRoute.jsx";
+// Auth Context
+import { AuthProvider } from "./contexts/AuthContext.jsx";
+import { ErrorBoundary } from "react-error-boundary";
+
+// Error Fallback Component
+const ErrorFallback = () => <ServerError />;
 
 function App() {
+  const [isUnderMaintenance] = useState(false);
+
+  const MaintenanceCheck = () => {
+    if (isUnderMaintenance) {
+      return <Maintenance />;
+    }
+
+    return (
+      <Routes>
+        {/* Public Routes */}
+        <Route path="/unauthorized" element={<Unauthorized />} />
+        <Route path="/forbidden" element={<Forbidden />} />
+        <Route path="/server-error" element={<ServerError />} />
+        <Route path="/maintenance" element={<Maintenance />} />
+        <Route path="/login" element={<LoginPage />} />
+        <Route path="/doclogin" element={<DocLogin />} />
+
+        {/* Patient Protected Routes */}
+        <Route
+          path="/form"
+          element={
+            <ProtectedRoute allowedRoles={["Patient"]}>
+              <Form />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/firstform"
+          element={
+            <ProtectedRoute allowedRoles={["Patient"]}>
+              <FirstForm />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/home"
+          element={
+            <ProtectedRoute allowedRoles={["Patient"]}>
+              <Home />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/homepage"
+          element={
+            <ProtectedRoute allowedRoles={["Patient"]}>
+              <HomePage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/appointments/*"
+          element={
+            <ProtectedRoute allowedRoles={["Patient"]}>
+              <Appointments />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/payments"
+          element={
+            <ProtectedRoute allowedRoles={["Patient"]}>
+              <Payments />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/paymentpage"
+          element={
+            <ProtectedRoute allowedRoles={["Patient"]}>
+              <PaymentPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/medicine"
+          element={
+            <ProtectedRoute allowedRoles={["Patient"]}>
+              <Medicine />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/track"
+          element={
+            <ProtectedRoute allowedRoles={["Patient"]}>
+              <Track />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/workshops"
+          element={
+            <ProtectedRoute allowedRoles={["Patient"]}>
+              <Workshops />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/settings"
+          element={
+            <ProtectedRoute allowedRoles={["Patient"]}>
+              <Settings />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/notification"
+          element={
+            <ProtectedRoute allowedRoles={["Patient"]}>
+              <Notification />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/profile"
+          element={
+            <ProtectedRoute allowedRoles={["Patient"]}>
+              <Profile />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/refer"
+          element={
+            <ProtectedRoute allowedRoles={["Patient"]}>
+              <ReferFriend />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/messenger"
+          element={
+            <ProtectedRoute allowedRoles={["Patient"]}>
+              <Messenger />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/needhelp"
+          element={
+            <ProtectedRoute allowedRoles={["Patient"]}>
+              <NeedHelp />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/razor"
+          element={
+            <ProtectedRoute allowedRoles={["Patient"]}>
+              <RazorScreen />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/family"
+          element={
+            <ProtectedRoute allowedRoles={["Patient"]}>
+              <FamilyTree />
+            </ProtectedRoute>
+          }
+        />
+
+        {/* Doctor Protected Routes */}
+        <Route
+          path="/layout"
+          element={
+            <ProtectedRoute allowedRoles={["Doctor"]}>
+              <DoctorLayout />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/appointments/calender"
+          element={
+            <ProtectedRoute allowedRoles={["Doctor"]}>
+              <Calender />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/appointments/list"
+          element={
+            <ProtectedRoute allowedRoles={["Doctor"]}>
+              <AppointmentList />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/appointments"
+          element={
+            <ProtectedRoute allowedRoles={["Doctor"]}>
+              <DocAppointments />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/dashboard"
+          element={
+            <ProtectedRoute allowedRoles={["Doctor"]}>
+              <Dashboard />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/assistdoc"
+          element={
+            <ProtectedRoute allowedRoles={["Doctor"]}>
+              <AssistDoc />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/assistdoc/docprofile"
+          element={
+            <ProtectedRoute allowedRoles={["Doctor"]}>
+              <Docprofile />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/assistdoc/doctors"
+          element={
+            <ProtectedRoute allowedRoles={["Doctor"]}>
+              <Doctors />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/assistdoc/doctorprofile/:id"
+          element={
+            <ProtectedRoute allowedRoles={["Doctor"]}>
+              <DoctorProfile />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/adddoctormodal"
+          element={
+            <ProtectedRoute allowedRoles={["Doctor"]}>
+              <AddDoctorModal />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/content"
+          element={
+            <ProtectedRoute allowedRoles={["Doctor"]}>
+              <Content />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/inventry"
+          element={
+            <ProtectedRoute allowedRoles={["Doctor"]}>
+              <Inventry />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/invoices"
+          element={
+            <ProtectedRoute allowedRoles={["Doctor"]}>
+              <DocInvoices />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/medicine"
+          element={
+            <ProtectedRoute allowedRoles={["Doctor"]}>
+              <DocMedicine />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/messenger"
+          element={
+            <ProtectedRoute allowedRoles={["Doctor"]}>
+              <DoctorMessenger />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/notification"
+          element={
+            <ProtectedRoute allowedRoles={["Doctor"]}>
+              <DoctorNotification />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/patients"
+          element={
+            <ProtectedRoute allowedRoles={["Doctor"]}>
+              <Patients />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/patients/card"
+          element={
+            <ProtectedRoute allowedRoles={["Doctor"]}>
+              <Patientcard />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/patients/viewdetails/:id"
+          element={
+            <ProtectedRoute allowedRoles={["Doctor"]}>
+              <ViewDetails />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/docpayments"
+          element={
+            <ProtectedRoute allowedRoles={["Doctor"]}>
+              <DocPayments />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/newprofile"
+          element={
+            <ProtectedRoute allowedRoles={["Doctor"]}>
+              <NewProfile />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/docsettings"
+          element={
+            <ProtectedRoute allowedRoles={["Doctor"]}>
+              <DocSettings />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/accounts"
+          element={
+            <ProtectedRoute allowedRoles={["Doctor"]}>
+              <Accounts />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/workshoppage"
+          element={
+            <ProtectedRoute allowedRoles={["Doctor"]}>
+              <WorkshopPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/newworkshop"
+          element={
+            <ProtectedRoute allowedRoles={["Doctor"]}>
+              <NewWorkshop />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/allocation"
+          element={
+            <ProtectedRoute allowedRoles={["Doctor"]}>
+              <Allocation />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/video-call"
+          element={
+            <ProtectedRoute allowedRoles={["Doctor"]}>
+              <VideoCall />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/note-taking"
+          element={
+            <ProtectedRoute allowedRoles={["Doctor"]}>
+              <NoteTaking />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/prescription-writing"
+          element={
+            <ProtectedRoute allowedRoles={["Doctor"]}>
+              <PrescriptionWriting />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/inventory"
+          element={
+            <ProtectedRoute allowedRoles={["Doctor"]}>
+              <InventoryDashboard />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/raw-materials"
+          element={
+            <ProtectedRoute allowedRoles={["Doctor"]}>
+              <RawMaterialsList />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/raw-materials/new"
+          element={
+            <ProtectedRoute allowedRoles={["Doctor"]}>
+              <RawMaterialForm />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/raw-materials/:id"
+          element={
+            <ProtectedRoute allowedRoles={["Doctor"]}>
+              <RawMaterialDetail />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/raw-materials/:id/edit"
+          element={
+            <ProtectedRoute allowedRoles={["Doctor"]}>
+              <RawMaterialForm isEdit={true} />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/medicines"
+          element={
+            <ProtectedRoute allowedRoles={["Doctor"]}>
+              <MedicinesList />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/medicines/new"
+          element={
+            <ProtectedRoute allowedRoles={["Doctor"]}>
+              <MedicineForm />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/medicines/:id"
+          element={
+            <ProtectedRoute allowedRoles={["Doctor"]}>
+              <MedicineDetail />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/medicines/:id/edit"
+          element={
+            <ProtectedRoute allowedRoles={["Doctor"]}>
+              <MedicineForm isEdit={true} />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/medicines/calculate-price"
+          element={
+            <ProtectedRoute allowedRoles={["Doctor"]}>
+              <PriceCalculator />
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/admin-dashboard"
+          element={
+            <ProtectedRoute allowedRoles={["Doctor"]}>
+              <AdminDashboard />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/doctor-dashboard"
+          element={
+            <ProtectedRoute allowedRoles={["Doctor"]}>
+              <AssistantDoctorDashboard />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/add-doctor"
+          element={
+            <ProtectedRoute allowedRoles={["Doctor"]}>
+              <AddDoctor />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/assistleave"
+          element={
+            <ProtectedRoute allowedRoles={["Doctor"]}>
+              <AssistLeave />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/leavemgt"
+          element={
+            <ProtectedRoute allowedRoles={["Doctor"]}>
+              <AdminLeaveManagement />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/leavesettings"
+          element={
+            <ProtectedRoute allowedRoles={["Doctor"]}>
+              <LeaveSettingsForm />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/videosettings"
+          element={
+            <ProtectedRoute allowedRoles={["Doctor"]}>
+              <VideoSettings />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/payrollsetting"
+          element={
+            <ProtectedRoute allowedRoles={["Doctor"]}>
+              <PayrollSettings />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/payroll"
+          element={
+            <ProtectedRoute allowedRoles={["Doctor"]}>
+              <Payroll />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/salarystructure"
+          element={
+            <ProtectedRoute allowedRoles={["Doctor"]}>
+              <SalaryStructure />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/hrm"
+          element={
+            <ProtectedRoute allowedRoles={["Doctor"]}>
+              <HRPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/break"
+          element={
+            <ProtectedRoute allowedRoles={["Doctor"]}>
+              <BreakTimer />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/payslip"
+          element={
+            <ProtectedRoute allowedRoles={["Doctor"]}>
+              <Payslip />
+            </ProtectedRoute>
+          }
+        />
+
+        {/* Root redirect */}
+        <Route path="/" element={<Navigate to="/login" replace />} />
+
+        {/* Wildcard - Not Found */}
+        <Route path="*" element={<NotFound />} />
+      </Routes>
+    );
+  };
   return (
     <div>
-    <Router>
-  
-            {/* patient Routes */}
-        <Routes>
-          <Route path="/login" element={<LoginPage />} />
-          <Route path="/form" element={<Form />} />
-          <Route path="/firstform" element={<FirstForm />} />
-          <Route path="/home" element={<Home/>}/>
-          <Route path="/homepage" element={<HomePage/>}/>
-          
-          <Route path="/appointments" element={<Appointments/>} >
-            <Route path="/appointments/recent" element={<RecentAppointments />} />
-            <Route path="/appointments/upcoming" element={<UpcomingAppointments />} />
-            <Route path="/appointments/newappointment" element={<NewAppointment />} />        
-            <Route path="/appointments/cancelled" element={<CancelledAppointment />} />
-          </Route>
-
-          <Route path="/payments" element={<Payments/>} />
-          <Route path="/paymentpage" element={<PaymentPage/>} />
-          {/* <Route path="/invoices" element={<Invoices/>}>
-          <Route path="/invoices/paymentpage" element={<PaymentPage />} />
-          </Route> */}
-          <Route path="/medicine" element={<Medicine/>} />
-          <Route path="/track" element={<Track/>} />
-          <Route path="/workshops" element={<Workshops/>} />
-          <Route path="/settings" element={<Settings/>} />
-          <Route path="/notification" element={<Notification/>} />
-          <Route path="/profile" element={<Profile/>} />
-          <Route path="/refer" element={<ReferFriend/>} />
-          <Route path="/messenger" element={<Messenger/>} />
-          <Route path="/needhelp" element={<NeedHelp/>} />
-          <Route path="/razor" element={<RazorScreen/>} />
-          <Route path="/layout" element={<Layout />}></Route>
-          <Route path="/family" element={<FamilyTree/>} />
-          <Route path="/consulthistory" element={<ConsultationHistory/>} />
-          <Route path="/consultdetail/consultationNo" element={<Consultdetail/>} />
-
-
-          {/* doctor website routing */}
-        <Route path="/layout" element={<DoctorLayout />}></Route>
-        <Route path="/appointments/calender" element={<Calender/>}></Route>
-        <Route path="/appointments/list" element={<AppointmentList />}></Route>
-        <Route path="/appointments" element={<DocAppointments />}></Route>
-        <Route path="/dashboard" element={<Dashboard />}></Route>
-        <Route path="/assistdoc" element={<AssistDoc />}></Route>
-        <Route path="/assistdoc/docprofile" element={<Docprofile />}></Route>
-        <Route path="/assistdoc/doctors" element={<Doctors />}></Route>
-        <Route path="/assistdoc/doctorprofile/:id" element={<DoctorProfile />}></Route>
-        <Route path="adddoctormodal" element={<AddDoctorModal />}></Route>
-        <Route path="/content" element={<Content />}></Route>
-        <Route path="/inventry" element={<Inventry />}></Route>
-        <Route path="/invoices" element={<DocInvoices/>}></Route>
-        <Route path="/medicine" element={<DocMedicine/>}></Route>
-        <Route path="/messenger" element={<DoctorMessenger/>}></Route>
-        <Route path="/notification" element={<DoctorNotification/>}></Route>
-        <Route path="/patients" element={<Patients/>}></Route>
-        <Route path="/patients/card" element={<Patientcard/>}></Route>
-        <Route path="/patients/viewdetails/:id" element={<ViewDetails/>}></Route>
-        <Route path="/docpayments" element={<DocPayments/>}></Route>
-        <Route path="/newprofile" element={<NewProfile/>}></Route>
-        <Route path="/docsettings" element={<DocSettings/>}></Route>
-        <Route path="/accounts" element={<Accounts/>}></Route>
-        <Route path="/workshoppage" element={<WorkshopPage/>}></Route>
-        <Route path="/newworkshop" element={<NewWorkshop/>}></Route>
-        <Route path="/allocation" element={<Allocation/>}></Route>
-        <Route path="/videocall" element={<VideoCall/>}></Route>
-        <Route path="/doclogin" element={<DocLogin />} />
-        <Route path="/admin-dashboard" element={<AdminDashboard />} />
-        <Route path="/doctor-dashboard" element={<AssistantDoctorDashboard />} />
-        <Route path="/add-doctor" element={<AddDoctor />} />
-        <Route path="/assistleave" element={<AssistLeave />} />
-        <Route path="/leavemgt" element={<AdminLeaveManagement />} />
-        <Route path="/leavesettings" element={<LeaveSettingsForm />} />
-        <Route path="/videosettings" element={<VideoSettings />} />
-        <Route path="/payrollsetting" element={<PayrollSettings/>}></Route>
-        <Route path="/payroll" element={<Payroll/>}></Route>
-        <Route path="/salarystructure" element={<SalaryStructure/>}></Route>
-        <Route path="/hrm" element={<HRPage />}></Route>
-        <Route path="/break" element={<BreakTimer/>}></Route>
-        <Route path="/payslip" element={<Payslip/>}></Route>
-       
-
-
-        </Routes>
-      
-    </Router>
+      <ErrorBoundary FallbackComponent={ErrorFallback}>
+        <AuthProvider>
+          <Router>
+            <MaintenanceCheck />
+          </Router>
+        </AuthProvider>
+      </ErrorBoundary>
     </div>
   );
 }
-
 
 export default App;

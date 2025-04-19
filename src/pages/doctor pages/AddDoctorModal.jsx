@@ -1,4 +1,6 @@
 import React, { useState, useEffect } from 'react';
+import config from '../../config';
+const API_URL = config.API_URL;
 
 const AddDoctorModal = ({ isOpen, onClose, employeeID, refreshDoctors, doctor }) => {
   const [uploadedDocuments, setUploadedDocuments] = useState([]);
@@ -66,7 +68,7 @@ useEffect(() => {
   if (!doctor) {  // Only fetch employee ID if doctor is not provided (i.e., new employee)
     async function fetchemployeeID() {
       try {
-        const response = await fetch("http://localhost:5000/api/employees/generate-employee-id");
+        const response = await fetch(`${API_URL}/api/employees/generate-employee-id`);
         const data = await response.json();
         if (data.success) {
           setFormData((prevFormData) => ({
@@ -107,7 +109,7 @@ const formatDateToDDMMYYYY = (dateString) => {
     if (doctor) {
       const fetchEmployeeData = async () => {
         try {
-          const response = await fetch(`http://localhost:5000/api/employees/getEmployeeById/${doctor.employeeID}`);
+          const response = await fetch(`${API_URL}/api/employees/getEmployeeById/${doctor.employeeID}`);
           const data = await response.json();
           if (data.success) {
             const employee = data.data;
@@ -257,8 +259,8 @@ usernameSystemAccess: '',
         const isUpdate = doctor && doctor.employeeID; // Check if 'doctor' object and ID exist
 
         const url = isUpdate
-            ? `http://localhost:5000/api/employees/updateEmployee/${doctor.employeeID}`
-            : `http://localhost:5000/api/employees/add`;
+            ? `${API_URL}/api/employees/updateEmployee/${doctor.employeeID}`
+            : `${API_URL}/api/employees/add`;
 
         const method = isUpdate ? "PUT" : "POST";
 

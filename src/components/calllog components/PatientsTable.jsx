@@ -25,22 +25,23 @@ const PatientsTable = () => {
   const [individualAllocations, setIndividualAllocations] = useState({});
 
   const API_URL = config.API_URL;
-
+const userId = localStorage.getItem('userId');
+console.log("userId", userId);
   useEffect(() => {
     const fetchPatientsAndFormStatus = async () => {
       try {
-        const response = await axios.get(`http://${API_URL}:5000/api/log/list`);
+        const response = await axios.get(`${API_URL}/api/log/list`);
         const patientsData = response.data.map(patient => ({
           ...patient,
-          diseaseType: typeof patient.diseaseType === 'string' 
-            ? { name: patient.diseaseType, isEdited: false }
-            : patient.diseaseType || { name: '', isEdited: false }
+          diseaseType: typeof patient.medicalDetails.diseaseType === 'string' 
+            ? { name: patient.medicalDetails.diseaseType, isEdited: false }
+            : patient.medicalDetails.diseaseType || { name: '', isEdited: false }
         }));
         
-        const allocationsResponse = await axios.get(`http://${API_URL}:5000/api/assign/allocations-with-doctors`);
+        const allocationsResponse = await axios.get(`${API_URL}/api/assign/allocations-with-doctors`);
         
         const followUpPromises = patientsData.map(patient => 
-          axios.get(`http://${API_URL}:5000/api/log/follow-up/${patient._id}`)
+          axios.get(`${API_URL}/api/log/follow-up/${patient._id}`)
         );
         const followUpResponses = await Promise.all(followUpPromises);
         const followUpStatusObj = {};
@@ -49,7 +50,7 @@ const PatientsTable = () => {
         });
         
         const formStatusPromises = patientsData.map(patient => 
-          axios.get(`http://${API_URL}:5000/api/log/patientProfile/${patient.phone}`)
+          axios.get(`${API_URL}/api/log/patientProfile/${patient.phone}`)
         );
         
         const formStatusResponses = await Promise.all(formStatusPromises);
@@ -73,7 +74,7 @@ const PatientsTable = () => {
 
   const handleIndividualAllocation = async (patientId, doctorId) => {
     try {
-      const response = await axios.post(`http://${API_URL}:5000/api/assign/individual-allocation`, {
+      const response = await axios.post(`${API_URL}/api/assign/individual-allocation`, {
         patientId,
         doctorId
       });
@@ -154,7 +155,7 @@ const PatientsTable = () => {
       });
       
       if (callResponse.status === 200) {
-        const countResponse = await axios.post(`http://${API_URL}:5000/api/log/increment-call-count/${patient._id}`);
+        const countResponse = await axios.post(`${API_URL}/api/log/increment-call-count/${patient._id}`);
         if (countResponse.status === 200) {
           setPatients(prevPatients => prevPatients.map(p =>
             p._id === patient._id ? countResponse.data.patient : p
@@ -188,7 +189,7 @@ const PatientsTable = () => {
 
   const sendMessage = async (patient) => {
     try {
-      const response = await axios.post(`http://${API_URL}:5000/api/log/send-message/${patient._id}`);
+      const response = await axios.post(`${API_URL}/api/log/send-message/${patient._id}`);
       if (response.status === 200) {
         setPatients(prevPatients => prevPatients.map(p =>
           p._id === patient._id
@@ -205,13 +206,13 @@ const PatientsTable = () => {
   };
   
   const getCallStatus = (patient) => {
-    if (!patient || typeof patient.enquiryStatus === 'undefined') {
+    if (!patient || typeof patient.medicalDetails.enquiryStatus === 'undefined') {
       return 'Unknown';
     }
 
-    const enquiryStatus = patient.enquiryStatus ? patient.enquiryStatus.trim() : '';
+    const enquiryStatus = patient.medicalDetails.enquiryStatus ? patient.medicalDetails.enquiryStatus.trim() : '';
     const appointmentFixed = patient.appointmentFixed === 'Yes';
-    const medicalPayment = patient.medicalPayment === 'Yes';
+    const medicalPayment = patient.medicalDetails.medicalPayment === 'Yes';
 
     console.log('Patient ID:', patient._id);
     console.log('Enquiry Status:', enquiryStatus);
@@ -228,13 +229,13 @@ const PatientsTable = () => {
 
   const handleEnquiryStatusChange = async (patientId, newStatus) => {
     try {
-      const response = await axios.put(`http://${API_URL}:5000/api/log/update-status/${patientId}`, {
+      const response = await axios.put(`${API_URL}/api/log/update-status/${patientId}`, {
         enquiryStatus: newStatus
       });
 
       if (response.status === 200) {
         setPatients(prevPatients => prevPatients.map(p => 
-          p._id === patientId ? { ...p, enquiryStatus: newStatus } : p
+          p._id === patientId ? { ...p, medicalDetails: { ...p.medicalDetails, enquiryStatus: newStatus }, } : p
         ));
         console.log('Enquiry status updated successfully:', newStatus);
       } else {
@@ -250,7 +251,7 @@ const PatientsTable = () => {
     try {
         const token = localStorage.getItem('token');
         console.log("Token:",token);
-        const response = await axios.put(`http://${API_URL}:5000/api/log/update-disease-type/${patientId}`, {
+        const response = await axios.put(`${API_URL}/api/log/update-disease-type/${patientId}`, {
             diseaseType: {
                 name: newDiseaseTypeName,
                 edit: true,
@@ -260,10 +261,12 @@ const PatientsTable = () => {
                 Authorization: `Bearer ${token}` // Set the bearer token
             }
         });
-
+        console.log(response.data);
         if (response.data.success) {
             setPatients(prevPatients => prevPatients.map(p =>
-                p._id === patientId ? { ...p, diseaseType: response.data.patient.diseaseType } : p
+                p._id === patientId ? {...p,medicalDetails: {...p.medicalDetails,diseaseType: response.data.medicalDetails.diseaseType, },
+              }
+            : p
             ));
             setEditingDiseaseType(null);
         } else {
@@ -375,7 +378,7 @@ const PatientsTable = () => {
       case "Patient Type":
         return patient.newExisting || '---';
       case "Who is the Consultation for":
-        return patient.consultingFor || '---';
+        return patient.medicalDetails.consultingFor || '---';
       case "Name":
         return patient.name;
       case "Phone Number":
@@ -391,15 +394,15 @@ const PatientsTable = () => {
       case "Current Location":
         return patient.currentLocation || '---';
       case "Consulting For":
-        return patient.diseaseName || '---';
+        return patient.medicalDetails.diseaseName || '---';
       case "If disease type is not available":
-        return patient.diseaseName || '---';
+        return patient.medicalDetails.diseaseName || '---';
       case "Acute / Chronic":
         return (
           <div>
             {editingDiseaseType === patient._id ? (
               <select
-                value={patient.diseaseType?.name || ''}
+                value={patient.medicalDetails?.diseaseType?.name || ''}  // Optional chaining here
                 onChange={(e) => handleEditDiseaseType(patient._id, e.target.value)}
                 onBlur={() => setEditingDiseaseType(null)}
                 autoFocus
@@ -411,8 +414,8 @@ const PatientsTable = () => {
               </select>
             ) : (
               <div className="flex items-center space-x-2">
-                <span className={`font-medium ${patient.diseaseType?.edit ? 'text-blue-600' : 'text-gray-700'}`}>
-                  {patient.diseaseType?.name || 'Not specified'}
+                <span className={`font-medium ${patient.medicalDetails?.diseaseType?.edit ? 'text-blue-600' : 'text-gray-700'}`}>
+                  {patient.medicalDetails?.diseaseType?.name || 'Not specified'}  {/* Optional chaining */}
                 </span>
                 <button 
                   onClick={() => setEditingDiseaseType(patient._id)}
@@ -428,13 +431,13 @@ const PatientsTable = () => {
               </div>
             )}
           </div>
-        );        
+        );   
       case "Patient Profile":
         return patientFormsStatus[patient._id] || 'Loading...';
       case "Enquiry Status":
         return (
           <select
-            value={patient.enquiryStatus || ''}
+            value={patient.medicalDetails.enquiryStatus || ''}
             onChange={(e) => handleEnquiryStatusChange(patient._id, e.target.value)}
             className="border border-gray-300 rounded px-2 py-1 text-sm"
           >
@@ -445,22 +448,25 @@ const PatientsTable = () => {
           </select>
         );
       case "Role and Activity Status":
-        return patient.follow || '---';
+        return patient.medicalDetails.follow || '---';
       case "Messenger Comment":
-        return patient.followComment || '---';
+        return patient.medicalDetails.followComment || '---';
       case "Omni Channel":
         return patient.patientEntry || '---';
       case "Message Sent":
         // return patient.messageSent?.status ? 'Yes' : 'No';
-        return patient.messageSent.status ? (
+        return patient.medicalDetails.messageSent?.status ? (
           "Sent"
         ) : (
-          <button className="send-message-button" onClick={() => sendMessage(patient)}>
+          <button
+            className="send-message-button"
+            onClick={() => sendMessage(patient)}
+          >
             Send Message
           </button>
         );
       case "Time Stamp":
-        return patient.messageSent.timeStamp;
+        return patient.medicalDetails.messageSent?.timeStamp;
       case "Make a Call":
         return (
           <button 
@@ -482,16 +488,31 @@ const PatientsTable = () => {
                   <RecordingsButton patient={patient} />
           </div>
         );
-      case "Follow up Comments":
-        return <CommentCell 
-          patient={patient} 
-          API_URL={API_URL}
-          onCommentAdded={(updatedPatient) => {
-            setPatients(prevPatients => 
-              prevPatients.map(p => p._id === updatedPatient._id ? updatedPatient : p)
-            );
-          }} 
-        />;
+        case "Follow up Comments":
+          return (
+              <CommentCell 
+                  patient={patient} 
+                  API_URL={API_URL}
+                  onCommentAdded={(updatedPatient) => {
+                    if (updatedPatient && updatedPatient._id) {
+                      setPatients((prevPatients) =>
+                        prevPatients.map((p) =>
+                          p._id === updatedPatient._id
+                            ? {
+                                ...p,
+                                medicalDetails: {
+                                  ...p.medicalDetails,
+                                  comments: updatedPatient.medicalDetails.comments || [],
+                                },
+                              }
+                            : p
+                        )
+                      );
+                    }
+                  }}
+              />
+          );
+      
       case "Out of network":
         return patient.outOfNetwork || '---';
       case "appDownload":
@@ -499,7 +520,7 @@ const PatientsTable = () => {
       case "Call Status":
         return getCallStatus(patient);
       case "Call Attempted tracking":
-        return patient.callCount || 0;
+        return patient.medicalDetails.callCount || 0;
       case "Conversion Status":
         return patient.appointmentFixed === 'Yes' ? <FaCheckCircle className='green' /> : <FaTimesCircle className='red' />;
       case "Consultation payment":

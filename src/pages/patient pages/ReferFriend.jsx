@@ -2,6 +2,8 @@ import React, { useState } from "react";
 import Layout from "../../components/patient components/Layout";
 import referfrnd from "/src/assets/images/patient images/referfrnd.png";
 import axios from "axios"; // Make sure to install axios
+import config from '../../config';
+const API_URL = config.API_URL;
 
 const ReferFriend = () => {
   const [name, setName] = useState("");
@@ -48,7 +50,7 @@ const ReferFriend = () => {
       try {
         const token = localStorage.getItem('accessToken');
         const response = await axios.post(
-          `http://localhost:5000/api/patient/referFriend`,
+          `${API_URL}/api/patient/referFriend`,
           {
             friendName: name, // Use "name" state variable here
             friendPhone: phone, // Use "phone" state variable here
