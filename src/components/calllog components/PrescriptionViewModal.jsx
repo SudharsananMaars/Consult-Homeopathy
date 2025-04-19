@@ -16,7 +16,7 @@ const PrescriptionViewModal = ({ isOpen, onClose, appointmentId }) => {
   const fetchPrescriptionByAppointmentId = async (id) => {
     try {
       // Get token from localStorage or your auth state management
-      const token = localStorage.getItem('accessToken');
+      const token = localStorage.getItem('token');
       
       if (!token) {
         throw new Error('Authentication required');

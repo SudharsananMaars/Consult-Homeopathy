@@ -1,6 +1,8 @@
 // DoctorSettings.js
 import React, { useState, useEffect } from "react";
 import axios from "axios";
+import config from '../../config';
+const API_URL = config.API_URL;
 
 const DoctorSettings = () => {
   const [selectedPlatform, setSelectedPlatform] = useState("");
@@ -31,7 +33,7 @@ const DoctorSettings = () => {
   const updateSettings = () => {
     axios
       .put(
-        "http://localhost:5000/api/doctor/updatesettings", // Use PUT method for updating settings
+        `${API_URL}/api/doctor/updatesettings`, // Use PUT method for updating settings
         { videoPlatform: selectedPlatform },
         {
           headers: { Authorization: `Bearer ${localStorage.getItem("accessToken")}` },

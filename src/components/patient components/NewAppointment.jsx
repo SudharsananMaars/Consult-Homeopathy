@@ -6,6 +6,8 @@ import dayjs from 'dayjs';
 import calendar from '/src/assets/images/patient images/calender.png';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';  // Import axios for API requests
+import config from '../../config';
+const API_URL = config.API_URL;
 
 const NewAppointment = () => {
   const [startDate, setStartDate] = useState(null);
@@ -33,7 +35,7 @@ const NewAppointment = () => {
           const appointmentDate = dayjs(startDate).format('YYYY-MM-DD');
     
           // Using the native fetch API
-          const response = await fetch(`http://localhost:5000/api/patient/checkSlots`, {
+          const response = await fetch(`${API_URL}/api/patient/checkSlots`, {
             method: 'POST', // Specify the request method
             headers: {
               Authorization: `Bearer ${token}`, // Authorization header
@@ -91,7 +93,7 @@ const NewAppointment = () => {
 
       // Make the API request to book the appointment
       const response = await axios.post(
-        'http://localhost:5000/api/patient/bookAppointment',  // Adjust API endpoint as necessary
+        `${API_URL}/api/patient/bookAppointment`,  // Adjust API endpoint as necessary
         { appointmentDate, timeSlot },
         {
           headers: {

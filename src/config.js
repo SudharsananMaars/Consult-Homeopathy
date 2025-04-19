@@ -1,5 +1,5 @@
 const config = {
-    API_URL: 'localhost',
+    API_URL: 'https://maars-server.onrender.com',
   };
   
 export default config;

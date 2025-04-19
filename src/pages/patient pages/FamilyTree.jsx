@@ -1,6 +1,8 @@
 import React, { useState } from "react";
 import axios from "axios";
 import Layout from "/src/components/patient components/Layout.jsx";
+import config from '../../config';
+const API_URL = config.API_URL;
 
 const FamilyTree = () => {
   const [familyMembers, setFamilyMembers] = useState([]); // Initial state for family members
@@ -26,7 +28,7 @@ const FamilyTree = () => {
     e.preventDefault(); // Prevent page refresh
 
     try {
-      const response = await axios.post("http://localhost:5000/api/patient/addFamily", formData, {
+      const response = await axios.post(`${API_URL}/api/patient/addFamily`, formData, {
         headers: {
           Authorization: `Bearer ${token}`, // Include your token here
         },

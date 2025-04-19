@@ -93,8 +93,8 @@ const Allocation = () => {
     setLoading(true);
     try {
       const [doctorsResponse, allocationsResponse] = await Promise.all([
-        axios.get(`http://${API_URL}:5000/api/assign/doctors`),
-        axios.get(`http://${API_URL}:5000/api/assign/allocations`)
+        axios.get(`${API_URL}/api/assign/doctors`),
+        axios.get(`${API_URL}/api/assign/allocations`)
       ]);
       const fetchedDoctors = doctorsResponse.data.map(doctor => ({
         ...doctor,
@@ -152,7 +152,7 @@ const Allocation = () => {
       console.log("Allocation data to be sent:", allocationData);
       setDebug(prev => ({ ...prev, allocationData }));
 
-      const response = await axios.post(`http://${API_URL}:5000/api/assign/allocations`, { allocations: allocationData });
+      const response = await axios.post(`${API_URL}/api/assign/allocations`, { allocations: allocationData });
       console.log("Server response:", response.data);
       setDebug(prev => ({ ...prev, serverResponse: response.data }));
 
@@ -246,7 +246,7 @@ const Allocation = () => {
 
   const resetAllocations = async () => {
     try {
-      await axios.delete(`http://${API_URL}:5000/api/assign/allocations`);
+      await axios.delete(`${API_URL}/api/assign/allocations`);
       setAllocations({});
       setHasChanges(true);
       setShowResetConfirm(false);

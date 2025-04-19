@@ -1,5 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
+import config from '../../config';
+const API_URL = config.API_URL;
 
 const LeaveSettingsForm = () => {
   const [sickLeave, setSickLeave] = useState('');
@@ -20,7 +22,7 @@ const LeaveSettingsForm = () => {
           return;
         }
 
-        const response = await axios.get('http://localhost:5000/api/leaves/get-leave-settings', {
+        const response = await axios.get(`${API_URL}/api/leaves/get-leave-settings`, {
           headers: {
             Authorization: `Bearer ${token}`,
           },
@@ -55,7 +57,7 @@ const LeaveSettingsForm = () => {
       }
 
       const response = await axios.post(
-        'http://localhost:5000/api/leaves/set-leave-settings',
+        `${API_URL}/api/leaves/set-leave-settings`,
         { sickLeave, casualLeave, paidLeave, maternityLeave },
         {
           headers: {

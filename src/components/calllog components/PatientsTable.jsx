@@ -30,7 +30,7 @@ console.log("userId", userId);
   useEffect(() => {
     const fetchPatientsAndFormStatus = async () => {
       try {
-        const response = await axios.get(`http://${API_URL}:5000/api/log/list`);
+        const response = await axios.get(`${API_URL}/api/log/list`);
         const patientsData = response.data.map(patient => ({
           ...patient,
           diseaseType: typeof patient.medicalDetails.diseaseType === 'string' 
@@ -38,10 +38,10 @@ console.log("userId", userId);
             : patient.medicalDetails.diseaseType || { name: '', isEdited: false }
         }));
         
-        const allocationsResponse = await axios.get(`http://${API_URL}:5000/api/assign/allocations-with-doctors`);
+        const allocationsResponse = await axios.get(`${API_URL}/api/assign/allocations-with-doctors`);
         
         const followUpPromises = patientsData.map(patient => 
-          axios.get(`http://${API_URL}:5000/api/log/follow-up/${patient._id}`)
+          axios.get(`${API_URL}/api/log/follow-up/${patient._id}`)
         );
         const followUpResponses = await Promise.all(followUpPromises);
         const followUpStatusObj = {};
@@ -50,7 +50,7 @@ console.log("userId", userId);
         });
         
         const formStatusPromises = patientsData.map(patient => 
-          axios.get(`http://${API_URL}:5000/api/log/patientProfile/${patient.phone}`)
+          axios.get(`${API_URL}/api/log/patientProfile/${patient.phone}`)
         );
         
         const formStatusResponses = await Promise.all(formStatusPromises);
@@ -74,7 +74,7 @@ console.log("userId", userId);
 
   const handleIndividualAllocation = async (patientId, doctorId) => {
     try {
-      const response = await axios.post(`http://${API_URL}:5000/api/assign/individual-allocation`, {
+      const response = await axios.post(`${API_URL}/api/assign/individual-allocation`, {
         patientId,
         doctorId
       });
@@ -155,7 +155,7 @@ console.log("userId", userId);
       });
       
       if (callResponse.status === 200) {
-        const countResponse = await axios.post(`http://${API_URL}:5000/api/log/increment-call-count/${patient._id}`);
+        const countResponse = await axios.post(`${API_URL}/api/log/increment-call-count/${patient._id}`);
         if (countResponse.status === 200) {
           setPatients(prevPatients => prevPatients.map(p =>
             p._id === patient._id ? countResponse.data.patient : p
@@ -189,7 +189,7 @@ console.log("userId", userId);
 
   const sendMessage = async (patient) => {
     try {
-      const response = await axios.post(`http://${API_URL}:5000/api/log/send-message/${patient._id}`);
+      const response = await axios.post(`${API_URL}/api/log/send-message/${patient._id}`);
       if (response.status === 200) {
         setPatients(prevPatients => prevPatients.map(p =>
           p._id === patient._id
@@ -229,7 +229,7 @@ console.log("userId", userId);
 
   const handleEnquiryStatusChange = async (patientId, newStatus) => {
     try {
-      const response = await axios.put(`http://${API_URL}:5000/api/log/update-status/${patientId}`, {
+      const response = await axios.put(`${API_URL}/api/log/update-status/${patientId}`, {
         enquiryStatus: newStatus
       });
 
@@ -251,7 +251,7 @@ console.log("userId", userId);
     try {
         const token = localStorage.getItem('token');
         console.log("Token:",token);
-        const response = await axios.put(`http://${API_URL}:5000/api/log/update-disease-type/${patientId}`, {
+        const response = await axios.put(`${API_URL}/api/log/update-disease-type/${patientId}`, {
             diseaseType: {
                 name: newDiseaseTypeName,
                 edit: true,

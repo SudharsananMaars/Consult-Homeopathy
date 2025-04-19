@@ -30,7 +30,7 @@ const WorkTable = () => {
 
   const fetchDoctors = async () => {
     try {
-      const response = await axios.get(`http://${API_URL}:5000/api/assign/doctors`);
+      const response = await axios.get(`${API_URL}/api/assign/doctors`);
       setDoctors(response.data);
     } catch (error) {
       console.error("Error fetching doctors:", error);
@@ -38,7 +38,7 @@ const WorkTable = () => {
     }
   };
   const getToken = () => {
-    return localStorage.getItem('accessToken');
+    return localStorage.getItem('token');
   };
   useEffect(() => {
     fetchDoctors();
@@ -60,7 +60,7 @@ const WorkTable = () => {
 
   const fetchSpecialAllocations = async (doctorId) => {
     try {
-      const response = await axios.get(`http://${API_URL}:5000/api/assign/special/${doctorId}`);
+      const response = await axios.get(`${API_URL}/api/assign/special/${doctorId}`);
       setSpecialAllocationPatients(response.data);
     } catch (error) {
       console.error("Error fetching special allocations:", error);
@@ -70,7 +70,7 @@ const WorkTable = () => {
   
   const handleDoctorChange = async (patientId, doctorId) => {
     try {
-      await axios.post(`http://${API_URL}:5000/api/assign/allocations`, {
+      await axios.post(`${API_URL}/api/assign/allocations`, {
         allocations: [{ role: 'patient', doctorId, patientId }]
       });
       // Refresh the patient list or update the local state
@@ -90,7 +90,7 @@ const WorkTable = () => {
       }
   
       const response = await axios.get( 
-        `http://${API_URL}:5000/api/doctor/getDoctorFollow`,
+        `${API_URL}/api/doctor/getDoctorFollow`,
         {
           headers: {
             Authorization: `Bearer ${token}`,
@@ -129,9 +129,9 @@ const WorkTable = () => {
 
   const fetchPatients = async () => {
     try {
-      let url = `http://${API_URL}:5000/api/doctor/getAllAppointmentsWithPatientData`;
+      let url = `${API_URL}/api/doctor/getAllAppointmentsWithPatientData`;
       if (selectedFollowType === 'View All') {
-        url = `http://${API_URL}:5000/api/log/list?appointmentFixed=Yes`;
+        url = `${API_URL}/api/log/list?appointmentFixed=Yes`;
       }
       const response = await axios.get(url);
       console.log(response.data);
@@ -784,7 +784,7 @@ const WorkTable = () => {
         break;
       case 'MarkDone':
         try {
-          const response = await axios.put(`http://${API_URL}:5000/api/patient/updateFollowUp/${item.medicalDetails._id}`);
+          const response = await axios.put(`${API_URL}/api/patient/updateFollowUp/${item.medicalDetails._id}`);
           alert('Follow-up status updated for ' + item.name);
           fetchPatients();
         } catch (error) {

@@ -4,7 +4,7 @@ import Header from "./DoctorHeader";
 
 const Layout = ({ children }) => {
   const [role, setRole] = useState('');
-
+console.log(role);
   useEffect(() => {
     const storedRole = localStorage.getItem('role'); // Retrieve role from localStorage
     setRole(storedRole);

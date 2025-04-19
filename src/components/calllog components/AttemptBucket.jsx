@@ -27,7 +27,7 @@ const AttemptBucket = () => {
   useEffect(() => {
     const fetchPatientsAndFormStatus = async () => {
       try {
-        const response = await axios.get(`http://${API_URL}:5000/api/log/list`);
+        const response = await axios.get(`${API_URL}/api/log/list`);
         const patientsData = response.data
           .filter(patient => patient.appointmentFixed !== 'Yes') // Only get patients without fixed appointments
           .map(patient => ({

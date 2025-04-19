@@ -27,7 +27,7 @@ const AssistantMainCom = ({ activeTab, handleTabClick }) => {
     const fetchDashboardData = async () => {
       try {
         setIsLoading(true);
-        const response = await axios.get(`http://${API_URL}:5000/api/log/dashboard`);
+        const response = await axios.get(`${API_URL}/api/log/dashboard`);
         setDashboardData(response.data);
         setIsLoading(false);
       } catch (error) {
