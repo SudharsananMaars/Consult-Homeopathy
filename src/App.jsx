@@ -95,7 +95,7 @@ import Forbidden from './pages/AuthPages/Forbidden.jsx';
 import Unauthorized from './pages/AuthPages/Unauthorized.jsx';
 import ServerError from './pages/AuthPages/InternalServerError.jsx';
 import Maintenance from './pages/AuthPages/MaintenancePage.jsx';
-
+import ProtectedRoute from './pages/AuthPages/ProtectedRoute.jsx';
 // Auth Context
 import { AuthProvider } from './contexts/AuthContext.jsx';
 import { ErrorBoundary } from 'react-error-boundary';
@@ -104,126 +104,386 @@ import { ErrorBoundary } from 'react-error-boundary';
 const ErrorFallback = () => <ServerError />;
 
 function App() {
-  // Replace environment variable with a local state or configuration value
-  const [isUnderMaintenance] = useState(false); // Set to true when in maintenance mode
+  const [isUnderMaintenance] = useState(false);
 
-  // Simple component to check for maintenance mode
   const MaintenanceCheck = () => {
     if (isUnderMaintenance) {
       return <Maintenance />;
     }
-    
+
     return (
       <Routes>
-        {/* Error Pages Routes */}
+        {/* Public Routes */}
         <Route path="/unauthorized" element={<Unauthorized />} />
         <Route path="/forbidden" element={<Forbidden />} />
         <Route path="/server-error" element={<ServerError />} />
         <Route path="/maintenance" element={<Maintenance />} />
-
-        {/* patient Routes */}
         <Route path="/login" element={<LoginPage />} />
-        <Route path="/form" element={<Form />} />
-        <Route path="/firstform" element={<FirstForm />} />
-        <Route path="/home" element={<Home/>}/>
-        <Route path="/homepage" element={<HomePage/>}/>
-        
-        <Route path="/appointments" element={<Appointments/>} >
-          <Route path="/appointments/recent" element={<RecentAppointments />} />
-          <Route path="/appointments/upcoming" element={<UpcomingAppointments />} />
-          <Route path="/appointments/newappointment" element={<NewAppointment />} />        
-          <Route path="/appointments/cancelled" element={<CancelledAppointment />} />
-        </Route>
-
-        <Route path="/payments" element={<Payments/>} />
-        <Route path="/paymentpage" element={<PaymentPage/>} />
-        {/* <Route path="/invoices" element={<Invoices/>}>
-        <Route path="/invoices/paymentpage" element={<PaymentPage />} />
-        </Route> */}
-        <Route path="/medicine" element={<Medicine/>} />
-        <Route path="/track" element={<Track/>} />
-        <Route path="/workshops" element={<Workshops/>} />
-        <Route path="/settings" element={<Settings/>} />
-        <Route path="/notification" element={<Notification/>} />
-        <Route path="/profile" element={<Profile/>} />
-        <Route path="/refer" element={<ReferFriend/>} />
-        <Route path="/messenger" element={<Messenger/>} />
-        <Route path="/needhelp" element={<NeedHelp/>} />
-        <Route path="/razor" element={<RazorScreen/>} />
-        <Route path="/layout" element={<Layout />}></Route>
-        <Route path="/family" element={<FamilyTree/>} />
-
-
-        {/* doctor website routing */}
-        <Route path="/layout" element={<DoctorLayout />}></Route>
-        <Route path="/appointments/calender" element={<Calender/>}></Route>
-        <Route path="/appointments/list" element={<AppointmentList />}></Route>
-        <Route path="/appointments" element={<DocAppointments />}></Route>
-        <Route path="/dashboard" element={<Dashboard />}></Route>
-        <Route path="/assistdoc" element={<AssistDoc />}></Route>
-        <Route path="/assistdoc/docprofile" element={<Docprofile />}></Route>
-        <Route path="/assistdoc/doctors" element={<Doctors />}></Route>
-        <Route path="/assistdoc/doctorprofile/:id" element={<DoctorProfile />}></Route>
-        <Route path="adddoctormodal" element={<AddDoctorModal />}></Route>
-        <Route path="/content" element={<Content />}></Route>
-        <Route path="/inventry" element={<Inventry />}></Route>
-        <Route path="/invoices" element={<DocInvoices/>}></Route>
-        <Route path="/medicine" element={<DocMedicine/>}></Route>
-        <Route path="/messenger" element={<DoctorMessenger/>}></Route>
-        <Route path="/notification" element={<DoctorNotification/>}></Route>
-        <Route path="/patients" element={<Patients/>}></Route>
-        <Route path="/patients/card" element={<Patientcard/>}></Route>
-        <Route path="/patients/viewdetails/:id" element={<ViewDetails/>}></Route>
-        <Route path="/docpayments" element={<DocPayments/>}></Route>
-        <Route path="/newprofile" element={<NewProfile/>}></Route>
-        <Route path="/docsettings" element={<DocSettings/>}></Route>
-        <Route path="/accounts" element={<Accounts/>}></Route>
-        <Route path="/workshoppage" element={<WorkshopPage/>}></Route>
-        <Route path="/newworkshop" element={<NewWorkshop/>}></Route>
-        <Route path="/allocation" element={<Allocation/>}></Route>
-        <Route path="/videocall" element={<VideoCall/>}></Route>
         <Route path="/doclogin" element={<DocLogin />} />
-        <Route path="/admin-dashboard" element={<AdminDashboard />} />
-        <Route path="/doctor-dashboard" element={<AssistantDoctorDashboard />} />
-        <Route path="/add-doctor" element={<AddDoctor />} />
-        <Route path="/assistleave" element={<AssistLeave />} />
-        <Route path="/leavemgt" element={<AdminLeaveManagement />} />
-        <Route path="/leavesettings" element={<LeaveSettingsForm />} />
-        <Route path="/videosettings" element={<VideoSettings />} />
-        <Route path="/payrollsetting" element={<PayrollSettings/>}></Route>
-        <Route path="/payroll" element={<Payroll/>}></Route>
-        <Route path="/salarystructure" element={<SalaryStructure/>}></Route>
-        <Route path="/hrm" element={<HRPage />}></Route>
-        <Route path="/break" element={<BreakTimer/>}></Route>
-        <Route path="/payslip" element={<Payslip/>}></Route>
-        <Route path="/video-call" element={<VideoCall />} />
-        <Route path="/note-taking" element={<NoteTaking />} />
-        <Route path='/prescription-writing' element={<PrescriptionWriting/>} />
 
-        {/* Inventory Module Routes */}
-        <Route path='/inventory' element={<InventoryDashboard/>} />
+        {/* Patient Protected Routes */}
+        <Route path="/form" element={
+          <ProtectedRoute allowedRoles={["Patient"]}>
+            <Form />
+          </ProtectedRoute>
+        } />
+        <Route path="/firstform" element={
+          <ProtectedRoute allowedRoles={["Patient"]}>
+            <FirstForm />
+          </ProtectedRoute>
+        } />
+        <Route path="/home" element={
+          <ProtectedRoute allowedRoles={["Patient"]}>
+            <Home />
+          </ProtectedRoute>
+        } />
+        <Route path="/homepage" element={
+          <ProtectedRoute allowedRoles={["Patient"]}>
+            <HomePage />
+          </ProtectedRoute>
+        } />
+        <Route path="/appointments/*" element={
+          <ProtectedRoute allowedRoles={["Patient"]}>
+            <Appointments />
+          </ProtectedRoute>
+        } />
+        <Route path="/payments" element={
+          <ProtectedRoute allowedRoles={["Patient"]}>
+            <Payments />
+          </ProtectedRoute>
+        } />
+        <Route path="/paymentpage" element={
+          <ProtectedRoute allowedRoles={["Patient"]}>
+            <PaymentPage />
+          </ProtectedRoute>
+        } />
+        <Route path="/medicine" element={
+          <ProtectedRoute allowedRoles={["Patient"]}>
+            <Medicine />
+          </ProtectedRoute>
+        } />
+        <Route path="/track" element={
+          <ProtectedRoute allowedRoles={["Patient"]}>
+            <Track />
+          </ProtectedRoute>
+        } />
+        <Route path="/workshops" element={
+          <ProtectedRoute allowedRoles={["Patient"]}>
+            <Workshops />
+          </ProtectedRoute>
+        } />
+        <Route path="/settings" element={
+          <ProtectedRoute allowedRoles={["Patient"]}>
+            <Settings />
+          </ProtectedRoute>
+        } />
+        <Route path="/notification" element={
+          <ProtectedRoute allowedRoles={["Patient"]}>
+            <Notification />
+          </ProtectedRoute>
+        } />
+        <Route path="/profile" element={
+          <ProtectedRoute allowedRoles={["Patient"]}>
+            <Profile />
+          </ProtectedRoute>
+        } />
+        <Route path="/refer" element={
+          <ProtectedRoute allowedRoles={["Patient"]}>
+            <ReferFriend />
+          </ProtectedRoute>
+        } />
+        <Route path="/messenger" element={
+          <ProtectedRoute allowedRoles={["Patient"]}>
+            <Messenger />
+          </ProtectedRoute>
+        } />
+        <Route path="/needhelp" element={
+          <ProtectedRoute allowedRoles={["Patient"]}>
+            <NeedHelp />
+          </ProtectedRoute>
+        } />
+        <Route path="/razor" element={
+          <ProtectedRoute allowedRoles={["Patient"]}>
+            <RazorScreen />
+          </ProtectedRoute>
+        } />
+        <Route path="/family" element={
+          <ProtectedRoute allowedRoles={["Patient"]}>
+            <FamilyTree />
+          </ProtectedRoute>
+        } />
 
-        <Route path="/raw-materials" element={<RawMaterialsList />} />
-        <Route path="/raw-materials/new" element={<RawMaterialForm />} />
-        <Route path="/raw-materials/:id" element={<RawMaterialDetail />} />
-        <Route path="/raw-materials/:id/edit" element={<RawMaterialForm isEdit={true} />} />
+        {/* Doctor Protected Routes */}
+        <Route path="/layout" element={
+          <ProtectedRoute allowedRoles={["Doctor"]}>
+            <DoctorLayout />
+          </ProtectedRoute>
+        } />
+        <Route path="/appointments/calender" element={
+          <ProtectedRoute allowedRoles={["Doctor"]}>
+            <Calender />
+          </ProtectedRoute>
+        } />
+        <Route path="/appointments/list" element={
+          <ProtectedRoute allowedRoles={["Doctor"]}>
+            <AppointmentList />
+          </ProtectedRoute>
+        } />
+        <Route path="/appointments" element={
+          <ProtectedRoute allowedRoles={["Doctor"]}>
+            <DocAppointments />
+          </ProtectedRoute>
+        } />
+        <Route path="/dashboard" element={
+          <ProtectedRoute allowedRoles={["Doctor"]}>
+            <Dashboard />
+          </ProtectedRoute>
+        } />
+        <Route path="/assistdoc" element={
+          <ProtectedRoute allowedRoles={["Doctor"]}>
+            <AssistDoc />
+          </ProtectedRoute>
+        } />
+        <Route path="/assistdoc/docprofile" element={
+          <ProtectedRoute allowedRoles={["Doctor"]}>
+            <Docprofile />
+          </ProtectedRoute>
+        } />
+        <Route path="/assistdoc/doctors" element={
+          <ProtectedRoute allowedRoles={["Doctor"]}>
+            <Doctors />
+          </ProtectedRoute>
+        } />
+        <Route path="/assistdoc/doctorprofile/:id" element={
+          <ProtectedRoute allowedRoles={["Doctor"]}>
+            <DoctorProfile />
+          </ProtectedRoute>
+        } />
+        <Route path="/adddoctormodal" element={
+          <ProtectedRoute allowedRoles={["Doctor"]}>
+            <AddDoctorModal />
+          </ProtectedRoute>
+        } />
+        <Route path="/content" element={
+          <ProtectedRoute allowedRoles={["Doctor"]}>
+            <Content />
+          </ProtectedRoute>
+        } />
+        <Route path="/inventry" element={
+          <ProtectedRoute allowedRoles={["Doctor"]}>
+            <Inventry />
+          </ProtectedRoute>
+        } />
+        <Route path="/invoices" element={
+          <ProtectedRoute allowedRoles={["Doctor"]}>
+            <DocInvoices />
+          </ProtectedRoute>
+        } />
+        <Route path="/medicine" element={
+          <ProtectedRoute allowedRoles={["Doctor"]}>
+            <DocMedicine />
+          </ProtectedRoute>
+        } />
+        <Route path="/messenger" element={
+          <ProtectedRoute allowedRoles={["Doctor"]}>
+            <DoctorMessenger />
+          </ProtectedRoute>
+        } />
+        <Route path="/notification" element={
+          <ProtectedRoute allowedRoles={["Doctor"]}>
+            <DoctorNotification />
+          </ProtectedRoute>
+        } />
+        <Route path="/patients" element={
+          <ProtectedRoute allowedRoles={["Doctor"]}>
+            <Patients />
+          </ProtectedRoute>
+        } />
+        <Route path="/patients/card" element={
+          <ProtectedRoute allowedRoles={["Doctor"]}>
+            <Patientcard />
+          </ProtectedRoute>
+        } />
+        <Route path="/patients/viewdetails/:id" element={
+          <ProtectedRoute allowedRoles={["Doctor"]}>
+            <ViewDetails />
+          </ProtectedRoute>
+        } />
+        <Route path="/docpayments" element={
+          <ProtectedRoute allowedRoles={["Doctor"]}>
+            <DocPayments />
+          </ProtectedRoute>
+        } />
+        <Route path="/newprofile" element={
+          <ProtectedRoute allowedRoles={["Doctor"]}>
+            <NewProfile />
+          </ProtectedRoute>
+        } />
+        <Route path="/docsettings" element={
+          <ProtectedRoute allowedRoles={["Doctor"]}>
+            <DocSettings />
+          </ProtectedRoute>
+        } />
+        <Route path="/accounts" element={
+          <ProtectedRoute allowedRoles={["Doctor"]}>
+            <Accounts />
+          </ProtectedRoute>
+        } />
+        <Route path="/workshoppage" element={
+          <ProtectedRoute allowedRoles={["Doctor"]}>
+            <WorkshopPage />
+          </ProtectedRoute>
+        } />
+        <Route path="/newworkshop" element={
+          <ProtectedRoute allowedRoles={["Doctor"]}>
+            <NewWorkshop />
+          </ProtectedRoute>
+        } />
+        <Route path="/allocation" element={
+          <ProtectedRoute allowedRoles={["Doctor"]}>
+            <Allocation />
+          </ProtectedRoute>
+        } />
+        <Route path="/video-call" element={
+          <ProtectedRoute allowedRoles={["Doctor"]}>
+            <VideoCall />
+          </ProtectedRoute>
+        } />
+        <Route path="/note-taking" element={
+          <ProtectedRoute allowedRoles={["Doctor"]}>
+            <NoteTaking />
+          </ProtectedRoute>
+        } />
+        <Route path="/prescription-writing" element={
+          <ProtectedRoute allowedRoles={["Doctor"]}>
+            <PrescriptionWriting />
+          </ProtectedRoute>
+        } />
+        <Route path="/inventory" element={
+          <ProtectedRoute allowedRoles={["Doctor"]}>
+            <InventoryDashboard />
+          </ProtectedRoute>
+        } />
+        <Route path="/raw-materials" element={
+          <ProtectedRoute allowedRoles={["Doctor"]}>
+            <RawMaterialsList />
+          </ProtectedRoute>
+        } />
+        <Route path="/raw-materials/new" element={
+          <ProtectedRoute allowedRoles={["Doctor"]}>
+            <RawMaterialForm />
+          </ProtectedRoute>
+        } />
+        <Route path="/raw-materials/:id" element={
+          <ProtectedRoute allowedRoles={["Doctor"]}>
+            <RawMaterialDetail />
+          </ProtectedRoute>
+        } />
+        <Route path="/raw-materials/:id/edit" element={
+          <ProtectedRoute allowedRoles={["Doctor"]}>
+            <RawMaterialForm isEdit={true} />
+          </ProtectedRoute>
+        } />
+        <Route path="/medicines" element={
+          <ProtectedRoute allowedRoles={["Doctor"]}>
+            <MedicinesList />
+          </ProtectedRoute>
+        } />
+        <Route path="/medicines/new" element={
+          <ProtectedRoute allowedRoles={["Doctor"]}>
+            <MedicineForm />
+          </ProtectedRoute>
+        } />
+        <Route path="/medicines/:id" element={
+          <ProtectedRoute allowedRoles={["Doctor"]}>
+            <MedicineDetail />
+          </ProtectedRoute>
+        } />
+        <Route path="/medicines/:id/edit" element={
+          <ProtectedRoute allowedRoles={["Doctor"]}>
+            <MedicineForm isEdit={true} />
+          </ProtectedRoute>
+        } />
+        <Route path="/medicines/calculate-price" element={
+          <ProtectedRoute allowedRoles={["Doctor"]}>
+            <PriceCalculator />
+          </ProtectedRoute>
+        } />
 
-        {/* Medicines Routes */}
-        <Route path="/medicines" element={<MedicinesList />} />
-        <Route path="/medicines/new" element={<MedicineForm />} />
-        <Route path="/medicines/:id" element={<MedicineDetail />} />
-        <Route path="/medicines/:id/edit" element={<MedicineForm isEdit={true} />} />
-        <Route path="/medicines/calculate-price" element={<PriceCalculator />} />
-        
-        {/* Root path redirect */}
-        <Route path="/" element={<Navigate to="/home" replace />} />
-        
-        {/* Wildcard route for 404 - Must be the last route */}
+        <Route path="/admin-dashboard" element={
+          <ProtectedRoute allowedRoles={["Doctor"]}>
+            <AdminDashboard />
+          </ProtectedRoute>
+        } />
+        <Route path="/doctor-dashboard" element={
+          <ProtectedRoute allowedRoles={["Doctor"]}>
+            <AssistantDoctorDashboard />
+          </ProtectedRoute>
+        } />
+        <Route path="/add-doctor" element={
+          <ProtectedRoute allowedRoles={["Doctor"]}>
+            <AddDoctor />
+          </ProtectedRoute>
+        } />
+        <Route path="/assistleave" element={
+          <ProtectedRoute allowedRoles={["Doctor"]}>
+            <AssistLeave />
+          </ProtectedRoute>
+        } />
+        <Route path="/leavemgt" element={
+          <ProtectedRoute allowedRoles={["Doctor"]}>
+            <AdminLeaveManagement />
+          </ProtectedRoute>
+        } />
+        <Route path="/leavesettings" element={
+          <ProtectedRoute allowedRoles={["Doctor"]}>
+            <LeaveSettingsForm />
+          </ProtectedRoute>
+        } />
+        <Route path="/videosettings" element={
+          <ProtectedRoute allowedRoles={["Doctor"]}>
+            <VideoSettings />
+          </ProtectedRoute>
+        } />
+        <Route path="/payrollsetting" element={
+          <ProtectedRoute allowedRoles={["Doctor"]}>
+            <PayrollSettings />
+          </ProtectedRoute>
+        } />
+        <Route path="/payroll" element={
+          <ProtectedRoute allowedRoles={["Doctor"]}>
+            <Payroll />
+          </ProtectedRoute>
+        } />
+        <Route path="/salarystructure" element={
+          <ProtectedRoute allowedRoles={["Doctor"]}>
+            <SalaryStructure />
+          </ProtectedRoute>
+        } />
+        <Route path="/hrm" element={
+          <ProtectedRoute allowedRoles={["Doctor"]}>
+            <HRPage />
+          </ProtectedRoute>
+        } />
+        <Route path="/break" element={
+          <ProtectedRoute allowedRoles={["Doctor"]}>
+            <BreakTimer />
+          </ProtectedRoute>
+        } />
+        <Route path="/payslip" element={
+          <ProtectedRoute allowedRoles={["Doctor"]}>
+            <Payslip />
+          </ProtectedRoute>
+        } />
+
+        {/* Root redirect */}
+        <Route path="/" element={<Navigate to="/login" replace />} />
+
+        {/* Wildcard - Not Found */}
         <Route path="*" element={<NotFound />} />
       </Routes>
     );
   };
-
   return (
     <div>
       <ErrorBoundary FallbackComponent={ErrorFallback}>
