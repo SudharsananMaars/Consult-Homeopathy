@@ -1,4 +1,6 @@
 import React, { useState, useEffect } from 'react';
+import config from '../../config';
+const API_URL = config.API_URL;
 
 const NewWorkshop = ({ isOpen, onClose }) => {
   if (!isOpen) return null;
@@ -163,7 +165,7 @@ const NewWorkshop = ({ isOpen, onClose }) => {
       };
 
       const token = localStorage.getItem('token');
-      const response = await fetch('http://localhost:5000/api/workshop/postWorkshop', {
+      const response = await fetch(`${API_URL}/api/workshop/postWorkshop`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

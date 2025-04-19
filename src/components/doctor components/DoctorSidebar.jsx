@@ -29,7 +29,7 @@ const Sidebar = ({ role }) => {
       if (token) {
         // Call the check-out endpoint
         await axios.post(
-          `http://${API_URL}:5000/api/work-hours/check-out`,
+          `${API_URL}/api/work-hours/check-out`,
           {},
           {
             headers: {

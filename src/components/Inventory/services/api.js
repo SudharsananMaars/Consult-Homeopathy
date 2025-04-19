@@ -1,5 +1,6 @@
 
-const API_URL = 'http://localhost:5000/api/inventory'; // Adjust to your backend URL
+import config from "../../../config";
+const API_URL = `${config.API_URL}/api/inventory`; // Adjust to your backend URL
 
 export const api = {
   // Raw Materials API calls

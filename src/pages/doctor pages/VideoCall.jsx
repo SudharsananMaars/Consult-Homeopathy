@@ -1,6 +1,8 @@
 import { useState, useEffect, useRef } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import axios from "axios";
+import config from '../../config';
+const API_URL = config.API_URL;
 
 const VideoCall = () => {
   const location = useLocation();
@@ -381,7 +383,7 @@ const VideoCall = () => {
       }
       
       const response = await axios.post(
-        "http://localhost:5000/api/doctor/notes",
+        `${API_URL}/api/doctor/notes`,
         { appointmentID, notes },
         {
           headers: { Authorization: `Bearer ${token}` },

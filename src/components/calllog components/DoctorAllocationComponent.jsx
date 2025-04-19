@@ -12,7 +12,7 @@ const DoctorAllocationCell = ({ patient, currentDoctor, onAllocationChange }) =>
     useEffect(() => {
         const fetchDoctors = async () => {
             try {
-                const response = await axios.get(`http://${API_URL}:5000/api/assign/doctors`);
+                const response = await axios.get(`${API_URL}/api/assign/doctors`);
                 setDoctors(response.data);
             } catch (error) {
                 console.error('Error fetching doctors:', error);
@@ -23,7 +23,7 @@ const DoctorAllocationCell = ({ patient, currentDoctor, onAllocationChange }) =>
 
     const handleIndividualAllocation = async (patientId, doctorId) => {
         try {
-            const response = await axios.post(`http://${API_URL}:5000/api/assign/individual-allocation`, {
+            const response = await axios.post(`${API_URL}/api/assign/individual-allocation`, {
                 patientId,
                 doctorId
             });

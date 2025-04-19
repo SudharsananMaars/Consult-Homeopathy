@@ -3,10 +3,10 @@ import { Chart, ArcElement, CategoryScale, LinearScale, PointElement, LineElemen
 import axios from 'axios';
 import 'chartjs-adapter-date-fns';
 import 'chartjs-plugin-datalabels';
-
+import config from '../../config';
 // Register Chart.js components
 Chart.register(ArcElement, CategoryScale, LinearScale, PointElement, LineElement, PieController, LineController);
-
+const API_URL = config.API_URL;
 const ChartComponent = () => {
   const pieChartRef = useRef<HTMLCanvasElement>(null);
   const lineChartRef = useRef<HTMLCanvasElement>(null);
@@ -17,7 +17,7 @@ const ChartComponent = () => {
 
     const fetchData = async () => {
       try {
-        const response = await axios.get('http://localhost:5000/api/dashboard-data');
+        const response = await axios.get(`${API_URL}/api/dashboard-data`);
         const { chronicCount, acuteCount, totalPatients, pendingMedicalRecords, pendingCallFromApp } = response.data;
 
         const pieData = {

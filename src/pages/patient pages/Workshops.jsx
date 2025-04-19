@@ -6,6 +6,9 @@ import { toast, ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import emptyState from '../../assets/images/empty-state.png';
 import { ConsoleLevel } from '@zegocloud/zego-uikit-prebuilt';
+import config from '../../config';
+const API_URL = config.API_URL;
+
 const Workshops = () => {
   const [activeTab, setActiveTab] = useState('Upcoming');
   const [workshops, setWorkshops] = useState([]);
@@ -14,7 +17,7 @@ const Workshops = () => {
 
   const fetchWorkshops = async () => {
     try {
-      const response = await axios.get('http://localhost:5000/api/workshop/viewAll', {
+      const response = await axios.get(`${API_URL}/api/workshop/viewAll`, {
         headers: {
           Authorization: `Bearer ${localStorage.getItem('token')}`,
         },
@@ -39,7 +42,7 @@ const Workshops = () => {
       setLoadingWorkshopId(workshopId);
   
       // Request order ID from the server
-      const response = await axios.post('http://localhost:5000/api/workshop/create-order', { amount: fee });
+      const response = await axios.post(`${API_URL}/api/workshop/create-order`, { amount: fee });
       const { orderId, amount } = response.data;
   
       // Initialize Razorpay payment
@@ -63,7 +66,7 @@ const Workshops = () => {
             };
   
             console.log(paymentDetails);
-            const paymentResponse = await axios.post('http://localhost:5000/api/workshop/confirm-booking', paymentDetails);
+            const paymentResponse = await axios.post(`${API_URL}/api/workshop/confirm-booking`, paymentDetails);
             if (paymentResponse.data.success) {
               toast.success('Payment successful and booking confirmed!');
               fetchWorkshops(); // Refresh the workshops list

@@ -2,6 +2,8 @@ import React, { useState, useEffect, useRef} from "react";
 import { FaEllipsisV, FaPlus, FaFileExport, FaEye, FaTrash } from "react-icons/fa";
 import { useNavigate } from "react-router-dom";
 import AddDoctorModal from "/src/pages/doctor pages/AddDoctorModal";
+import config from '../../config';
+const API_URL = config.API_URL;
 
 const AssistDoc = () => {
     const navigate = useNavigate();
@@ -20,7 +22,7 @@ const AssistDoc = () => {
     useEffect(() => {
         const fetchDoctors = async () => {
             try {
-                const response = await fetch("http://localhost:5000/api/employees/all");
+                const response = await fetch(`${API_URL}/api/employees/all`);
                 const data = await response.json();
                 setDoctors(data);
             } catch (error) {
@@ -33,7 +35,7 @@ const AssistDoc = () => {
     // Fetch specific doctor details
     const fetchDoctorById = async (employeeID) => {
         try {
-            const response = await fetch(`http://localhost:5000/api/employees/getEmployeeById/${employeeID}`);
+            const response = await fetch(`${API_URL}/api/employees/getEmployeeById/${employeeID}`);
             if (!response.ok) {
                 throw new Error("Failed to fetch doctor details");
             }
@@ -118,7 +120,7 @@ const AssistDoc = () => {
     const handleDeleteDoctor = async (employeeID) => {
         if (window.confirm("Are you sure you want to delete this doctor?")) {
             try {
-                await fetch(`http://localhost:5000/api/employees/delete/${employeeID}`, { method: "DELETE" });
+                await fetch(`${API_URL}/api/employees/delete/${employeeID}`, { method: "DELETE" });
                 setDoctors((prevDoctors) => prevDoctors.filter((doctor) => doctor.employeeID !== employeeID));
                 if (currentDoctors.length === 1 && currentPage > 1) {
                     setCurrentPage(currentPage - 1); // Adjust pagination if the last entry is deleted

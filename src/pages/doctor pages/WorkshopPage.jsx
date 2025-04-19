@@ -3,6 +3,8 @@ import axios from "axios";
 import DoctorLayout from "/src/components/doctor components/DoctorLayout.jsx";
 import { PlusIcon } from '@heroicons/react/20/solid';
 import NewWorkshop from './NewWorkshop'; // Modal component
+import config from '../../config';
+const API_URL = config.API_URL;
 
 // WorkshopCard component
 const WorkshopCard = ({ title, description, scheduledDateTime, fee, image }) => {
@@ -33,7 +35,7 @@ const WorkshopPage = () => {
       const token = localStorage.getItem('token');
       console.log("Token: ", token);
       try {
-        const response = await axios.get('http://localhost:5000/api/workshop/viewAll', {
+        const response = await axios.get(`${API_URL}/api/workshop/viewAll`, {
           headers: {
             Authorization: `Bearer ${token}`,
           },

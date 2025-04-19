@@ -2,6 +2,8 @@ import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
 import homeo from '/src/assets/images/patient images/homeo.png'; // Ensure this path is correct
+import config from '../../config';
+const API_URL = config.API_URL;
 
 const LoginPage = () => {
   const [role, setRole] = useState(''); // 'doctor' or 'patient'
@@ -101,7 +103,7 @@ const LoginPage = () => {
     if (validateFields()) {
       try {
         const token = localStorage.getItem('token'); // Assuming token is stored in localStorage
-        const response = await axios.post('http://localhost:5000/api/otp/send-otp', { 
+        const response = await axios.post(`${API_URL}/api/otp/send-otp`, { 
           phone: mobileNumber,
           role: role === 'patient' ? 'Patient' : 'Doctor',
         },
@@ -129,7 +131,7 @@ const LoginPage = () => {
   const verifyOtp = async () => {
     if (validateFields()) {
       try {
-        const response = await axios.post('http://localhost:5000/api/otp/verifyOtp', {
+        const response = await axios.post(`${API_URL}/api/otp/verifyOtp`, {
           phone: mobileNumber,
           userOTP: otp,
           userType: role === 'patient' ? 'Patient' : 'Doctor',

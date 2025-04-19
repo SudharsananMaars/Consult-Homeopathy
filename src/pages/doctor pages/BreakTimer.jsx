@@ -1,4 +1,6 @@
 import React, { useState, useEffect } from "react";
+import config from '../../config';
+const API_URL = config.API_URL;
 
 const BreakTimer = () => {
   const [isOnBreak, setIsOnBreak] = useState(false);
@@ -24,7 +26,7 @@ const BreakTimer = () => {
     }
 
     // Call the backend API to start the break
-    fetch("http://localhost:5000/api/work-hours/start-break", {
+    fetch(`${API_URL}/api/work-hours/start-break`, {
       method: "POST",
       body: JSON.stringify({ duration }),
       headers: {
@@ -49,7 +51,7 @@ const BreakTimer = () => {
     }
 
     // Call the backend API to end the break
-    fetch("http://localhost:5000/api/work-hours/end-break", {
+    fetch(`${API_URL}/api/work-hours/end-break`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",

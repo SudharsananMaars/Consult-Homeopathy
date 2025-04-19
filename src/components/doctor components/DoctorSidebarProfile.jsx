@@ -1,7 +1,8 @@
 import React, { useEffect, useState } from "react";
 import axios from "axios";
 import doctorImage from "/src/assets/images/doctor images/doc.jpg"; // Replace with the actual path
-
+import config from "../../config";
+const API_URL = config.API_URL;
 const SidebarProfile = () => {
   const [doctorDetails, setDoctorDetails] = useState({
     name: "",
@@ -15,7 +16,7 @@ const SidebarProfile = () => {
       try {
         const token = localStorage.getItem("token"); // Fetch the token from storage
         console.log(token);
-        const response = await axios.get("http://localhost:5000/api/employees/profile", {
+        const response = await axios.get(`${API_URL}/api/employees/profile`, {
           headers: {
             Authorization: `Bearer ${token}`, // Send the token in headers
           },

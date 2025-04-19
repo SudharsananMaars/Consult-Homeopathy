@@ -16,7 +16,7 @@ const CommentCell = ({ patient, API_URL, onCommentAdded }) => {
       if (!newComment.trim()) return;
       try {
         const response = await axios.post(
-          `http://${API_URL}:5000/api/log/comments/${patient._id}`,
+          `${API_URL}/api/log/comments/${patient._id}`,
           { text: newComment }
         );
     

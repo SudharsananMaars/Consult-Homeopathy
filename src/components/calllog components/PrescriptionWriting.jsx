@@ -111,8 +111,8 @@ const PrescriptionWriting = () => {
       const authAxios = createAuthAxios();
       
       const [medicinesRes, rawMaterialsRes] = await Promise.all([
-        authAxios.get(`http://${API_URL}:5000/api/prescription/medicines`),
-        authAxios.get(`http://${API_URL}:5000/api/prescription/rawMaterials`)
+        authAxios.get(`${API_URL}/api/prescription/medicines`),
+        authAxios.get(`${API_URL}/api/prescription/rawMaterials`)
       ]);
       
       setMedicines(medicinesRes.data);
@@ -214,14 +214,14 @@ const PrescriptionWriting = () => {
   //     const token = localStorage.getItem('accessToken');
   //     console.log(token);
   //     const [medicinesRes, rawMaterialsRes] = await Promise.all([
-  //       axios.get(`http://${API_URL}:5000/api/prescription/medicines`,
+  //       axios.get(`${API_URL}/api/prescription/medicines`,
   //       {
   //         headers: {
   //           Authorization: `Bearer ${token}`,
   //         },
   //       }
   //       ),
-  //       axios.get(`http://${API_URL}:5000/api/prescription/rawMaterials`,
+  //       axios.get(`${API_URL}/api/prescription/rawMaterials`,
   //         {
   //           headers: {
   //             Authorization: `Bearer ${"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyIjp7InBob25lIjoiKzkxOTA5MjU1NjYxNyIsInVzZXJUeXBlIjoiRG9jdG9yIn0sImlhdCI6MTc0NDQzNTUyNiwiZXhwIjoxNzQ0NTIxOTI2fQ.ikAP3siWTm1A457pZKlYAgMbQ4xPrZWStvh8ZPSR3No"}`,
@@ -241,7 +241,7 @@ const PrescriptionWriting = () => {
   const handleAddNewMedicine = async (medicineName) => {
     try {
       const authAxios = createAuthAxios();
-      const response = await authAxios.post(`http://${API_URL}:5000/api/prescription/medicines`, {
+      const response = await authAxios.post(`${API_URL}/api/prescription/medicines`, {
         name: medicineName
       });
       setMedicines([...medicines, response.data]);
@@ -266,7 +266,7 @@ const PrescriptionWriting = () => {
   const handleAddNewRawMaterial = async (rawMaterialName) => {
     try {
       const authAxios = createAuthAxios();
-      const response = await authAxios.post(`http://${API_URL}:5000/api/prescription/rawMaterials`, {
+      const response = await authAxios.post(`${API_URL}/api/prescription/rawMaterials`, {
         name: rawMaterialName
       });
       setRawMaterials([...rawMaterials, response.data]);
@@ -396,7 +396,7 @@ const PrescriptionWriting = () => {
         }))
       };
       
-      const response = await authAxios.post(`http://${API_URL}:5000/api/prescription/create`, formattedData);
+      const response = await authAxios.post(`${API_URL}/api/prescription/create`, formattedData);
       
       toast.success("Prescription saved successfully!");
       setTimeout(() => navigate('/doctor-dashboard'), 1500);
