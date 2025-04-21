@@ -7,6 +7,7 @@ import calendar from '/src/assets/images/patient images/calender.png';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';  // Import axios for API requests
 import config from '../../config';
+import Select from 'react-select';
 const API_URL = config.API_URL;
 
 const NewAppointment = () => {

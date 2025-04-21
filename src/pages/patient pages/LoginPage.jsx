@@ -82,8 +82,8 @@ const LoginPage = () => {
     if (!loginWithOTP && !password) {
       newErrors.password = 'This field is required';
       isValid = false;
-    } else if (!loginWithOTP && !/^(?=.*[A-Za-z])(?=.*\d)(?=.*[@$!%*?&])(?=\S)(?!.*\s)[A-Za-z\d@$!%*?&]{8,15}$/.test(password)) {
-      newErrors.password = 'Password must be 8-15 characters long and include a mix of letters, numbers, and special characters without spaces';
+    } else if (!loginWithOTP && !/^(?=.*[A-Za-z])(?=.*[@$!%*?&])[\S]{6,}$/.test(password)) {
+      newErrors.password ='Password must be at least 6 characters long and include at least one letter and one special character (no spaces)';
       isValid = false;
     }
 
@@ -162,16 +162,34 @@ const LoginPage = () => {
     }
   };
 
-  const handleLogin = () => {
-    if (validateFields()) {
-      // Handle login logic here
-      console.log(`Role: ${role}, Mobile Number: ${mobileNumber}, Password: ${password}`);
+  const handleLogin = async () => {
+    if (!validateFields()) return;
   
-      // Assume you get a token after a successful login from your API
-      const token = "your_jwt_token"; // Replace this with the actual token received from your API
-      localStorage.setItem('token', token); // Store the token in localStorage
+    try {
+      const response = await axios.post(`${API_URL}/api/otp/loginWithPassword`, {
+        phone: mobileNumber,
+        password,
+        role: role === 'doctor' ? 'Doctor' : 'Patient' // Backend expects capitalized role
+      });
   
-      navigate('/home');
+      if (response.data.success) {
+        const { accessToken, refreshToken, userId, userType } = response.data;
+  
+        // Store tokens securely (avoid localStorage in real apps, use HttpOnly cookies)
+        localStorage.setItem("token", accessToken);
+        localStorage.setItem("refreshToken", refreshToken);
+        localStorage.setItem("userId", userId);
+        localStorage.setItem("userType", userType);
+  
+        if (userType === "Patient") {
+          navigate("/home");
+        } else if (userType === "Doctor") {
+          navigate("/dashboard");
+        }
+      }
+    } catch (error) {
+      console.error("Login error:", error.response?.data || error.message);
+      alert(error.response?.data?.message || "Login failed");
     }
   };
   

@@ -87,6 +87,7 @@ const FirstForm = () => {
     symptom: '',
     currentLocation: '',
     patientEntry: '',
+    password: '',
   });
 
   const [formError, setFormError] = useState({});
@@ -96,6 +97,7 @@ const FirstForm = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [prediction, setPrediction] = useState(null);
   const [symptomError, setSymptomError] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
@@ -184,6 +186,13 @@ const FirstForm = () => {
     if (!formData.consultingReason) errors.consultingReason = 'This field is required';
     if (!formData.currentLocation) errors.currentLocation = 'This field is required';
     if (!formData.patientEntry) errors.patientEntry = 'This field is required';
+    if (!formData.password) {
+      errors.password = 'This field is required';
+    } else if (formData.password.length < 6) {
+      errors.password = 'Password must be at least 6 characters';
+    } else if (!/[!@#$%^&*(),.?":{}|<>]/.test(formData.password)) {
+      errors.password = 'Password must contain at least one symbol';
+    }
   
     if (Object.keys(errors).length === 0) {
       try {
@@ -238,6 +247,7 @@ const FirstForm = () => {
           currentLocation: formData.currentLocation,
           patientEntry: formData.patientEntry,
           symptomNotKnown: formData.symptom || '', // Add symptom if available
+          password: formData.password
         };
   
         // Create URL with query parameters if they exist
@@ -555,6 +565,34 @@ const FirstForm = () => {
               className="mt-1"
             />
             {formError.patientEntry && <div className="mt-1 text-sm text-red-600">{formError.patientEntry}</div>}
+          </div>
+
+          {/* password */}
+          <div className="col-span-1">
+            <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-1">
+              Password <span className="text-red-500">*</span>
+            </label>
+            <div className="relative">
+              <input
+                type={showPassword ? 'text' : 'password'}
+                id="password"
+                name="password"
+                value={formData.password}
+                onChange={handleInputChange}
+                className="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm py-2 px-3 border pr-10"
+                placeholder="Enter your password"
+              />
+              <button
+                type="button"
+                onClick={() => setShowPassword(!showPassword)}
+                className="absolute inset-y-0 right-0 pr-3 flex items-center text-sm leading-5"
+              >
+                {showPassword ? 'Hide' : 'Show'}
+              </button>
+            </div>
+            {formError.password && (
+              <div className="mt-1 text-sm text-red-600">{formError.password}</div>
+            )}
           </div>
         </div>
 

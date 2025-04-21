@@ -32,6 +32,7 @@ import Messenger from "./components/patient components/Messenger.jsx";
 import HomePage from "./pages/patient pages/HomePage.jsx";
 import RazorScreen from "./pages/patient pages/RazorScreen.jsx";
 import FamilyTree from "./pages/patient pages/FamilyTree.jsx";
+import ConsultationHistory from "./pages/patient pages/ConsultationHistory.jsx";
 
 // import doctor website
 import DoctorLayout from "./components/doctor components/DoctorLayout.jsx";
@@ -161,6 +162,60 @@ function App() {
           element={
             <ProtectedRoute allowedRoles={["Patient"]}>
               <Appointments />
+            </ProtectedRoute>
+          }
+        />
+        
+        <Route
+          path="/appointments/newappointment"
+          element={
+            <ProtectedRoute allowedRoles={["Patient"]}>
+              <NewAppointment />
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/appointments/upcoming"
+          element={
+            <ProtectedRoute allowedRoles={["Patient"]}>
+              <UpcomingAppointments />
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/appointments/recent"
+          element={
+            <ProtectedRoute allowedRoles={["Patient"]}>
+              <RecentAppointments />
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/appointments/cancelled"
+          element={
+            <ProtectedRoute allowedRoles={["Patient"]}>
+              <CancelledAppointment />
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/appointments/layout"
+          element={
+            <ProtectedRoute allowedRoles={["Patient"]}>
+              <Layout />
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/consulthistory"
+          element={
+            <ProtectedRoute allowedRoles={["Patient"]}>
+              <ConsultationHistory />
             </ProtectedRoute>
           }
         />
@@ -700,9 +755,7 @@ function App() {
     <div>
       <ErrorBoundary FallbackComponent={ErrorFallback}>
         <AuthProvider>
-          <Router>
             <MaintenanceCheck />
-          </Router>
         </AuthProvider>
       </ErrorBoundary>
     </div>

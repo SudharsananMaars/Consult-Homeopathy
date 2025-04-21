@@ -18,8 +18,8 @@ function Dashboard() {
     { title: 'Today Appointment', count: '5', color: 'bg-blue-100', image: cal1 },
     { title: 'Total Patients', count: '57', color: 'bg-indigo-100', image: Online_Doctor },
     { title: 'Consultations', count: '62', color: 'bg-pink-100', image: Consultation },
-    { title: 'Assistent Doctors', count: '3', color: 'bg-yellow-100', image: AssisstentDoctors },
-    { title: 'Inventry', count: '75%', color: 'bg-red-100', image: AssisstentDoctors },
+    { title: 'Assistant Doctors', count: '3', color: 'bg-yellow-100', image: AssisstentDoctors },
+    { title: 'Inventory', count: '75%', color: 'bg-red-100', image: AssisstentDoctors },
   ];
 
   const appointments = [

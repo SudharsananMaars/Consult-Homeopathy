@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import Layout from "../../components/patient components/Layout";
 import axios from "axios";
 import config from '../../config';
@@ -23,7 +23,7 @@ const Profile = () => {
   useEffect(() => {
     const fetchPatientProfile = async () => {
       try {
-        const token = localStorage.getItem('accessToken');
+        const token = localStorage.getItem('token');
         const response = await fetch(`${API_URL}/api/patient/profile`, {
           method: 'GET',
           headers: {

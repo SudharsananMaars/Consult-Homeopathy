@@ -19,7 +19,7 @@ const LoginPage = () => {
 
   useEffect(() => {
     // Initialize role from local storage
-    const savedRole = localStorage.getItem('userRole');
+    const savedRole = localStorage.getItem('userType');
     if (savedRole) {
       setRole(savedRole);
     } else {
