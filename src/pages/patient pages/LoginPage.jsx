@@ -148,7 +148,8 @@ const LoginPage = () => {
             localStorage.setItem('role', response.data.role); 
             navigate('/dashboard'); // Redirect to Doctor Dashboard
           } else if (role === 'patient') {
-            navigate('/form'); // Redirect to Patient Dashboard
+            // navigate('/form'); // Redirect to Patient Dashboard
+            navigate('/home'); // Redirect to Patient Dashboard
           }
           window.location.reload(); // Reload page after success
         } else {

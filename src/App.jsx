@@ -105,6 +105,10 @@ import ProtectedRoute from "./pages/AuthPages/ProtectedRoute.jsx";
 import { AuthProvider } from "./contexts/AuthContext.jsx";
 import { ErrorBoundary } from "react-error-boundary";
 
+//Patient Registration pages
+// import FirstForm from "./PatientRegistration/First-Form.jsx";
+// import Form from "./PatientRegistration/SecondForm.jsx";
+
 // Error Fallback Component
 const ErrorFallback = () => <ServerError />;
 
@@ -125,21 +129,14 @@ function App() {
         <Route path="/maintenance" element={<Maintenance />} />
         <Route path="/login" element={<LoginPage />} />
         <Route path="/doclogin" element={<DocLogin />} />
-
+        <Route path="/firstform" element={<FirstForm />}/>
+        
         {/* Patient Protected Routes */}
         <Route
           path="/form"
           element={
             <ProtectedRoute allowedRoles={["Patient"]}>
               <Form />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/firstform"
-          element={
-            <ProtectedRoute allowedRoles={["Patient"]}>
-              <FirstForm />
             </ProtectedRoute>
           }
         />

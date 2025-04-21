@@ -1,7 +1,7 @@
-// FirstForm.jsx   
-import React, { useState } from "react";                                                                                                                                                                                   
+import React, { useState } from 'react';
 import Select from 'react-select';
 import axios from 'axios';
+import { useNavigate } from 'react-router-dom';
 
 const countries = [
   { code: 'IN', name: 'India', dialCode: '+91' },
@@ -9,7 +9,6 @@ const countries = [
   { code: 'LK', name: 'Sri Lanka', dialCode: '+94' },
   { code: 'CN', name: 'China', dialCode: '+86' },
   { code: 'RU', name: 'Russia', dialCode: '+7' },
-  // Add more countries as needed
 ];
 
 const consultingPersons = [
@@ -62,14 +61,20 @@ const consultingReasonOptions = consultingReasons.map(reason => ({
   label: reason,
 }));
 
-const referralOptions = [
-  { value: "Social Media", label: "Social Media" },
-  { value: "Friends", label: "Friends" },
-  { value: "Websites", label: "Websites" },
-  { value: "Families", label: "Families" }
+const locationOptions = [
+  { value: "Urban", label: "Urban" },
+  { value: "Rural", label: "Rural" },
+  { value: "Suburban", label: "Suburban" }
+];
+
+const patientEntryOptions = [
+  { value: "Instagram", label: "Instagram" },
+  { value: "Facebook", label: "Facebook" },
+  { value: "Google", label: "Google" }
 ];
 
 const FirstForm = () => {
+  const navigate = useNavigate();
   const [formData, setFormData] = useState({
     consultingFor: '',
     fullName: '',
@@ -80,77 +85,39 @@ const FirstForm = () => {
     gender: '',
     consultingReason: '',
     symptom: '',
-    referral: '',
-    location: '',
+    currentLocation: '',
+    patientEntry: '',
   });
 
   const [formError, setFormError] = useState({});
   const [selectedCountry, setSelectedCountry] = useState(countries[0].dialCode);
   const [selectedCountryWhatsApp, setSelectedCountryWhatsApp] = useState(countries[0].dialCode);
   const [isWhatsAppSame, setIsWhatsAppSame] = useState(false);
-  const [prediction, setPrediction] = useState(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [loadingLocation, setLoadingLocation] = useState(false);
-
-  const handleGeolocation = () => {
-    setLoadingLocation(true); // Start loading
-    if (navigator.geolocation) {
-      navigator.geolocation.getCurrentPosition(
-        (position) => {
-          const { latitude, longitude } = position.coords;
-          const nominatimUrl = `https://nominatim.openstreetmap.org/reverse?format=json&lat=${latitude}&lon=${longitude}&zoom=10&addressdetails=1`;
-
-          fetch(nominatimUrl)
-            .then((response) => response.json())
-            .then((data) => {
-              const place = data.address.city || data.address.town || data.address.village || "Unknown location";
-              setFormData((prevData) => ({
-                ...prevData,
-                location: place,
-              }));
-              setLoadingLocation(false); // Stop loading
-            })
-            .catch((error) => {
-              console.error('Error with reverse geocoding:', error);
-              setFormError((prevError) => ({
-                ...prevError,
-                location: 'Unable to retrieve location',
-              }));
-              setLoadingLocation(false); // Stop loading
-            });
-        },
-        (error) => {
-          console.error('Error getting geolocation:', error);
-          setFormError((prevError) => ({
-            ...prevError,
-            location: 'Unable to retrieve location',
-          }));
-          setLoadingLocation(false); // Stop loading
-        }
-      );
-    } else {
-      setFormError((prevError) => ({
-        ...prevError,
-        location: 'Geolocation is not supported by this browser',
-      }));
-      setLoadingLocation(false); // Stop loading
-    }
-  };
-
-  const ClearIndicator = () => null;
+  const [prediction, setPrediction] = useState(null);
+  const [symptomError, setSymptomError] = useState('');
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
-    setFormData(prevData => ({ ...prevData, [name]: value }));
+    setFormData(prevData => ({...prevData, [name]: value }));
+    
+    if (name === 'symptom') {
+      if (value.length < 40) {
+        setSymptomError('Please enter at least 40 characters for the symptom.');
+      } else {
+        setSymptomError('');
+      }
+    }
+
     if (formError[name]) {
-      setFormError(prevErrors => ({ ...prevErrors, [name]: '' }));
+      setFormError(prevErrors => ({...prevErrors, [name]: '' }));
     }
   };
 
   const handleSelectChange = (name, selectedOption) => {
-    setFormData(prevData => ({ ...prevData, [name]: selectedOption ? selectedOption.value : '' }));
+    setFormData(prevData => ({...prevData, [name]: selectedOption ? selectedOption.value : '' }));
     if (formError[name]) {
-      setFormError(prevErrors => ({ ...prevErrors, [name]: '' }));
+      setFormError(prevErrors => ({...prevErrors, [name]: '' }));
     }
   };
 
@@ -164,76 +131,163 @@ const FirstForm = () => {
     setSelectedCountryWhatsApp(selected.dialCode);
   };
 
-  const handleNumberChange = (e) => {
-    const { name, value } = e.target;
-    const regex = /^[0-9]{0,15}$/; // Increased max length to accommodate country codes if needed
-    if (regex.test(value)) {
-      setFormData(prevData => ({ ...prevData, [name]: value }));
-      setFormError(prevErrors => ({ ...prevErrors, [name]: '' }));
+  const handleWhatsAppSameChange = (e) => {
+    const isChecked = e.target.checked;
+    setIsWhatsAppSame(isChecked);
+    if (isChecked) {
+      setFormData(prevData => ({
+       ...prevData,
+        whatsappNumber: prevData.mobileNumber
+      }));
+      setSelectedCountryWhatsApp(selectedCountry);
+    } else {
+      setFormData(prevData => ({
+       ...prevData,
+        whatsappNumber: ''
+      }));
     }
   };
 
-  const handleEmailChange = (e) => {
-    const { value } = e.target;
-    const regex = /^[A-Z0-9._%+-]+@gmail\.com$/i; // Updated to specifically validate Gmail addresses
-    setFormData(prevData => ({ ...prevData, email: value }));
-    if (regex.test(value)) {
-      setFormError(prevErrors => ({ ...prevErrors, email: '' }));
-    } else {
-      setFormError(prevErrors => ({ ...prevErrors, email: 'Please enter a valid Gmail address' }));
+  const sendMessage = async (formData, patientId) => {
+    try {
+      const phoneNumber = `${selectedCountry}${formData.mobileNumber}`;
+      
+      const messageData = {
+        to: phoneNumber,
+        patientId: patientId,
+        message: `Dear ${formData.fullName},\n\nThank you for registering with our medical consultation service. We have received your request for consultation regarding ${formData.consultingReason}.\n\nOur medical team will contact you shortly.\n\nBest regards,\nMedical Consultation Team`
+      };
+
+      const response = await axios.post('http://localhost:5000/api/log/send-first-message', messageData);
+      
+      if (response.data.success) {
+        console.log('Message sent successfully');
+      } else {
+        console.error('Failed to send message');
+      }
+    } catch (error) {
+      console.error('Error sending message:', error);
     }
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     const errors = {};
+  
+    // Validation
     if (!formData.consultingFor) errors.consultingFor = 'This field is required';
     if (!formData.fullName) errors.fullName = 'This field is required';
-    if (!formData.age ) errors.age = 'This field is required';
-    if (!formData.email) errors.email = 'This field is required';
+    if (!formData.age) errors.age = 'This field is required';
     if (!formData.mobileNumber) errors.mobileNumber = 'This field is required';
+    if (!formData.email) errors.email = 'This field is required';
     if (!formData.gender) errors.gender = 'This field is required';
     if (!formData.consultingReason) errors.consultingReason = 'This field is required';
-    if (formData.consultingReason === 'Other' && !formData.symptom) errors.symptom = "This is required";
-    if (!formData.referral) errors.referral = 'This field is required';
-
+    if (!formData.currentLocation) errors.currentLocation = 'This field is required';
+    if (!formData.patientEntry) errors.patientEntry = 'This field is required';
+  
     if (Object.keys(errors).length === 0) {
       try {
         setIsSubmitting(true);
-        const dataToSend = {
-          consultingReason: formData.consultingReason,
-          symptom: formData.symptom,
+  
+        // Get referral code from URL if it exists
+        const urlParams = new URLSearchParams(window.location.search);
+        const referralCode = urlParams.get('referralCode');
+        const familyToken = urlParams.get('familyToken');
+  
+        let predictedDiseaseName = '';
+        let predictedDiseaseType = '';
+  
+        if (formData.consultingReason === 'Other' && formData.symptom) {
+          const predictionData = {
+            consultingReason: formData.consultingReason,
+            symptom: formData.symptom,
+          };
+  
+          const predictionResponse = await axios.post(
+            'http://localhost:5000/api/forms/predict',
+            predictionData
+          );
+  
+          const predictionMessage = predictionResponse.data.message;
+          const diseaseMatch = predictionMessage.match(/The predicted disease is "([^"]+)"/);
+          const typeMatch = predictionMessage.match(/predicted condition is (\w+)/);
+  
+          if (diseaseMatch && typeMatch) {
+            predictedDiseaseName = diseaseMatch[1];
+            predictedDiseaseType = typeMatch[1];
+          }
+  
+          setPrediction(predictionMessage);
+        }
+  
+        const fullFormData = {
+          consultingFor: formData.consultingFor,
+          name: formData.fullName,
+          age: parseInt(formData.age),
+          phone: `${selectedCountry}${formData.mobileNumber}`,
+          whatsappNumber: isWhatsAppSame
+            ? `${selectedCountry}${formData.mobileNumber}`
+            : `${selectedCountryWhatsApp}${formData.whatsappNumber}`,
+          email: formData.email,
+          gender: formData.gender,
+          diseaseName: formData.consultingReason === 'Other' ? predictedDiseaseName : formData.consultingReason,
+          diseaseType: {
+            name: predictedDiseaseType || '',
+            edit: false,
+          },
+          currentLocation: formData.currentLocation,
+          patientEntry: formData.patientEntry,
+          symptomNotKnown: formData.symptom || '', // Add symptom if available
         };
-
-        // Update the API URL if your Node.js backend runs on a different port or domain
-        const response = await axios.post('http://localhost:5000/api/predict', dataToSend);
-
-        setPrediction(response.data.message);
-
-        // Optionally, reset the form fields except for prediction
-        setFormData({
-          consultingFor: '',
-          fullName: '',
-          age: '',
-          mobileNumber: '',
-          whatsappNumber: '',
-          email: '',
-          gender: '',
-          consultingReason: '',
-          symptom: '',
-          referral: '',
-          location: '',
-        });
-
-        setIsWhatsAppSame(false);
-        setSelectedCountry(countries[0].dialCode);
-        setSelectedCountryWhatsApp(countries[0].dialCode);
-        alert('Form Submitted Successfully');
+  
+        // Create URL with query parameters if they exist
+        const apiUrl = new URL('http://localhost:5000/api/patient/sendRegForm');
+        if (referralCode) {
+          apiUrl.searchParams.append('referralCode', referralCode);
+        }
+        if (familyToken) {
+          apiUrl.searchParams.append('familyToken', familyToken);
+        }
+  
+        const patientResponse = await axios.post(
+          apiUrl.toString(),
+          fullFormData
+        );
+  
+        if (patientResponse.data.success || patientResponse.status === 201) {
+          const patientId = patientResponse.data.patientId;
+          if (typeof sendMessage === 'function') {
+            await sendMessage(formData, patientId);
+          }
+  
+          alert('Form Submitted Successfully');
+  
+          // Reset form
+          setFormData({
+            consultingFor: '',
+            fullName: '',
+            age: '',
+            mobileNumber: '',
+            whatsappNumber: '',
+            email: '',
+            gender: '',
+            consultingReason: '',
+            symptom: '',
+            currentLocation: '',
+            patientEntry: '',
+          });
+          setIsWhatsAppSame(false);
+          setSelectedCountry(countries[0].dialCode);
+          setSelectedCountryWhatsApp(countries[0].dialCode);
+          setPrediction(null);
+        }
+        navigate('/login');
       } catch (error) {
-        console.error('Submission error:', error);
-        if (error.response && error.response.data && error.response.data.error) {
-          alert(`Error:${error.response.data.error}`);
+        if (error.response && error.response.status === 400) {
+          // Display a user-friendly error message
+          alert(error.response.data.message || 'Bad Request');
         } else {
+          console.error('Submission error:', error);
           alert('Error submitting form');
         }
       } finally {
@@ -244,264 +298,287 @@ const FirstForm = () => {
     }
   };
 
-  const handleWhatsAppSameChange = (e) => {
-    const isChecked = e.target.checked;
-    setIsWhatsAppSame(isChecked);
-    if (isChecked) {
-      setFormData(prevData => ({
-        ...prevData,
-        whatsappNumber: prevData.mobileNumber
-      }));
-      setSelectedCountryWhatsApp(selectedCountry);
-    } else {
-      setFormData(prevData => ({
-        ...prevData,
-        whatsappNumber: ''
-      }));
-    }
+  const customSelectStyles = {
+    control: (provided) => ({
+      ...provided,
+      borderColor: '#e5e7eb',
+      boxShadow: 'none', 
+      '&:hover': {
+        borderColor: '#3b82f6'
+      }
+    }),
+    option: (provided, state) => ({
+      ...provided,
+      backgroundColor: state.isSelected ? '#3b82f6' : state.isFocused ? '#e0f2fe' : null,
+      color: state.isSelected ? 'white' : '#374151'
+    })
   };
 
+  
   return (
-    <div className="flex justify-center items-center min-h-screen bg-gray-200 p-4">
-      <form onSubmit={handleSubmit} className="bg-white p-8 rounded-lg shadow-lg w-full max-w-lg">
-        <h2 className="text-center h-[70px] bg-blue-300 p-6 text-white text-xl font-bold mb-4">Registration Form</h2>
-
-        {/* Consulting Person */}
-        <div className="mb-4">
-          <label htmlFor="consultingFor" className="block text-gray-800 font-medium mb-2">Consulting Person</label>
-          <Select
-            name="consultingFor"
-            options={consultingPersons}
-            value={consultingPersons.find(option => option.value === formData.consultingFor) || null}
-            onChange={(selectedOption) => handleSelectChange('consultingFor', selectedOption)}
-            isClearable
-            isSearchable
-            components={{ ClearIndicator }}
-            className="w-full border-gray-300 rounded text-gray-600"
-          />
-          {formError.consultingFor && <div className="text-red-500 text-sm mt-1">{formError.consultingFor}</div>}
+    <div className="max-w-4xl mx-auto py-10 px-4 sm:px-6 lg:px-8 bg-gradient-to-br from-blue-50 to-gray-50">
+      <form onSubmit={handleSubmit} className="bg-white shadow-xl rounded-xl overflow-hidden">
+        {/* Header */}
+        <div className="bg-gradient-to-r from-blue-600 to-indigo-700 px-6 py-5">
+          <h2 className="text-2xl font-bold text-white">Patient Registration Form</h2>
+          <p className="text-blue-100 mt-1">Please complete all required fields</p>
         </div>
 
-        {/* Full Name */}
-        <div className="mb-4">
-          <label htmlFor="fullName" className="block text-gray-800 font-medium mb-2">Full Name</label>
-          <input
-            type="text"
-            id="fullName"
-            name="fullName"
-            value={formData.fullName}
-            onChange={handleInputChange}
-            className="w-full p-2 border border-gray-300 rounded text-gray-600 h-10"
-          />
-          {formError.fullName && <div className="text-red-500 text-sm mt-1">{formError.fullName}</div>}
-        </div>
-
-        {/* Age */}
-        <div className="mb-4">
-          <label htmlFor="age" className="block text-gray-800 font-medium mb-2">Age</label>
-          <Select
-            name="age"
-            options={ageOptions}
-            value={ageOptions.find(option => option.value === formData.age) || null}
-            onChange={(selectedOption) => handleSelectChange('age', selectedOption)}
-            isClearable
-            isSearchable
-            components={{ ClearIndicator }}
-            className="w-full border-gray-300 rounded text-gray-600"
-          />
-          {formError.age && <div className="text-red-500 text-sm mt-1">{formError.age}</div>}
-        </div>
-
-        {/* Mobile Number */}
-        <div className="mb-4">
-          <label htmlFor="mobileNumber" className="block text-gray-800 font-medium mb-2">Mobile Number</label>
-          <div className="flex">
-            <select
-              name="countryCode"
-              onChange={handleCountryChange}
-              className="w-1/3 p-2 border border-gray-300 rounded-l text-gray-600 h-10"
-              value={countries.find(country => country.dialCode === selectedCountry)?.code || countries[0].code}
-            >
-              {countries.map(country => (
-                <option key={country.code} value={country.code}>{country.dialCode} {country.name}</option>
-              ))}
-            </select>
-            <input
-              type="text"
-              id="mobileNumber"
-              name="mobileNumber"
-              value={formData.mobileNumber}
-              onChange={handleNumberChange}
-              className="w-full p-2 border border-gray-300 rounded-r text-gray-600 h-10"
-              maxLength="15"
-              placeholder="Enter mobile number"
+        <div className="p-6 sm:p-8 grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-6">
+          {/* Consulting Person */}
+          <div className="col-span-1">
+            <label htmlFor="consultingFor" className="block text-sm font-medium text-gray-700 mb-1">
+              Consulting For <span className="text-red-500">*</span>
+            </label>
+            <Select
+              name="consultingFor"
+              options={consultingPersons}
+              value={consultingPersons.find(option => option.value === formData.consultingFor) || null}
+              onChange={(selectedOption) => handleSelectChange('consultingFor', selectedOption)}
+              styles={customSelectStyles}
+              placeholder="Select..."
+              className="mt-1"
             />
+            {formError.consultingFor && <div className="mt-1 text-sm text-red-600">{formError.consultingFor}</div>}
           </div>
-          {formError.mobileNumber && <div className="text-red-500 text-sm mt-1">{formError.mobileNumber}</div>}
-        </div>
 
-        {/* WhatsApp Number Same as Mobile */}
-        <div className="flex items-center mb-4">
-          <input
-            type="checkbox"
-            checked={isWhatsAppSame}
-            onChange={handleWhatsAppSameChange}
-            className="mr-2 h-4 w-4"
-          />
-          <span className="text-gray-600 text-sm">WhatsApp number is the same as mobile number</span>
-        </div>
-
-        {/* WhatsApp Number */}
-        <div className="mb-4">
-          <label htmlFor="whatsappNumber" className="block text-gray-800 font-medium mb-2">WhatsApp Number</label>
-          <div className="flex">
-            <select
-              name="whatsappCountryCode"
-              value={countries.find(country => country.dialCode === selectedCountryWhatsApp)?.code || countries[0].code}
-              onChange={handleCountryChangeWhatsApp}
-              disabled={isWhatsAppSame}
-              className={`w-1/3 p-2 border border-gray-300 rounded-l text-gray-600 h-10 ${isWhatsAppSame ? 'bg-gray-300 cursor-not-allowed' : ''}`}
-            >
-              {countries.map(country => (
-                <option key={country.code} value={country.code}>{country.dialCode} {country.name}</option>
-              ))}
-            </select>
+          {/* Full Name */}
+          <div className="col-span-1">
+            <label htmlFor="fullName" className="block text-sm font-medium text-gray-700 mb-1">
+              Full Name <span className="text-red-500">*</span>
+            </label>
             <input
               type="text"
-              name="whatsappNumber"
-              value={formData.whatsappNumber}
-              onChange={handleNumberChange}
-              className={`w-full p-2 border border-gray-300 rounded-r text-gray-600 h-10 ${isWhatsAppSame ? 'bg-gray-100 cursor-not-allowed' : ''}`}
-              disabled={isWhatsAppSame}
-              placeholder="Enter WhatsApp number"
-              maxLength="15"
-            />
-          </div>
-          {formError.whatsappNumber && <div className="text-red-500 text-sm mt-1">{formError.whatsappNumber}</div>}
-        </div>
-
-        {/* Email */}
-        <div className="mb-4">
-          <label htmlFor="email" className="block text-gray-800 font-medium mb-2">Email</label>
-          <input
-            type="email"
-            id="email"
-            name="email"
-            placeholder='@gmail.com'
-            value={formData.email}
-            onChange={handleEmailChange}
-            className="w-full p-2 border border-gray-300 rounded text-gray-600 h-10"
-          />
-          {formError.email && <div className="text-red-500 text-sm mt-1">{formError.email}</div>}
-        </div>
-
-        {/* Gender */}
-        <div className="mb-4">
-          <label htmlFor="gender" className="block text-gray-800 font-medium mb-2">Gender</label>
-          <Select
-            name="gender"
-            options={genderOptions}
-            value={genderOptions.find(option => option.value === formData.gender) || null}
-            onChange={(selectedOption) => handleSelectChange('gender', selectedOption)}
-            isClearable
-            isSearchable
-            components={{ ClearIndicator }}
-            className="w-full border-gray-300 rounded text-gray-600"
-          />
-          {formError.gender && <div className="text-red-500 text-sm mt-1">{formError.gender}</div>}
-        </div>
-
-        {/* Consulting Reason */}
-        <div className="mb-4">
-          <label htmlFor="consultingReason" className="block text-gray-800 font-medium mb-2">Consulting Reason</label>
-          <Select
-            name="consultingReason"
-            options={consultingReasonOptions}
-            placeholder="Select"
-            value={consultingReasonOptions.find(option => option.value === formData.consultingReason) || null}
-            onChange={(selectedOption) => handleSelectChange('consultingReason', selectedOption)}
-            isClearable
-            isSearchable
-            components={{ ClearIndicator }}
-            className="w-full border-gray-300 rounded text-gray-600"
-          />
-          {formError.consultingReason && <div className="text-red-500 text-sm mt-1">{formError.consultingReason}</div>}
-        </div>
-
-        {/* Symptom (Conditional) */}
-        {formData.consultingReason === 'Other' && (
-          <div className="mb-4">
-            <label htmlFor="symptom" className="block text-gray-800 font-medium mb-2">Symptom</label>
-            <input
-              type="text"
-              id="symptom"
-              name="symptom"
-              value={formData.symptom}
+              id="fullName"
+              name="fullName"
+              value={formData.fullName}
               onChange={handleInputChange}
-              className="w-full border p-2 border-gray-300 rounded text-gray-600 h-10"
-              placeholder="Describe your symptom"
+              className="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm py-2 px-3 border"
+              placeholder="Enter your full name"
             />
-            {formError.symptom && <div className="text-red-500 text-sm mt-1">{formError.symptom}</div>}
+            {formError.fullName && <div className="mt-1 text-sm text-red-600">{formError.fullName}</div>}
           </div>
-        )}
 
-        {/* Referral Option */}
-        <div className="mb-4">
-          <label htmlFor="referral" className="block text-gray-800 font-medium mb-2">Referral Option</label>
-          <Select
-            name="referral"
-            options={referralOptions}
-            value={referralOptions.find(option => option.value === formData.referral) || null}
-            onChange={(selectedOption) => handleSelectChange('referral', selectedOption)}
-            isClearable
-            isSearchable
-            components={{ ClearIndicator }}
-            className="w-full border-gray-300 rounded text-gray-600"
-          />
-          {formError.referral && <div className="text-red-500 text-sm mt-1">{formError.referral}</div>}
+          {/* Age */}
+          <div className="col-span-1">
+            <label htmlFor="age" className="block text-sm font-medium text-gray-700 mb-1">
+              Age <span className="text-red-500">*</span>
+            </label>
+            <Select
+              name="age"
+              options={ageOptions}
+              value={ageOptions.find(option => option.value === formData.age) || null}
+              onChange={(selectedOption) => handleSelectChange('age', selectedOption)}
+              styles={customSelectStyles}
+              placeholder="Select age"
+              className="mt-1"
+            />
+            {formError.age && <div className="mt-1 text-sm text-red-600">{formError.age}</div>}
+          </div>
+
+          {/* Gender */}
+          <div className="col-span-1">
+            <label htmlFor="gender" className="block text-sm font-medium text-gray-700 mb-1">
+              Gender <span className="text-red-500">*</span>
+            </label>
+            <Select
+              name="gender"
+              options={genderOptions}
+              value={genderOptions.find(option => option.value === formData.gender) || null}
+              onChange={(selectedOption) => handleSelectChange('gender', selectedOption)}
+              styles={customSelectStyles}
+              placeholder="Select gender"
+              className="mt-1"
+            />
+            {formError.gender && <div className="mt-1 text-sm text-red-600">{formError.gender}</div>}
+          </div>
+
+          {/* Mobile Number */}
+          <div className="col-span-1">
+            <label htmlFor="mobileNumber" className="block text-sm font-medium text-gray-700 mb-1">
+              Mobile Number <span className="text-red-500">*</span>
+            </label>
+            <div className="flex">
+              <select
+                name="countryCode"
+                onChange={handleCountryChange}
+                value={countries.find(country => country.dialCode === selectedCountry)?.code}
+                className="rounded-l-md border-r-0 border-gray-300 bg-gray-50 text-gray-700 text-sm focus:ring-blue-500 focus:border-blue-500 py-2 px-3"
+              >
+                {countries.map(country => (
+                  <option key={country.code} value={country.code}>
+                    {country.dialCode} {country.name}
+                  </option>
+                ))}
+              </select>
+              <input
+                type="text"
+                id="mobileNumber"
+                name="mobileNumber"
+                value={formData.mobileNumber}
+                onChange={handleInputChange}
+                className="block w-full rounded-r-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm py-2 px-3 border"
+                placeholder="Enter mobile number"
+              />
+            </div>
+            {formError.mobileNumber && <div className="mt-1 text-sm text-red-600">{formError.mobileNumber}</div>}
+          </div>
+
+          {/* WhatsApp Same as Mobile */}
+          <div className="col-span-1 flex items-center mt-6">
+            <input
+              type="checkbox"
+              id="whatsappSame"
+              checked={isWhatsAppSame}
+              onChange={handleWhatsAppSameChange}
+              className="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+            />
+            <label htmlFor="whatsappSame" className="ml-2 text-sm text-gray-700">
+              WhatsApp number is same as mobile number
+            </label>
+          </div>
+
+          {/* WhatsApp Number */}
+          <div className="col-span-1">
+            <label htmlFor="whatsappNumber" className="block text-sm font-medium text-gray-700 mb-1">
+              WhatsApp Number
+            </label>
+            <div className="flex">
+              <select
+                name="whatsappCountryCode"
+                onChange={handleCountryChangeWhatsApp}
+                value={countries.find(country => country.dialCode === selectedCountryWhatsApp)?.code}
+                disabled={isWhatsAppSame}
+                className={`rounded-l-md border-r-0 border-gray-300 text-gray-700 text-sm py-2 px-3 ${isWhatsAppSame ? 'bg-gray-100' : 'bg-gray-50'}`}
+              >
+                {countries.map(country => (
+                  <option key={country.code} value={country.code}>
+                    {country.dialCode} {country.name}
+                  </option>
+                ))}
+              </select>
+              <input
+                type="text"
+                id="whatsappNumber"
+                name="whatsappNumber"
+                value={formData.whatsappNumber}
+                onChange={handleInputChange}
+                disabled={isWhatsAppSame}
+                className={`block w-full rounded-r-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm py-2 px-3 border ${isWhatsAppSame ? 'bg-gray-100' : ''}`}
+                placeholder="Enter WhatsApp number"
+              />
+            </div>
+          </div>
+
+          {/* Email */}
+          <div className="col-span-1">
+            <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-1">
+              Email <span className="text-red-500">*</span>
+            </label>
+            <input
+              type="email"
+              id="email"
+              name="email"
+              value={formData.email}
+              onChange={handleInputChange}
+              className="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm py-2 px-3 border"
+              placeholder="your.email@example.com"
+            />
+            {formError.email && <div className="mt-1 text-sm text-red-600">{formError.email}</div>}
+          </div>
+
+          {/* Consulting Reason */}
+          <div className="col-span-1">
+            <label htmlFor="consultingReason" className="block text-sm font-medium text-gray-700 mb-1">
+              Reason for Consultation <span className="text-red-500">*</span>
+            </label>
+            <Select
+              name="consultingReason"
+              options={consultingReasonOptions}
+              value={consultingReasonOptions.find(option => option.value === formData.consultingReason) || null}
+              onChange={(selectedOption) => handleSelectChange('consultingReason', selectedOption)}
+              styles={customSelectStyles}
+              placeholder="Select reason"
+              className="mt-1"
+            />
+            {formError.consultingReason && <div className="mt-1 text-sm text-red-600">{formError.consultingReason}</div>}
+          </div>
+
+          {/* Symptom */}
+          {formData.consultingReason === 'Other' && (
+            <div className="col-span-1">
+              <label htmlFor="symptom" className="block text-sm font-medium text-gray-700 mb-1">
+                Specify Symptom <span className="text-red-500">*</span>
+              </label>
+              <input
+                type="text"
+                id="symptom"
+                name="symptom"
+                value={formData.symptom}
+                onChange={handleInputChange}
+                className="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm py-2 px-3 border"
+                placeholder="Please describe your symptoms"
+              />
+              {symptomError && <div className="mt-1 text-sm text-red-600">{symptomError}</div>}
+            </div>
+          )}
+
+          {/* Current Location */}
+          <div className="col-span-1">
+            <label htmlFor="currentLocation" className="block text-sm font-medium text-gray-700 mb-1">
+              Current Location <span className="text-red-500">*</span>
+            </label>
+            <input
+              type="text"
+              id="currentLocation"
+              name="currentLocation"
+              value={formData.currentLocation}
+              onChange={handleInputChange}
+              className="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm py-2 px-3 border"
+              placeholder="City, State, Country"
+            />
+            {formError.currentLocation && <div className="mt-1 text-sm text-red-600">{formError.currentLocation}</div>}
+          </div>
+
+          {/* Patient Entry */}
+          <div className="col-span-1">
+            <label htmlFor="patientEntry" className="block text-sm font-medium text-gray-700 mb-1">
+              How did you find us? <span className="text-red-500">*</span>
+            </label>
+            <Select
+              name="patientEntry"
+              options={patientEntryOptions}
+              value={patientEntryOptions.find(option => option.value === formData.patientEntry) || null}
+              onChange={(selectedOption) => handleSelectChange('patientEntry', selectedOption)}
+              styles={customSelectStyles}
+              placeholder="Select option"
+              className="mt-1"
+            />
+            {formError.patientEntry && <div className="mt-1 text-sm text-red-600">{formError.patientEntry}</div>}
+          </div>
         </div>
 
-        <div className="mb-4">
-        <label htmlFor="location" className="block text-gray-800 font-medium mb-2">Location</label>
-        <input
-          type="text"
-          id="location"
-          value={formData.location}
-          readOnly
-          className="w-full p-2 border border-gray-300 rounded text-gray-600 h-10"
-        />
-        <button
-          type="button"
-          onClick={handleGeolocation}
-          className="bg-blue-500 text-white p-2 mt-2 rounded"
-        >
-          Get Current Location
-        </button>
-        {loadingLocation && <p className="text-sm text-gray-600 mt-1">Fetching location...</p>}
-        {formError.location && <p className="text-red-500 text-sm mt-1">{formError.location}</p>}
-      </div>
-
-
-        {/* Submit Button */}
-        <div className="flex justify-center">
+        {/* Form Footer with Submit Button */}
+        <div className="px-6 py-4 bg-gray-50 border-t border-gray-200 flex justify-end">
           <button
             type="submit"
-            className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-400"
             disabled={isSubmitting}
+            className="rounded-md bg-gradient-to-r from-blue-600 to-indigo-600 px-6 py-3 text-base font-medium text-white shadow-sm hover:from-blue-700 hover:to-indigo-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-all duration-200 ease-in-out disabled:opacity-70 disabled:cursor-not-allowed"
           >
-            {isSubmitting ? 'Submitting...' : 'Submit'}
+            {isSubmitting ? (
+              <span className="flex items-center">
+                <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                </svg>
+                Submitting...
+              </span>
+            ) : 'Submit Registration'}
           </button>
         </div>
-
-        {/* Prediction Result */}
-        {prediction && (
-          <div className="mt-4 p-4 bg-green-100 border border-green-400 text-green-700 rounded">
-            <p className="text-lg font-medium">Prediction: {prediction}</p>
-          </div>
-        )}
       </form>
     </div>
   );
 };
 
-export default FirstForm;
+export default FirstForm;
