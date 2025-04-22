@@ -82,7 +82,7 @@ const LoginPage = () => {
     if (!loginWithOTP && !password) {
       newErrors.password = 'This field is required';
       isValid = false;
-    } else if (!loginWithOTP && !/^(?=.*[A-Za-z])(?=.*[@$!%*?&])[\S]{6,}$/.test(password)) {
+    } else if (!loginWithOTP && !/^(?=.*[@$!%*?&])[\S]{6,}$/.test(password)) {
       newErrors.password ='Password must be at least 6 characters long and include at least one letter and one special character (no spaces)';
       isValid = false;
     }
@@ -180,10 +180,11 @@ const LoginPage = () => {
         localStorage.setItem("refreshToken", refreshToken);
         localStorage.setItem("userId", userId);
         localStorage.setItem("userType", userType);
-  
+        
         if (userType === "Patient") {
           navigate("/home");
         } else if (userType === "Doctor") {
+          localStorage.setItem("role", response.data.role);
           navigate("/dashboard");
         }
       }
@@ -200,6 +201,10 @@ const LoginPage = () => {
     setRole(newRole);
     window.location.reload();
   };
+
+  const handleRegistration = () => {
+    navigate('/firstform');
+  }
 
   return (
     <div className="flex items-center justify-center min-h-screen bg-blue-100 p-4">
@@ -358,6 +363,18 @@ const LoginPage = () => {
               {role === 'doctor' ? 'Login as Patient' : 'Login as Doctor'}
             </button>
           </div>
+
+          {role === 'patient' && (
+            <div className="mt-4 text-center">
+              <button
+                onClick={handleRegistration}
+                className="text-blue-500 hover:underline"
+              >
+                Register Patient
+              </button>
+            </div>
+          )}
+
         </div>
       </div>
     </div>

@@ -8,14 +8,20 @@ export default defineConfig({
   server: {
     host: '0.0.0.0',
     port: 5173,
-    https:{
+    https: {
       key: fs.readFileSync('server.key'),
-      cert: fs.readFileSync('server.crt') }  // You can specify a different port here
+      cert: fs.readFileSync('server.crt')
+    }
   },
-
   css: {
     postcss: {
       plugins: [tailwindcss('./tailwind.config.cjs')]
     }
+  },
+  build: {
+    sourcemap: false, // 👈 This disables exposing source maps in production
+    minify: 'esbuild', // Optional: 'terser' is slower but can be more aggressive
+    outDir: 'dist',    // Default output directory, can be customized
+    target: 'esnext'   // Good for modern browsers
   }
 });

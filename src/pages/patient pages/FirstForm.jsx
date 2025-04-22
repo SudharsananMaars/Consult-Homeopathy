@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import Select from 'react-select';
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
-
+import config from '../../config';
 const countries = [
   { code: 'IN', name: 'India', dialCode: '+91' },
   { code: 'US', name: 'United States', dialCode: '+1' },
@@ -75,6 +75,7 @@ const patientEntryOptions = [
 
 const FirstForm = () => {
   const navigate = useNavigate();
+  const API_URL = config.API_URL;
   const [formData, setFormData] = useState({
     consultingFor: '',
     fullName: '',
@@ -160,7 +161,7 @@ const FirstForm = () => {
         message: `Dear ${formData.fullName},\n\nThank you for registering with our medical consultation service. We have received your request for consultation regarding ${formData.consultingReason}.\n\nOur medical team will contact you shortly.\n\nBest regards,\nMedical Consultation Team`
       };
 
-      const response = await axios.post('http://localhost:5000/api/log/send-first-message', messageData);
+      const response = await axios.post(`${API_URL}/api/log/send-first-message`, messageData);
       
       if (response.data.success) {
         console.log('Message sent successfully');
@@ -251,7 +252,7 @@ const FirstForm = () => {
         };
   
         // Create URL with query parameters if they exist
-        const apiUrl = new URL('http://localhost:5000/api/patient/sendRegForm');
+        const apiUrl = new URL(`${API_URL}/api/patient/sendRegForm`);
         if (referralCode) {
           apiUrl.searchParams.append('referralCode', referralCode);
         }
