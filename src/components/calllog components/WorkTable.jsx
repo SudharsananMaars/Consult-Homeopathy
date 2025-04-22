@@ -43,15 +43,18 @@ const WorkTable = () => {
   useEffect(() => {
     fetchDoctors();
     const token = getToken();
+    const userId = localStorage.getItem('userId');
     // console.log("Token:", token);
     if (token) {
       const decodedToken = jwtDecode(token);
-      setUserRole(decodedToken.role); // Setting user role based on token
-      setCurrentDoctorId(decodedToken.id);
-      console.log("This is current doctor id: ", decodedToken.id);
-      const decodedToken_id = "66faef2467d2c448c05a29ef";
-      if (decodedToken_id) {
-        fetchSpecialAllocations(decodedToken_id);
+      // console.log("decodedToken",decodedToken);
+      // setUserRole(decodedToken.role); // Setting user role based on token
+      setUserRole(decodedToken.user.userType);
+      setCurrentDoctorId(userId);
+      console.log("This is current doctor id: ", userId);
+      // const decodedToken_id = "66faef2467d2c448c05a29ef";
+      if (userId) {
+        fetchSpecialAllocations(userId);
       }
     }
     fetchDoctorFollowTypes();
