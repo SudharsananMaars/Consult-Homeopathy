@@ -3,7 +3,7 @@ import React from "react";
 const RazorScreen = () => {
   const handlePayment = () => {
     const options = {
-      key: 'rzp_test_BSNfZKPk1eo1NA', // Replace with your Razorpay key
+      key: process.env.RAZOR_PAY_KEY, // Replace with your Razorpay key
       amount: 10000, // Amount in paise (10000 paise = 100 INR)
       currency: 'INR',
       name: 'Maaaaarsss',
