@@ -14,7 +14,7 @@ const FamilyTree = () => {
   });
   const [showProfileModal, setShowProfileModal] = useState(false);
   const [selectedMember, setSelectedMember] = useState(null);
-  const token = localStorage.getItem("accesstoken");
+  const token = localStorage.getItem("token");
 
   const handleChange = (e) => {
     const { name, value, type, checked } = e.target;

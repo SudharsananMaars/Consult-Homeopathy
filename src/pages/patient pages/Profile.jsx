@@ -1,337 +1,247 @@
+// PatientProfile.js
 import React, { useState, useEffect } from "react";
-import Layout from "../../components/patient components/Layout";
+import DoctorLayout from "/src/components/doctor components/DoctorLayout.jsx";
 import axios from "axios";
-import config from '../../config';
+import config from "../../config";
 const API_URL = config.API_URL;
 
-const Profile = () => {
+const PatientProfile = () => {
+  const [profile, setProfile] = useState({});
+  const [formData, setFormData] = useState({
+    name: "",
+    age: "",
+    phone: "",
+    whatsappNumber: "",
+    gender: "",
+  });
   const [profilePhoto, setProfilePhoto] = useState(null);
-  const [name, setName] = useState("");
-  const [email, setEmail] = useState("");
-  const [mobile, setMobile] = useState("");
-  const [dob, setDob] = useState("");
-  const [address, setAddress] = useState("");
-  const [locality, setLocality] = useState("");
-  const [city, setCity] = useState("");
-  const [state, setState] = useState("");
-  const [country, setCountry] = useState("");
-  const [pincode, setPincode] = useState("");
-  const [gender, setGender] = useState("");
-  const [bgrp, setBgrp] = useState("");
+  const [previewPhoto, setPreviewPhoto] = useState(null);
   const [isEditing, setIsEditing] = useState(false);
 
-  useEffect(() => {
-    const fetchPatientProfile = async () => {
-      try {
-        const token = localStorage.getItem('token');
-        const response = await fetch(`${API_URL}/api/patient/profile`, {
-          method: 'GET',
-          headers: {
-            Authorization: `Bearer ${token}`, // Assuming you're using localStorage to store the token
-          },
-        });
-        const patientData = await response.json();
-        
-        // Set the state with fetched data
-        setName(patientData.name);
-        setEmail(patientData.email);
-        setMobile(patientData.phone);
-        setGender(patientData.gender);
-        // Set other fields to empty or default if not provided
-        setDob(patientData.dob || "");
-        setAddress(patientData.address || "");
-        setLocality(patientData.locality || "");
-        setCity(patientData.city || "");
-        setState(patientData.state || "");
-        setCountry(patientData.country || "");
-        setPincode(patientData.pincode || "");
-      } catch (error) {
-        console.error("Error fetching patient profile:", error);
-      }
-    };
+  const token = localStorage.getItem("token");
 
-    fetchPatientProfile();
+  useEffect(() => {
+    fetchProfile();
   }, []);
 
-
-  const states = [
-    "Andhra Pradesh", "Arunachal Pradesh", "Assam", "Bihar", "Chhattisgarh", "Goa", "Gujarat", "Haryana", "Himachal Pradesh", "Jharkhand",
-    "Karnataka", "Kerala", "Madhya Pradesh", "Maharashtra", "Manipur", "Meghalaya", "Mizoram", "Nagaland", "Odisha", "Punjab",
-    "Rajasthan", "Sikkim", "Tamil Nadu", "Telangana", "Tripura", "Uttar Pradesh", "Uttarakhand", "West Bengal", "Andaman and Nicobar Islands",
-    "Chandigarh", "Dadra and Nagar Haveli and Daman and Diu", "Lakshadweep", "Delhi", "Puducherry", "Ladakh", "Jammu and Kashmir"
-  ];
-
-  const countries = ["India", "United States", "United Kingdom", "Canada", "Australia"];
-
-  const handlePhotoUpload = (event) => {
-    const file = event.target.files[0];
-    if (file) {
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        setProfilePhoto(reader.result);
-      };
-      reader.readAsDataURL(file);
-    }
-  };
-  const handleSubmit = async () =>{
+  const fetchProfile = async () => {
     try {
-      const token = localStorage.getItem('accessToken');
-      const response = await axios.put(`${API_URL}/api/patient/profile`, {
-        name,
-        email,
-        phone: mobile,
-        gender,
-        dob,
-        address,
-        locality,
-        city,
-        state,
-        country,
-        pincode,
-        // Add other fields you want to update
-      }, {
+      const res = await axios.get(`${API_URL}/api/patient/profile`, {
         headers: {
           Authorization: `Bearer ${token}`,
         },
       });
+      setProfile(res.data);
+      setFormData({
+        name: res.data.name || "",
+        age: res.data.age || "",
+        phone: res.data.phone || "",
+        whatsappNumber: res.data.whatsappNumber || "",
+        gender: res.data.gender || "",
+      });
+    } catch (error) {
+      console.error("Error fetching profile:", error);
+    }
+  };
 
-      console.log("Profile updated:", response.data);
-      setIsEditing(false); // Exit editing mode
+  const handleInputChange = (e) => {
+    setFormData((prev) => ({
+      ...prev,
+      [e.target.name]: e.target.value,
+    }));
+  };
+
+  const handleProfileUpdate = async () => {
+    try {
+      const res = await axios.put(
+        `${API_URL}/api/patient/updateProfile`,
+        formData,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+      alert("✅ Profile updated successfully!");
+      setProfile(res.data.data);
+      setIsEditing(false);
     } catch (error) {
       console.error("Error updating profile:", error);
     }
   };
 
-  const handleEditClick = () => {
-    setIsEditing(true); // Enable edit mode
+  const handlePhotoChange = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      setProfilePhoto(file);
+      setPreviewPhoto(URL.createObjectURL(file));
+    }
+  };
+
+  const uploadProfilePhoto = async () => {
+    try {
+      const data = new FormData();
+      data.append("profilePhoto", profilePhoto);
+
+      await axios.post(`${API_URL}/api/patient/uploadProfilePicture`, data, {
+        headers: {
+          "Content-Type": "multipart/form-data",
+          Authorization: `Bearer ${token}`,
+        },
+      });
+      alert("📸 Profile picture updated!");
+      fetchProfile();
+    } catch (error) {
+      console.error("Error uploading profile picture:", error);
+    }
   };
 
   return (
-    <Layout>
+    <DoctorLayout>
       <div className="p-6">
-      <h1 className="text-2xl font-bold mb-4">Profile</h1>
-      <div className="max-w-2/3 mx-auto w-full p-6 shadow bg-white"> 
-        <div className="flex flex-col md:flex-row items-center space-y-4 md:space-y-0 md:space-x-6 mb-6">
-          {/* Profile Photo */} 
-          <div className="flex-shrink-0 w-24 h-24 rounded-full border-3 border-gray-100 overflow-hidden bg-gray-200">
-            {profilePhoto ? (
-              <img src={profilePhoto} alt="Profile" className="w-full h-full object-cover rounded-full" />
-            ) : (
-              <div className="flex items-center justify-center h-full text-gray-400">No Photo</div>
-            )}
-          </div>
+        <h1 className="text-2xl font-bold mb-4">Profile</h1>
+        <div className="max-w-2/3 mx-auto w-full p-6 shadow bg-white rounded-lg">
+          <div className="flex flex-col md:flex-row items-center space-y-4 md:space-y-0 md:space-x-6 mb-6">
+            <div className="flex-shrink-0 w-24 h-24 rounded-full border-3 border-gray-100 overflow-hidden bg-gray-200">
+              {previewPhoto || profile.profilePhoto ? (
+                <img
+                  src={previewPhoto || profile.profilePhoto}
+                  alt="Profile"
+                  className="w-full h-full object-cover rounded-full"
+                />
+              ) : (
+                <div className="flex items-center justify-center h-full text-gray-400">
+                  No Photo
+                </div>
+              )}
+            </div>
 
-          {/* Upload Photo Section */}
-          <div className="flex flex-col space-y-2 space-x-7">
-            <label className="text-sm font-medium text-gray-700">Pick a photo from your files</label>
-            <div>
-              <input
-                type="file"
-                accept="image/*"
-                onChange={handlePhotoUpload}
-                className="hidden"
-                id="file-upload"
-                disabled={!isEditing}
-              />
-              <label
-                htmlFor="file-upload"
-                className="cursor-pointer inline-block py-2 px-4 bg-blue-500 text-white text-sm font-medium rounded-md hover:bg-blue-600"
-              >
-                Add Photo   
+            <div className="flex flex-col space-y-2 space-x-7">
+              <label className="text-sm font-medium text-gray-700">
+                Pick a photo from your files
               </label>
+              <div>
+                <input
+                  type="file"
+                  accept="image/*"
+                  onChange={handlePhotoChange}
+                  className="hidden"
+                  id="file-upload"
+                  disabled={!isEditing}
+                />
+                <label
+                  htmlFor="file-upload"
+                  className="cursor-pointer inline-block py-2 px-4 bg-blue-500 text-white text-sm font-medium rounded-md hover:bg-blue-600"
+                >
+                  Add Photo
+                </label>
+                {profilePhoto && (
+                  <button
+                    onClick={uploadProfilePhoto}
+                    className="ml-4 bg-green-500 hover:bg-green-600 text-white px-3 py-1 rounded-md"
+                  >
+                    Upload
+                  </button>
+                )}
+              </div>
+            </div>
+
+            <div className="w-1/2 flex justify-end items-end">
+              <button
+                className="bg-blue-500 hover:bg-blue-600 border-2 p-2 px-4 relative rounded-md text-white font-medium"
+                onClick={() => setIsEditing(true)}
+                disabled={isEditing}
+              >
+                Edit
+              </button>
             </div>
           </div>
 
-          <div className="w-1/2 flex justify-end items-end">
-          <button 
-          className="bg-blue-500 hover:bg-blue-600 border-2 p-2 px-4 relative rounded-md text-white font-medium"
-          onClick={handleEditClick}
-          disabled={isEditing}
-          >
-            Edit
-          </button>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-4 mb-6">
+            <InputField
+              label="Name"
+              name="name"
+              value={formData.name}
+              onChange={handleInputChange}
+              disabled={!isEditing}
+            />
+            <InputField
+              label="Age"
+              name="age"
+              value={formData.age}
+              onChange={handleInputChange}
+              type="number"
+              disabled={!isEditing}
+            />
+            <InputField
+              label="Phone"
+              name="phone"
+              value={formData.phone}
+              onChange={handleInputChange}
+              disabled={!isEditing}
+            />
           </div>
-        </div>                  
 
-        {/* Responsive Row with 3 inputs */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-4 mb-6">
-        <div className="flex flex-col space-y-2 w-full md:w-auto">
-            <label className="text-sm font-medium text-gray-700">Name</label>
-            <input
-              type="text"
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              className="px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring focus:border-blue-300"
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-4 mb-6">
+            <InputField
+              label="WhatsApp Number"
+              name="whatsappNumber"
+              value={formData.whatsappNumber}
+              onChange={handleInputChange}
               disabled={!isEditing}
             />
-          </div>
-          <div className="flex flex-col space-y-2 w-full md:w-auto">
-            <label className="text-sm font-medium text-gray-700">Email</label>
-            <input
-              type="text"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              className="px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring focus:border-blue-300"
-              disabled={!isEditing}
-            />
-          </div>
-          <div className="flex flex-col space-y-2">
-            <label className="text-sm font-medium text-gray-700">Mobile Number</label>
-            <input
-              type="text"
-              value={mobile}
-              onChange={(e) => setMobile(e.target.value)}
-              className="px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring focus:border-blue-300"
-              disabled={!isEditing}
-            />
-          </div>
-          
-        </div>
-
-        {/* Responsive Row with 3 inputs */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-4 mb-6">
-        <div className="flex flex-col space-y-2">
-            <label className="text-sm font-medium text-gray-700">Date of Birth</label>
-            <input
-              type="date"
-              value={dob}
-              onChange={(e) => setDob(e.target.value)}
-              className="px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring focus:border-blue-300"
-              disabled={!isEditing}
-           />
-          </div>
-          <div className="flex flex-col space-y-2">
-            <label className="text-sm font-medium text-gray-700">Gender</label>
-            <select
-              value={gender}
-              onChange={(e) => setGender(e.target.value)}
-              className="px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring focus:border-blue-300"
-              disabled={!isEditing}
-            >
-              <option value="">Select Gender</option>
-              <option value="Male">Male</option>
-              <option value="Female">Female</option>
-              <option value="Other">Other</option>
-            </select>
-          </div>
-          <div className="flex flex-col space-y-2 w-full md:w-auto">
-          <label className="text-sm font-medium text-gray-700">Blood Group</label>
-          <select
-            value={bgrp}
-            onChange={(e) => setBgrp(e.target.value)}
-            className="px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring focus:border-blue-300"
-            disabled={!isEditing}
-          >
-            <option value="">Select Blood Group</option>
-            <option value="A+">A+</option>
-            <option value="A-">A-</option>
-            <option value="B+">B+</option>
-            <option value="B-">B-</option>
-            <option value="O+">O+</option>
-            <option value="O-">O-</option>
-            <option value="AB+">AB+</option>
-            <option value="AB-">AB-</option>
-          </select>
-        </div>
-         
-          
-        </div>
-
-        {/* Responsive Row with 3 inputs */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-4 mb-6">
-        <div className="flex flex-col space-y-2">
-            <label className="text-sm font-medium text-gray-700">Address</label>
-            <input
-              type="text"
-              value={address}
-              onChange={(e) => setAddress(e.target.value)}
-              className="px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring focus:border-blue-300"
-              disabled={!isEditing}
-            />
-          </div>
-        <div className="flex flex-col space-y-2">
-            <label className="text-sm font-medium text-gray-700">Locality</label>
-            <input
-              type="text"
-              value={locality}
-              onChange={(e) => setLocality(e.target.value)}
-              className="px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring focus:border-blue-300"
-              disabled={!isEditing}
-            />
-          </div>
-          <div className="flex flex-col space-y-2">
-            <label className="text-sm font-medium text-gray-700">City</label>
-            <input
-              type="text"
-              value={city}
-              onChange={(e) => setCity(e.target.value)}
-              className="px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring focus:border-blue-300"
-              disabled={!isEditing}
-            />
-         </div>
-         </div>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-4 mb-6">
-          
-          <div className="flex flex-col space-y-2">
-            <label className="text-sm font-medium text-gray-700">State</label>
-            <select
-              value={state}
-              onChange={(e) => setState(e.target.value)}
-              className="px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring focus:border-blue-300"
-              disabled={!isEditing}
-            >
-              <option value="">Select State</option>
-              {states.map((state) => (
-                <option key={state} value={state}>
-                  {state}
-                </option>
-              ))}
-            </select>
-          </div>
-          <div className="flex flex-col space-y-2">
-            <label className="text-sm font-medium text-gray-700">Country</label>
-            <select
-              value={country}
-              onChange={(e) => setCountry(e.target.value)}
-              className="px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring focus:border-blue-300"
-              disabled={!isEditing}
-            >
-              <option value="">Select Country</option>
-              {countries.map((country) => (
-                <option key={country} value={country}>
-                  {country}
-                </option>
-              ))}
-            </select>
-          </div>
-          <div className="flex flex-col space-y-2">
-            <label className="text-sm font-medium text-gray-700">Pincode</label>
-            <input
-              type="text"
-              value={pincode}
-              onChange={(e) => setPincode(e.target.value)}
-              className="px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring focus:border-blue-300"
-              disabled={!isEditing}
-            />
-          </div>
-          </div>
-          <div className="flex justify-center items-center h-full mt-9">
-            <button 
-                onClick={handleSubmit}
-                className="bg-blue-500 hover:bg-blue-600 border-2 p-2 px-4 rounded-md text-white font-medium"
+            <div className="flex flex-col space-y-2">
+              <label className="text-sm font-medium text-gray-700">
+                Gender
+              </label>
+              <select
+                name="gender"
+                value={formData.gender}
+                onChange={handleInputChange}
+                className="px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring focus:border-blue-300"
                 disabled={!isEditing}
-            >
-                Save Changes
-            </button>
+              >
+                <option value="">Select Gender</option>
+                <option value="male">Male</option>
+                <option value="female">Female</option>
+                <option value="other">Other</option>
+              </select>
+            </div>
           </div>
-        
 
-        {/* Blood Group Section */}
-        
+          {isEditing && (
+            <button
+              onClick={handleProfileUpdate}
+              className="w-full bg-green-500 hover:bg-green-600 text-white font-semibold py-2 rounded-lg shadow-md transition-all duration-200"
+            >
+              Save Changes
+            </button>
+          )}
+        </div>
       </div>
-    </div>
-    </Layout>
+    </DoctorLayout>
   );
 };
 
-export default Profile;
+const InputField = ({
+  label,
+  name,
+  value,
+  onChange,
+  type = "text",
+  disabled,
+}) => (
+  <div className="flex flex-col space-y-2">
+    <label className="text-sm font-medium text-gray-700">{label}</label>
+    <input
+      type={type}
+      name={name}
+      value={value}
+      onChange={onChange}
+      className="px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring focus:border-blue-300"
+      disabled={disabled}
+    />
+  </div>
+);
+
+export default PatientProfile;
