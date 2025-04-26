@@ -61,52 +61,66 @@ const RawMaterialDetail = () => {
         </div>
       </div>
 
-      <div className="grid gap-8">
-        {/* Basic Information */}
-        <div className="bg-gray-50 p-4 rounded-lg shadow-sm">
-          <h3 className="text-lg font-semibold mb-3 text-gray-700">📄 Basic Information</h3>
-          <div className="grid md:grid-cols-2 gap-4">
-            <Detail label="Description" value={rawMaterial.description || 'N/A'} />
-            <Detail label="Quantity" value={`${rawMaterial.quantity} ${rawMaterial.unit}`} />
-            <Detail label="Cost Per Unit" value={`$${rawMaterial.costPerUnit.toFixed(2)}`} />
-            <Detail
-              label="Total Value"
-              value={`$${(rawMaterial.quantity * rawMaterial.costPerUnit).toFixed(2)}`}
-            />
-          </div>
+      {rawMaterial.productImage && (
+        <div className="mb-6">
+          <img
+            src={rawMaterial.productImage}
+            alt={rawMaterial.name}
+            className="max-w-xs rounded-lg shadow"
+          />
         </div>
+      )}
 
-        {/* Supplier & Batch Information */}
-        <div className="bg-gray-50 p-4 rounded-lg shadow-sm">
-          <h3 className="text-lg font-semibold mb-3 text-gray-700">📦 Supplier & Batch</h3>
-          <div className="grid md:grid-cols-2 gap-4">
-            <Detail label="Supplier" value={rawMaterial.supplier} />
-            <Detail label="Batch Number" value={rawMaterial.batchNumber} />
-            <Detail
-              label="Purchase Date"
-              value={new Date(rawMaterial.purchaseDate).toLocaleDateString()}
-            />
-            <Detail
-              label="Expiry Date"
-              value={new Date(rawMaterial.expiryDate).toLocaleDateString()}
-            />
-          </div>
-        </div>
+      <div className="grid gap-8">
+        {/* Basic Info */}
+        <Section title="📄 Basic Information">
+          <Detail label="Type" value={rawMaterial.type} />
+          <Detail label="Category" value={rawMaterial.category} />
+          {/* <Detail label="Description" value={rawMaterial.description || '—'} /> */}
+          <Detail label="Package Size" value={rawMaterial.packageSize || '—'} />
+          <Detail label="Unit of Measure" value={rawMaterial.uom || '—'} />
+          <Detail
+            label="Stock"
+            value={`${rawMaterial.currentQuantity} ${rawMaterial.uom}`}
+          />
+          <Detail
+            label="Total Quantity"
+            value={`${rawMaterial.quantity} ${rawMaterial.uom}`}
+          />
+          <Detail
+            label="Threshold"
+            value={`${rawMaterial.thresholdQuantity}%`}
+          />
+          <Detail
+            label="Cost Per Unit"
+            value={`$${Number(rawMaterial.costPerUnit).toFixed(2)}`}
+          />
+          <Detail
+            label="Total Value"
+            value={`$${(rawMaterial.quantity * rawMaterial.costPerUnit).toFixed(2)}`}
+          />
+          <Detail label="Barcode" value={rawMaterial.barcode || '—'} />
+        </Section>
 
         {/* System Info */}
-        <div className="bg-gray-50 p-4 rounded-lg shadow-sm">
-          <h3 className="text-lg font-semibold mb-3 text-gray-700">🛠️ System Information</h3>
-          <div className="grid md:grid-cols-2 gap-4">
-            <Detail
-              label="Created"
-              value={new Date(rawMaterial.createdAt).toLocaleString()}
-            />
-            <Detail
-              label="Last Updated"
-              value={new Date(rawMaterial.updatedAt).toLocaleString()}
-            />
-          </div>
-        </div>
+        <Section title="🛠️ System Information">
+          <Detail
+            label="Created At"
+            value={new Date(rawMaterial.createdAt).toLocaleString()}
+          />
+          <Detail
+            label="Last Updated"
+            value={new Date(rawMaterial.updatedAt).toLocaleString()}
+          />
+          <Detail
+            label="Expiry Date"
+            value={
+              rawMaterial.expiryDate
+                ? new Date(rawMaterial.expiryDate).toLocaleDateString()
+                : '—'
+            }
+          />
+        </Section>
       </div>
 
       <div className="mt-6">
@@ -120,6 +134,13 @@ const RawMaterialDetail = () => {
     </div>
   );
 };
+
+const Section = ({ title, children }) => (
+  <div className="bg-gray-50 p-4 rounded-lg shadow-sm">
+    <h3 className="text-lg font-semibold mb-3 text-gray-700">{title}</h3>
+    <div className="grid md:grid-cols-2 gap-4">{children}</div>
+  </div>
+);
 
 const Detail = ({ label, value }) => (
   <div>
