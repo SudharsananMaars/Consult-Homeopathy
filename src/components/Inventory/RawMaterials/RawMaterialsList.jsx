@@ -7,6 +7,7 @@ const RawMaterialsList = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [filter, setFilter] = useState("all");
+  const [typeFilter, setTypeFilter] = useState("Raw Material");
 
   const location = useLocation();
   const navigate = useNavigate();
@@ -46,23 +47,33 @@ const RawMaterialsList = () => {
   };
 
   const filterMaterials = () => {
+    let filtered = [...rawMaterials];
+    
     if (filter === "expiring") {
       const nextMonth = new Date();
       nextMonth.setMonth(nextMonth.getMonth() + 1);
-      return rawMaterials.filter(
+      filtered = filtered.filter(
         (material) => new Date(material.expiryDate) < nextMonth
       );
     }
-    return rawMaterials;
-  };
+  
+    if (typeFilter !== "all") {
+      filtered = filtered.filter((material) => material.type === typeFilter);
+    }
+  
+    return filtered;
+  };  
 
   const handleFilterChange = (newFilter) => {
     setFilter(newFilter);
-    if (newFilter === "expiring") {
-      navigate("?filter=expiring");
-    } else {
-      navigate("");
-    }
+    navigate(newFilter === "expiring" ? "?filter=expiring" : "");
+  };
+
+  const calculateStockStatus = (material) => {
+    const { quantity, currentQuantity, thresholdQuantity } = material;
+    if (!quantity || !thresholdQuantity) return null;
+    const usedPercentage = ((quantity - currentQuantity) / quantity) * 100;
+    return usedPercentage >= thresholdQuantity ? "low" : "ok";
   };
 
   if (loading)
@@ -86,24 +97,35 @@ const RawMaterialsList = () => {
         <h2 className="text-2xl font-bold text-gray-800 mb-4 md:mb-0">
           Raw Materials
         </h2>
-        <div className="flex items-center gap-4">
-          <div className="flex items-center gap-2">
-            <label
-              htmlFor="filter"
-              className="text-sm font-medium text-gray-700"
-            >
-              Filter:
-            </label>
-            <select
-              id="filter"
-              value={filter}
-              onChange={(e) => handleFilterChange(e.target.value)}
-              className="border border-gray-300 rounded-lg px-3 py-1 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
-            >
-              <option value="all">All</option>
-              <option value="expiring">Expiring Soon</option>
-            </select>
-          </div>
+          <div className="flex items-center gap-4">
+            <div className="flex items-center gap-4">
+              <div className="flex items-center gap-2">
+                <label htmlFor="filter" className="text-sm font-medium text-gray-700">Expiry:</label>
+                <select
+                  id="filter"
+                  value={filter}
+                  onChange={(e) => handleFilterChange(e.target.value)}
+                  className="border border-gray-300 rounded-lg px-3 py-1 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                >
+                  <option value="all">All</option>
+                  <option value="expiring">Expiring Soon</option>
+                </select>
+              </div>
+
+              <div className="flex items-center gap-2">
+                <label htmlFor="typeFilter" className="text-sm font-medium text-gray-700">Type:</label>
+                <select
+                  id="typeFilter"
+                  value={typeFilter}
+                  onChange={(e) => setTypeFilter(e.target.value)}
+                  className="border border-gray-300 rounded-lg px-3 py-1 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                >
+                  <option value="all">All</option>
+                  <option value="Raw Material">Raw Material</option>
+                  <option value="Packaging">Packaging</option>
+                </select>
+              </div>
+            </div>
           <Link
             to="/raw-materials/new"
             className="bg-blue-600 hover:bg-blue-700 text-white text-sm px-4 py-2 rounded-lg shadow"
@@ -119,56 +141,91 @@ const RawMaterialsList = () => {
         </div>
       ) : (
         <div className="overflow-x-auto">
-          <table className="min-w-full table-auto border-collapse">
+          <table className="min-w-full table-auto border-collapse text-sm">
             <thead>
-              <tr className="bg-gray-100 text-gray-700 text-sm">
+              <tr className="bg-gray-100 text-gray-700">
                 <th className="px-4 py-3 text-left">Name</th>
+                <th className="px-4 py-3 text-left">Type</th>
+                <th className="px-4 py-3 text-left">Category</th>
+                <th className="px-4 py-3 text-left">Package Size</th>
+                <th className="px-4 py-3 text-left">Stock</th>
                 <th className="px-4 py-3 text-left">Quantity</th>
-                <th className="px-4 py-3 text-left">Unit</th>
-                <th className="px-4 py-3 text-left">Supplier</th>
-                <th className="px-4 py-3 text-left">Batch #</th>
+                <th className="px-4 py-3 text-left">Threshold</th>
+                <th className="px-4 py-3 text-left">Cost/Unit</th>
+                <th className="px-4 py-3 text-left">Barcode</th>
                 <th className="px-4 py-3 text-left">Expiry Date</th>
+                <th className="px-4 py-3 text-left">Created At</th>
+                <th className="px-4 py-3 text-left">Status</th>
                 <th className="px-4 py-3 text-left">Actions</th>
               </tr>
             </thead>
             <tbody>
-              {filteredMaterials.map((material) => (
-                <tr
-                  key={material._id}
-                  className="border-t hover:bg-gray-50 text-sm"
-                >
-                  <td className="px-4 py-3 font-medium text-gray-800">
-                    {material.name}
-                  </td>
-                  <td className="px-4 py-3">{material.quantity}</td>
-                  <td className="px-4 py-3">{material.unit}</td>
-                  <td className="px-4 py-3">{material.supplier}</td>
-                  <td className="px-4 py-3">{material.batchNumber}</td>
-                  <td className="px-4 py-3">
-                    {new Date(material.expiryDate).toLocaleDateString()}
-                  </td>
-                  <td className="px-4 py-3 flex flex-wrap gap-2">
-                    <Link
-                      to={`/raw-materials/${material._id}`}
-                      className="bg-green-500 hover:bg-green-600 text-white px-3 py-1 rounded"
-                    >
-                      View
-                    </Link>
-                    <Link
-                      to={`/raw-materials/${material._id}/edit`}
-                      className="bg-yellow-500 hover:bg-yellow-600 text-white px-3 py-1 rounded"
-                    >
-                      Edit
-                    </Link>
-                    <button
-                      onClick={() => handleDelete(material._id)}
-                      className="bg-red-500 hover:bg-red-600 text-white px-3 py-1 rounded"
-                    >
-                      Delete
-                    </button>
-                  </td>
-                </tr>
-              ))}
+              {filteredMaterials.map((material) => {
+                const stockStatus = calculateStockStatus(material);
+                const isLow = stockStatus === "low";
+
+                return (
+                  <tr
+                    key={material._id}
+                    className={`border-t ${
+                      isLow ? "bg-red-50" : "hover:bg-gray-50"
+                    }`}
+                  >
+                    <td className="px-4 py-3 font-medium text-gray-800">
+                      {material.name}
+                    </td>
+                    <td className="px-4 py-3">{material.type}</td>
+                    <td className="px-4 py-3">{material.category}</td>
+                    <td className="px-4 py-3">{material.packageSize}</td>
+                    <td className="px-4 py-3">
+                      {material.currentQuantity} {material.uom}
+                    </td>
+                    <td className="px-4 py-3">
+                      {material.quantity} {material.uom}
+                    </td>
+                    <td className="px-4 py-3">{material.thresholdQuantity}%</td>
+                    <td className="px-4 py-3">{material.costPerUnit}</td>
+                    <td className="px-4 py-3">{material.barcode}</td>
+                    <td className="px-4 py-3">
+                      {new Date(material.expiryDate).toLocaleDateString()}
+                    </td>
+                    <td className="px-4 py-3">
+                      {material.createdAt
+                        ? new Date(material.createdAt).toLocaleDateString()
+                        : "—"}
+                    </td>
+                    <td className="px-4 py-3">
+                      {isLow ? (
+                        <span className="text-red-600 font-semibold">
+                          Low Stock
+                        </span>
+                      ) : (
+                        <span className="text-green-600 font-medium">Available</span>
+                      )}
+                    </td>
+                    <td className="px-4 py-3 flex flex-wrap gap-2">
+                      <Link
+                        to={`/raw-materials/${material._id}`}
+                        className="bg-green-500 hover:bg-green-600 text-white px-3 py-1 rounded"
+                      >
+                        View
+                      </Link>
+                      <Link
+                        to={`/raw-materials/${material._id}/edit`}
+                        className="bg-yellow-500 hover:bg-yellow-600 text-white px-3 py-1 rounded"
+                      >
+                        Edit
+                      </Link>
+                      <button
+                        onClick={() => handleDelete(material._id)}
+                        className="bg-red-500 hover:bg-red-600 text-white px-3 py-1 rounded"
+                      >
+                        Delete
+                      </button>
+                    </td>
+                  </tr>
+                );
+              })}
             </tbody>
           </table>
         </div>

@@ -318,7 +318,7 @@ const PrescriptionWriting = () => {
         { 
           id: newId, 
           medicineName: "", 
-          rawMaterialName: "", 
+          rawMaterials: [],
           preparationSteps: "", 
           form: "Tablets", 
           uom: "Graam", 
@@ -535,6 +535,9 @@ const PrescriptionWriting = () => {
               <th scope="col" className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                 Price (₹)
               </th>
+              <th scope="col" className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                Packaging
+              </th>
               <th scope="col" className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Preparation Steps</th>
               <th scope="col" className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Form</th>
               <th scope="col" className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">UOM</th>
@@ -609,9 +612,20 @@ const PrescriptionWriting = () => {
                             checked={item.rawMaterials.some(rm => rm._id === material._id)}
                             onChange={(e) => handleRawMaterialSelection(item.id, material._id, e.target.checked)}
                           />
-                          <label htmlFor={`raw-${item.id}-${material._id}`} className="text-sm text-gray-700">
-                            {material.name}
-                          </label>
+                          <div className="flex justify-between items-center w-full">
+                            <label htmlFor={`raw-${item.id}-${material._id}`} className="text-sm text-gray-700">
+                              {material.name}
+                            </label>
+                            <h4
+                              className={`text-sm ${
+                                material.currentQuantity <= (material.quantity * (material.thresholdQuantity / 100))
+                                  ? 'text-red-600 font-semibold'
+                                  : 'text-gray-900'
+                              }`}
+                            >
+                              {material.currentQuantity}
+                            </h4>
+                          </div>
                         </div>
                       ))}
                       {filteredRawMaterials.length === 0 && (
@@ -675,6 +689,19 @@ const PrescriptionWriting = () => {
                       </div>
                     )}
                   </div>
+                </td>
+
+                {/* Packaging */}
+                <td className="px-4 py-4 min-w-[140px]">
+                  <select
+                    className="block w-full text-sm rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-500 focus:ring-opacity-50 py-2 px-3"
+                    // value={item.form}
+                    // onChange={(e) => handleItemChange(item.id, '', e.target.value)}
+                  >
+                    <option value="10 ml">Bottle</option>
+                    <option value="15 ml">Cover</option>
+                    {/* <option value="20 ml"></option> */}
+                  </select>
                 </td>
 
                 {/* Preparation Steps - Improved */}
