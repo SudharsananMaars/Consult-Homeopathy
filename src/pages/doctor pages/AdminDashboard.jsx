@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import {
   FaHome, FaChartLine, FaFileAlt, FaCog, FaUserMd, FaQuestionCircle,
   FaSignOutAlt, FaCalendarAlt, FaBell, FaUserCircle, FaBoxOpen, FaVideo,
-  FaChevronLeft, FaChevronRight, FaBars
+  FaChevronLeft, FaChevronRight, FaBars, FaTruckLoading, FaCoins
 } from 'react-icons/fa';
 import MainContentComponent from '/src/components/calllog components/MainContentComponent.jsx';
 import AddDoctor from './AddDoctor';
@@ -154,6 +154,12 @@ const AdminDashboard = () => {
             </p>
           </div>
           <div className="header-right">
+            <span className="user-icon" onClick={() => window.location.href = '/login'}>
+              <FaCoins size={20}/>
+            </span>
+            <span className="user-icon" onClick={() => window.location.href = '/vendors'}>
+              <FaTruckLoading size={20}/>
+            </span>
             <span className="notification-icon">
               <FaBell size={18} />
             </span>
@@ -163,87 +169,7 @@ const AdminDashboard = () => {
           </div>
         </div>
 
-        {/* Status component content */}
-        {/* <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8 bg-white p-6 rounded-lg shadow">
-          <div className="flex flex-col items-center justify-center p-4 border-r last:border-none">
-            <h3 className="text-lg font-bold mb-2 text-gray-800">Call Completion</h3>
-            <div className="grid grid-cols-3 gap-4 w-full">
-              <div className="flex flex-col items-center">
-                <span className="text-sm text-gray-500">Total calls scheduled </span>
-                <span className="text-xl font-bold text-gray-800">{dashboardData.totalCallsScheduled}</span>
-              </div>
-              <div className="flex flex-col items-center">
-                <span className="text-sm text-gray-500">Completed Calls </span>
-                <span className="text-xl font-bold text-gray-800">{dashboardData.totalCallsCompleted}</span>
-              </div>
-              <div className="flex flex-col items-center">
-                <span className="text-sm text-gray-500">Completion %</span>
-                <span className="text-xl font-bold text-gray-800">{dashboardData.callCompletionPercentage.toFixed(2)}%</span>
-              </div>
-            </div>
-          </div>
-          <div className="flex flex-col items-center justify-center p-4 border-r last:border-none">
-            <h3 className="text-lg font-bold mb-2 text-gray-800">Follow up-Calls</h3>
-            <div className="grid grid-cols-3 gap-4 w-full">
-              <div className="flex flex-col items-center">
-                <span className="text-sm text-gray-500">Total calls scheduled </span>
-                <span className="text-xl font-bold text-gray-800">{dashboardData.totalFollowUpCallsScheduled}</span>
-              </div>
-              <div className="flex flex-col items-center">
-                <span className="text-sm text-gray-500">Completed Calls </span>
-                <span className="text-xl font-bold text-gray-800">{dashboardData.totalFollowUpCallsCompleted}</span>
-              </div>
-              <div className="flex flex-col items-center">
-                <span className="text-sm text-gray-500">Completion %</span>
-                <span className="text-xl font-bold text-gray-800">{dashboardData.followUpCallCompletionPercentage.toFixed(2)}%</span>
-              </div>
-            </div>
-          </div>
-          <div className="flex flex-col items-center justify-center p-4 border-r last:border-none">
-            <h3 className="text-lg font-bold mb-2 text-gray-800">Quieres - Call Follow ups</h3>
-            <div className="grid grid-cols-3 gap-4 w-full">
-              <div className="flex flex-col items-center">
-                <span className="text-sm text-gray-500">Total calls scheduled </span>
-                <span className="text-xl font-bold text-gray-800">{dashboardData.totalQuieresCallsScheduled}</span>
-              </div>
-              <div className="flex flex-col items-center">
-                <span className="text-sm text-gray-500">Completed Calls </span>
-                <span className="text-xl font-bold text-gray-800">{dashboardData.totalQuieresCallsCompleted}</span>
-              </div>
-              <div className="flex flex-col items-center">
-                <span className="text-sm text-gray-500">Completion %</span>
-                <span className="text-xl font-bold text-gray-800">{dashboardData.quieresCallCompletionPercentage.toFixed(2)}%</span>
-              </div>
-            </div>
-          </div>
-          <div className="flex flex-col items-center justify-center p-4">
-            <h3 className="text-lg font-bold mb-2 text-gray-800">Payment - Follow ups</h3>
-            <div className="grid grid-cols-5 gap-4 w-full">
-              <div className="flex flex-col items-center">
-                <span className="text-sm text-gray-500">Total scheduled</span>
-                <span className="text-xl font-bold text-gray-800">{dashboardData.totalPaymentFollowUpsScheduled}</span>
-              </div>
-              <div className="flex flex-col items-center">
-                <span className="text-sm text-gray-500">Completed</span>
-                <span className="text-xl font-bold text-gray-800">{dashboardData.totalPaymentFollowUpsCompleted}</span>
-              </div>
-              <div className="flex flex-col items-center">
-                <span className="text-sm text-gray-500">Completion %</span>
-                <span className="text-xl font-bold text-gray-800">{dashboardData.paymentFollowUpCompletionPercentage.toFixed(2)}%</span>
-              </div>
-              <div className="flex flex-col items -center">
-                <span className="text-sm text-gray-500">FCR</span>
-                <span className="text-xl font-bold text-gray-800">{dashboardData.paymentFollowUpFCR.toFixed(2)}</span>
-              </div>
-              <div className="flex flex-col items-center">
-                <span className="text-sm text-gray-500">Payment Conversion</span>
-                <span className="text-xl font-bold text-gray-800">{dashboardData.paymentFollowUpConversion.toFixed(2)}%</span>
-              </div>
-            </div>
-          </div>
-        </div> */}
-
-        <DashboardStatus dashboardData={dashboardData} />
+        {/* <DashboardStatus dashboardData={dashboardData} /> */}
 
         {renderMainContent()}
       </div>

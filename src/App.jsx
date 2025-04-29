@@ -62,7 +62,7 @@ import Doctors from "./pages/doctor pages/Doctors.jsx";
 import Patientcard from "./pages/doctor pages/Patientcard.jsx";
 import Allocation from "./pages/doctor pages/Allocation.jsx";
 import VideoCall from "./pages/doctor pages/VideoCall.jsx";
-import DocLogin from "/src/pages/doctor pages/DocLogin.jsx";
+import AdminLoginPage from "./pages/doctor pages/AdminLogin.jsx";
 import AdminDashboard from "/src/pages/doctor pages/AdminDashboard.jsx";
 import AssistantDoctorDashboard from "/src/pages/doctor pages/AssistantDoctorDashboard.jsx";
 import AddDoctor from "/src/pages/doctor pages/AddDoctor.jsx";
@@ -94,7 +94,7 @@ import MedicinesList from "./components/Inventory/Medicine/MedicinesList.jsx";
 import MedicineDetail from "./components/Inventory/Medicine/MedicineDetail.jsx";
 import MedicineForm from "./components/Inventory/Medicine/MedicineForm.jsx";
 import PriceCalculator from "./components/Inventory/Medicine/PriceCalculator.jsx";
-
+import EditVendor from "./components/Vendor/EditVendor.jsx";
 // Error Pages
 import NotFound from "./pages/AuthPages/NotFound.jsx";
 import Forbidden from "./pages/AuthPages/Forbidden.jsx";
@@ -109,6 +109,13 @@ import { ErrorBoundary } from "react-error-boundary";
 //Patient Registration pages
 // import FirstForm from "./PatientRegistration/First-Form.jsx";
 // import Form from "./PatientRegistration/SecondForm.jsx";
+
+// Vendor Module
+import VendorDashboard from "./components/Vendor/VendorDashboard.jsx";
+import AddVendor from "./components/Vendor/AddVendor.jsx";
+import Navbar from "./components/Vendor/Navbar.jsx";
+import { ToastContainer } from "react-toastify";
+import 'react-toastify/dist/ReactToastify.css';
 
 // Error Fallback Component
 const ErrorFallback = () => <ServerError />;
@@ -129,8 +136,33 @@ function App() {
         <Route path="/server-error" element={<ServerError />} />
         <Route path="/maintenance" element={<Maintenance />} />
         <Route path="/login" element={<LoginPage />} />
-        <Route path="/doclogin" element={<DocLogin />} />
+        <Route path="/admin-login" element={<AdminLoginPage />} />
         <Route path="/firstform" element={<FirstForm />}/>
+
+        <Route
+          path="/vendors"
+          element={
+            <ProtectedRoute allowedRoles={["admin", "Manager"]}>
+              <VendorDashboard />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/vendors/add"
+          element={
+            <ProtectedRoute allowedRoles={["admin", "Manager"]}>
+              <AddVendor />
+            </ProtectedRoute>
+          }
+        />  
+        <Route
+          path="/vendors/edit/:id"
+          element={
+            <ProtectedRoute allowedRoles={["admin", "Manager"]}>
+              <EditVendor />
+            </ProtectedRoute>
+          }
+        />
         
         {/* Patient Protected Routes */}
         <Route
@@ -641,7 +673,7 @@ function App() {
         <Route
           path="/admin-dashboard"
           element={
-            <ProtectedRoute allowedRoles={["Doctor"]}>
+            <ProtectedRoute allowedRoles={["admin"]}>
               <AdminDashboard />
             </ProtectedRoute>
           }
