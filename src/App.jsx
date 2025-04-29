@@ -318,7 +318,7 @@ function App() {
         <Route
           path="/family"
           element={
-            <ProtectedRoute allowedRoles={["Patient"]}>
+            <ProtectedRoute allowedRoles={["Patient"]}> 
               <FamilyTree />
             </ProtectedRoute>
           }
