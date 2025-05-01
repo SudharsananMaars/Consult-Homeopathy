@@ -1,4 +1,4 @@
-import React, { useState,useEffect } from "react";
+import React, { useState, useEffect } from "react";
 import Select from "react-select";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
@@ -155,20 +155,22 @@ const FirstForm = () => {
   });
 
   const [formError, setFormError] = useState({});
-  const [selectedCountry, setSelectedCountry] = useState(countries[0].dialCode);
-  const [selectedCountryWhatsApp, setSelectedCountryWhatsApp] = useState(
-    countries[0].dialCode
-  );
+  const [selectedCountry, setSelectedCountry] = useState("+91");
+  const [selectedCountryWhatsApp, setSelectedCountryWhatsApp] = useState("+91");
+
   const [isWhatsAppSame, setIsWhatsAppSame] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [prediction, setPrediction] = useState(null);
   const [symptomError, setSymptomError] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [isPhonePrefilled, setIsPhonePrefilled] = useState(false);
+  const [isGenderPrefilled, setIsGenderPrefilled] = useState(false); // NEW
+  const [patientEntryPrefill, setPatientEntryPrefill] = useState(""); // NEW
 
   useEffect(() => {
     const urlParams = new URLSearchParams(window.location.search);
     const referralCode = urlParams.get("code");
+    const familyToken = urlParams.get("familyToken");
 
     if (referralCode) {
       axios
@@ -180,12 +182,39 @@ const FirstForm = () => {
               ...prev,
               fullName: referredFriendName || "",
               mobileNumber: referredFriendPhone || "",
+              patientEntry: "Referral",
             }));
-            setIsPhonePrefilled(true); // disable mobile field
+            setIsPhonePrefilled(true);
+            setPatientEntryPrefill("Referral");
           }
         })
         .catch((err) => {
           console.error("Error validating referral:", err);
+        });
+    }
+
+    if (familyToken) {
+      axios
+        .get(
+          `${API_URL}/api/patient/fetchFamilyDetails?familyToken=${familyToken}`
+        )
+        .then((res) => {
+          if (res.data.success && res.data.data) {
+            const { name, phone, gender } = res.data.data;
+            setFormData((prev) => ({
+              ...prev,
+              fullName: name || "",
+              mobileNumber: phone || "",
+              gender: gender || "",
+              patientEntry: "Family Member",
+            }));
+            setIsPhonePrefilled(true);
+            setIsGenderPrefilled(true);
+            setPatientEntryPrefill("Family Member");
+          }
+        })
+        .catch((err) => {
+          console.error("Error fetching family details:", err);
         });
     }
   }, []);
@@ -278,8 +307,8 @@ const FirstForm = () => {
     const errors = {};
 
     // Validation
-    if (!formData.consultingFor)
-      errors.consultingFor = "This field is required";
+    // if (!formData.consultingFor)
+    //   errors.consultingFor = "This field is required";
     if (!formData.fullName) errors.fullName = "This field is required";
     if (!formData.age) errors.age = "This field is required";
     if (!formData.mobileNumber) errors.mobileNumber = "This field is required";
@@ -456,7 +485,7 @@ const FirstForm = () => {
         </div>
 
         <div className="p-6 sm:p-8 grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-6">
-          {/* Consulting Person */}
+          {/* Consulting Person
           <div className="col-span-1">
             <label
               htmlFor="consultingFor"
@@ -484,7 +513,7 @@ const FirstForm = () => {
                 {formError.consultingFor}
               </div>
             )}
-          </div>
+          </div> */}
 
           {/* Full Name */}
           <div className="col-span-1">
@@ -556,10 +585,12 @@ const FirstForm = () => {
               onChange={(selectedOption) =>
                 handleSelectChange("gender", selectedOption)
               }
+              isDisabled={isGenderPrefilled} // Disable when phone prefilled
               styles={customSelectStyles}
               placeholder="Select gender"
               className="mt-1"
             />
+
             {formError.gender && (
               <div className="mt-1 text-sm text-red-600">
                 {formError.gender}
@@ -576,7 +607,7 @@ const FirstForm = () => {
               Mobile Number <span className="text-red-500">*</span>
             </label>
             <div className="flex">
-              <select
+              {/* <select
                 name="countryCode"
                 onChange={handleCountryChange}
                 value={
@@ -591,7 +622,11 @@ const FirstForm = () => {
                     {country.dialCode} {country.name}
                   </option>
                 ))}
-              </select>
+              </select> */}
+              <span className="inline-flex items-center rounded-l-md border border-gray-300 bg-gray-50 text-gray-700 text-sm px-3">
+                +91
+              </span>
+
               <input
                 type="text"
                 id="mobileNumber"
@@ -638,7 +673,7 @@ const FirstForm = () => {
               WhatsApp Number
             </label>
             <div className="flex">
-              <select
+              {/* <select
                 name="whatsappCountryCode"
                 onChange={handleCountryChangeWhatsApp}
                 value={
@@ -656,7 +691,11 @@ const FirstForm = () => {
                     {country.dialCode} {country.name}
                   </option>
                 ))}
-              </select>
+              </select> */}
+              <span className="inline-flex items-center rounded-l-md border border-gray-300 bg-gray-50 text-gray-700 text-sm px-3">
+                +91
+              </span>
+
               <input
                 type="text"
                 id="whatsappNumber"
@@ -784,17 +823,21 @@ const FirstForm = () => {
               name="patientEntry"
               options={patientEntryOptions}
               value={
-                patientEntryOptions.find(
-                  (option) => option.value === formData.patientEntry
-                ) || null
+                patientEntryPrefill
+                  ? { value: patientEntryPrefill, label: patientEntryPrefill } // freeze value
+                  : patientEntryOptions.find(
+                      (option) => option.value === formData.patientEntry
+                    ) || null
               }
               onChange={(selectedOption) =>
                 handleSelectChange("patientEntry", selectedOption)
               }
+              isDisabled={!!patientEntryPrefill} // Disable if prefilled
               styles={customSelectStyles}
               placeholder="Select option"
               className="mt-1"
             />
+
             {formError.patientEntry && (
               <div className="mt-1 text-sm text-red-600">
                 {formError.patientEntry}
