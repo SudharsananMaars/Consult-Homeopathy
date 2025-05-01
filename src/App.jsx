@@ -33,6 +33,8 @@ import HomePage from "./pages/patient pages/HomePage.jsx";
 import RazorScreen from "./pages/patient pages/RazorScreen.jsx";
 import FamilyTree from "./pages/patient pages/FamilyTree.jsx";
 import ConsultationHistory from "./pages/patient pages/ConsultationHistory.jsx";
+import PrescriptionView from "./pages/patient pages/PrescriptionView.jsx";
+import MedicinePaymentPage from "./pages/patient pages/MedicinePaymentPage.jsx";
 
 // import doctor website
 import DoctorLayout from "./components/doctor components/DoctorLayout.jsx";
@@ -251,6 +253,23 @@ function App() {
             </ProtectedRoute>
           }
         />
+
+      <Route 
+        path="/prescription/:appointmentId" 
+        element={
+          <ProtectedRoute allowedRoles={["Patient"]}>
+            <PrescriptionView />
+          </ProtectedRoute>
+        } 
+      />
+      <Route 
+        path="/payment/:appointmentId" 
+        element={
+          <ProtectedRoute allowedRoles={["Patient"]}>
+            <MedicinePaymentPage />
+          </ProtectedRoute>
+        }
+      />
         <Route
           path="/payments"
           element={
