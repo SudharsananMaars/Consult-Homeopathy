@@ -258,6 +258,8 @@ const WorkTable = () => {
             'Omni channel',
             'Patient Type',
             'Who is the Consultation for',
+            'Appointment Date',
+            'Appointment Timing',
             'Name',
             'Phone Number',
             'Whatsapp Number',
@@ -292,6 +294,8 @@ const WorkTable = () => {
             item.patientEntry || '---',
             item.newExisting || '',
             item.medicalDetails.consultingFor || '',
+            item.medicalDetails.appointmentDate.split('T')[0] || '',
+            item.medicalDetails.timeSlot || '',
             item.name || '',
             item.phone || '',
             item.whatsappNumber || '',
@@ -777,8 +781,8 @@ const WorkTable = () => {
       case 'ViewPrescription':
         const appointmentId = item.medicalDetails._id;
         setModalContent(
-          <PrescriptionViewModal 
-            isOpen={true} 
+          <PrescriptionViewModal
+            isOpen={true}
             onClose={() => setShowModal(false)}
             appointmentId={appointmentId}
           />
