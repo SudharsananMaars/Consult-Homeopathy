@@ -63,9 +63,9 @@ const InventoryDashboard = () => {
         </div>
 
         <div className="bg-white rounded-2xl shadow p-4 text-center hover:shadow-lg transition">
-          <h3 className="text-lg font-semibold text-gray-700">Medicines</h3>
-          <p className="text-2xl font-bold text-green-600 my-2">{stats.totalMedicines}</p>
-          <Link to="/medicines" className="text-green-500 hover:underline text-sm">View All</Link>
+          <h3 className="text-lg font-semibold text-gray-700">Place Order</h3>
+          <p className="text-2xl font-bold text-green-600 my-2">{stats.totalRawMaterials}</p>
+          <Link to="/order-raw-materials" className="text-green-500 hover:underline text-sm">click to order</Link>
         </div>
 
         <div className="bg-yellow-100 rounded-2xl shadow p-4 text-center hover:shadow-lg transition">

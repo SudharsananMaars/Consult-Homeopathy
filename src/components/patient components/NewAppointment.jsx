@@ -75,7 +75,7 @@ const NewAppointment = () => {
           headers: { Authorization: `Bearer ${token}` },
         });
         const userId = JSON.parse(atob(token.split('.')[1])).id; // Assuming JWT contains user id
-
+        console.log("familyMembers: ", res.data.familyMembers);
         const options = [
           { value: userId, label: "Self" },
           ...res.data.familyMembers.map(member => ({
@@ -140,11 +140,11 @@ const NewAppointment = () => {
     const payload = {
       appointmentDate,
       timeSlot: selectedTime,
-      consultingFor: consultingFor.value,
+      consultingFor: consultingFor,
       consultingReason: consultingReason.value,
       symptom: consultingReason.value === "Other" ? symptom : "",
     };
-
+    console.log("payload", payload);
     try {
       await axios.post(`${API_URL}/api/patient/bookAppointment`, payload, {
         headers: { Authorization: `Bearer ${token}` },

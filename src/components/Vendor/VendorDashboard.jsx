@@ -99,7 +99,7 @@ const VendorDashboard = () => {
           </div>
         </div>
         
-        <div className="bg-gradient-to-br from-purple-500 to-purple-600 rounded-xl shadow-md overflow-hidden">
+        {/* <div className="bg-gradient-to-br from-purple-500 to-purple-600 rounded-xl shadow-md overflow-hidden">
           <div className="p-6">
             <div className="flex items-center justify-between">
               <div>
@@ -111,7 +111,7 @@ const VendorDashboard = () => {
               </div>
             </div>
           </div>
-        </div>
+        </div> */}
       </div>
     );
   };

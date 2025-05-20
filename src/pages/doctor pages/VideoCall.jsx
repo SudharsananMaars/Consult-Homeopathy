@@ -375,7 +375,7 @@ const VideoCall = () => {
     setSaveStatus("Submitting...");
     
     try {
-      const token = localStorage.getItem("accessToken");
+      const token = localStorage.getItem("token");
       if (!token) {
         alert("You are not authenticated. Please log in.");
         navigate("/login");
