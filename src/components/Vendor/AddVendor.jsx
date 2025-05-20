@@ -3,7 +3,9 @@ import { useNavigate } from 'react-router-dom';
 import { toast } from 'react-toastify';
 import axios from 'axios';
 
+import config from '../../config';
 const AddVendor = () => {
+  const API_URL = config.API_URL;
   const navigate = useNavigate();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errors, setErrors] = useState({});
@@ -128,7 +130,7 @@ const AddVendor = () => {
     setIsSubmitting(true);
     
     try {
-      const response = await axios.post('http://localhost:5000/api/vendor/vendors', {
+      const response = await axios.post(`${API_URL}/api/vendor/vendors`, {
         vendor,
         products
       }, {
