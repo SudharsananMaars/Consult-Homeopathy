@@ -4,7 +4,9 @@ import axios from 'axios';
 import VendorList from './VendorList';
 import { ChevronRight, Plus, Loader, AlertTriangle, Users, Package, DollarSign } from 'lucide-react';
 
+import config from '../../config';
 const VendorDashboard = () => {
+  const API_URL = config.API_URL;
   const [stats, setStats] = useState({
     totalVendors: 0,
     totalProducts: 0,
@@ -16,7 +18,7 @@ const VendorDashboard = () => {
   useEffect(() => {
     const fetchStats = async () => {
       try {
-        const response = await axios.get('http://localhost:5000/api/vendor/vendors', {
+        const response = await axios.get(`${API_URL}/api/vendor/vendors`, {
           headers: {
             Authorization: `Bearer ${token}`,
           },

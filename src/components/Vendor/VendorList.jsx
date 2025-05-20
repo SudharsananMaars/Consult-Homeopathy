@@ -2,7 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import axios from 'axios';
 import { toast } from 'react-toastify';
-
+import config from '../../config';
+const API_URL = config.API_URL;
 const VendorList = () => {
   const [vendors, setVendors] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -10,14 +11,13 @@ const VendorList = () => {
   const [expandedVendor, setExpandedVendor] = useState(null);
   const [searchTerm, setSearchTerm] = useState('');
   const token = localStorage.getItem("token");
-  
   useEffect(() => {
     fetchVendors();
   }, []);
 
   const fetchVendors = async () => {
     try {
-      const response = await axios.get('http://localhost:5000/api/vendor/vendors', {
+      const response = await axios.get(`${API_URL}/api/vendor/vendors`, {
         headers: {
           Authorization: `Bearer ${token}`,
         },

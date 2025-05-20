@@ -3,7 +3,9 @@ import { useParams, useNavigate, Link } from 'react-router-dom';
 import axios from 'axios';
 import { toast } from 'react-toastify';
 
+import config from '../../config';
 const EditVendor = () => {
+  const API_URL = config.API_URL;
   const { id } = useParams();
   const navigate = useNavigate();
   const token = localStorage.getItem("token");
@@ -29,7 +31,7 @@ const EditVendor = () => {
   const fetchVendorDetails = async () => {
     try {
       setLoading(true);
-      const response = await axios.get(`http://localhost:5000/api/vendor/vendors/${id}`, {
+      const response = await axios.get(`${API_URL}/api/vendor/vendors/${id}`, {
         headers: {
           Authorization: `Bearer ${token}`,
         },
@@ -111,7 +113,7 @@ const EditVendor = () => {
         products: products
       };
       
-      await axios.patch(`http://localhost:5000/api/vendor/vendors/${id}`, requestBody, {
+      await axios.patch(`${API_URL}/api/vendor/vendors/${id}`, requestBody, {
         headers: {
           Authorization: `Bearer ${token}`,
           'Content-Type': 'application/json',
