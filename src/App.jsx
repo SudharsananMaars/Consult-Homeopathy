@@ -80,6 +80,7 @@ import BreakTimer from "./pages/doctor pages/BreakTimer.jsx";
 import Payslip from "./pages/doctor pages/payslip.jsx";
 import NoteTaking from "./pages/doctor pages/NoteTaking.jsx";
 import PrescriptionWriting from "./components/calllog components/PrescriptionWriting.jsx";
+import MedicinePreparationView from "./pages/doctor pages/MedicinePreparationView.jsx";
 import InventoryPage from "./components/calllog components/InventoryPage.jsx";
 import "@fortawesome/fontawesome-free/css/all.min.css";
 
@@ -96,6 +97,7 @@ import MedicinesList from "./components/Inventory/Medicine/MedicinesList.jsx";
 import MedicineDetail from "./components/Inventory/Medicine/MedicineDetail.jsx";
 import MedicineForm from "./components/Inventory/Medicine/MedicineForm.jsx";
 import PriceCalculator from "./components/Inventory/Medicine/PriceCalculator.jsx";
+import OrderRawMaterials from "./components/Inventory/Order/OrderRawMaterials.jsx";
 import EditVendor from "./components/Vendor/EditVendor.jsx";
 // Error Pages
 import NotFound from "./pages/AuthPages/NotFound.jsx";
@@ -609,9 +611,17 @@ function App() {
           }
         />
         <Route
-          path="/inventory"
+          path="/prepare-medicine/:appointmentId"
           element={
             <ProtectedRoute allowedRoles={["Doctor"]}>
+              <MedicinePreparationView />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/inventory"
+          element={
+            <ProtectedRoute allowedRoles={["Doctor", "admin"]}>
               <InventoryDashboard />
             </ProtectedRoute>
           }
@@ -619,7 +629,7 @@ function App() {
         <Route
           path="/raw-materials"
           element={
-            <ProtectedRoute allowedRoles={["Doctor"]}>
+            <ProtectedRoute allowedRoles={["Doctor", "admin"]}>
               <RawMaterialsList />
             </ProtectedRoute>
           }
@@ -627,7 +637,7 @@ function App() {
         <Route
           path="/raw-materials/new"
           element={
-            <ProtectedRoute allowedRoles={["Doctor"]}>
+            <ProtectedRoute allowedRoles={["Doctor", "admin"]}>
               <RawMaterialForm />
             </ProtectedRoute>
           }
@@ -635,7 +645,7 @@ function App() {
         <Route
           path="/raw-materials/:id"
           element={
-            <ProtectedRoute allowedRoles={["Doctor"]}>
+            <ProtectedRoute allowedRoles={["Doctor", "admin"]}>
               <RawMaterialDetail />
             </ProtectedRoute>
           }
@@ -643,7 +653,7 @@ function App() {
         <Route
           path="/raw-materials/:id/edit"
           element={
-            <ProtectedRoute allowedRoles={["Doctor"]}>
+            <ProtectedRoute allowedRoles={["Doctor", "admin"]}>
               <RawMaterialForm isEdit={true} />
             </ProtectedRoute>
           }
@@ -651,7 +661,7 @@ function App() {
         <Route
           path="/medicines"
           element={
-            <ProtectedRoute allowedRoles={["Doctor"]}>
+            <ProtectedRoute allowedRoles={["Doctor", "admin"]}>
               <MedicinesList />
             </ProtectedRoute>
           }
@@ -659,7 +669,7 @@ function App() {
         <Route
           path="/medicines/new"
           element={
-            <ProtectedRoute allowedRoles={["Doctor"]}>
+            <ProtectedRoute allowedRoles={["Doctor", "admin"]}>
               <MedicineForm />
             </ProtectedRoute>
           }
@@ -667,7 +677,7 @@ function App() {
         <Route
           path="/medicines/:id"
           element={
-            <ProtectedRoute allowedRoles={["Doctor"]}>
+            <ProtectedRoute allowedRoles={["Doctor", "admin"]}>
               <MedicineDetail />
             </ProtectedRoute>
           }
@@ -675,7 +685,7 @@ function App() {
         <Route
           path="/medicines/:id/edit"
           element={
-            <ProtectedRoute allowedRoles={["Doctor"]}>
+            <ProtectedRoute allowedRoles={["Doctor", "admin"]}>
               <MedicineForm isEdit={true} />
             </ProtectedRoute>
           }
@@ -683,8 +693,16 @@ function App() {
         <Route
           path="/medicines/calculate-price"
           element={
-            <ProtectedRoute allowedRoles={["Doctor"]}>
+            <ProtectedRoute allowedRoles={["Doctor", "admin"]}>
               <PriceCalculator />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/order-raw-materials"
+          element={
+            <ProtectedRoute allowedRoles={["Doctor", "admin"]}>
+              <OrderRawMaterials />
             </ProtectedRoute>
           }
         />

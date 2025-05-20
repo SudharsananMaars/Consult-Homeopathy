@@ -9,6 +9,7 @@ import CommentCell from './CommentCell';
 import VideoCall from '../../pages/doctor pages/VideoCall';
 import DraftViewModal from './DraftViewModal'; // Make sure the path is correct
 import PrescriptionViewModal from './PrescriptionViewModal';
+import MedicinePreparationView from '../../pages/doctor pages/MedicinePreparationView';
 
 const WorkTable = () => {
   const [patients, setPatients] = useState([]);
@@ -444,6 +445,7 @@ const WorkTable = () => {
             'Comments',
             'View Drafts',
             'View prescription',
+            'Prepare Medicine',
             'Voice call',
             'Recordings',
             'Mark Done',
@@ -479,6 +481,9 @@ const WorkTable = () => {
             </div>,
             <div className="action-buttons">
                 {renderButton('View prescription', () => handleAction('ViewPrescription', item))}
+            </div>,
+            <div className="action-buttons">
+                {renderButton('Prepare Medicine', () => handleAction('PrepareMedicine', item))}
             </div>,
             <div className="action-buttons">
                 {renderButton('Make Voice Call', () => handleAction('VoiceCall', item))}
@@ -788,6 +793,10 @@ const WorkTable = () => {
           />
         );
         setShowModal(true);
+        break;
+      case 'PrepareMedicine':
+        const appointment_Id = item.medicalDetails._id;
+        navigate(`/prepare-medicine/${appointment_Id}`);
         break;
       case 'MarkDone':
         try {

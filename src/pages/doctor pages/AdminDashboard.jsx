@@ -154,7 +154,7 @@ const AdminDashboard = () => {
             </p>
           </div>
           <div className="header-right">
-            <span className="user-icon" onClick={() => window.location.href = '/login'}>
+            <span className="user-icon" onClick={() => window.location.href = '/inventory'}>
               <FaCoins size={20}/>
             </span>
             <span className="user-icon" onClick={() => window.location.href = '/vendors'}>
