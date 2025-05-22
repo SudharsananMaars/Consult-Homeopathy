@@ -155,6 +155,14 @@ const Sidebar = ({ role }) => {
             timeout: 5000 // Set timeout to prevent hanging logout
           }
         );
+        await axios.post(
+        `${API_URL}/api/otp/logout`,
+        {},
+        {
+          headers: { Authorization: `Bearer ${token}` },
+          timeout: 5000
+        }
+      );
       }
 
       // Clear the session and redirect
@@ -163,7 +171,7 @@ const Sidebar = ({ role }) => {
       
       // Small delay for better UX
       setTimeout(() => {
-        window.location.href = '/doclogin'; // Redirect to the login page
+        window.location.href = '/login'; // Redirect to the login page
       }, 500);
       
     } catch (err) {
@@ -175,7 +183,7 @@ const Sidebar = ({ role }) => {
       localStorage.removeItem('role');
       
       setTimeout(() => {
-        window.location.href = '/doclogin';
+        window.location.href = '/login';
       }, 2000);
     }
   };

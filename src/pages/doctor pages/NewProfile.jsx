@@ -2,6 +2,8 @@
 import React, { useState, useEffect } from "react";
 import DoctorLayout from "/src/components/doctor components/DoctorLayout.jsx";
 import axios from "axios";
+import config from "../../config";
+const API_URL = config.API_URL;
 
 const PatientProfile = () => {
   const [profile, setProfile] = useState({});
@@ -24,7 +26,7 @@ const PatientProfile = () => {
 
   const fetchProfile = async () => {
     try {
-      const res = await axios.get("http://localhost:5000/api/patient/profile", {
+      const res = await axios.get(`${API_URL}/api/doctor/profile`, {
         headers: {
           Authorization: `Bearer ${token}`,
         },
@@ -52,7 +54,7 @@ const PatientProfile = () => {
   const handleProfileUpdate = async () => {
     try {
       const res = await axios.put(
-        "http://localhost:5000/api/patient/updateProfile",
+        `${API_URL}/api/doctor/updateProfile`,
         formData,
         {
           headers: {
@@ -82,7 +84,7 @@ const PatientProfile = () => {
       data.append("profilePhoto", profilePhoto);
 
       await axios.post(
-        "http://localhost:5000/api/patient/uploadProfilePicture",
+        `${API_URL}/api/doctor/uploadProfilePicture`,
         data,
         {
           headers: {
@@ -112,12 +114,16 @@ const PatientProfile = () => {
                   className="w-full h-full object-cover rounded-full"
                 />
               ) : (
-                <div className="flex items-center justify-center h-full text-gray-400">No Photo</div>
+                <div className="flex items-center justify-center h-full text-gray-400">
+                  No Photo
+                </div>
               )}
             </div>
 
             <div className="flex flex-col space-y-2 space-x-7">
-              <label className="text-sm font-medium text-gray-700">Pick a photo from your files</label>
+              <label className="text-sm font-medium text-gray-700">
+                Pick a photo from your files
+              </label>
               <div>
                 <input
                   type="file"
@@ -189,7 +195,9 @@ const PatientProfile = () => {
               disabled={!isEditing}
             />
             <div className="flex flex-col space-y-2">
-              <label className="text-sm font-medium text-gray-700">Gender</label>
+              <label className="text-sm font-medium text-gray-700">
+                Gender
+              </label>
               <select
                 name="gender"
                 value={formData.gender}
@@ -219,7 +227,14 @@ const PatientProfile = () => {
   );
 };
 
-const InputField = ({ label, name, value, onChange, type = "text", disabled }) => (
+const InputField = ({
+  label,
+  name,
+  value,
+  onChange,
+  type = "text",
+  disabled,
+}) => (
   <div className="flex flex-col space-y-2">
     <label className="text-sm font-medium text-gray-700">{label}</label>
     <input
