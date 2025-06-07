@@ -107,16 +107,33 @@ const MedicinePreparationView = () => {
     });
   }, [rawMaterials]);
 
-  // Filter raw materials based on search term
   const filteredRawMaterials = useMemo(() => {
-    if (!searchTerm.trim()) return sortedRawMaterials;
+    if (!selectedMedicine || !rawMaterials.length) return [];
     
-    return sortedRawMaterials.filter(material => 
-      material.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      material.type?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      material.category?.toLowerCase().includes(searchTerm.toLowerCase())
+    // Get prescription medicine names to filter by
+    const prescriptionMedicineNames = prescription?.prescriptionItems?.map(item => 
+      item.name?.toLowerCase() || item.rawMaterialName?.toLowerCase()
+    ) || [];
+    console.log("prescriptionMedicineNames", prescriptionMedicineNames);
+    // Filter raw materials that match prescription medicines
+    let filtered = sortedRawMaterials.filter(material => 
+      prescriptionMedicineNames.some(name => 
+        material.name.toLowerCase().includes(name) || 
+        name.includes(material.name.toLowerCase())
+      )
     );
-  }, [sortedRawMaterials, searchTerm]);
+    
+    // Apply search term filter
+    if (searchTerm.trim()) {
+      filtered = filtered.filter(material => 
+        material.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        material.type?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        material.category?.toLowerCase().includes(searchTerm.toLowerCase())
+      );
+    }
+    
+    return filtered;
+  }, [sortedRawMaterials, searchTerm, selectedMedicine, prescription]);
 
   const handleSelectMedicine = (medicine) => {
     setSelectedMedicine(medicine);
@@ -176,6 +193,30 @@ const MedicinePreparationView = () => {
     try {
       setPreparing(true);
       const token = localStorage.getItem('token');
+
+      const summaryData = {
+      appointmentId: appointment._id,
+      prescriptionId: prescription._id,
+      patientId: appointment.patientId || prescription.patientId,
+      selectedMedicine: selectedMedicine,
+      rawMaterialsUsed: cart,
+      totalCost: parseFloat(getTotalCost()),
+      preparationNotes: `Medicine ${selectedMedicine.rawMaterialName} prepared with ${cart.length} raw materials`
+    };
+    console.log("summaryData", summaryData);
+    // Save preparation summary
+    const summaryResponse = await fetch(`${API_URL}/api/medicine-summary/summary`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify(summaryData)
+    });
+    
+    if (!summaryResponse.ok) {
+      throw new Error('Failed to save preparation summary');
+    }
       
       // Create prescription item with raw materials
       const prescriptionItem = {
@@ -234,6 +275,7 @@ const MedicinePreparationView = () => {
       }
       
       alert("Medicine prepared successfully!");
+      navigate(-1);
     } catch (err) {
       console.error("Error preparing medicine:", err);
       setPreparing(false);
@@ -426,17 +468,24 @@ const MedicinePreparationView = () => {
                   </thead>
                   <tbody className="divide-y divide-gray-200">
                     {filteredRawMaterials.map((material) => (
-                      <tr key={material._id} className="hover:bg-gray-50">
-                        <td className="px-4 py-2 whitespace-nowrap">
-                          <div className="flex items-center">
-                            {material.name}
-                            {isLowStock(material.currentQuantity, material.quantity) && (
-                              <span className="ml-2 text-yellow-500" title="Low stock">
-                                <FaExclamationTriangle />
-                              </span>
-                            )}
-                          </div>
-                        </td>
+                      <tr key={material._id} className={`hover:bg-gray-50 ${isExpiryWarning(material.expiryDate) ? 'bg-red-50 border-l-4 border-red-400' : ''}`}>
+  <td className="px-4 py-2 whitespace-nowrap">
+    <div className="flex items-center">
+      {isExpiryWarning(material.expiryDate) && (
+        <span className="mr-2 text-red-500 animate-pulse" title="Expires soon!">
+          <FaExclamationTriangle />
+        </span>
+      )}
+      <span className={isExpiryWarning(material.expiryDate) ? 'font-semibold text-red-700' : ''}>
+        {material.name}
+      </span>
+      {isLowStock(material.currentQuantity, material.quantity) && (
+        <span className="ml-2 text-yellow-500" title="Low stock">
+          <FaExclamationTriangle />
+        </span>
+      )}
+    </div>
+  </td>
                         <td className="px-4 py-2 whitespace-nowrap text-sm text-gray-500">
                           {material.category || material.type || "N/A"}
                         </td>
@@ -446,10 +495,17 @@ const MedicinePreparationView = () => {
                           </span>
                         </td>
                         <td className="px-4 py-2 whitespace-nowrap text-sm">
-                          <span className={isExpiryWarning(material.expiryDate) ? "text-red-600" : "text-gray-700"}>
-                            {moment(material.expiryDate).format("MMM DD, YYYY")}
-                          </span>
-                        </td>
+    <div className={`px-2 py-1 rounded-full text-xs font-medium ${
+      isExpiryWarning(material.expiryDate) 
+        ? 'bg-red-100 text-red-800 border border-red-200' 
+        : 'text-gray-700'
+    }`}>
+      {moment(material.expiryDate).format("MMM DD, YYYY")}
+      {isExpiryWarning(material.expiryDate) && (
+        <span className="ml-1 font-bold">⚠️</span>
+      )}
+    </div>
+  </td>
                         <td className="px-4 py-2 whitespace-nowrap text-sm text-gray-500">
                           ${material.costPerUnit.toFixed(2)} / {material.uom}
                         </td>
@@ -591,16 +647,7 @@ const MedicinePreparationView = () => {
                   </tbody>
                 </table>
               </div>
-              
-              <div className="border rounded-md p-4 mb-6">
-                <h3 className="font-medium mb-2">Preparation Steps:</h3>
-                <textarea 
-                  className="w-full p-2 border rounded-md" 
-                  rows="4"
-                  placeholder="Enter preparation instructions here..."
-                ></textarea>
-              </div>
-              
+
               <div className="flex justify-between">
                 <button
                   onClick={() => setStep(2)}
