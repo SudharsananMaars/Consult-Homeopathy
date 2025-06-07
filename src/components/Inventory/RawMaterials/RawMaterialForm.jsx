@@ -21,7 +21,7 @@ const RawMaterialForm = ({ isEdit = false }) => {
     // batchNumber: '',
     // purchaseDate: '',
     expiryDate: '',
-    barcode: '',
+    // barcode: '',
     productImage: '',
     costPerUnit: ''
   };
@@ -69,7 +69,7 @@ const RawMaterialForm = ({ isEdit = false }) => {
         ...formData,
         quantity: Number(formData.quantity),
         costPerUnit: Number(formData.costPerUnit),
-        barcode: formData.barcode || generateBarcode(),
+        // barcode: formData.barcode || generateBarcode(),
       };
 
       if (isEdit) {
@@ -295,7 +295,7 @@ const RawMaterialForm = ({ isEdit = false }) => {
           >
             {submitting ? 'Saving...' : isEdit ? 'Update' : 'Create'}
           </button>
-          {formData.barcode && (
+          {/* {formData.barcode && (
             <div className="mt-6 text-center">
               <p className="font-medium text-gray-700 mb-2">Barcode Preview:</p>
               <div className="inline-block bg-white p-4 shadow border">
@@ -308,7 +308,7 @@ const RawMaterialForm = ({ isEdit = false }) => {
                 Print Barcode
               </button>
             </div>
-          )}
+          )} */}
         </div>
       </form>
     </div>
