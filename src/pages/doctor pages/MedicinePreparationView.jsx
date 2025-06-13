@@ -79,7 +79,7 @@ const MedicinePreparationView = () => {
 
     fetchData();
   }, [appointmentId, API_URL]);
-
+console.log("prescription:", prescription);
   // Sort raw materials based on prioritization logic
   const sortedRawMaterials = useMemo(() => {
     if (!rawMaterials.length) return [];

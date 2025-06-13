@@ -24,7 +24,9 @@ const Sidebar = ({ role }) => {
   const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(false);
   const [isLoggingOut, setIsLoggingOut] = useState(false);
   const [logoutError, setLogoutError] = useState(null);
-
+  const [doctorRole, setDoctorRole] = useState(null);
+  const [visibleLinks, setVisibleLinks] = useState([]);
+  
   // Define sidebar links based on role
   const SIDEBAR_LINKS = role === "admin-doctor" ? [
     { id: 1, path: "/dashboard", name: "Home", icon: LuBox },
