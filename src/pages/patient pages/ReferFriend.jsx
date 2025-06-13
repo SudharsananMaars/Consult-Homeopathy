@@ -1,7 +1,7 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import Layout from "../../components/patient components/Layout";
 import referfrnd from "/src/assets/images/patient images/referfrnd.png";
-import axios from "axios"; // Make sure to install axios
+import axios from "axios";
 import config from "../../config";
 const API_URL = config.API_URL;
 
@@ -11,33 +11,15 @@ const ReferFriend = () => {
   const [errors, setErrors] = useState({});
   const [successMessage, setSuccessMessage] = useState("");
   const [errorMessage, setErrorMessage] = useState("");
-  const [activeTab, setActiveTab] = useState("friends");
-
-  const friendsData = [
-    {
-      name: "John Doe",
-      date: "1 Sep,2024",
-      status: "Accepted",
-      validity: "30 Sep,2024",
-      referralCode: "FRIEND123",
-    },
-    {
-      name: "Jane Smith",
-      date: "2 Sep,2024",
-      status: "Pending",
-      validity: "1 Oct,2024",
-      referralCode: "FRIEND456",
-    },
-  ];
-
-  const postsData = [
-    { name: "Post A", date: "25 Aug,2024", referralCode: "POST123" },
-    { name: "Post B", date: "26 Aug,2024", referralCode: "POST456" },
-  ];
-
-  const handleTabSwitch = (tab) => {
-    setActiveTab(tab);
-  };
+  const [referrals, setReferrals] = useState([]);
+  
+  // Filter and pagination states
+  const [filters, setFilters] = useState({
+    status: "",
+    validity: "",
+  });
+  const [currentPage, setCurrentPage] = useState(1);
+  const [entriesPerPage, setEntriesPerPage] = useState(10);
 
   const validateForm = () => {
     const errors = {};
@@ -52,9 +34,6 @@ const ReferFriend = () => {
       errors.phone = "Phone number must be exactly 10 digits";
     }
 
-    //  else if (!/^\d{10}$/.test(phone)) {
-    //   errors.phone = "Phone number should be 10 digits";
-    // }
     setErrors(errors);
     return Object.keys(errors).length === 0;
   };
@@ -67,19 +46,23 @@ const ReferFriend = () => {
         const response = await axios.post(
           `${API_URL}/api/patient/referFriend`,
           {
-            friendName: name, // Use "name" state variable here
-            friendPhone: phone, // Use "phone" state variable here
+            friendName: name,
+            friendPhone: phone,
           },
           {
             headers: {
-              Authorization: `Bearer ${token}`, // Ensure JWT token is added for authentication
+              Authorization: `Bearer ${token}`,
               "Content-Type": "application/json",
             },
           }
         );
         setSuccessMessage("Referral sent successfully!");
-        setErrorMessage(""); // Clear previous error message
-        console.log(response.data); // Handle success response
+        setErrorMessage("");
+        setName("");
+        setPhone("");
+        // Refresh referrals list
+        fetchReferrals();
+        console.log(response.data);
       } catch (error) {
         if (
           error.response &&
@@ -87,13 +70,77 @@ const ReferFriend = () => {
           error.response.data.message
         ) {
           console.error("Backend Error:", error.response.data.message);
-          setErrorMessage(error.response.data.message); // Show backend error message
+          setErrorMessage(error.response.data.message);
         } else {
           console.error("Unknown error:", error);
           setErrorMessage("Failed to send referral. Please try again later.");
         }
-        setSuccessMessage(""); // Clear success message
+        setSuccessMessage("");
       }
+    }
+  };
+
+  const fetchReferrals = async () => {
+    try {
+      const token = localStorage.getItem("token");
+      const res = await axios.get(`${API_URL}/api/patient/referrals`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      setReferrals(res.data.referrals);
+    } catch (error) {
+      console.error("Error fetching referrals:", error);
+    }
+  };
+
+  useEffect(() => {
+    fetchReferrals();
+  }, []);
+
+  // Filter handlers
+  const handleFilterChange = (e) => {
+    const { name, value } = e.target;
+    setFilters({ ...filters, [name]: value });
+    setCurrentPage(1);
+  };
+
+  const handleEntriesPerPageChange = (e) => {
+    setEntriesPerPage(Number(e.target.value));
+    setCurrentPage(1);
+  };
+
+  // Filter referrals based on status and validity
+  const filteredReferrals = referrals.filter((referral) => {
+    const statusMatch = filters.status === "" || 
+      referral.status.toLowerCase().includes(filters.status.toLowerCase());
+    
+    const validityMatch = filters.validity === "" || 
+      referral.validity.toLowerCase().includes(filters.validity.toLowerCase());
+    
+    return statusMatch && validityMatch;
+  });
+
+  // Pagination logic
+  const indexOfLastEntry = currentPage * entriesPerPage;
+  const indexOfFirstEntry = indexOfLastEntry - entriesPerPage;
+  const currentReferrals = filteredReferrals.slice(
+    indexOfFirstEntry,
+    indexOfLastEntry
+  );
+  const totalPages = Math.ceil(filteredReferrals.length / entriesPerPage);
+
+  const paginate = (pageNumber) => setCurrentPage(pageNumber);
+
+  // Status color helper
+  const getStatusColor = (status) => {
+    switch (status) {
+      case "Accepted":
+        return "text-green-600 bg-green-100";
+      case "Pending":
+        return "text-yellow-600 bg-yellow-100";
+      case "Outdated":
+        return "text-gray-600 bg-gray-100";
+      default:
+        return "text-red-600 bg-red-100";
     }
   };
 
@@ -160,7 +207,7 @@ const ReferFriend = () => {
                 <p className="text-green-500 text-sm">{successMessage}</p>
               )}
               {errorMessage && (
-                <p className="text-red-500 text-sm">{errorMessage}</p> // Display the backend error message here
+                <p className="text-red-500 text-sm">{errorMessage}</p>
               )}
               <button
                 type="submit"
@@ -172,105 +219,142 @@ const ReferFriend = () => {
           </div>
         </div>
 
-        <div className="mx-auto max-w-4xl pl-3">
+        {/* Referred Friends Table */}
+        <div className="mx-auto max-w-6xl mt-10">
+          <h2 className="text-2xl font-bold mb-4">Referred Friends</h2>
+          
+          {/* Filters */}
           <div className="flex space-x-4 mb-6">
-            <button
-              onClick={() => handleTabSwitch("friends")}
-              className={`px-4 py-2 rounded-md ${
-                activeTab === "friends"
-                  ? "bg-blue-500 text-white"
-                  : "bg-gray-200 text-gray-700"
-              } hover:bg-blue-400 hover:text-white`}
+            <input
+              type="text"
+              name="friendName"
+              placeholder="Search by Friend Name"
+              className="p-2 border border-gray-300 rounded-md hover:bg-gray-100"
+            />
+            <select
+              name="status"
+              value={filters.status}
+              onChange={handleFilterChange}
+              className="p-2 w-1/6 border border-gray-300 rounded-md bg-white hover:bg-gray-100"
             >
-              Referred Friends
-            </button>
-            <button
-              onClick={() => handleTabSwitch("posts")}
-              className={`px-4 py-2 rounded-md ${
-                activeTab === "posts"
-                  ? "bg-blue-500 text-white"
-                  : "bg-gray-200 text-gray-700 hover:bg-gray-300"
-              } hover:bg-blue-400 hover:text-white`}
-            >
-              Referred Posts
-            </button>
+              <option value="">All Status</option>
+              <option value="Accepted">Accepted</option>
+              <option value="Pending">Pending</option>
+              <option value="Outdated">Outdated</option>
+            </select>
+            <input
+              type="text"
+              name="validity"
+              value={filters.validity}
+              onChange={handleFilterChange}
+              placeholder="Search by Validity Date"
+              className="p-2 border border-gray-300 rounded-md hover:bg-gray-100"
+            />
           </div>
 
-          {activeTab === "friends" && (
-            <div>
-              <h2 className="text-xl font-semibold mb-4">Referred Friends</h2>
-              <div className="overflow-x-auto">
-                <table className="min-w-full bg-white">
-                  <thead>
-                    <tr>
-                      <th className="py-2 px-4 border">Name</th>
-                      <th className="py-2 px-4 border">Date</th>
-                      <th className="py-2 px-4 border">Status</th>
-                      <th className="py-2 px-4 border">Validity</th>
-                      <th className="py-2 px-4 border">Referral Code</th>
-                      <th className="py-2 px-4 border">Action</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {friendsData.map((friend, index) => (
-                      <tr key={index}>
-                        <td className="py-2 px-4 border">{friend.name}</td>
-                        <td className="py-2 px-4 border">{friend.date}</td>
-                        <td
-                          className={`py-2 px-4 border ${
-                            friend.status === "Accepted"
-                              ? "text-green-500"
-                              : "text-red-500"
-                          }`}
+          {/* Table */}
+          <div className="overflow-x-auto">
+            <table className="w-full table-auto border-collapse">
+              <thead>
+                <tr className="bg-gray-100 text-left">
+                  <th className="px-4 py-2">Name</th>
+                  <th className="px-4 py-2">Date</th>
+                  <th className="px-4 py-2">Status</th>
+                  <th className="px-4 py-2">Validity</th>
+                  <th className="px-4 py-2">Referral Code</th>
+                  <th className="px-4 py-2">Action</th>
+                </tr>
+              </thead>
+              <tbody>
+                {currentReferrals.length > 0 ? (
+                  currentReferrals.map((friend, index) => (
+                    <tr key={index} className="border-b">
+                      <td className="px-4 py-4">{friend.friendName}</td>
+                      <td className="px-4 py-4">{friend.date}</td>
+                      <td className="px-4 py-4">
+                        <span
+                          className={`px-2 py-1 rounded-full text-sm font-semibold ${getStatusColor(
+                            friend.status
+                          )}`}
                         >
                           {friend.status}
-                        </td>
-                        <td className="py-2 px-4 border">{friend.validity}</td>
-                        <td className="py-2 px-4 border">
-                          {friend.referralCode}
-                        </td>
-                        <td className="py-2 px-4 border">
-                          <button className="bg-blue-500 text-white px-4 py-2 rounded-md">
-                            Redeem
-                          </button>
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            </div>
-          )}
-
-          {activeTab === "posts" && (
-            <div>
-              <h2 className="text-xl font-semibold mb-4">Refer Posts</h2>
-              <table className="min-w-full bg-white">
-                <thead>
-                  <tr>
-                    <th className="py-2 px-4 border">Name</th>
-                    <th className="py-2 px-4 border">Date</th>
-                    <th className="py-2 px-4 border">Referral Code</th>
-                    <th className="py-2 px-4 border">Action</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {postsData.map((post, index) => (
-                    <tr key={index}>
-                      <td className="py-2 px-4 border">{post.name}</td>
-                      <td className="py-2 px-4 border">{post.date}</td>
-                      <td className="py-2 px-4 border">{post.referralCode}</td>
-                      <td className="py-2 px-4 border">
-                        <button className="bg-blue-500 text-white px-4 py-2 rounded">
+                        </span>
+                      </td>
+                      <td className="px-4 py-4">{friend.validity}</td>
+                      <td className="px-4 py-4">{friend.referralCode}</td>
+                      <td className="px-4 py-4">
+                        <button
+                          className={`px-4 py-2 rounded-md ${
+                            friend.status === "Accepted"
+                              ? "bg-blue-500 hover:bg-blue-600 text-white"
+                              : "bg-gray-300 text-gray-500 cursor-not-allowed"
+                          }`}
+                          disabled={friend.status !== "Accepted"}
+                        >
                           Redeem
                         </button>
                       </td>
                     </tr>
-                  ))}
-                </tbody>
-              </table>
+                  ))
+                ) : (
+                  <tr>
+                    <td colSpan="6" className="text-center p-4">
+                      No matching referrals found.
+                    </td>
+                  </tr>
+                )}
+              </tbody>
+            </table>
+          </div>
+
+          {/* Pagination */}
+          <div className="flex justify-between items-center mt-4">
+            <div>
+              <label>
+                Show{" "}
+                <select
+                  value={entriesPerPage}
+                  onChange={handleEntriesPerPageChange}
+                  className="border p-2 rounded-md"
+                >
+                  <option value={5}>5</option>
+                  <option value={10}>10</option>
+                  <option value={15}>15</option>
+                  <option value={20}>20</option>
+                </select>{" "}
+                entries per page
+              </label>
             </div>
-          )}
+            <div>
+              <button
+                onClick={() => paginate(currentPage - 1)}
+                disabled={currentPage === 1}
+                className="px-3 py-1 border rounded-md mx-1 hover:bg-blue-200 disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                Previous
+              </button>
+              {[...Array(totalPages)].map((_, index) => (
+                <button
+                  key={index}
+                  onClick={() => paginate(index + 1)}
+                  className={`px-3 py-1 border rounded-md mx-1 ${
+                    currentPage === index + 1
+                      ? "bg-blue-300"
+                      : "hover:bg-blue-200"
+                  }`}
+                >
+                  {index + 1}
+                </button>
+              ))}
+              <button
+                onClick={() => paginate(currentPage + 1)}
+                disabled={currentPage === totalPages}
+                className="px-3 py-1 border rounded-md mx-1 hover:bg-blue-200 disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                Next
+              </button>
+            </div>
+          </div>
         </div>
       </div>
     </Layout>
