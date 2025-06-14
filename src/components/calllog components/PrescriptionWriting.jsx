@@ -376,19 +376,36 @@ const FrequencyModal = ({
                             </div>
                             <div>
                               <label className="block text-xs font-medium text-gray-600 mb-1">
-                                Time
+                                Time Range
                               </label>
-                              <input
-                                type="text"
-                                onChange={(e) =>
-                                  handleFrequencyChange(
-                                    `${period}.time`,
-                                    e.target.value
-                                  )
-                                }
-                                placeholder="e.g., 8:00 AM"
-                                className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                              />
+                              <div className="flex items-center gap-2">
+                                <input
+                                  type="time"
+                                  onChange={(e) =>
+                                    handleFrequencyChange(
+                                      `${period}.timeStart`,
+                                      e.target.value
+                                    )
+                                  }
+                                  className="flex-1 border border-gray-300 rounded-md px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                                />
+                                <span className="text-gray-500 text-sm font-medium">
+                                  to
+                                </span>
+                                <input
+                                  type="time"
+                                  onChange={(e) =>
+                                    handleFrequencyChange(
+                                      `${period}.timeEnd`,
+                                      e.target.value
+                                    )
+                                  }
+                                  className="flex-1 border border-gray-300 rounded-md px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                                />
+                              </div>
+                              <p className="text-xs text-gray-500 mt-1">
+                                Select start and end time for this period
+                              </p>
                             </div>
                           </div>
                         </div>
@@ -397,26 +414,42 @@ const FrequencyModal = ({
                   </div>
                 ) : (
                   <div className="bg-white border rounded-lg p-6">
-                    <h4 className="font-medium text-gray-800 mb-3 flex items-center">
-                      <span className="w-3 h-3 rounded-full bg-green-500 mr-2"></span>
-                      Custom Frequency Interval
-                    </h4>
-                    <div>
-                      <label className="block text-sm font-medium text-gray-600 mb-2">
-                        Interval Description
-                      </label>
-                      <input
-                        type="text"
-                        onChange={(e) => handleFrequentChange(e.target.value)}
-                        placeholder="e.g., Every 50 minutes, 3 times per day"
-                        className="w-full border border-gray-300 rounded-md px-4 py-3 text-sm focus:ring-2 focus:ring-green-500 focus:border-green-500"
-                      />
-                      <p className="text-xs text-gray-500 mt-1">
-                        Describe the custom frequency interval for the selected
-                        days
-                      </p>
-                    </div>
-                  </div>
+  <h4 className="font-medium text-gray-800 mb-3 flex items-center">
+    <span className="w-3 h-3 rounded-full bg-green-500 mr-2"></span>
+    Custom Frequency Timer
+  </h4>
+
+  <div>
+    <label className="block text-sm font-medium text-gray-600 mb-2">
+      Set Frequency Interval
+    </label>
+    <div className="flex items-center gap-4">
+      <div className="flex-1">
+        <input
+          type="number"
+          min="0"
+          placeholder="Hours"
+          onChange={(e) => handleFrequentChange(`hours:${e.target.value}`)}
+          className="w-full border border-gray-300 rounded-md px-4 py-2 text-sm focus:ring-2 focus:ring-green-500 focus:border-green-500"
+        />
+      </div>
+      <div className="flex-1">
+        <input
+          type="number"
+          min="0"
+          max="59"
+          placeholder="Minutes"
+          onChange={(e) => handleFrequentChange(`minutes:${e.target.value}`)}
+          className="w-full border border-gray-300 rounded-md px-4 py-2 text-sm focus:ring-2 focus:ring-green-500 focus:border-green-500"
+        />
+      </div>
+    </div>
+    <p className="text-xs text-gray-500 mt-1">
+      Specify how often the event should repeat (e.g., every 1 hr 30 mins)
+    </p>
+  </div>
+</div>
+
                 )}
 
                 {/* Action Buttons */}
@@ -1369,20 +1402,20 @@ const PrescriptionWriting = () => {
         return;
       }
 
-      for (const item of prescriptionData.prescriptionItems) {
-        if (!item.medicineName.trim()) {
-          toast.error("Please enter medicine name for all items");
-          return;
-        }
-        if (!item.preparationQuantity.length) {
-          toast.error("Please select raw materials for all medicines");
-          return;
-        }
-        if (!item.frequencies.length) {
-          toast.error("Please configure frequency for all medicines");
-          return;
-        }
-      }
+      // for (const item of prescriptionData.prescriptionItems) {
+      //   if (!item.medicineName.trim()) {
+      //     toast.error("Please enter medicine name for all items");
+      //     return;
+      //   }
+      //   if (!item.preparationQuantity.length) {
+      //     toast.error("Please select raw materials for all medicines");
+      //     return;
+      //   }
+      //   if (!item.frequencies.length) {
+      //     toast.error("Please configure frequency for all medicines");
+      //     return;
+      //   }
+      // }
 
       const authAxios = createAuthAxios();
 
@@ -1449,6 +1482,62 @@ const PrescriptionWriting = () => {
   const filteredRawMaterials = rawMaterials.filter((material) =>
     material.name.toLowerCase().includes(searchRawTerm.toLowerCase())
   );
+
+  const getFieldVisibility = (prescriptionType) => {
+    const fieldConfig = {
+      prescriptionType: true, // Always visible
+      medicineConsumptionType: false,
+      medicineName: true, // Always visible
+      medicineForm: true, // Always visible
+      dispenseQuantity: true, // Always visible
+      rawMaterial: false,
+      preparationQuantity: false,
+      duration: false,
+      frequency: false,
+      price: true, // Always visible
+      medicineConsumption: false,
+      label: false,
+      additionalComments: true, // Always visible
+      actions: true, // Always visible
+    };
+
+    switch (prescriptionType) {
+      case "Prescription + Medicine":
+        return {
+          ...fieldConfig,
+          medicineConsumptionType: true,
+          rawMaterial: true,
+          preparationQuantity: true,
+          duration: true,
+          frequency: true,
+          medicineConsumption: true,
+          label: true,
+        };
+
+      case "Only Prescription":
+        return {
+          ...fieldConfig,
+          medicineConsumptionType: true,
+          duration: true,
+          frequency: true,
+          medicineConsumption: true,
+          label: true,
+        };
+
+      case "Only Medicine":
+      case "Medicine + Kit":
+      case "Prescription + Medicine kit":
+      case "SOS Medicine":
+        return {
+          ...fieldConfig,
+          rawMaterial: true,
+          preparationQuantity: true,
+        };
+
+      default:
+        return fieldConfig;
+    }
+  };
 
   if (loading) {
     return (
@@ -1557,10 +1646,12 @@ const PrescriptionWriting = () => {
                         {new Date(prescription.createdAt).toLocaleDateString()}
                       </td>
                       <td className="border border-gray-300 px-4 py-2">
-                        {prescription.consultingType || "N/A"}
+                        {/* {prescription.consultingType || "N/A"} */}
+                        {patientData?.medicalDetails?.diseaseType?.name}
                       </td>
                       <td className="border border-gray-300 px-4 py-2">
-                        {prescription.consultingFor || "N/A"}
+                        {/* {prescription.consultingFor || "N/A"} */}
+                        {patientData?.medicalDetails?.drafts}
                       </td>
                       <td className="border border-gray-300 px-4 py-2">
                         {prescription.medicineCourse} days
@@ -1616,13 +1707,13 @@ const PrescriptionWriting = () => {
                 <label className="block text-sm font-medium mb-3.5">
                   Consulting Type:
                 </label>
-                <p>{patientData?.medicalDetails.diseaseType.name}</p>
+                <p>{patientData?.medicalDetails?.diseaseType?.name}</p>
               </div>
               <div>
                 <label className="block text-sm font-medium mb-3.5">
                   Consulting For
                 </label>
-                <p>{patientData?.medicalDetails.drafts}</p>
+                <p>{patientData?.medicalDetails?.drafts}</p>
               </div>
               <div>
                 <label className="block text-sm font-medium mb-3.5">
@@ -1756,199 +1847,354 @@ const PrescriptionWriting = () => {
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-gray-100">
-                  {prescriptionData.prescriptionItems.map((item, index) => (
-                    <tr
-                      key={item.id}
-                      className="hover:bg-blue-50 transition-colors duration-150"
-                    >
-                      {/* S.No */}
-                      <td className="px-4 py-4 text-center">
-                        <span className="inline-flex items-center justify-center w-8 h-8 bg-blue-100 text-blue-800 rounded-full text-sm font-medium">
-                          {index + 1}
-                        </span>
-                      </td>
+                  {prescriptionData.prescriptionItems.map((item, index) => {
+                    const fieldVisibility = getFieldVisibility(
+                      item.prescriptionType
+                    );
 
-                      {/* Prescription Type */}
-                      <td className="px-4 py-4 min-w-48">
-                        <select
-                          value={item.prescriptionType}
-                          onChange={(e) =>
-                            updatePrescriptionItem(
-                              item.id,
-                              "prescriptionType",
-                              e.target.value
-                            )
-                          }
-                          className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white hover:border-gray-300 transition-colors"
-                        >
-                          <option value="Only Prescription">
-                            Only Prescription
-                          </option>
-                          <option value="Prescription + Medicine">
-                            Prescription + Medicine
-                          </option>
-                          <option value="Medicine + Kit">Medicine + Kit</option>
-                          <option value="Only Medicine">Only Medicine</option>
-                          <option value="Prescription + Medicine kit">
-                            Prescription + Medicine kit
-                          </option>
-                          <option value="SOS Medicine">SOS Medicine</option>
-                        </select>
-                      </td>
+                    return (
+                      <tr
+                        key={item.id}
+                        className="hover:bg-blue-50 transition-colors duration-150"
+                      >
+                        {/* S.No */}
+                        <td className="px-4 py-4 text-center">
+                          <span className="inline-flex items-center justify-center w-8 h-8 bg-blue-100 text-blue-800 rounded-full text-sm font-medium">
+                            {index + 1}
+                          </span>
+                        </td>
 
-                      {/* Medicine Consumption Type */}
-                      <td className="px-4 py-4 min-w-44">
-                        <select
-                          value={item.medicineConsumptionType}
-                          onChange={(e) =>
-                            updatePrescriptionItem(
-                              item.id,
-                              "medicineConsumptionType",
-                              e.target.value
-                            )
-                          }
-                          className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white hover:border-gray-300 transition-colors"
-                        >
-                          <option value="Sequential">Sequential</option>
-                          <option value="Sequential + Gap">
-                            Sequential + Gap
-                          </option>
-                          <option value="Parallel">Parallel</option>
-                        </select>
-                      </td>
-
-                      {/* Medicine Name */}
-                      <td className="px-4 py-4 min-w-44">
-                        <select
-                          value={item.medicineName}
-                          onChange={(e) =>
-                            updatePrescriptionItem(
-                              item.id,
-                              "medicineName",
-                              e.target.value
-                            )
-                          }
-                          className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white hover:border-gray-300 transition-colors"
-                        >
-                          <option value="">Select medicine</option>
-                          {medicines.map((med) => (
-                            <option key={med._id} value={med.name}>
-                              {med.name}
+                        {/* Prescription Type */}
+                        <td className="px-4 py-4 min-w-48">
+                          <select
+                            value={item.prescriptionType}
+                            onChange={(e) =>
+                              updatePrescriptionItem(
+                                item.id,
+                                "prescriptionType",
+                                e.target.value
+                              )
+                            }
+                            className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white hover:border-gray-300 transition-colors"
+                          >
+                            <option value="Only Prescription">
+                              Only Prescription
                             </option>
-                          ))}
-                        </select>
-                      </td>
+                            <option value="Prescription + Medicine">
+                              Prescription + Medicine
+                            </option>
+                            <option value="Medicine + Kit">
+                              Medicine + Kit
+                            </option>
+                            <option value="Only Medicine">Only Medicine</option>
+                            <option value="Prescription + Medicine kit">
+                              Prescription + Medicine kit
+                            </option>
+                            <option value="SOS Medicine">SOS Medicine</option>
+                          </select>
+                        </td>
 
-                      {/* Medicine Form */}
-                      <td className="px-4 py-4 min-w-36">
-                        <select
-                          value={item.form}
-                          onChange={(e) =>
-                            updatePrescriptionItem(
-                              item.id,
-                              "form",
-                              e.target.value
-                            )
-                          }
-                          className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white hover:border-gray-300 transition-colors"
+                        {/* Medicine Consumption Type */}
+                        <td
+                          className={`px-4 py-4 min-w-44 ${
+                            !fieldVisibility.medicineConsumptionType
+                              ? "opacity-30 pointer-events-none"
+                              : ""
+                          }`}
                         >
-                          <option value="Tablets">Tablets</option>
-                          <option value="Pills">Pills</option>
-                          <option value="Liquid form">Liquid form</option>
-                          <option value="Individual Medicine">
-                            Individual Medicine
-                          </option>
-                        </select>
-                      </td>
+                          <select
+                            value={item.medicineConsumptionType}
+                            onChange={(e) =>
+                              updatePrescriptionItem(
+                                item.id,
+                                "medicineConsumptionType",
+                                e.target.value
+                              )
+                            }
+                            disabled={!fieldVisibility.medicineConsumptionType}
+                            className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white hover:border-gray-300 transition-colors disabled:bg-gray-100 disabled:cursor-not-allowed"
+                          >
+                            <option value="Sequential">Sequential</option>
+                            <option value="Sequential + Gap">
+                              Sequential + Gap
+                            </option>
+                            <option value="Parallel">Parallel</option>
+                          </select>
+                        </td>
 
-                      {/* Dispense Quantity */}
-                      <td className="px-4 py-4 min-w-32">
-                        {item.form === "Liquid form" ? (
+                        {/* Medicine Name */}
+                        <td className="px-4 py-4 min-w-44">
                           <select
-                            value={item.dispenseQuantity}
+                            value={item.medicineName}
                             onChange={(e) =>
                               updatePrescriptionItem(
                                 item.id,
-                                "dispenseQuantity",
+                                "medicineName",
                                 e.target.value
                               )
                             }
                             className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white hover:border-gray-300 transition-colors"
                           >
-                            <option value="">Select quantity</option>
-                            <option value="5ml">5ml</option>
-                            <option value="15ml">15ml</option>
-                            <option value="30ml">30ml</option>
+                            <option value="">Select medicine</option>
+                            {medicines.map((med) => (
+                              <option key={med._id} value={med.name}>
+                                {med.name}
+                              </option>
+                            ))}
                           </select>
-                        ) : item.form === "Pills" ? (
-                          <select
-                            value={item.dispenseQuantity}
-                            onChange={(e) =>
-                              updatePrescriptionItem(
-                                item.id,
-                                "dispenseQuantity",
-                                e.target.value
-                              )
-                            }
-                            className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white hover:border-gray-300 transition-colors"
-                          >
-                            <option value="">Select quantity</option>
-                            <option value="1/2 dram">1/2 dram</option>
-                            <option value="1 dram">1 dram</option>
-                            <option value="2 dram">2 dram</option>
-                          </select>
-                        ) : item.form === "Tablets" ? (
-                          <select
-                            value={item.dispenseQuantity}
-                            onChange={(e) =>
-                              updatePrescriptionItem(
-                                item.id,
-                                "dispenseQuantity",
-                                e.target.value
-                              )
-                            }
-                            className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white hover:border-gray-300 transition-colors"
-                          >
-                            <option value="">Select quantity</option>
-                            <option value="10gram">10gram</option>
-                            <option value="20gram">20gram</option>
-                            <option value="25gram">25gram</option>
-                          </select>
-                        ) : (
-                          <input
-                            type="text"
-                            value={item.dispenseQuantity}
-                            onChange={(e) =>
-                              updatePrescriptionItem(
-                                item.id,
-                                "dispenseQuantity",
-                                e.target.value
-                              )
-                            }
-                            className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white hover:border-gray-300 transition-colors"
-                            placeholder="Enter quantity"
-                          />
-                        )}
-                      </td>
+                        </td>
 
-                      {/* Raw Material */}
-                      <td className="px-4 py-4 min-w-44">
-                        <div className="relative">
+                        {/* Medicine Form */}
+                        <td className="px-4 py-4 min-w-36">
+                          <select
+                            value={item.form}
+                            onChange={(e) =>
+                              updatePrescriptionItem(
+                                item.id,
+                                "form",
+                                e.target.value
+                              )
+                            }
+                            className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white hover:border-gray-300 transition-colors"
+                          >
+                            <option value="Tablets">Tablets</option>
+                            <option value="Pills">Pills</option>
+                            <option value="Liquid form">Liquid form</option>
+                            <option value="Individual Medicine">
+                              Individual Medicine
+                            </option>
+                          </select>
+                        </td>
+
+                        {/* Dispense Quantity */}
+                        <td className="px-4 py-4 min-w-32">
+                          {item.form === "Liquid form" ? (
+                            <select
+                              value={item.dispenseQuantity}
+                              onChange={(e) =>
+                                updatePrescriptionItem(
+                                  item.id,
+                                  "dispenseQuantity",
+                                  e.target.value
+                                )
+                              }
+                              className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white hover:border-gray-300 transition-colors"
+                            >
+                              <option value="">Select quantity</option>
+                              <option value="5ml">5ml</option>
+                              <option value="15ml">15ml</option>
+                              <option value="30ml">30ml</option>
+                            </select>
+                          ) : item.form === "Pills" ? (
+                            <select
+                              value={item.dispenseQuantity}
+                              onChange={(e) =>
+                                updatePrescriptionItem(
+                                  item.id,
+                                  "dispenseQuantity",
+                                  e.target.value
+                                )
+                              }
+                              className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white hover:border-gray-300 transition-colors"
+                            >
+                              <option value="">Select quantity</option>
+                              <option value="1/2 dram">1/2 dram</option>
+                              <option value="1 dram">1 dram</option>
+                              <option value="2 dram">2 dram</option>
+                            </select>
+                          ) : item.form === "Tablets" ? (
+                            <select
+                              value={item.dispenseQuantity}
+                              onChange={(e) =>
+                                updatePrescriptionItem(
+                                  item.id,
+                                  "dispenseQuantity",
+                                  e.target.value
+                                )
+                              }
+                              className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white hover:border-gray-300 transition-colors"
+                            >
+                              <option value="">Select quantity</option>
+                              <option value="10gram">10gram</option>
+                              <option value="20gram">20gram</option>
+                              <option value="25gram">25gram</option>
+                            </select>
+                          ) : (
+                            <input
+                              type="text"
+                              value={item.dispenseQuantity}
+                              onChange={(e) =>
+                                updatePrescriptionItem(
+                                  item.id,
+                                  "dispenseQuantity",
+                                  e.target.value
+                                )
+                              }
+                              className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white hover:border-gray-300 transition-colors"
+                              placeholder="Enter quantity"
+                            />
+                          )}
+                        </td>
+
+                        {/* Raw Material */}
+                        <td
+                          className={`px-4 py-4 min-w-44 ${
+                            !fieldVisibility.rawMaterial
+                              ? "opacity-30 pointer-events-none"
+                              : ""
+                          }`}
+                        >
+                          <div className="relative">
+                            <button
+                              type="button"
+                              disabled={!fieldVisibility.rawMaterial}
+                              onClick={() => {
+                                if (fieldVisibility.rawMaterial) {
+                                  const dropdown = document.getElementById(
+                                    `raw-material-dropdown-${item.id}`
+                                  );
+                                  dropdown.style.display =
+                                    dropdown.style.display === "block"
+                                      ? "none"
+                                      : "block";
+                                }
+                              }}
+                              className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm text-left bg-white hover:bg-gray-50 hover:border-gray-300 transition-all duration-200 flex items-center justify-between disabled:bg-gray-100 disabled:cursor-not-allowed"
+                            >
+                              <span>
+                                Raw Materials ({item.rawMaterials.length})
+                              </span>
+                              <svg
+                                className="w-4 h-4 text-gray-400"
+                                fill="none"
+                                stroke="currentColor"
+                                viewBox="0 0 24 24"
+                              >
+                                <path
+                                  strokeLinecap="round"
+                                  strokeLinejoin="round"
+                                  strokeWidth="2"
+                                  d="M19 9l-7 7-7-7"
+                                ></path>
+                              </svg>
+                            </button>
+                            {fieldVisibility.rawMaterial && (
+                              <div
+                                id={`raw-material-dropdown-${item.id}`}
+                                className="absolute z-10 w-72 bg-white border border-gray-200 rounded-lg shadow-lg mt-2 max-h-48 overflow-y-auto hidden"
+                              >
+                                <div className="p-3 border-b border-gray-100">
+                                  <input
+                                    type="text"
+                                    placeholder="Search raw materials..."
+                                    value={searchRawTerm}
+                                    onChange={(e) =>
+                                      setSearchRawTerm(e.target.value)
+                                    }
+                                    className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                  />
+                                </div>
+                                <div className="max-h-36 overflow-y-auto">
+                                  {filteredRawMaterials.map((material) => (
+                                    <div
+                                      key={material._id}
+                                      className="px-3 py-2 hover:bg-blue-50 transition-colors"
+                                    >
+                                      <label className="flex items-center text-sm cursor-pointer">
+                                        <input
+                                          type="checkbox"
+                                          checked={item.rawMaterials.some(
+                                            (rm) => rm._id === material._id
+                                          )}
+                                          onChange={(e) =>
+                                            handleRawMaterialSelection(
+                                              item.id,
+                                              material._id,
+                                              e.target.checked
+                                            )
+                                          }
+                                          className="mr-3 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                                        />
+                                        <span className="text-gray-700">
+                                          {material.name} ({material.unit})
+                                        </span>
+                                      </label>
+                                    </div>
+                                  ))}
+                                </div>
+                              </div>
+                            )}
+                          </div>
+                        </td>
+
+                        {/* Preparation + Quantity */}
+                        <td
+                          className={`px-4 py-4 min-w-52 ${
+                            !fieldVisibility.preparationQuantity
+                              ? "opacity-30 pointer-events-none"
+                              : ""
+                          }`}
+                        >
+                          <div className="space-y-2">
+                            {item.preparationQuantity.map((prep) => (
+                              <div
+                                key={prep._id}
+                                className="flex items-center gap-2 p-2 bg-gray-50 rounded-lg border border-gray-100"
+                              >
+                                <span className="text-sm text-gray-700 flex-1 truncate">
+                                  {prep.name}
+                                </span>
+                                <input
+                                  type="number"
+                                  value={prep.quantity}
+                                  onChange={(e) =>
+                                    updatePreparationQuantity(
+                                      item.id,
+                                      prep._id,
+                                      e.target.value
+                                    )
+                                  }
+                                  disabled={
+                                    !fieldVisibility.preparationQuantity
+                                  }
+                                  className="w-20 border border-gray-200 rounded px-2 py-1 text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:bg-gray-100 disabled:cursor-not-allowed"
+                                  min="0"
+                                  step="0.1"
+                                />
+                                <span className="text-sm text-gray-500">
+                                  {prep.unit}
+                                </span>
+                              </div>
+                            ))}
+                            {item.preparationQuantity.length === 0 && (
+                              <div className="p-3 text-center">
+                                <span className="text-sm text-gray-400">
+                                  No materials selected
+                                </span>
+                              </div>
+                            )}
+                          </div>
+                        </td>
+
+                        {/* Duration */}
+                        <td
+                          className={`px-4 py-4 min-w-32 ${
+                            !fieldVisibility.duration
+                              ? "opacity-30 pointer-events-none"
+                              : ""
+                          }`}
+                        >
                           <button
                             type="button"
-                            onClick={() => {
-                              const dropdown = document.getElementById(
-                                `raw-material-dropdown-${item.id}`
-                              );
-                              dropdown.style.display =
-                                dropdown.style.display === "block"
-                                  ? "none"
-                                  : "block";
-                            }}
-                            className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm text-left bg-white hover:bg-gray-50 hover:border-gray-300 transition-all duration-200 flex items-center justify-between"
+                            disabled={!fieldVisibility.duration}
+                            onClick={() =>
+                              fieldVisibility.duration &&
+                              openDurationModal(item, index)
+                            }
+                            className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm bg-white hover:bg-gray-50 hover:border-gray-300 text-left transition-all duration-200 flex items-center justify-between disabled:bg-gray-100 disabled:cursor-not-allowed"
                           >
-                            <span>
-                              Raw Materials ({item.rawMaterials.length})
+                            <span className="text-gray-700">
+                              {item.duration || "Set Duration"}
                             </span>
                             <svg
                               className="w-4 h-4 text-gray-400"
@@ -1960,293 +2206,36 @@ const PrescriptionWriting = () => {
                                 strokeLinecap="round"
                                 strokeLinejoin="round"
                                 strokeWidth="2"
-                                d="M19 9l-7 7-7-7"
+                                d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 100 4m0-4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 100 4m0-4v2m0-6V4"
                               ></path>
                             </svg>
                           </button>
-                          <div
-                            id={`raw-material-dropdown-${item.id}`}
-                            className="absolute z-10 w-72 bg-white border border-gray-200 rounded-lg shadow-lg mt-2 max-h-48 overflow-y-auto hidden"
-                          >
-                            <div className="p-3 border-b border-gray-100">
-                              <input
-                                type="text"
-                                placeholder="Search raw materials..."
-                                value={searchRawTerm}
-                                onChange={(e) =>
-                                  setSearchRawTerm(e.target.value)
-                                }
-                                className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                              />
-                            </div>
-                            <div className="max-h-36 overflow-y-auto">
-                              {filteredRawMaterials.map((material) => (
-                                <div
-                                  key={material._id}
-                                  className="px-3 py-2 hover:bg-blue-50 transition-colors"
-                                >
-                                  <label className="flex items-center text-sm cursor-pointer">
-                                    <input
-                                      type="checkbox"
-                                      checked={item.rawMaterials.some(
-                                        (rm) => rm._id === material._id
-                                      )}
-                                      onChange={(e) =>
-                                        handleRawMaterialSelection(
-                                          item.id,
-                                          material._id,
-                                          e.target.checked
-                                        )
-                                      }
-                                      className="mr-3 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
-                                    />
-                                    <span className="text-gray-700">
-                                      {material.name} ({material.unit})
-                                    </span>
-                                  </label>
-                                </div>
-                              ))}
-                            </div>
-                          </div>
-                        </div>
-                      </td>
+                        </td>
 
-                      {/* Preparation + Quantity */}
-                      <td className="px-4 py-4 min-w-52">
-                        <div className="space-y-2">
-                          {item.preparationQuantity.map((prep) => (
-                            <div
-                              key={prep._id}
-                              className="flex items-center gap-2 p-2 bg-gray-50 rounded-lg border border-gray-100"
-                            >
-                              <span className="text-sm text-gray-700 flex-1 truncate">
-                                {prep.name}
-                              </span>
-                              <input
-                                type="number"
-                                value={prep.quantity}
-                                onChange={(e) =>
-                                  updatePreparationQuantity(
-                                    item.id,
-                                    prep._id,
-                                    e.target.value
-                                  )
-                                }
-                                className="w-20 border border-gray-200 rounded px-2 py-1 text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                                min="0"
-                                step="0.1"
-                              />
-                              <span className="text-sm text-gray-500">
-                                {prep.unit}
-                              </span>
-                            </div>
-                          ))}
-                          {item.preparationQuantity.length === 0 && (
-                            <div className="p-3 text-center">
-                              <span className="text-sm text-gray-400">
-                                No materials selected
-                              </span>
-                            </div>
-                          )}
-                        </div>
-                      </td>
-
-                      {/* Duration */}
-                      <td className="px-4 py-4 min-w-32">
-                        <button
-                          type="button"
-                          onClick={() => openDurationModal(item, index)}
-                          className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm bg-white hover:bg-gray-50 hover:border-gray-300 text-left transition-all duration-200 flex items-center justify-between"
+                        {/* Frequency */}
+                        <td
+                          className={`px-4 py-4 min-w-32 ${
+                            !fieldVisibility.frequency
+                              ? "opacity-30 pointer-events-none"
+                              : ""
+                          }`}
                         >
-                          <span className="text-gray-700">
-                            {item.duration || "Set Duration"}
-                          </span>
-                          <svg
-                            className="w-4 h-4 text-gray-400"
-                            fill="none"
-                            stroke="currentColor"
-                            viewBox="0 0 24 24"
-                          >
-                            <path
-                              strokeLinecap="round"
-                              strokeLinejoin="round"
-                              strokeWidth="2"
-                              d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 100 4m0-4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 100 4m0-4v2m0-6V4"
-                            ></path>
-                          </svg>
-                        </button>
-                      </td>
-
-                      {/* Frequency */}
-                      <td className="px-4 py-4 min-w-32">
-                        <button
-                          type="button"
-                          onClick={() => openFrequencyModal(item, index)}
-                          className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm bg-white hover:bg-gray-50 hover:border-gray-300 text-left transition-all duration-200 flex items-center justify-between"
-                        >
-                          <span className="text-gray-700">
-                            {item.frequencies.length > 0
-                              ? `${item.frequencies.length} frequencies`
-                              : "Set Frequency"}
-                          </span>
-                          <svg
-                            className="w-4 h-4 text-gray-400"
-                            fill="none"
-                            stroke="currentColor"
-                            viewBox="0 0 24 24"
-                          >
-                            <path
-                              strokeLinecap="round"
-                              strokeLinejoin="round"
-                              strokeWidth="2"
-                              d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 100 4m0-4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 100 4m0-4v2m0-6V4"
-                            ></path>
-                          </svg>
-                        </button>
-                      </td>
-
-                      {/* Price */}
-                      <td className="px-4 py-4 text-center min-w-24">
-                        <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-semibold bg-green-100 text-green-800">
-                          ₹{item.price.toFixed(2)}
-                        </span>
-                      </td>
-
-                      {/* Medicine Consumption */}
-                      <td className="px-4 py-4 min-w-64">
-                        <div className="space-y-2">
-                          {item.form === "Liquid form" ? (
-                            <select
-                              value={item.medicineConsumption}
-                              onChange={(e) =>
-                                updatePrescriptionItem(
-                                  item.id,
-                                  "medicineConsumption",
-                                  e.target.value
-                                )
-                              }
-                              className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white hover:border-gray-300 transition-colors"
-                            >
-                              <option value="">Select</option>
-                              <option value="3 drops in 15ml of water">
-                                3 drops in 15ml of water
-                              </option>
-                              <option value="10 strokes (as per bottle) in 15ml">
-                                10 strokes (as per bottle) in 15ml
-                              </option>
-                              <option value="Additional">Additional</option>
-                            </select>
-                          ) : item.form === "Pills" ? (
-                            <select
-                              value={item.medicineConsumption}
-                              onChange={(e) =>
-                                updatePrescriptionItem(
-                                  item.id,
-                                  "medicineConsumption",
-                                  e.target.value
-                                )
-                              }
-                              className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white hover:border-gray-300 transition-colors"
-                            >
-                              <option value="">Select</option>
-                              <option value="5 pills dissolve in one teacup of water 1 dose = 5 Full teaspoon">
-                                5 pills dissolve in one teacup of water 1 dose =
-                                5 Full teaspoon
-                              </option>
-                              <option value="3 pills">3 pills</option>
-                              <option value="Additional">Additional</option>
-                            </select>
-                          ) : item.form === "Tablets" ? (
-                            <select
-                              value={item.medicineConsumption}
-                              onChange={(e) =>
-                                updatePrescriptionItem(
-                                  item.id,
-                                  "medicineConsumption",
-                                  e.target.value
-                                )
-                              }
-                              className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white hover:border-gray-300 transition-colors"
-                            >
-                              <option value="">Select</option>
-                              <option value="No of tabs (as mentioned on the bottle) - chew - drink one sip of hot water">
-                                No of tabs (as mentioned on the bottle) - chew -
-                                drink one sip of hot water
-                              </option>
-                              <option value="Additional">Additional</option>
-                            </select>
-                          ) : null}
-
-                          {/* Show text box if 'Additional' is selected */}
-                          {item.medicineConsumption === "Additional" && (
-                            <input
-                              type="text"
-                              value={item.customConsumption}
-                              onChange={(e) =>
-                                updatePrescriptionItem(
-                                  item.id,
-                                  "customConsumption",
-                                  e.target.value
-                                )
-                              }
-                              className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white hover:border-gray-300 transition-colors"
-                              placeholder="Enter custom instruction"
-                            />
-                          )}
-                        </div>
-                      </td>
-
-                      {/* Label */}
-                      <td className="px-4 py-4 min-w-20">
-                        <select
-                          value={item.label}
-                          onChange={(e) =>
-                            updatePrescriptionItem(
-                              item.id,
-                              "label",
-                              e.target.value
-                            )
-                          }
-                          className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white hover:border-gray-300 transition-colors"
-                        >
-                          <option value="A">A</option>
-                          <option value="B">B</option>
-                          <option value="C">C</option>
-                          <option value="D">D</option>
-                          <option value="1">1</option>
-                          <option value="2">2</option>
-                          <option value="3">3</option>
-                          <option value="4">4</option>
-                        </select>
-                      </td>
-
-                      {/* Additional Comments */}
-                      <td className="px-4 py-4 min-w-48">
-                        <textarea
-                          value={item.additionalComments}
-                          onChange={(e) =>
-                            updatePrescriptionItem(
-                              item.id,
-                              "additionalComments",
-                              e.target.value
-                            )
-                          }
-                          className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none bg-white hover:border-gray-300 transition-colors"
-                          rows="2"
-                          placeholder="Additional notes..."
-                        />
-                      </td>
-
-                      {/* Actions */}
-                      <td className="px-4 py-4 text-center">
-                        {prescriptionData.prescriptionItems.length > 1 && (
                           <button
-                            onClick={() => removePrescriptionItem(item.id)}
-                            className="inline-flex items-center px-3 py-2 bg-red-600 text-white rounded-lg text-sm hover:bg-red-700 transition-colors duration-200 shadow-sm hover:shadow-md"
-                            title="Remove item"
+                            type="button"
+                            disabled={!fieldVisibility.frequency}
+                            onClick={() =>
+                              fieldVisibility.frequency &&
+                              openFrequencyModal(item, index)
+                            }
+                            className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm bg-white hover:bg-gray-50 hover:border-gray-300 text-left transition-all duration-200 flex items-center justify-between disabled:bg-gray-100 disabled:cursor-not-allowed"
                           >
+                            <span className="text-gray-700">
+                              {item.frequencies.length > 0
+                                ? `${item.frequencies.length} frequencies`
+                                : "Set Frequency"}
+                            </span>
                             <svg
-                              className="w-4 h-4"
+                              className="w-4 h-4 text-gray-400"
                               fill="none"
                               stroke="currentColor"
                               viewBox="0 0 24 24"
@@ -2255,14 +2244,188 @@ const PrescriptionWriting = () => {
                                 strokeLinecap="round"
                                 strokeLinejoin="round"
                                 strokeWidth="2"
-                                d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
+                                d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 100 4m0-4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 100 4m0-4v2m0-6V4"
                               ></path>
                             </svg>
                           </button>
-                        )}
-                      </td>
-                    </tr>
-                  ))}
+                        </td>
+
+                        {/* Price */}
+                        <td className="px-4 py-4 text-center min-w-24">
+                          <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-semibold bg-green-100 text-green-800">
+                            ₹{item.price.toFixed(2)}
+                          </span>
+                        </td>
+
+                        {/* Medicine Consumption */}
+                        <td
+                          className={`px-4 py-4 min-w-64 ${
+                            !fieldVisibility.medicineConsumption
+                              ? "opacity-30 pointer-events-none"
+                              : ""
+                          }`}
+                        >
+                          <div className="space-y-2">
+                            {item.form === "Liquid form" ? (
+                              <select
+                                value={item.medicineConsumption}
+                                onChange={(e) =>
+                                  updatePrescriptionItem(
+                                    item.id,
+                                    "medicineConsumption",
+                                    e.target.value
+                                  )
+                                }
+                                disabled={!fieldVisibility.medicineConsumption}
+                                className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white hover:border-gray-300 transition-colors disabled:bg-gray-100 disabled:cursor-not-allowed"
+                              >
+                                <option value="">Select</option>
+                                <option value="3 drops in 15ml of water">
+                                  3 drops in 15ml of water
+                                </option>
+                                <option value="10 strokes (as per bottle) in 15ml">
+                                  10 strokes (as per bottle) in 15ml
+                                </option>
+                                <option value="Additional">Additional</option>
+                              </select>
+                            ) : item.form === "Pills" ? (
+                              <select
+                                value={item.medicineConsumption}
+                                onChange={(e) =>
+                                  updatePrescriptionItem(
+                                    item.id,
+                                    "medicineConsumption",
+                                    e.target.value
+                                  )
+                                }
+                                disabled={!fieldVisibility.medicineConsumption}
+                                className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white hover:border-gray-300 transition-colors disabled:bg-gray-100 disabled:cursor-not-allowed"
+                              >
+                                <option value="">Select</option>
+                                <option value="5 pills dissolve in one teacup of water 1 dose = 5 Full teaspoon">
+                                  5 pills dissolve in one teacup of water 1 dose
+                                  = 5 Full teaspoon
+                                </option>
+                                <option value="3 pills">3 pills</option>
+                                <option value="Additional">Additional</option>
+                              </select>
+                            ) : item.form === "Tablets" ? (
+                              <select
+                                value={item.medicineConsumption}
+                                onChange={(e) =>
+                                  updatePrescriptionItem(
+                                    item.id,
+                                    "medicineConsumption",
+                                    e.target.value
+                                  )
+                                }
+                                disabled={!fieldVisibility.medicineConsumption}
+                                className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white hover:border-gray-300 transition-colors disabled:bg-gray-100 disabled:cursor-not-allowed"
+                              >
+                                <option value="">Select</option>
+                                <option value="No of tabs (as mentioned on the bottle) - chew - drink one sip of hot water">
+                                  No of tabs (as mentioned on the bottle) - chew
+                                  - drink one sip of hot water
+                                </option>
+                                <option value="Additional">Additional</option>
+                              </select>
+                            ) : null}
+
+                            {/* Show text box if 'Additional' is selected */}
+                            {item.medicineConsumption === "Additional" &&
+                              fieldVisibility.medicineConsumption && (
+                                <input
+                                  type="text"
+                                  value={item.customConsumption}
+                                  onChange={(e) =>
+                                    updatePrescriptionItem(
+                                      item.id,
+                                      "customConsumption",
+                                      e.target.value
+                                    )
+                                  }
+                                  className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white hover:border-gray-300 transition-colors"
+                                  placeholder="Enter custom instruction"
+                                />
+                              )}
+                          </div>
+                        </td>
+
+                        {/* Label */}
+                        <td
+                          className={`px-4 py-4 min-w-20 ${
+                            !fieldVisibility.label
+                              ? "opacity-30 pointer-events-none"
+                              : ""
+                          }`}
+                        >
+                          <select
+                            value={item.label}
+                            onChange={(e) =>
+                              updatePrescriptionItem(
+                                item.id,
+                                "label",
+                                e.target.value
+                              )
+                            }
+                            disabled={!fieldVisibility.label}
+                            className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white hover:border-gray-300 transition-colors disabled:bg-gray-100 disabled:cursor-not-allowed"
+                          >
+                            <option value="A">A</option>
+                            <option value="B">B</option>
+                            <option value="C">C</option>
+                            <option value="D">D</option>
+                            <option value="1">1</option>
+                            <option value="2">2</option>
+                            <option value="3">3</option>
+                            <option value="4">4</option>
+                          </select>
+                        </td>
+
+                        {/* Additional Comments */}
+                        <td className="px-4 py-4 min-w-48">
+                          <textarea
+                            value={item.additionalComments}
+                            onChange={(e) =>
+                              updatePrescriptionItem(
+                                item.id,
+                                "additionalComments",
+                                e.target.value
+                              )
+                            }
+                            className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none bg-white hover:border-gray-300 transition-colors"
+                            rows="2"
+                            placeholder="Additional notes..."
+                          />
+                        </td>
+
+                        {/* Actions */}
+                        <td className="px-4 py-4 text-center">
+                          {prescriptionData.prescriptionItems.length > 1 && (
+                            <button
+                              onClick={() => removePrescriptionItem(item.id)}
+                              className="inline-flex items-center px-3 py-2 bg-red-600 text-white rounded-lg text-sm hover:bg-red-700 transition-colors duration-200 shadow-sm hover:shadow-md"
+                              title="Remove item"
+                            >
+                              <svg
+                                className="w-4 h-4"
+                                fill="none"
+                                stroke="currentColor"
+                                viewBox="0 0 24 24"
+                              >
+                                <path
+                                  strokeLinecap="round"
+                                  strokeLinejoin="round"
+                                  strokeWidth="2"
+                                  d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
+                                ></path>
+                              </svg>
+                            </button>
+                          )}
+                        </td>
+                      </tr>
+                    );
+                  })}
                 </tbody>
               </table>
             </div>
