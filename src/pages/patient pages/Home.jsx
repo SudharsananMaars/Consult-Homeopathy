@@ -2,6 +2,8 @@ import React, { useState, useEffect } from "react";
 import axios from "axios";
 import Layout from "../../components/patient components/Layout";
 import { BsBell, BsSearch } from "react-icons/bs";
+import { format } from "date-fns";
+import { useNavigate } from "react-router-dom";
 import {
   BsClipboard,
   BsWallet,
@@ -41,6 +43,7 @@ ChartJS.register(
 
 const Home = () => {
   const [activeTab, setActiveTab] = useState("Live");
+  const navigate = useNavigate();
 
   const data = {
     labels: ["Morning", "Afternoon", "night"], // Days of the week
@@ -113,6 +116,95 @@ const Home = () => {
       fetchPendingAppointments();
     }
   }, [activeTab]); // refetch when tab switches to 'Live'
+
+  const [couponCount, setCouponCount] = useState(0);
+
+  useEffect(() => {
+    const fetchCoupons = async () => {
+      try {
+        const token = localStorage.getItem("token");
+        const response = await axios.get(
+          `${API_URL}/api/patient/pendingCoupons`,
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          }
+        );
+        setCouponCount(response.data.availableCoupons || 0);
+      } catch (error) {
+        console.log("Error fetching coupon count available");
+      }
+    };
+    fetchCoupons();
+  }, [activeTab]);
+
+  const [upcomingAppointments, setUpcomingAppointments] = useState(null);
+  useEffect(() => {
+    const fetchUpcomingAppointment = async () => {
+      try {
+        const token = localStorage.getItem("token");
+        const response = await axios.get(
+          `${API_URL}/api/patient/upComingAppointment`,
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          }
+        );
+        setUpcomingAppointments(response.data.appointment);
+      } catch (error) {
+        console.log("Error fetching upcoming appointments");
+      }
+    };
+    fetchUpcomingAppointment();
+  }, [activeTab]);
+
+  const [transactionHistory, setTransactionHistory] = useState([]);
+  useEffect(() => {
+    const fetchTransactionHistory = async () => {
+      try {
+        const token = localStorage.getItem("token");
+        const response = await axios.get(
+          `${API_URL}/api/patient/transactionHistory`,
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          }
+        );
+        setTransactionHistory(response.data.transactions || []);
+      } catch (error) {
+        console.log("Error fetching transaction history");
+      }
+    };
+    fetchTransactionHistory();
+  }, [activeTab]);
+
+  const [transaction, setTransaction] = useState(null);
+  useEffect(() => {
+    const fetchPendingTransaction = async () => {
+      try {
+        const token = await localStorage.getItem("token");
+        const response = await axios.get(
+          `${API_URL}/api/patient/pendingTransactions`,
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          }
+        );
+        setTransaction(response.data);
+      } catch (error) {
+        console.log("Unable to fetch pending transactions");
+      }
+    };
+    fetchPendingTransaction();
+  }, [activeTab]);
+
+  const handlePay = () => {
+    navigate("/payments");
+  };
 
   return (
     <div>
@@ -197,7 +289,9 @@ const Home = () => {
                     <h3 className="text-lg font-medium text-gray-600">
                       Coupons
                     </h3>
-                    <p className="text-4xl font-bold text-gray-800">3</p>
+                    <p className="text-4xl font-bold text-gray-800">
+                      {couponCount}
+                    </p>
                   </div>
                 </div>
               )}
@@ -257,20 +351,30 @@ const Home = () => {
                     </h3>
                   </div>
                 </div>
-                <div className="flex flex-col">
-                  <p className="text-xl font-semibold text-gray-800">
-                    Dr. John Smith
-                  </p>
-                  <div className="flex items-center justify-between mt-2">
-                    <div className="flex flex-col">
-                      <p className="text-md text-gray-700">15 September 2024</p>
-                      <p className="text-md text-gray-500">10:30 AM</p>
+                {upcomingAppointments ? (
+                  <div className="flex flex-col">
+                    <p className="text-xl font-semibold text-gray-800">
+                      {upcomingAppointments.doctorName}
+                    </p>
+                    <div className="flex items-center justify-between mt-2">
+                      <div className="flex flex-col">
+                        <p className="text-md text-gray-700">
+                          {format(
+                            new Date(upcomingAppointments.date),
+                            "dd MMMM yyyy"
+                          )}
+                        </p>
+                        <p className="text-md text-gray-500">
+                          {upcomingAppointments.timeSlot}
+                        </p>
+                      </div>
                     </div>
-                    <button className="bg-red-500 text-white py-1 px-3 rounded hover:bg-red-600">
-                      Cancel
-                    </button>
                   </div>
-                </div>
+                ) : (
+                  <p className="text-gray-500 text-center">
+                    No upcoming appointment
+                  </p>
+                )}
               </div>
               <div className="bg-white shadow-lg rounded-lg p-4 flex flex-col min-h-[150px]">
                 <div className="flex items-center justify-between mb-4">
@@ -282,47 +386,62 @@ const Home = () => {
                   </button>
                 </div>
                 <div className="flex flex-col flex-grow">
-                  <p className="text-md font-semibold text-gray-700">
-                    Medical Bill
-                  </p>
-                  <div className="flex items-center justify-between mb-2">
-                    <p className="text-md text-gray-700">Ratna</p>
-                    <p className="text-md text-gray-700">15 June 2024</p>
-                    <p className="text-md text-gray-500">Rs.1000</p>
-                  </div>
-                  <p className="text-md font-semibold text-gray-700">
-                    Appointment
-                  </p>
-                  <div className="flex items-center justify-between mb-2">
-                    <p className="text-md text-gray-700">Rahul</p>
-                    <p className="text-md text-gray-700">12 Feb 2024</p>
-                    <p className="text-md text-gray-500">Rs.250</p>
-                  </div>
+                  {transactionHistory.length === 0 ? (
+                    <p className="text-gray-500">No recent transactions</p>
+                  ) : (
+                    transactionHistory.map((txn, idx) => (
+                      <div key={idx}>
+                        <p className="text-md font-semibold text-gray-700">
+                          {txn.service}
+                        </p>
+                        <div className="flex items-center justify-between mb-2">
+                          <p className="text-md text-gray-700">{txn.date}</p>
+                          <p className="text-md text-gray-500">{txn.amount}</p>
+                        </div>
+                      </div>
+                    ))
+                  )}
                 </div>
               </div>
-
               <div className="bg-white shadow-lg rounded-lg p-4 flex flex-col">
                 <div className="flex items-center justify-between mb-4">
                   <h4 className="text-lg font-semibold text-gray-800">
                     Pending Transactions
                   </h4>
-                  <button className="text-blue-500 hover:underline">
-                    See All
-                  </button>
                 </div>
-                <div className="flex flex-col">
-                  <p className="text-md font-semibold text-gray-800">
-                    Medicine Bill
-                  </p>
-                  <div className="flex items-center justify-between mb-2">
-                    <p className="text-md text-gray-700">Ratna</p>
-                    <p className="text-md text-gray-700">20 Sept 2024</p>
-                    <p className="text-md text-gray-500">1500</p>
+
+                {transaction ? (
+                  <div className="flex flex-col">
+                    <p className="text-md font-semibold text-gray-800">
+                      {transaction.service}
+                    </p>
+                    <div className="flex items-center justify-between mb-2">
+                      <p className="text-md text-gray-700">
+                        {new Date(transaction.date).toLocaleDateString(
+                          "en-GB",
+                          {
+                            day: "2-digit",
+                            month: "short",
+                            year: "numeric",
+                          }
+                        )}
+                      </p>
+                      <p className="text-md text-gray-500">
+                        ₹{transaction.amount}
+                      </p>
+                    </div>
+                    <button
+                      onClick={handlePay}
+                      className="bg-green-500 text-white py-1 px-3 rounded hover:bg-green-600"
+                    >
+                      Pay
+                    </button>
                   </div>
-                  <button className="bg-green-500 text-white py-1 px-3 rounded hover:bg-green-600">
-                    Pay
-                  </button>
-                </div>
+                ) : (
+                  <p className="text-gray-500 text-md text-center">
+                    No pending transactions
+                  </p>
+                )}
               </div>
             </div>
 
