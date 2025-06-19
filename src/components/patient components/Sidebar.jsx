@@ -31,13 +31,13 @@ const Sidebar = () => {
   }, [location.pathname]);
 
   const SIDEBAR_LINKS = [
+    { id: 2, path: "/home", name: "Home", icon: LuBox },
     {
       id: 1,
       path: "/consulthistory",
       name: "ConsultationHistory",
       icon: LuBox,
     },
-    { id: 2, path: "/home", name: "Home", icon: LuBox },
     {
       id: 3,
       path: "/appointments/newappointment",

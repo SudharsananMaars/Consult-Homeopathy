@@ -1,6 +1,6 @@
 // PatientProfile.js
 import React, { useState, useEffect } from "react";
-import DoctorLayout from "/src/components/doctor components/DoctorLayout.jsx";
+import Layout from "../../components/patient components/Layout";
 import axios from "axios";
 import config from "../../config";
 const API_URL = config.API_URL;
@@ -97,7 +97,7 @@ const PatientProfile = () => {
   };
 
   return (
-    <DoctorLayout>
+    <Layout>
       <div className="p-6">
         <h1 className="text-2xl font-bold mb-4">Profile</h1>
         <div className="max-w-2/3 mx-auto w-full p-6 shadow bg-white rounded-lg">
@@ -219,7 +219,7 @@ const PatientProfile = () => {
           )}
         </div>
       </div>
-    </DoctorLayout>
+    </Layout>
   );
 };
 
