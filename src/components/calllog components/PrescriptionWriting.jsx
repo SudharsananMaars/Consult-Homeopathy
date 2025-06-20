@@ -56,36 +56,82 @@ const FrequencyModal = ({
     selectedDurationDays.length > 0 ? selectedDurationDays : [];
   const totalDays = availableDays.length;
 
-  useEffect(() => {
+  // Time validation ranges
+  const timeRanges = {
+    morning: { start: "04:00", end: "11:59" },
+    afternoon: { start: "12:00", end: "16:59" },
+    evening: { start: "17:00", end: "20:59" },
+    night: { start: "21:00", end: "03:59" },
+  };
+
+ useEffect(() => {
     if (currentFrequencies.length > 0) {
+      console.log("Loading existing frequencies:", currentFrequencies);
+      
       // Group existing frequencies by day ranges
       const ranges = [];
       const configs = {};
-
+      const dayToRangeMap = new Map();
+      
       currentFrequencies.forEach((freq) => {
         if (availableDays.includes(freq.day)) {
-          // Find if this day belongs to an existing range
-          let existingRange = ranges.find((range) =>
-            range.some((day) => day === freq.day)
-          );
-
-          if (!existingRange) {
-            // Create new range for this day
-            existingRange = [freq.day];
-            ranges.push(existingRange);
+          const key = freq.duration || `Day ${freq.day}`;
+          
+          if (!dayToRangeMap.has(key)) {
+            dayToRangeMap.set(key, []);
           }
+          dayToRangeMap.get(key).push(freq.day);
+        }
+      });
 
-          const rangeKey = `${Math.min(...existingRange)}-${Math.max(
-            ...existingRange
-          )}`;
-          configs[rangeKey] = freq;
+      // Convert map to ranges and configurations
+      dayToRangeMap.forEach((days, key) => {
+        const sortedDays = [...new Set(days)].sort((a, b) => a - b);
+        ranges.push(sortedDays);
+        
+        const rangeKey = `${Math.min(...sortedDays)}-${Math.max(...sortedDays)}`;
+        const firstFreq = currentFrequencies.find(f => sortedDays.includes(f.day));
+        
+        if (firstFreq) {
+          configs[rangeKey] = {
+            days: sortedDays,
+            frequencyType: firstFreq.frequencyType || frequencyType,
+            standardFrequency: firstFreq.standardFrequency || {},
+            frequentFrequency: firstFreq.frequentFrequency || {}
+          };
         }
       });
 
       setDayRanges(ranges);
       setRangeConfigurations(configs);
     }
-  }, [currentFrequencies, availableDays]);
+  }, [currentFrequencies, availableDays, frequencyType]);
+
+  const validateTime = (time, period) => {
+    if (!time) return true;
+
+    const timeMinutes = timeToMinutes(time);
+    const range = timeRanges[period];
+    const startMinutes = timeToMinutes(range.start);
+    const endMinutes = timeToMinutes(range.end);
+
+    // Handle overnight periods (night time)
+    if (period === "night") {
+      return timeMinutes >= startMinutes || timeMinutes <= endMinutes;
+    }
+
+    return timeMinutes >= startMinutes && timeMinutes <= endMinutes;
+  };
+
+  const timeToMinutes = (time) => {
+    const [hours, minutes] = time.split(":").map(Number);
+    return hours * 60 + minutes;
+  };
+
+  const getTimeRangeLabel = (period) => {
+    const range = timeRanges[period];
+    return `${range.start} - ${range.end}`;
+  };
 
   const handleDayClick = (day) => {
     if (clickStart === null) {
@@ -111,8 +157,21 @@ const FrequencyModal = ({
       );
 
       if (!overlapping) {
-        setDayRanges([...dayRanges, newRange]);
-        setSelectedRange(dayRanges.length); // Select the new range
+        const updatedRanges = [...dayRanges, newRange];
+        setDayRanges(updatedRanges);
+        setSelectedRange(updatedRanges.length - 1); // Select the new range
+
+        // Initialize configuration for new range
+        const rangeKey = `${Math.min(...newRange)}-${Math.max(...newRange)}`;
+        setRangeConfigurations((prev) => ({
+          ...prev,
+          [rangeKey]: {
+            days: newRange,
+            frequencyType: frequencyType,
+            standardFrequency: {},
+            frequentFrequency: {},
+          },
+        }));
       } else {
         alert(
           "This range overlaps with an existing range. Please select non-overlapping days."
@@ -142,22 +201,25 @@ const FrequencyModal = ({
     setSelectedRange(null);
   };
 
-  const handleFrequencyChange = (field, value) => {
+const handleFrequencyChange = (field, value) => {
     if (selectedRange === null) return;
 
     const currentRange = dayRanges[selectedRange];
-    const rangeKey = `${Math.min(...currentRange)}-${Math.max(
-      ...currentRange
-    )}`;
-
+    const rangeKey = `${Math.min(...currentRange)}-${Math.max(...currentRange)}`;
     const fieldParts = field.split(".");
 
-    setRangeConfigurations((prev) => {
-      const frequencyKey =
-        frequencyType === "standard"
-          ? "standardFrequency"
-          : "frequentFrequency";
+    // Validate time if it's a time field
+    if (fieldParts[1] === 'from' || fieldParts[1] === 'to') {
+      const period = fieldParts[0];
+      // if (!validateTime(value, period)) {
+      //   alert(`Invalid time for ${period}. Please select time between ${getTimeRangeLabel(period)}`);
+      //   return;
+      // }
+    }
 
+    setRangeConfigurations((prev) => {
+      const frequencyKey = frequencyType === "standard" ? "standardFrequency" : "frequentFrequency";
+      
       return {
         ...prev,
         [rangeKey]: {
@@ -175,7 +237,6 @@ const FrequencyModal = ({
       };
     });
   };
-
   const handleFrequentChange = (field, value) => {
     if (selectedRange === null) return;
 
@@ -205,27 +266,75 @@ const FrequencyModal = ({
     setClickStart(null);
   };
 
-  const handleSave = () => {
+const handleSave = () => {
     const freqArray = [];
 
+    console.log("Saving frequency configuration:", { dayRanges, rangeConfigurations });
+
+    // Process each range separately
     dayRanges.forEach((range) => {
       const rangeKey = `${Math.min(...range)}-${Math.max(...range)}`;
       const config = rangeConfigurations[rangeKey];
 
       if (config) {
+        // Create frequency objects for each day in the range
         range.forEach((day) => {
-          freqArray.push({
-            ...config,
+          const baseFreqObj = {
             day: day,
             duration: `Day ${Math.min(...range)}-${Math.max(...range)}`,
-            // Ensure frequencyType is included
-            frequencyType: frequencyType,
-          });
+            frequencyType: config.frequencyType,
+          };
+
+          if (config.frequencyType === "standard") {
+            // Create standardFrequency object from configuration
+            const standardFrequency = {};
+            ['morning', 'afternoon', 'evening', 'night'].forEach(period => {
+              const periodConfig = config.standardFrequency?.[period] || {};
+              standardFrequency[period] = {
+                foodType: periodConfig.foodType || "",
+                from: periodConfig.from || "",
+                to: periodConfig.to || "",
+              };
+            });
+
+            freqArray.push({
+              ...baseFreqObj,
+              standardFrequency: standardFrequency,
+              // Also create timing structure for backend compatibility
+              timing: {
+                morning: {
+                  food: standardFrequency.morning.foodType,
+                  time: standardFrequency.morning.from,
+                },
+                afternoon: {
+                  food: standardFrequency.afternoon.foodType,
+                  time: standardFrequency.afternoon.from,
+                },
+                evening: {
+                  food: standardFrequency.evening.foodType,
+                  time: standardFrequency.evening.from,
+                },
+                night: {
+                  food: standardFrequency.night.foodType,
+                  time: standardFrequency.night.from,
+                },
+              },
+            });
+          } else {
+            // Frequent frequency
+            const frequentFrequency = config.frequentFrequency || {};
+            freqArray.push({
+              ...baseFreqObj,
+              frequentFrequency: frequentFrequency,
+              // For backend compatibility
+              frequency: `${frequentFrequency.hours || 0}hr ${frequentFrequency.minutes || 0}mins`,
+            });
+          }
         });
       }
     });
 
-    // console.log("Saving frequency data:", freqArray); // Debug log
+    console.log("Final frequency array to save:", freqArray);
     onSave(freqArray);
     onClose();
   };
@@ -429,6 +538,10 @@ const FrequencyModal = ({
     }
 
     const currentRange = dayRanges[selectedRange];
+    const rangeKey = `${Math.min(...currentRange)}-${Math.max(
+      ...currentRange
+    )}`;
+    const config = rangeConfigurations[rangeKey] || {};
     const rangeText = `Days ${Math.min(...currentRange)} - ${Math.max(
       ...currentRange
     )}`;
@@ -443,49 +556,77 @@ const FrequencyModal = ({
             <p className="text-sm text-blue-600">4 times per day</p>
           </div>
 
-          <div className="grid grid-cols-2 gap-4">
-            {["morning", "afternoon", "evening", "night"].map((period) => (
-              <div key={period}>
-                <label className="block text-sm font-medium text-gray-700 mb-2 capitalize">
-                  {period}
-                </label>
-                <div className="flex gap-2 mb-2">
-                  <input
-                    type="time"
-                    onChange={(e) =>
-                      handleFrequencyChange(`${period}.from`, e.target.value)
-                    }
-                    className="w-1/2 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                    placeholder="From"
-                  />
-                  <input
-                    type="time"
-                    onChange={(e) =>
-                      handleFrequencyChange(`${period}.to`, e.target.value)
-                    }
-                    className="w-1/2 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                    placeholder="To"
-                  />
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+            {["morning", "afternoon", "evening", "night"].map((period) => {
+              const periodConfig = config.standardFrequency?.[period] || {};
+              return (
+                <div key={period} className="bg-white p-4 rounded-lg border border-gray-200">
+                  <div className="flex items-center justify-between mb-3">
+                    <label className="text-sm font-semibold text-gray-700 capitalize">
+                      {period}
+                    </label>
+                    <span className="text-xs text-gray-500 bg-gray-100 px-2 py-1 rounded">
+                      {getTimeRangeLabel(period)}
+                    </span>
+                  </div>
+                  
+                  <div className="space-y-3">
+                    {/* Time Range */}
+                    <div className="grid grid-cols-2 gap-2">
+                      <div>
+                        <label className="block text-xs font-medium text-gray-600 mb-1">
+                          Start Time
+                        </label>
+                        <input
+                          type="time"
+                          value={periodConfig.from || ""}
+                          onChange={(e) =>
+                            handleFrequencyChange(`${period}.from`, e.target.value)
+                          }
+                          className="w-full px-2 py-1.5 text-sm border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-xs font-medium text-gray-600 mb-1">
+                          End Time
+                        </label>
+                        <input
+                          type="time"
+                          value={periodConfig.to || ""}
+                          onChange={(e) =>
+                            handleFrequencyChange(`${period}.to`, e.target.value)
+                          }
+                          className="w-full px-2 py-1.5 text-sm border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                        />
+                      </div>
+                    </div>
+
+                    {/* Food Type */}
+                    <div>
+                      <label className="block text-xs font-medium text-gray-600 mb-1">
+                        Food Type
+                      </label>
+                      <select
+                        value={periodConfig.foodType || ""}
+                        onChange={(e) =>
+                          handleFrequencyChange(`${period}.foodType`, e.target.value)
+                        }
+                        className="w-full px-2 py-1.5 text-sm border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                      >
+                        <option value="">Select</option>
+                        <option value="E/S">E/S (Empty Stomach)</option>
+                        <option value="L/S">L/S (Light Stomach)</option>
+                      </select>
+                    </div>
+                  </div>
                 </div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Food type
-                </label>
-                <select
-                  onChange={(e) =>
-                    handleFrequencyChange(`${period}.foodType`, e.target.value)
-                  }
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                >
-                  <option value="">Select</option>
-                  <option value="E/S">E/S (Empty Stomach)</option>
-                  <option value="L/S">L/S (Light Stomach)</option>
-                </select>
-              </div>
-            ))}
+              );
+            })}
           </div>
         </div>
       );
     } else {
+      const frequentConfig = config.frequentFrequency || {};
       return (
         <div className="space-y-4">
           <div className="bg-purple-50 p-3 rounded-lg border border-purple-200">
@@ -497,53 +638,63 @@ const FrequencyModal = ({
             </p>
           </div>
 
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Hours
-              </label>
-              <input
-                type="number"
-                min="0"
-                max="23"
-                onChange={(e) =>
-                  handleFrequentChange("hours", parseInt(e.target.value) || 0)
-                }
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                placeholder="0"
-              />
+          <div className="bg-white p-4 rounded-lg border border-gray-200">
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Hours
+                </label>
+                <input
+                  type="number"
+                  min="0"
+                  max="23"
+                  value={frequentConfig.hours || ""}
+                  onChange={(e) =>
+                    handleFrequentChange("hours", parseInt(e.target.value) || 0)
+                  }
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  placeholder="0"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Minutes
+                </label>
+                <input
+                  type="number"
+                  min="0"
+                  max="59"
+                  value={frequentConfig.minutes || ""}
+                  onChange={(e) =>
+                    handleFrequentChange(
+                      "minutes",
+                      parseInt(e.target.value) || 0
+                    )
+                  }
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  placeholder="0"
+                />
+              </div>
             </div>
 
-            <div>
+            {/* <div className="mt-4">
               <label className="block text-sm font-medium text-gray-700 mb-2">
-                Minutes
+                Food Type
               </label>
-              <input
-                type="number"
-                min="0"
-                max="59"
+              <select
+                value={frequentConfig.foodType || ""}
                 onChange={(e) =>
-                  handleFrequentChange("minutes", parseInt(e.target.value) || 0)
+                  handleFrequentChange("foodType", e.target.value)
                 }
                 className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                placeholder="0"
-              />
-            </div>
+              >
+                <option value="">Select</option>
+                <option value="E/S">E/S (Empty Stomach)</option>
+                <option value="L/S">L/S (Light Stomach)</option>
+              </select>
+            </div> */}
           </div>
-
-          {/* <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Food type
-            </label>
-            <select
-              onChange={(e) => handleFrequentChange("foodType", e.target.value)}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-            >
-              <option value="">Select</option>
-              <option value="E/S">E/S (Empty Stomach)</option>
-              <option value="L/S">L/S (Light Stomach)</option>
-            </select>
-          </div> */}
         </div>
       );
     }
@@ -556,7 +707,7 @@ const FrequencyModal = ({
       <div className="bg-white rounded-xl shadow-2xl w-full max-w-7xl max-h-[90vh] overflow-hidden">
         <div className="flex flex-col lg:flex-row h-full max-h-[90vh]">
           {/* Left Panel - Calendar & Ranges */}
-<div className="w-1/3 bg-gray-50 p-6 border-r overflow-y-auto max-h-[calc(95vh-3rem)]">
+          <div className="w-full lg:w-1/3 bg-gray-50 p-6 border-r overflow-y-auto max-h-[calc(95vh-3rem)]">
             <div className="flex justify-between items-center mb-6">
               <h3 className="text-xl font-bold text-gray-800">
                 Select Day Ranges
@@ -605,7 +756,7 @@ const FrequencyModal = ({
           </div>
 
           {/* Right Panel - Frequency Configuration */}
-<div className="flex-1 p-6 overflow-y-auto max-h-[calc(95vh-3rem)]">
+          <div className="flex-1 p-6 overflow-y-auto max-h-[calc(95vh-3rem)]">
             <h3 className="text-xl font-bold text-gray-800 mb-6">
               Configure Frequency
             </h3>
@@ -703,19 +854,20 @@ const DurationModal = ({
   // Get all day assignments including other medicines (read-only) and current medicine (editable)
   const getDayAssignments = (day) => {
     const assignments = [];
-    
+
     // Add read-only assignments from other medicines
     allDurationRanges.forEach((ranges, medicineIndex) => {
       if (medicineIndex !== currentRowIndex && ranges && ranges.length > 0) {
-        ranges.forEach(range => {
+        ranges.forEach((range) => {
           if (day >= range.startDay && day <= range.endDay) {
             assignments.push({
               ...range,
               medicineIndex,
               isReadOnly: true,
-              medicineName: prescriptionItems[medicineIndex]?.medicineName || 
-                           prescriptionItems[medicineIndex]?.rawMaterial?.name || 
-                           `Medicine ${medicineIndex + 1}`
+              medicineName:
+                prescriptionItems[medicineIndex]?.medicineName ||
+                prescriptionItems[medicineIndex]?.rawMaterial?.name ||
+                `Medicine ${medicineIndex + 1}`,
             });
           }
         });
@@ -723,13 +875,13 @@ const DurationModal = ({
     });
 
     // Add current medicine's assignments (editable)
-    durationRanges.forEach(range => {
+    durationRanges.forEach((range) => {
       if (day >= range.startDay && day <= range.endDay) {
         assignments.push({
           ...range,
           medicineIndex: currentRowIndex,
           isReadOnly: false,
-          medicineName: getCurrentMedicineName()
+          medicineName: getCurrentMedicineName(),
         });
       }
     });
@@ -748,7 +900,8 @@ const DurationModal = ({
     // Check conflicts with other medicines
     for (let day = newRange.startDay; day <= newRange.endDay; day++) {
       const existing = getDayAssignments(day).filter(
-        (assignment) => assignment.medicineIndex !== currentRowIndex && assignment.isReadOnly
+        (assignment) =>
+          assignment.medicineIndex !== currentRowIndex && assignment.isReadOnly
       );
       if (existing.length > 0) {
         conflicts.push({ day, existing });
@@ -762,11 +915,11 @@ const DurationModal = ({
 
     // Get all ranges from all medicines
     const allRanges = [];
-    
+
     // Add ranges from other medicines
     allDurationRanges.forEach((ranges, medicineIndex) => {
       if (medicineIndex !== currentRowIndex && ranges && ranges.length > 0) {
-        ranges.forEach(range => {
+        ranges.forEach((range) => {
           allRanges.push({ ...range, medicineIndex });
         });
       }
@@ -794,10 +947,14 @@ const DurationModal = ({
   const handleDayClick = (day) => {
     // Check if this day has read-only assignments
     const dayAssignments = getDayAssignments(day);
-    const hasReadOnlyAssignment = dayAssignments.some(assignment => assignment.isReadOnly);
-    
+    const hasReadOnlyAssignment = dayAssignments.some(
+      (assignment) => assignment.isReadOnly
+    );
+
     if (hasReadOnlyAssignment && consumptionType !== "Parallel") {
-      alert(`Day ${day} is already assigned to another medicine and cannot be modified.`);
+      alert(
+        `Day ${day} is already assigned to another medicine and cannot be modified.`
+      );
       return;
     }
 
@@ -809,19 +966,24 @@ const DurationModal = ({
       // Second click - create range and apply
       const start = Math.min(clickStart, day);
       const end = Math.max(clickStart, day);
-      
+
       // Check if any day in the range has read-only assignments
       let hasConflictInRange = false;
       for (let d = start; d <= end; d++) {
         const assignments = getDayAssignments(d);
-        if (assignments.some(assignment => assignment.isReadOnly) && consumptionType !== "Parallel") {
+        if (
+          assignments.some((assignment) => assignment.isReadOnly) &&
+          consumptionType !== "Parallel"
+        ) {
           hasConflictInRange = true;
           break;
         }
       }
 
       if (hasConflictInRange) {
-        alert(`Some days in the selected range are already assigned to other medicines.`);
+        alert(
+          `Some days in the selected range are already assigned to other medicines.`
+        );
         setClickStart(null);
         setSelectedDays(new Set());
         return;
@@ -862,10 +1024,14 @@ const DurationModal = ({
   const applyRange = (newRange) => {
     setDurationRanges((prev) => {
       // Remove any existing range for the current medicine that overlaps
-      const updated = prev.filter(range => 
-        !(newRange.startDay <= range.endDay && newRange.endDay >= range.startDay)
+      const updated = prev.filter(
+        (range) =>
+          !(
+            newRange.startDay <= range.endDay &&
+            newRange.endDay >= range.startDay
+          )
       );
-      
+
       // Add new range
       updated.push(newRange);
       return updated;
@@ -885,9 +1051,14 @@ const DurationModal = ({
   const clearDay = (day) => {
     // Only allow clearing if it's not read-only
     const dayAssignments = getDayAssignments(day);
-    const hasReadOnlyAssignment = dayAssignments.some(assignment => assignment.isReadOnly);
-    
-    if (hasReadOnlyAssignment && dayAssignments.every(assignment => assignment.isReadOnly)) {
+    const hasReadOnlyAssignment = dayAssignments.some(
+      (assignment) => assignment.isReadOnly
+    );
+
+    if (
+      hasReadOnlyAssignment &&
+      dayAssignments.every((assignment) => assignment.isReadOnly)
+    ) {
       alert("This day is assigned to another medicine and cannot be cleared.");
       return;
     }
@@ -908,8 +1079,10 @@ const DurationModal = ({
     const availableDays = [];
     for (let day = 1; day <= days; day++) {
       const assignments = getDayAssignments(day);
-      const hasReadOnlyAssignment = assignments.some(assignment => assignment.isReadOnly);
-      
+      const hasReadOnlyAssignment = assignments.some(
+        (assignment) => assignment.isReadOnly
+      );
+
       if (!hasReadOnlyAssignment || consumptionType === "Parallel") {
         availableDays.push(day);
       }
@@ -986,8 +1159,12 @@ const DurationModal = ({
           const isSelected = selectedDays.has(day);
           const isClickStart = clickStart === day;
           const hasAssignment = assignments.length > 0;
-          const hasReadOnlyAssignment = assignments.some(assignment => assignment.isReadOnly);
-          const hasEditableAssignment = assignments.some(assignment => !assignment.isReadOnly);
+          const hasReadOnlyAssignment = assignments.some(
+            (assignment) => assignment.isReadOnly
+          );
+          const hasEditableAssignment = assignments.some(
+            (assignment) => !assignment.isReadOnly
+          );
 
           // Show preview range when clickStart is set
           const showPreviewRange = clickStart !== null && day !== clickStart;
@@ -1006,7 +1183,11 @@ const DurationModal = ({
                 ${isSelected ? "ring-2 ring-blue-400 ring-opacity-75" : ""}
                 ${hasAssignment ? "bg-opacity-90" : "bg-white hover:bg-gray-50"}
                 ${isInPreviewRange ? "bg-blue-50 border-blue-300" : ""}
-                ${hasReadOnlyAssignment && !hasEditableAssignment ? "opacity-60" : ""}
+                ${
+                  hasReadOnlyAssignment && !hasEditableAssignment
+                    ? "opacity-60"
+                    : ""
+                }
               `}
               onClick={() => handleDayClick(day)}
               onContextMenu={(e) => {
@@ -1026,8 +1207,16 @@ const DurationModal = ({
                     key={idx}
                     className={`
                       flex-1 ${getMedicineColor(assignment.medicineIndex)} 
-                      ${assignments.length === 1 ? "bg-opacity-40" : "bg-opacity-60"}
-                      ${assignment.isReadOnly ? "bg-opacity-30 border-2 border-dashed border-gray-400" : ""}
+                      ${
+                        assignments.length === 1
+                          ? "bg-opacity-40"
+                          : "bg-opacity-60"
+                      }
+                      ${
+                        assignment.isReadOnly
+                          ? "bg-opacity-30 border-2 border-dashed border-gray-400"
+                          : ""
+                      }
                       flex items-center justify-center
                       ${
                         consumptionType === "Parallel" && assignments.length > 1
@@ -1035,9 +1224,15 @@ const DurationModal = ({
                           : ""
                       }
                     `}
-                    title={`${assignment.medicineName}${assignment.isReadOnly ? " (Read-only)" : ""}`}
+                    title={`${assignment.medicineName}${
+                      assignment.isReadOnly ? " (Read-only)" : ""
+                    }`}
                   >
-                    <span className={`text-xs font-medium truncate px-1 ${assignment.isReadOnly ? "text-gray-600" : "text-white"}`}>
+                    <span
+                      className={`text-xs font-medium truncate px-1 ${
+                        assignment.isReadOnly ? "text-gray-600" : "text-white"
+                      }`}
+                    >
                       {assignment.medicineName.substring(0, 6)}
                       {assignment.isReadOnly && (
                         <span className="block text-[8px]">R/O</span>
@@ -1163,7 +1358,9 @@ const DurationModal = ({
                     <div className="flex items-center">
                       <div
                         className={`w-3 h-3 rounded ${
-                          medicineColors[currentRowIndex % medicineColors.length]
+                          medicineColors[
+                            currentRowIndex % medicineColors.length
+                          ]
                         } mr-2`}
                       ></div>
                       <span className="text-gray-700">
@@ -1173,9 +1370,11 @@ const DurationModal = ({
                     <div className="text-right">
                       <span className="text-gray-600">
                         {durationRanges.reduce(
-                          (total, range) => total + (range.endDay - range.startDay + 1),
+                          (total, range) =>
+                            total + (range.endDay - range.startDay + 1),
                           0
-                        )} days
+                        )}{" "}
+                        days
                       </span>
                       {durationRanges.length > 0 && (
                         <div className="text-xs text-gray-500">
@@ -1192,36 +1391,55 @@ const DurationModal = ({
               </div>
 
               {/* Other Medicines Summary */}
-              {allDurationRanges.some((ranges, index) => index !== currentRowIndex && ranges && ranges.length > 0) && (
+              {allDurationRanges.some(
+                (ranges, index) =>
+                  index !== currentRowIndex && ranges && ranges.length > 0
+              ) && (
                 <div className="mt-4 p-4 bg-gray-100 rounded-lg border">
                   <h4 className="font-medium text-gray-800 mb-2">
                     Other Medicines (Read-only)
                   </h4>
                   <div className="space-y-1 text-sm">
                     {allDurationRanges.map((ranges, medicineIndex) => {
-                      if (medicineIndex === currentRowIndex || !ranges || ranges.length === 0) return null;
-                      
+                      if (
+                        medicineIndex === currentRowIndex ||
+                        !ranges ||
+                        ranges.length === 0
+                      )
+                        return null;
+
                       const assignedDays = ranges.reduce(
-                        (total, range) => total + (range.endDay - range.startDay + 1),
+                        (total, range) =>
+                          total + (range.endDay - range.startDay + 1),
                         0
                       );
-                      
-                      const medicineName = prescriptionItems[medicineIndex]?.medicineName || 
-                                          prescriptionItems[medicineIndex]?.rawMaterial?.name || 
-                                          `Medicine ${medicineIndex + 1}`;
+
+                      const medicineName =
+                        prescriptionItems[medicineIndex]?.medicineName ||
+                        prescriptionItems[medicineIndex]?.rawMaterial?.name ||
+                        `Medicine ${medicineIndex + 1}`;
 
                       return (
-                        <div key={medicineIndex} className="flex justify-between items-center">
+                        <div
+                          key={medicineIndex}
+                          className="flex justify-between items-center"
+                        >
                           <div className="flex items-center">
                             <div
                               className={`w-3 h-3 rounded ${
-                                medicineColors[medicineIndex % medicineColors.length]
+                                medicineColors[
+                                  medicineIndex % medicineColors.length
+                                ]
                               } mr-2 opacity-60`}
                             ></div>
-                            <span className="text-gray-600">{medicineName}</span>
+                            <span className="text-gray-600">
+                              {medicineName}
+                            </span>
                           </div>
                           <div className="text-right">
-                            <span className="text-gray-500">{assignedDays} days</span>
+                            <span className="text-gray-500">
+                              {assignedDays} days
+                            </span>
                             <div className="text-xs text-gray-400">
                               {ranges.map((range, idx) => (
                                 <div key={idx}>
@@ -1277,20 +1495,28 @@ const DurationModal = ({
                       {getCurrentMedicineName()} (Editable)
                     </span>
                   </div>
-                  
+
                   {/* Other medicines */}
                   {allDurationRanges.map((ranges, medicineIndex) => {
-                    if (medicineIndex === currentRowIndex || !ranges || ranges.length === 0) return null;
-                    
-                    const medicineName = prescriptionItems[medicineIndex]?.medicineName || 
-                                        prescriptionItems[medicineIndex]?.rawMaterial?.name || 
-                                        `Medicine ${medicineIndex + 1}`;
+                    if (
+                      medicineIndex === currentRowIndex ||
+                      !ranges ||
+                      ranges.length === 0
+                    )
+                      return null;
+
+                    const medicineName =
+                      prescriptionItems[medicineIndex]?.medicineName ||
+                      prescriptionItems[medicineIndex]?.rawMaterial?.name ||
+                      `Medicine ${medicineIndex + 1}`;
 
                     return (
                       <div key={medicineIndex} className="flex items-center">
                         <div
                           className={`w-4 h-4 rounded ${
-                            medicineColors[medicineIndex % medicineColors.length]
+                            medicineColors[
+                              medicineIndex % medicineColors.length
+                            ]
                           } mr-2 opacity-60 border-2 border-dashed border-gray-400`}
                         ></div>
                         <span className="text-sm text-gray-500">
@@ -1400,13 +1626,14 @@ const PrescriptionWriting = () => {
       {
         id: 1,
         prescriptionType: "Only Prescription",
-        medicineConsumptionType: "Sequential",
+        consumptionType: "Sequential",
         medicineName: "",
         form: "Tablets",
         dispenseQuantity: 0,
         rawMaterials: [],
         preparationQuantity: [],
         duration: "",
+        uom: "Pieces",
         // FIXED: Add proper frequency fields
         frequencyType: "standard", // Add this field
         frequencies: [], // Keep for internal use
@@ -1608,47 +1835,48 @@ const PrescriptionWriting = () => {
     });
   };
 
-  const updatePrescriptionItem = (itemId, field, value) => {
-    setPrescriptionData((prev) => ({
-      ...prev,
-      prescriptionItems: prev.prescriptionItems.map((item) => {
-        if (item.id === itemId) {
-          let updatedItem = { ...item };
+const updatePrescriptionItem = (itemId, field, value) => {
+  setPrescriptionData((prev) => ({
+    ...prev,
+    prescriptionItems: prev.prescriptionItems.map((item) => {
+      if (item.id === itemId) {
+        let updatedItem = { ...item };
 
-          if (field === "frequencyData") {
-            // Handle frequency data update
-            updatedItem = {
-              ...updatedItem,
-              frequencies: value.frequencies,
-              standardSchedule: value.standardSchedule,
-              frequentSchedule: value.frequentSchedule,
-              frequencyType: value.frequencyType,
-            };
-          } else if (field === "form") {
-            const formQuantity = getQuantityByForm(value);
-            updatedItem = {
-              ...updatedItem,
-              // 🔑 actually update the form
-              form: value,
-              dispenseQuantity: formQuantity.quantity,
-              uom: formQuantity.uom,
-              preparationQuantity: (item.preparationQuantity || []).map(
-                (prep) => ({
-                  ...prep,
-                  unit: formQuantity.uom,
-                })
-              ),
-            };
-          } else {
-            updatedItem[field] = value;
-          }
-
-          return updatedItem;
+        if (field === "frequencyData") {
+          // Handle frequency data update
+          updatedItem = {
+            ...updatedItem,
+            frequencies: value.frequencies,
+            standardSchedule: value.standardSchedule,
+            frequentSchedule: value.frequentSchedule,
+            frequencyType: value.frequencyType,
+          };
+        } else if (field === "form") {
+          const formQuantity = getQuantityByForm(value);
+          updatedItem = {
+            ...updatedItem,
+            // 🔑 actually update the form
+            form: value,
+            dispenseQuantity: formQuantity.quantity,
+            uom: formQuantity.uom,
+            preparationQuantity: (item.preparationQuantity || []).map(
+              (prep) => ({
+                ...prep,
+                unit: formQuantity.uom,
+              })
+            ),
+          };
+        } else {
+          updatedItem[field] = value;
         }
-        return item;
-      }),
-    }));
-  };
+
+        return updatedItem;
+      }
+      return item;
+    }),
+  }));
+};
+
 
   const addPrescriptionItem = () => {
     const newId =
@@ -1729,85 +1957,123 @@ const PrescriptionWriting = () => {
     const frequencyType = frequencies[0]?.frequencyType || "standard";
 
     if (frequencyType === "standard") {
+      // Transform to backend format for standard schedule
+      const standardSchedule = frequencies.map((freq) => ({
+        day: freq.day,
+        duration: freq.duration,
+        timing: freq.timing || {
+          morning: {
+            food: freq.standardFrequency?.morning?.foodType || "",
+            time: freq.standardFrequency?.morning?.from || "",
+          },
+          afternoon: {
+            food: freq.standardFrequency?.afternoon?.foodType || "",
+            time: freq.standardFrequency?.afternoon?.from || "",
+          },
+          evening: {
+            food: freq.standardFrequency?.evening?.foodType || "",
+            time: freq.standardFrequency?.evening?.from || "",
+          },
+          night: {
+            food: freq.standardFrequency?.night?.foodType || "",
+            time: freq.standardFrequency?.night?.from || "",
+          },
+        },
+      }));
+
       return {
         frequencies: frequencies,
-        standardSchedule: frequencies,
+        standardSchedule: standardSchedule,
         frequentSchedule: [],
         frequencyType: "standard",
       };
     } else {
+      // Transform to backend format for frequent schedule
+      const frequentSchedule = frequencies.map((freq) => ({
+        day: freq.day,
+        frequency:
+          freq.frequency ||
+          `${freq.frequentFrequency?.hours || 0}hr ${
+            freq.frequentFrequency?.minutes || 0
+          }mins`,
+      }));
+
       return {
         frequencies: frequencies,
         standardSchedule: [],
-        frequentSchedule: frequencies,
+        frequentSchedule: frequentSchedule,
         frequencyType: "frequent",
       };
     }
   };
 
   const saveFrequency = (frequencies) => {
-    if (currentItemForModal) {
-      // Transform frequencies to proper backend format
-      const transformedData = transformFrequencyData(frequencies);
+  if (currentItemForModal) {
+    console.log("Saving frequencies:", frequencies); // Debug log
+    
+    // Transform frequencies to proper backend format
+    const transformedData = transformFrequencyData(frequencies);
+    
+    console.log("Transformed data:", transformedData); // Debug log
 
-      // Update multiple fields at once
-      updatePrescriptionItem(
-        currentItemForModal.id,
-        "frequencyData",
-        transformedData
-      );
-    }
-    setShowFrequencyModal(false);
-    setCurrentItemForModal(null);
-  };
+    // Update multiple fields at once
+    updatePrescriptionItem(
+      currentItemForModal.id,
+      "frequencyData",
+      transformedData
+    );
+  }
+  setShowFrequencyModal(false);
+  setCurrentItemForModal(null);
+};
 
   const saveDuration = (durationRanges, summary) => {
-  if (currentItemForModal && currentRowIndex !== null) {
-    // Extract selected days from ranges
-    const selectedDurationDays = [];
-    durationRanges.forEach((range) => {
-      if (range.startDay && range.endDay) {
-        for (let day = range.startDay; day <= range.endDay; day++) {
-          if (!selectedDurationDays.includes(day)) {
-            selectedDurationDays.push(day);
+    if (currentItemForModal && currentRowIndex !== null) {
+      // Extract selected days from ranges
+      const selectedDurationDays = [];
+      durationRanges.forEach((range) => {
+        if (range.startDay && range.endDay) {
+          for (let day = range.startDay; day <= range.endDay; day++) {
+            if (!selectedDurationDays.includes(day)) {
+              selectedDurationDays.push(day);
+            }
           }
         }
-      }
-    });
+      });
 
-    // Update specific item in prescription data
-    setPrescriptionData((prev) => ({
-      ...prev,
-      prescriptionItems: prev.prescriptionItems.map((item, index) => {
-        if (index === currentRowIndex) {
-          return {
-            ...item,
-            durationRanges,
-            duration: summary || item.duration,
-            selectedDurationDays: selectedDurationDays.sort((a, b) => a - b),
-          };
+      // Update specific item in prescription data
+      setPrescriptionData((prev) => ({
+        ...prev,
+        prescriptionItems: prev.prescriptionItems.map((item, index) => {
+          if (index === currentRowIndex) {
+            return {
+              ...item,
+              durationRanges,
+              duration: summary || item.duration,
+              selectedDurationDays: selectedDurationDays.sort((a, b) => a - b),
+            };
+          }
+          return item;
+        }),
+      }));
+
+      // Update global allDurationRanges
+      setAllDurationRanges((prev) => {
+        const updated = [...prev];
+        // Ensure the array is long enough
+        while (updated.length <= currentRowIndex) {
+          updated.push([]);
         }
-        return item;
-      }),
-    }));
+        updated[currentRowIndex] = durationRanges;
+        return updated;
+      });
+    }
 
-    // Update global allDurationRanges
-    setAllDurationRanges((prev) => {
-      const updated = [...prev];
-      // Ensure the array is long enough
-      while (updated.length <= currentRowIndex) {
-        updated.push([]);
-      }
-      updated[currentRowIndex] = durationRanges;
-      return updated;
-    });
-  }
-
-  // Close modal
-  setShowDurationModal(false);
-  setCurrentItemForModal(null);
-  setCurrentRowIndex(null);
-};
+    // Close modal
+    setShowDurationModal(false);
+    setCurrentItemForModal(null);
+    setCurrentRowIndex(null);
+  };
 
   // const saveDuration = (durationRanges) => {
   //   if (currentItemForModal && currentRowIndex !== null) {
@@ -1887,181 +2153,99 @@ const PrescriptionWriting = () => {
     }));
   };
 
-  const handleSavePrescription = async () => {
-    try {
-      setSaving(true);
-
-      // Enhanced validation
-      if (!prescriptionData.prescriptionItems.length) {
-        toast.error("Please add at least one prescription item");
-        return;
-      }
-
-      // Validate each prescription item
-      const validationErrors = [];
-      prescriptionData.prescriptionItems.forEach((item, index) => {
-        if (!item.medicineName?.trim()) {
-          validationErrors.push(
-            `Medicine name is required for item ${index + 1}`
-          );
-        }
-        if (!item.duration?.trim()) {
-          validationErrors.push(`Duration is required for item ${index + 1}`);
-        }
-        // Check if frequencies are configured
-        if (!item.frequencies || item.frequencies.length === 0) {
-          validationErrors.push(
-            `Frequency configuration is required for item ${index + 1}`
-          );
-        }
-      });
-
-      if (validationErrors.length > 0) {
-        toast.error(
-          `Please fix the following:\n${validationErrors.join("\n")}`
-        );
-        return;
-      }
-
-      const authAxios = createAuthAxios();
-
-      // Prepare data for API with proper frequency mapping
-      const apiData = {
-        patientId: prescriptionData.patientId,
-        prescriptionItems: prescriptionData.prescriptionItems.map((item) => {
-          // Determine frequency type (normalize case)
-          const isStandardFreq =
-            item.frequencyType === "standard" ||
-            item.frequencyType === "Standard" ||
-            !item.frequencyType; // Default to standard if not set
-
-          // Prepare frequency schedules
-          const frequencies = item.frequencies || [];
-          let standardSchedule = [];
-          let frequentSchedule = [];
-
-          if (isStandardFreq) {
-            // For standard frequency, map the data correctly
-            standardSchedule = frequencies.map((freq) => ({
-              day: freq.day,
-              duration: freq.duration,
-              frequencyType: freq.frequencyType || "standard",
-              // Extract standard frequency data
-              standardFrequency: freq.standardFrequency || {
-                morning: freq.morning || { from: "", to: "", foodType: "" },
-                afternoon: freq.afternoon || { from: "", to: "", foodType: "" },
-                evening: freq.evening || { from: "", to: "", foodType: "" },
-                night: freq.night || { from: "", to: "", foodType: "" },
-              },
-            }));
-          } else {
-            // For frequent frequency, map the data correctly
-            frequentSchedule = frequencies.map((freq) => ({
-              day: freq.day,
-              duration: freq.duration,
-              frequencyType: freq.frequencyType || "frequent",
-              // Extract frequent frequency data
-              frequentFrequency: freq.frequentFrequency || {
-                hours: freq.hours || 0,
-                minutes: freq.minutes || 0,
-                foodType: freq.foodType || "",
-              },
-            }));
-          }
-
-          return {
-            medicineName: item.medicineName,
-            rawMaterialDetails: (item.preparationQuantity || []).map((rm) => ({
-              _id: rm._id,
-              name: rm.name,
-              quantity: rm.quantity || 0,
-              pricePerUnit: rm.pricePerUnit || 0,
-              totalPrice: rm.totalPrice || 0,
-            })),
-            form: item.form,
-            dispenseQuantity: item.dispenseQuantity,
-            uom: item.uom || "Pieces",
-            duration: item.duration,
-
-            // FIXED: Proper frequency mapping
-            frequencyType: isStandardFreq ? "Standard" : "Frequent",
-            standardSchedule: standardSchedule,
-            frequentSchedule: frequentSchedule,
-
-            price: item.price || 0,
-            additionalComments: item.additionalComments || "",
-
-            // Individual item fields
-            prescriptionType: item.prescriptionType || "Only Prescription",
-            consumptionType: item.medicineConsumptionType || "Sequential",
-            label: item.label || "A",
-          };
-        }),
-        followUpDays: prescriptionData.followUpDays || 10,
-        medicineCharges: prescriptionData.medicineCharges || 0,
-        shippingCharges: prescriptionData.shippingCharges || 0,
-        notes: prescriptionData.notes || "",
-        medicineCourse: prescriptionData.medicineCourse || 10,
-        action: prescriptionData.action || {
-          status: "In Progress",
-          closeComment: "",
-        },
-        parentPrescriptionId: prescriptionData.parentPrescriptionId,
-        consultingType: prescriptionData.consultingType || "",
-        consultingFor: prescriptionData.consultingFor || "",
-      };
-
-      // Debug logging - remove in production
-      // console.log("Sending prescription data to API:", JSON.stringify(apiData, null, 2));
-
-      // Log frequency data specifically for debugging
-      apiData.prescriptionItems.forEach((item, index) => {
-        console.log(`Item ${index + 1} frequency data:`, {
-          frequencyType: item.frequencyType,
-          standardSchedule: item.standardSchedule,
-          frequentSchedule: item.frequentSchedule,
-        });
-      });
-
-      const response = await authAxios.post(
-        `${API_URL}/api/prescriptionControl/create`,
-        apiData
-      );
-
-      if (response.data.success) {
-        toast.success("Prescription saved successfully!");
-
-        // Optional: Log the saved prescription for debugging
-        // console.log("Prescription saved successfully:", response.data.data);
-
-        navigate("/doctor-dashboard");
-      } else {
-        console.error("API Error Response:", response.data);
-        toast.error(response.data.message || "Failed to save prescription");
-      }
-    } catch (err) {
-      console.error("Error saving prescription:", err);
-
-      // Enhanced error handling
-      if (err.response) {
-        // Server responded with error
-        console.error("Server Error Response:", err.response.data);
-        toast.error(
-          err.response.data?.message || `Server Error: ${err.response.status}`
-        );
-      } else if (err.request) {
-        // Request failed (network issue)
-        console.error("Network Error:", err.request);
-        toast.error("Network error. Please check your connection.");
-      } else {
-        // Other error
-        console.error("Error:", err.message);
-        toast.error(err.message || "An unexpected error occurred");
-      }
-    } finally {
-      setSaving(false);
-    }
+  const prepareDataForBackend = (prescriptionData) => {
+  const backendData = {
+    ...prescriptionData,
+    prescriptionItems: prescriptionData.prescriptionItems.map(item => ({
+      medicineName: item.medicineName || '',
+      rawMaterials: (item.rawMaterialsDetails || []).map(rm => ({
+        _id: rm._id,
+        name: rm.name,
+        quantity: rm.quantity || 0,
+        pricePerUnit: rm.pricePerUnit || 0,
+        totalPrice: rm.totalPrice || 0
+      })),
+      form: item.form || 'Tablets',
+      dispenseQuantity: item.dispenseQuantity || '',
+      duration: item.duration || '',
+      uom: item.uom || 'Pieces',
+      price: item.price || 0,
+      additionalComments: item.additionalComments || '',
+      frequencyType: item.frequencyType || 'standard',
+      // Map frequency data based on type
+      standardSchedule: item.frequencyType === 'standard' || item.frequencyType === 'Standard' 
+        ? (item.standardSchedule || []) 
+        : [],
+      frequentSchedule: item.frequencyType === 'frequent' || item.frequencyType === 'Frequent'
+        ? (item.frequentSchedule || [])
+        : [],
+      // Individual item fields
+      prescriptionType: item.prescriptionType || 'Only Prescription',
+      consumptionType: item.consumptionType || 'Sequential',
+      label: item.label || 'A',
+    }))
   };
+
+  console.log("Backend data prepared:", backendData); // Debug log
+  return backendData;
+};
+
+const handleSavePrescription = async () => {
+  try {
+    setSaving(true);
+
+    if (!prescriptionData.prescriptionItems.length) {
+      toast.error("Please add at least one prescription item");
+      return;
+    }
+
+    const validationErrors = [];
+    prescriptionData.prescriptionItems.forEach((item, index) => {
+      if (!item.medicineName?.trim()) {
+        validationErrors.push(`Medicine name is required for item ${index + 1}`);
+      }
+      if (!item.duration?.trim()) {
+        validationErrors.push(`Duration is required for item ${index + 1}`);
+      }
+      if (!item.frequencies || item.frequencies.length === 0) {
+        validationErrors.push(`Frequency configuration is required for item ${index + 1}`);
+      }
+    });
+
+    if (validationErrors.length > 0) {
+      toast.error(`Please fix the following:\n${validationErrors.join("\n")}`);
+      return;
+    }
+
+    const authAxios = createAuthAxios();
+
+    // ✅ Use reusable data preparation function
+    const apiData = prepareDataForBackend(prescriptionData);
+
+    const response = await authAxios.post(
+      `${API_URL}/api/prescriptionControl/create`,
+      apiData
+    );
+
+    if (response.data.success) {
+      toast.success("Prescription saved successfully!");
+      navigate("/doctor-dashboard");
+    } else {
+      toast.error(response.data.message || "Failed to save prescription");
+    }
+  } catch (err) {
+    console.error("Error saving prescription:", err);
+    if (err.response) {
+      toast.error(err.response.data?.message || `Server Error: ${err.response.status}`);
+    } else if (err.request) {
+      toast.error("Network error. Please check your connection.");
+    } else {
+      toast.error(err.message || "An unexpected error occurred");
+    }
+  } finally {
+    setSaving(false);
+  }
+};
 
   // OPTIONAL: Helper function to validate frequency data structure
   const validateFrequencyData = (frequencies, frequencyType) => {
@@ -2217,27 +2401,32 @@ const PrescriptionWriting = () => {
   const [showAddMedicineModal, setShowAddMedicineModal] = useState(false);
   const [newMedicineName, setNewMedicineName] = useState("");
 
-  const handleAddMedicine = async () => {
-    if (!newMedicineName.trim()) return alert("Medicine name cannot be empty.");
-    const authAxios = createAuthAxios();
+const handleAddMedicine = async () => {
+  if (!newMedicineName.trim()) return alert("Medicine name cannot be empty.");
 
-    try {
-      const response = await authAxios.post(
-        `${API_URL}/api/prescriptionControl/medicines`,
-        { name: newMedicineName.trim() }
-      );
+  const authAxios = createAuthAxios();
+  try {
+    const response = await authAxios.post(
+      `${API_URL}/api/prescriptionControl/medicines`,
+      { name: newMedicineName.trim() }
+    );
 
-      if (response.status === 201) {
-        alert("Medicine added successfully!");
-        setShowAddMedicineModal(false);
-        setNewMedicineName("");
-        fetchData(); // Refresh list
-      }
-    } catch (error) {
+    if (response.status === 201) {
+      alert("Medicine added successfully!");
+      setShowAddMedicineModal(false);
+      setNewMedicineName("");
+      fetchData(); // Refresh list
+    }
+  } catch (error) {
+    if (error.response?.status === 409) {
+      alert("This medicine already exists.");
+    } else {
       console.error("Error adding medicine", error);
       alert("Failed to add medicine");
     }
-  };
+  }
+};
+
 
   if (loading) {
     return (
