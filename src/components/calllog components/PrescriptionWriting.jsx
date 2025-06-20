@@ -64,19 +64,19 @@ const FrequencyModal = ({
     night: { start: "21:00", end: "03:59" },
   };
 
- useEffect(() => {
+  useEffect(() => {
     if (currentFrequencies.length > 0) {
       console.log("Loading existing frequencies:", currentFrequencies);
-      
+
       // Group existing frequencies by day ranges
       const ranges = [];
       const configs = {};
       const dayToRangeMap = new Map();
-      
+
       currentFrequencies.forEach((freq) => {
         if (availableDays.includes(freq.day)) {
           const key = freq.duration || `Day ${freq.day}`;
-          
+
           if (!dayToRangeMap.has(key)) {
             dayToRangeMap.set(key, []);
           }
@@ -88,16 +88,20 @@ const FrequencyModal = ({
       dayToRangeMap.forEach((days, key) => {
         const sortedDays = [...new Set(days)].sort((a, b) => a - b);
         ranges.push(sortedDays);
-        
-        const rangeKey = `${Math.min(...sortedDays)}-${Math.max(...sortedDays)}`;
-        const firstFreq = currentFrequencies.find(f => sortedDays.includes(f.day));
-        
+
+        const rangeKey = `${Math.min(...sortedDays)}-${Math.max(
+          ...sortedDays
+        )}`;
+        const firstFreq = currentFrequencies.find((f) =>
+          sortedDays.includes(f.day)
+        );
+
         if (firstFreq) {
           configs[rangeKey] = {
             days: sortedDays,
             frequencyType: firstFreq.frequencyType || frequencyType,
             standardFrequency: firstFreq.standardFrequency || {},
-            frequentFrequency: firstFreq.frequentFrequency || {}
+            frequentFrequency: firstFreq.frequentFrequency || {},
           };
         }
       });
@@ -201,15 +205,17 @@ const FrequencyModal = ({
     setSelectedRange(null);
   };
 
-const handleFrequencyChange = (field, value) => {
+  const handleFrequencyChange = (field, value) => {
     if (selectedRange === null) return;
 
     const currentRange = dayRanges[selectedRange];
-    const rangeKey = `${Math.min(...currentRange)}-${Math.max(...currentRange)}`;
+    const rangeKey = `${Math.min(...currentRange)}-${Math.max(
+      ...currentRange
+    )}`;
     const fieldParts = field.split(".");
 
     // Validate time if it's a time field
-    if (fieldParts[1] === 'from' || fieldParts[1] === 'to') {
+    if (fieldParts[1] === "from" || fieldParts[1] === "to") {
       const period = fieldParts[0];
       // if (!validateTime(value, period)) {
       //   alert(`Invalid time for ${period}. Please select time between ${getTimeRangeLabel(period)}`);
@@ -218,8 +224,11 @@ const handleFrequencyChange = (field, value) => {
     }
 
     setRangeConfigurations((prev) => {
-      const frequencyKey = frequencyType === "standard" ? "standardFrequency" : "frequentFrequency";
-      
+      const frequencyKey =
+        frequencyType === "standard"
+          ? "standardFrequency"
+          : "frequentFrequency";
+
       return {
         ...prev,
         [rangeKey]: {
@@ -266,10 +275,13 @@ const handleFrequencyChange = (field, value) => {
     setClickStart(null);
   };
 
-const handleSave = () => {
+  const handleSave = () => {
     const freqArray = [];
 
-    console.log("Saving frequency configuration:", { dayRanges, rangeConfigurations });
+    console.log("Saving frequency configuration:", {
+      dayRanges,
+      rangeConfigurations,
+    });
 
     // Process each range separately
     dayRanges.forEach((range) => {
@@ -288,7 +300,7 @@ const handleSave = () => {
           if (config.frequencyType === "standard") {
             // Create standardFrequency object from configuration
             const standardFrequency = {};
-            ['morning', 'afternoon', 'evening', 'night'].forEach(period => {
+            ["morning", "afternoon", "evening", "night"].forEach((period) => {
               const periodConfig = config.standardFrequency?.[period] || {};
               standardFrequency[period] = {
                 foodType: periodConfig.foodType || "",
@@ -327,7 +339,9 @@ const handleSave = () => {
               ...baseFreqObj,
               frequentFrequency: frequentFrequency,
               // For backend compatibility
-              frequency: `${frequentFrequency.hours || 0}hr ${frequentFrequency.minutes || 0}mins`,
+              frequency: `${frequentFrequency.hours || 0}hr ${
+                frequentFrequency.minutes || 0
+              }mins`,
             });
           }
         });
@@ -560,7 +574,10 @@ const handleSave = () => {
             {["morning", "afternoon", "evening", "night"].map((period) => {
               const periodConfig = config.standardFrequency?.[period] || {};
               return (
-                <div key={period} className="bg-white p-4 rounded-lg border border-gray-200">
+                <div
+                  key={period}
+                  className="bg-white p-4 rounded-lg border border-gray-200"
+                >
                   <div className="flex items-center justify-between mb-3">
                     <label className="text-sm font-semibold text-gray-700 capitalize">
                       {period}
@@ -569,7 +586,7 @@ const handleSave = () => {
                       {getTimeRangeLabel(period)}
                     </span>
                   </div>
-                  
+
                   <div className="space-y-3">
                     {/* Time Range */}
                     <div className="grid grid-cols-2 gap-2">
@@ -581,7 +598,10 @@ const handleSave = () => {
                           type="time"
                           value={periodConfig.from || ""}
                           onChange={(e) =>
-                            handleFrequencyChange(`${period}.from`, e.target.value)
+                            handleFrequencyChange(
+                              `${period}.from`,
+                              e.target.value
+                            )
                           }
                           className="w-full px-2 py-1.5 text-sm border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                         />
@@ -594,7 +614,10 @@ const handleSave = () => {
                           type="time"
                           value={periodConfig.to || ""}
                           onChange={(e) =>
-                            handleFrequencyChange(`${period}.to`, e.target.value)
+                            handleFrequencyChange(
+                              `${period}.to`,
+                              e.target.value
+                            )
                           }
                           className="w-full px-2 py-1.5 text-sm border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                         />
@@ -609,7 +632,10 @@ const handleSave = () => {
                       <select
                         value={periodConfig.foodType || ""}
                         onChange={(e) =>
-                          handleFrequencyChange(`${period}.foodType`, e.target.value)
+                          handleFrequencyChange(
+                            `${period}.foodType`,
+                            e.target.value
+                          )
                         }
                         className="w-full px-2 py-1.5 text-sm border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                       >
@@ -1835,48 +1861,47 @@ const PrescriptionWriting = () => {
     });
   };
 
-const updatePrescriptionItem = (itemId, field, value) => {
-  setPrescriptionData((prev) => ({
-    ...prev,
-    prescriptionItems: prev.prescriptionItems.map((item) => {
-      if (item.id === itemId) {
-        let updatedItem = { ...item };
+  const updatePrescriptionItem = (itemId, field, value) => {
+    setPrescriptionData((prev) => ({
+      ...prev,
+      prescriptionItems: prev.prescriptionItems.map((item) => {
+        if (item.id === itemId) {
+          let updatedItem = { ...item };
 
-        if (field === "frequencyData") {
-          // Handle frequency data update
-          updatedItem = {
-            ...updatedItem,
-            frequencies: value.frequencies,
-            standardSchedule: value.standardSchedule,
-            frequentSchedule: value.frequentSchedule,
-            frequencyType: value.frequencyType,
-          };
-        } else if (field === "form") {
-          const formQuantity = getQuantityByForm(value);
-          updatedItem = {
-            ...updatedItem,
-            // 🔑 actually update the form
-            form: value,
-            dispenseQuantity: formQuantity.quantity,
-            uom: formQuantity.uom,
-            preparationQuantity: (item.preparationQuantity || []).map(
-              (prep) => ({
-                ...prep,
-                unit: formQuantity.uom,
-              })
-            ),
-          };
-        } else {
-          updatedItem[field] = value;
+          if (field === "frequencyData") {
+            // Handle frequency data update
+            updatedItem = {
+              ...updatedItem,
+              frequencies: value.frequencies,
+              standardSchedule: value.standardSchedule,
+              frequentSchedule: value.frequentSchedule,
+              frequencyType: value.frequencyType,
+            };
+          } else if (field === "form") {
+            const formQuantity = getQuantityByForm(value);
+            updatedItem = {
+              ...updatedItem,
+              // 🔑 actually update the form
+              form: value,
+              dispenseQuantity: formQuantity.quantity,
+              uom: formQuantity.uom,
+              preparationQuantity: (item.preparationQuantity || []).map(
+                (prep) => ({
+                  ...prep,
+                  unit: formQuantity.uom,
+                })
+              ),
+            };
+          } else {
+            updatedItem[field] = value;
+          }
+
+          return updatedItem;
         }
-
-        return updatedItem;
-      }
-      return item;
-    }),
-  }));
-};
-
+        return item;
+      }),
+    }));
+  };
 
   const addPrescriptionItem = () => {
     const newId =
@@ -2008,24 +2033,24 @@ const updatePrescriptionItem = (itemId, field, value) => {
   };
 
   const saveFrequency = (frequencies) => {
-  if (currentItemForModal) {
-    console.log("Saving frequencies:", frequencies); // Debug log
-    
-    // Transform frequencies to proper backend format
-    const transformedData = transformFrequencyData(frequencies);
-    
-    console.log("Transformed data:", transformedData); // Debug log
+    if (currentItemForModal) {
+      console.log("Saving frequencies:", frequencies); // Debug log
 
-    // Update multiple fields at once
-    updatePrescriptionItem(
-      currentItemForModal.id,
-      "frequencyData",
-      transformedData
-    );
-  }
-  setShowFrequencyModal(false);
-  setCurrentItemForModal(null);
-};
+      // Transform frequencies to proper backend format
+      const transformedData = transformFrequencyData(frequencies);
+
+      console.log("Transformed data:", transformedData); // Debug log
+
+      // Update multiple fields at once
+      updatePrescriptionItem(
+        currentItemForModal.id,
+        "frequencyData",
+        transformedData
+      );
+    }
+    setShowFrequencyModal(false);
+    setCurrentItemForModal(null);
+  };
 
   const saveDuration = (durationRanges, summary) => {
     if (currentItemForModal && currentRowIndex !== null) {
@@ -2154,98 +2179,108 @@ const updatePrescriptionItem = (itemId, field, value) => {
   };
 
   const prepareDataForBackend = (prescriptionData) => {
-  const backendData = {
-    ...prescriptionData,
-    prescriptionItems: prescriptionData.prescriptionItems.map(item => ({
-      medicineName: item.medicineName || '',
-      rawMaterials: (item.rawMaterialsDetails || []).map(rm => ({
-        _id: rm._id,
-        name: rm.name,
-        quantity: rm.quantity || 0,
-        pricePerUnit: rm.pricePerUnit || 0,
-        totalPrice: rm.totalPrice || 0
+    const backendData = {
+      ...prescriptionData,
+      prescriptionItems: prescriptionData.prescriptionItems.map((item) => ({
+        medicineName: item.medicineName || "",
+        rawMaterials: (item.rawMaterialsDetails || []).map((rm) => ({
+          _id: rm._id,
+          name: rm.name,
+          quantity: rm.quantity || 0,
+          pricePerUnit: rm.pricePerUnit || 0,
+          totalPrice: rm.totalPrice || 0,
+        })),
+        form: item.form || "Tablets",
+        dispenseQuantity: item.dispenseQuantity || "",
+        duration: item.duration || "",
+        uom: item.uom || "Pieces",
+        price: item.price || 0,
+        additionalComments: item.additionalComments || "",
+        frequencyType: item.frequencyType || "standard",
+        // Map frequency data based on type
+        standardSchedule:
+          item.frequencyType === "standard" || item.frequencyType === "Standard"
+            ? item.standardSchedule || []
+            : [],
+        frequentSchedule:
+          item.frequencyType === "frequent" || item.frequencyType === "Frequent"
+            ? item.frequentSchedule || []
+            : [],
+        // Individual item fields
+        prescriptionType: item.prescriptionType || "Only Prescription",
+        consumptionType: item.consumptionType || "Sequential",
+        label: item.label || "A",
       })),
-      form: item.form || 'Tablets',
-      dispenseQuantity: item.dispenseQuantity || '',
-      duration: item.duration || '',
-      uom: item.uom || 'Pieces',
-      price: item.price || 0,
-      additionalComments: item.additionalComments || '',
-      frequencyType: item.frequencyType || 'standard',
-      // Map frequency data based on type
-      standardSchedule: item.frequencyType === 'standard' || item.frequencyType === 'Standard' 
-        ? (item.standardSchedule || []) 
-        : [],
-      frequentSchedule: item.frequencyType === 'frequent' || item.frequencyType === 'Frequent'
-        ? (item.frequentSchedule || [])
-        : [],
-      // Individual item fields
-      prescriptionType: item.prescriptionType || 'Only Prescription',
-      consumptionType: item.consumptionType || 'Sequential',
-      label: item.label || 'A',
-    }))
+    };
+
+    console.log("Backend data prepared:", backendData); // Debug log
+    return backendData;
   };
 
-  console.log("Backend data prepared:", backendData); // Debug log
-  return backendData;
-};
+  const handleSavePrescription = async () => {
+    try {
+      setSaving(true);
 
-const handleSavePrescription = async () => {
-  try {
-    setSaving(true);
-
-    if (!prescriptionData.prescriptionItems.length) {
-      toast.error("Please add at least one prescription item");
-      return;
-    }
-
-    const validationErrors = [];
-    prescriptionData.prescriptionItems.forEach((item, index) => {
-      if (!item.medicineName?.trim()) {
-        validationErrors.push(`Medicine name is required for item ${index + 1}`);
+      if (!prescriptionData.prescriptionItems.length) {
+        toast.error("Please add at least one prescription item");
+        return;
       }
-      if (!item.duration?.trim()) {
-        validationErrors.push(`Duration is required for item ${index + 1}`);
+
+      const validationErrors = [];
+      prescriptionData.prescriptionItems.forEach((item, index) => {
+        if (!item.medicineName?.trim()) {
+          validationErrors.push(
+            `Medicine name is required for item ${index + 1}`
+          );
+        }
+        if (!item.duration?.trim()) {
+          validationErrors.push(`Duration is required for item ${index + 1}`);
+        }
+        if (!item.frequencies || item.frequencies.length === 0) {
+          validationErrors.push(
+            `Frequency configuration is required for item ${index + 1}`
+          );
+        }
+      });
+
+      if (validationErrors.length > 0) {
+        toast.error(
+          `Please fix the following:\n${validationErrors.join("\n")}`
+        );
+        return;
       }
-      if (!item.frequencies || item.frequencies.length === 0) {
-        validationErrors.push(`Frequency configuration is required for item ${index + 1}`);
+
+      const authAxios = createAuthAxios();
+
+      // ✅ Use reusable data preparation function
+      const apiData = prepareDataForBackend(prescriptionData);
+
+      const response = await authAxios.post(
+        `${API_URL}/api/prescriptionControl/create`,
+        apiData
+      );
+
+      if (response.data.success) {
+        toast.success("Prescription saved successfully!");
+        navigate("/doctor-dashboard");
+      } else {
+        toast.error(response.data.message || "Failed to save prescription");
       }
-    });
-
-    if (validationErrors.length > 0) {
-      toast.error(`Please fix the following:\n${validationErrors.join("\n")}`);
-      return;
+    } catch (err) {
+      console.error("Error saving prescription:", err);
+      if (err.response) {
+        toast.error(
+          err.response.data?.message || `Server Error: ${err.response.status}`
+        );
+      } else if (err.request) {
+        toast.error("Network error. Please check your connection.");
+      } else {
+        toast.error(err.message || "An unexpected error occurred");
+      }
+    } finally {
+      setSaving(false);
     }
-
-    const authAxios = createAuthAxios();
-
-    // ✅ Use reusable data preparation function
-    const apiData = prepareDataForBackend(prescriptionData);
-
-    const response = await authAxios.post(
-      `${API_URL}/api/prescriptionControl/create`,
-      apiData
-    );
-
-    if (response.data.success) {
-      toast.success("Prescription saved successfully!");
-      navigate("/doctor-dashboard");
-    } else {
-      toast.error(response.data.message || "Failed to save prescription");
-    }
-  } catch (err) {
-    console.error("Error saving prescription:", err);
-    if (err.response) {
-      toast.error(err.response.data?.message || `Server Error: ${err.response.status}`);
-    } else if (err.request) {
-      toast.error("Network error. Please check your connection.");
-    } else {
-      toast.error(err.message || "An unexpected error occurred");
-    }
-  } finally {
-    setSaving(false);
-  }
-};
+  };
 
   // OPTIONAL: Helper function to validate frequency data structure
   const validateFrequencyData = (frequencies, frequencyType) => {
@@ -2401,32 +2436,102 @@ const handleSavePrescription = async () => {
   const [showAddMedicineModal, setShowAddMedicineModal] = useState(false);
   const [newMedicineName, setNewMedicineName] = useState("");
 
-const handleAddMedicine = async () => {
-  if (!newMedicineName.trim()) return alert("Medicine name cannot be empty.");
+  const handleAddMedicine = async () => {
+    if (!newMedicineName.trim()) return alert("Medicine name cannot be empty.");
 
-  const authAxios = createAuthAxios();
-  try {
-    const response = await authAxios.post(
-      `${API_URL}/api/prescriptionControl/medicines`,
-      { name: newMedicineName.trim() }
-    );
+    const authAxios = createAuthAxios();
+    try {
+      const response = await authAxios.post(
+        `${API_URL}/api/prescriptionControl/medicines`,
+        { name: newMedicineName.trim() }
+      );
 
-    if (response.status === 201) {
-      alert("Medicine added successfully!");
-      setShowAddMedicineModal(false);
-      setNewMedicineName("");
-      fetchData(); // Refresh list
+      if (response.status === 201) {
+        alert("Medicine added successfully!");
+        setShowAddMedicineModal(false);
+        setNewMedicineName("");
+        fetchData(); // Refresh list
+      }
+    } catch (error) {
+      if (error.response?.status === 409) {
+        alert("This medicine already exists.");
+      } else {
+        console.error("Error adding medicine", error);
+        alert("Failed to add medicine");
+      }
     }
-  } catch (error) {
-    if (error.response?.status === 409) {
-      alert("This medicine already exists.");
-    } else {
-      console.error("Error adding medicine", error);
-      alert("Failed to add medicine");
-    }
-  }
-};
+  };
 
+  const [showCloseModal, setShowCloseModal] = useState(false);
+  const [selectedCommentPrescriptionId, setSelectedCommentPrescriptionId] =
+    useState(null);
+  const [closeComment, setCloseComment] = useState("");
+
+  const handleOpenCloseModal = (prescriptionId) => {
+    setSelectedPrescriptionId(prescriptionId);
+    setCloseComment("");
+    setShowCloseModal(true);
+  };
+
+  const handleConfirmCloseStatus = async () => {
+    try {
+      const authAxios = createAuthAxios();
+      const response = await authAxios.patch(
+        `${API_URL}/api/prescriptionControl/${selectedPrescriptionId}/closeComment`,
+        {
+          status: "Close",
+          closeComment: closeComment,
+        }
+      );
+
+      if (response.data.success) {
+        toast.success("Prescription marked as closed!");
+
+        // ✅ Update the prescription in the existingPrescriptions list
+        setExistingPrescriptions((prev) =>
+          prev.map((p) =>
+            p._id === selectedPrescriptionId ? response.data.data : p
+          )
+        );
+
+        setShowCloseModal(false);
+      } else {
+        toast.error(response.data.message || "Failed to update status.");
+      }
+    } catch (err) {
+      console.error("Error updating status:", err);
+      toast.error("An error occurred while updating the status.");
+    }
+  };
+
+  const handleUpdateActionStatus = async (
+    prescriptionId,
+    status = "In Progress"
+  ) => {
+    try {
+      const authAxios = createAuthAxios();
+      const response = await authAxios.patch(
+        `${API_URL}/api/prescriptionControl/${prescriptionId}/closeComment`,
+        {
+          status: status,
+          closeComment: "", // Empty since it's a reopen
+        }
+      );
+
+      if (response.data.success) {
+        toast.success(`Prescription marked as ${status}`);
+        // ✅ Update UI with new data
+        setExistingPrescriptions((prev) =>
+          prev.map((p) => (p._id === prescriptionId ? response.data.data : p))
+        );
+      } else {
+        toast.error(response.data.message || "Failed to update status");
+      }
+    } catch (err) {
+      console.error("Error updating action status:", err);
+      toast.error("An error occurred while updating the status");
+    }
+  };
 
   if (loading) {
     return (
@@ -2547,42 +2652,25 @@ const handleAddMedicine = async () => {
                       </td>
 
                       <div>
-                        {/* Status Dropdown */}
-                        <select
-                          value={prescriptionData.action.status}
-                          onChange={(e) =>
-                            setPrescriptionData((prev) => ({
-                              ...prev,
-                              action: {
-                                ...prev.action,
-                                status: e.target.value,
-                              },
-                            }))
-                          }
-                          className="w-full border rounded px-3 py-2"
-                        >
-                          <option value="In Progress">In Progress</option>
-                          <option value="Close">Close</option>
-                        </select>
-
-                        {/* Show comment input when status is Close */}
-                        {prescriptionData.action.status === "Close" && (
-                          <input
-                            type="text"
-                            placeholder="Enter close comment"
-                            value={prescriptionData.action.closeComment}
-                            onChange={(e) =>
-                              setPrescriptionData((prev) => ({
-                                ...prev,
-                                action: {
-                                  ...prev.action,
-                                  closeComment: e.target.value,
-                                },
-                              }))
-                            }
-                            className="w-full border rounded mt-2 px-3 py-2 text-sm"
-                          />
-                        )}
+                        <td className="border border-gray-300 px-4 py-2 text-center">
+                          {prescription.action?.status === "In Progress" ? (
+                            <button
+                              className="bg-yellow-500 text-white px-3 py-1 rounded hover:bg-yellow-600"
+                              onClick={() =>
+                                handleOpenCloseModal(prescription._id)
+                              }
+                            >
+                              Mark as Closed
+                            </button>
+                          ) : (
+                            <button
+                              className="bg-green-600 text-white px-3 py-1 rounded hover:bg-green-700"
+                              // onClick={() => handleUpdateActionStatus(prescription._id, "In Progress")}
+                            >
+                              Closed
+                            </button>
+                          )}
+                        </td>
                       </div>
                       <td className="border border-gray-300 px-4 py-2">
                         <button
@@ -2597,6 +2685,36 @@ const handleAddMedicine = async () => {
                     </tr>
                   ))}
                 </tbody>
+                {showCloseModal && (
+                  <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
+                    <div className="bg-white p-6 rounded shadow-lg w-full max-w-md">
+                      <h2 className="text-lg font-semibold mb-4">
+                        Add Close Comment
+                      </h2>
+                      <textarea
+                        rows="4"
+                        className="w-full p-2 border rounded mb-4"
+                        placeholder="Enter reason or notes for closing..."
+                        value={closeComment}
+                        onChange={(e) => setCloseComment(e.target.value)}
+                      />
+                      <div className="flex justify-end gap-3">
+                        <button
+                          className="bg-gray-300 text-gray-700 px-4 py-2 rounded"
+                          onClick={() => setShowCloseModal(false)}
+                        >
+                          Cancel
+                        </button>
+                        <button
+                          className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
+                          onClick={handleConfirmCloseStatus}
+                        >
+                          Confirm Close
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                )}
               </table>
             </div>
           ) : (
@@ -3311,7 +3429,7 @@ const handleAddMedicine = async () => {
 
                         {/* Label */}
                         <td
-                          className={`px-4 py-4 min-w-20 ${
+                          className={`px-4 py-4 min-w-24 ${
                             !fieldVisibility.label
                               ? "opacity-30 pointer-events-none"
                               : ""
