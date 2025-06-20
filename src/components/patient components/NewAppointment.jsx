@@ -194,7 +194,8 @@ const NewAppointment = () => {
         const appointmentDate = dayjs(startDate).format("YYYY-MM-DD");
         try {
           const res = await axios.post(
-            `${API_URL}/api/patient/checkSlots`,
+            `
+            ${API_URL}/api/patient/checkSlots`,
             { appointmentDate },
             { headers: { Authorization: `Bearer ${token}` } }
           );
@@ -367,7 +368,7 @@ const NewAppointment = () => {
       } else if (err.request) {
         console.error("📡 No response received. Request was:", err.request);
       } else {
-        console.error("⚠️ Error setting up request:", err.message);
+        console.error("⚠ Error setting up request:", err.message);
       }
       throw err;
     }
