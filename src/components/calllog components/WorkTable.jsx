@@ -3,7 +3,7 @@ import axios from 'axios';
 import { IoIosSearch, IoIosWarning, IoIosHourglass } from 'react-icons/io';
 import {FaUserInjured, FaUserPlus, FaFileMedical, FaPhoneAlt, FaRecordVinyl, FaCheck, FaDownload, FaPencilAlt} from 'react-icons/fa';
 import config from '../../config';
-import { useNavigate } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 import { jwtDecode } from 'jwt-decode';
 import CommentCell from './CommentCell';
 import VideoCall from '../../pages/doctor pages/VideoCall';
@@ -29,6 +29,10 @@ const WorkTable = () => {
   const [showModal, setShowModal] = useState(false);
   const [modalContent, setModalContent] = useState(null);
 
+  const location = useLocation();
+  const userId = localStorage.getItem('userId');
+  const storageKey = `selectedFollowType_${userId}`;
+
   const fetchDoctors = async () => {
     try {
       const response = await axios.get(`${API_URL}/api/assign/doctors`);
@@ -41,6 +45,31 @@ const WorkTable = () => {
   const getToken = () => {
     return localStorage.getItem('token');
   };
+
+useEffect(() => {
+  const queryParams = new URLSearchParams(location.search);
+  const followFromUrl = queryParams.get('follow');
+  const savedFollow = localStorage.getItem(storageKey);
+
+  if (followTypes.length === 0) return; // Wait for fetch to finish
+
+  if (followFromUrl && followTypes.includes(followFromUrl)) {
+    setSelectedFollowType(followFromUrl);
+    localStorage.setItem(storageKey, followFromUrl);
+  } else if (savedFollow && followTypes.includes(savedFollow)) {
+    setSelectedFollowType(savedFollow);
+  }
+}, [location.search, followTypes]);
+
+  const handleFollowChange = (e) => {
+    const newType = e.target.value;
+    setSelectedFollowType(newType);
+    localStorage.setItem(storageKey, newType);
+    const params = new URLSearchParams(location.search);
+    params.set('follow', newType);
+    navigate(`${location.pathname}?${params.toString()}`, { replace: true });
+  };
+
   useEffect(() => {
     fetchDoctors();
     const token = getToken();
@@ -85,51 +114,51 @@ const WorkTable = () => {
     }
   };
   
-  const fetchDoctorFollowTypes = async () => {
-    try {
-      const token = getToken();
-      console.log("This is token speaking", token);
-      if (!token) {
-        throw new Error('No authorization token found');
-      }
-  
-      const response = await axios.get( 
-        `${API_URL}/api/doctor/getDoctorFollow`,
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        }
-      );
-  
-      let followTypesArray = response.data.follow.split(', ');
-      
-      console.log("This is follow types array", followTypesArray);
-      // Adjusting the follow-up types for Follow up-C cases
-      if (followTypesArray.includes('Follow up-C')) {
-        const index = followTypesArray.indexOf('Follow up-C');
-        followTypesArray.splice(index, 1, 'Follow up-C-New', 'Follow up-C-Existing');
-      }
-
-      followTypesArray.push('Special Allocation');
-  
-      if (userRole === 'admin-doctor') {
-        followTypesArray.push('View All');
-      }
-
-      setFollowTypes(followTypesArray);
-      setSelectedFollowType(followTypesArray[0]);
-    } catch (error) {
-      console.error(
-        'Error fetching doctor follow-up types:',
-        error.response ? error.response.data : error.message
-      );
-      setError(error.message);
-    } finally {
-      setIsLoading(false);
+const fetchDoctorFollowTypes = async () => {
+  try {
+    const token = getToken();
+    if (!token) {
+      throw new Error('No authorization token found');
     }
-  };
-  
+
+    const response = await axios.get(`${API_URL}/api/doctor/getDoctorFollow`, {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    });
+
+    let followTypesArray = response.data.follow.split(', ');
+
+    // Handle Follow up-C expansion
+    if (followTypesArray.includes('Follow up-C')) {
+      const index = followTypesArray.indexOf('Follow up-C');
+      followTypesArray.splice(index, 1, 'Follow up-C-New', 'Follow up-C-Existing');
+    }
+
+    followTypesArray.push('Special Allocation');
+    if (userRole === 'admin-doctor') {
+      followTypesArray.push('View All');
+    }
+
+    setFollowTypes(followTypesArray);
+
+    // ✅ Do not overwrite selectedFollowType if already set from URL or localStorage
+    const savedFollow = localStorage.getItem(storageKey);
+    const queryParams = new URLSearchParams(location.search);
+    const followFromUrl = queryParams.get('follow');
+
+    if (!followFromUrl && !savedFollow) {
+      setSelectedFollowType(followTypesArray[0]);
+      localStorage.setItem(storageKey, followTypesArray[0]);
+    }
+  } catch (error) {
+    console.error('Error fetching doctor follow-up types:', error.response ? error.response.data : error.message);
+    setError(error.message);
+  } finally {
+    setIsLoading(false);
+  }
+};
+
 
   const fetchPatients = async () => {
     try {
@@ -849,15 +878,9 @@ const WorkTable = () => {
           />
         </div>
 
-        <select
-          value={selectedFollowType}
-          onChange={(e) => setSelectedFollowType(e.target.value)}
-          className="w-full px-3 py-2 border border-blue-800 rounded-lg"
-        >
-          {followTypes.map((type) => (
-            <option key={type} value={type}>
-              {type}
-            </option>
+        <select value={selectedFollowType} onChange={handleFollowChange}>
+          {followTypes.map(type => (
+            <option key={type} value={type}>{type}</option>
           ))}
         </select>
       </div>

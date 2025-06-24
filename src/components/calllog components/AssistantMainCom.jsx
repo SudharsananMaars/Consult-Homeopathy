@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useParams, useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import PatientsTable from './PatientsTable';
 import WorkTable from './WorkTable';
@@ -9,7 +10,7 @@ import AttemptBucket from './AttemptBucket';
 import { FaCalendarAlt, FaChevronDown } from 'react-icons/fa';
 import config from '../../config';
 
-const AssistantMainCom = ({ activeTab, handleTabClick }) => {
+const AssistantMainCom = () => {
   const [dashboardData, setDashboardData] = useState({
     totalPatients: 0,
     chronicPatients: 0,
@@ -22,6 +23,16 @@ const AssistantMainCom = ({ activeTab, handleTabClick }) => {
   const [error, setError] = useState(null);
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const API_URL = config.API_URL;
+
+  const { tabType } = useParams();
+  const navigate = useNavigate();
+
+  const defaultTab = 'all';
+  const activeTab = tabType || defaultTab;
+
+  const handleTabClick = (tab) => {
+    navigate(`/doctor-dashboard/${tab}`);
+  };
 
   useEffect(() => {
     const fetchDashboardData = async () => {

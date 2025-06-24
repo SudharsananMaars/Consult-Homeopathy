@@ -716,7 +716,7 @@ function App() {
           }
         />
         <Route
-          path="/doctor-dashboard"
+          path="/doctor-dashboard/:tabType"
           element={
             <ProtectedRoute allowedRoles={["Doctor"]}>
               <AssistantDoctorDashboard />

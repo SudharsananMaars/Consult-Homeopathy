@@ -8,12 +8,14 @@ import AssistantMainCom from '/src/components/calllog components/AssistantMainCo
 import AddDoctor from './AddDoctor';
 import Appointments from './Appointments';
 import '/src/css/AdminDashboard.css';
+import { useParams } from 'react-router-dom';
 
 const AssistantDoctorDashboard = () => {
   const [activeNav, setActiveNav] = useState('home');
   const [activeTab, setActiveTab] = useState('all');
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [isMobile, setIsMobile] = useState(window.innerWidth <= 768);
+  const { tabType } = useParams();
 
   useEffect(() => {
     const handleResize = () => {
@@ -50,7 +52,7 @@ const AssistantDoctorDashboard = () => {
   const renderMainContent = () => {
     switch (activeNav) {
       case 'home':
-        return <AssistantMainCom activeTab={activeTab} handleTabClick={handleTabClick} />;
+        return <AssistantMainCom activeTab={tabType || 'all'} handleTabClick={handleTabClick} />;
       case 'add-doctor':
         return <AddDoctor />;
       case 'appointments':
@@ -63,51 +65,6 @@ const AssistantDoctorDashboard = () => {
   return (
     
     <div className="dashboard-container">
-      {/* <div className={`bg-blue-900 text-white w-30   min-h-screen ${isSidebarOpen ? '' : 'hidden'} md:block transition-all duration-300`}>
-        <div className="p-4">
-          <div className="flex items-center space-x-2 mb-8">
-            <div className="w-8 h-8 bg-white rounded-md"></div>
-            <span className="text-xl font-bold">Maars</span>
-          </div>
-          <nav className="space-y-2">
-            {[
-              { icon: FaUserMd, label: 'Add Doctor', link: 'add-doctor' },
-              { icon: FaHome, label: 'Home', link: 'home' },
-              { icon: FaVideo, label: 'Appointments', link: 'appointments' },
-              { icon: FaFileAlt, label: 'Reports', link: 'reports' },
-              { icon: FaBoxOpen, label: 'Inventory', link: 'inventory' },
-              { icon: FaCog, label: 'Settings', link: 'settings' },
-            ].map(({ icon: Icon, label, link }) => (
-              <a
-                key={link}
-                href={`#${link}`}
-                className={`flex items-center space-x-2 p-2 rounded-lg hover:bg-blue-800 transition-colors duration-200 ${activeNav === link ? 'bg-pink-500' : ''}`}
-                onClick={() => handleNavClick(link)}
-              >
-                <Icon size={18} />
-                <span>{label}</span>
-              </a>
-            ))}
-          </nav>
-        </div>
-        <div className="absolute bottom-0 w-64 p-4">
-          {[
-            { icon: FaQuestionCircle, label: 'Help', link: 'help' },
-            { icon: FaSignOutAlt, label: 'Logout', link: 'logout' },
-          ].map(({ icon: Icon, label, link }) => (
-            <a
-              key={link}
-              href={`#${link}`}
-              className="flex items-center space-x-2 p-2 rounded-lg hover:bg-blue-800 transition-colors duration-200"
-              onClick={() => handleNavClick(link)}
-            >
-              <Icon size={18} />
-              <span>{label}</span>
-            </a>
-          ))}
-        </div>
-      </div> */}
-
       <div className="main-content">
         <div className="header">
           <button className="hamburger-menu" onClick={toggleSidebar}>
