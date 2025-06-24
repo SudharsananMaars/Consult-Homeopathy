@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef, useCallback } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import axios from "axios";
 import {
@@ -1639,8 +1639,10 @@ const PrescriptionWriting = () => {
   const [isDurationModalOpen, setIsDurationModalOpen] = useState(false);
 
   // Prescription details
-  const [prescriptionData, setPrescriptionData] = useState({
-    patientId: patientData?._id || "",
+const [prescriptionData, setPrescriptionData] = useState(() => {
+  // Initialize with default structure
+  const defaultData = {
+    patientId: "",
     consultingType: "",
     consultingFor: "",
     medicineCourse: 10,
@@ -1660,11 +1662,10 @@ const PrescriptionWriting = () => {
         preparationQuantity: [],
         duration: "",
         uom: "Pieces",
-        // FIXED: Add proper frequency fields
-        frequencyType: "standard", // Add this field
-        frequencies: [], // Keep for internal use
-        standardSchedule: [], // Add for backend
-        frequentSchedule: [], // Add for backend
+        frequencyType: "standard",
+        frequencies: [],
+        standardSchedule: [],
+        frequentSchedule: [],
         durationRanges: [],
         price: 0,
         medicineConsumption: "",
@@ -1678,7 +1679,131 @@ const PrescriptionWriting = () => {
     shippingCharges: 0,
     notes: "",
     parentPrescriptionId: null,
-  });
+  };
+
+  // Try to load saved data
+  try {
+    const saved = localStorage.getItem("draftPrescription");
+    if (saved) {
+      const parsed = JSON.parse(saved);
+      
+      // Validate saved data structure
+      if (parsed && typeof parsed === 'object' && parsed.prescriptionItems && Array.isArray(parsed.prescriptionItems)) {
+        // Merge with default structure to ensure all fields exist
+        return {
+          ...defaultData,
+          ...parsed,
+          // Ensure prescriptionItems have all required fields
+          prescriptionItems: parsed.prescriptionItems.map(item => ({
+            ...defaultData.prescriptionItems[0],
+            ...item,
+            id: item.id || Date.now() + Math.random(), // Ensure unique ID
+          }))
+        };
+      }
+    }
+  } catch (error) {
+    console.error("Failed to parse saved prescription:", error);
+    // Clear corrupted data
+    localStorage.removeItem("draftPrescription");
+  }
+  
+  return defaultData;
+});
+  
+useEffect(() => {
+  if (patientData?._id && prescriptionData.patientId !== patientData._id) {
+    setPrescriptionData(prev => ({
+      ...prev,
+      patientId: patientData._id
+    }));
+  }
+}, [patientData?._id]);
+
+useEffect(() => {
+  const timeoutId = setTimeout(() => {
+    try {
+      // Add timestamp for cleanup purposes
+      const dataToSave = {
+        ...prescriptionData,
+        _savedAt: new Date().toISOString(),
+        _version: '1.0' // Add version for future migrations
+      };
+      
+      localStorage.setItem("draftPrescription", JSON.stringify(dataToSave));
+      console.log("Prescription draft saved successfully");
+    } catch (error) {
+      console.error("Failed to save prescription draft:", error);
+      // Handle storage quota exceeded
+      if (error.name === 'QuotaExceededError') {
+        alert('Storage limit exceeded. Please submit or clear your draft.');
+      }
+    }
+  }, 500); // 500ms debounce
+
+  return () => clearTimeout(timeoutId);
+}, [prescriptionData]);
+
+const clearDraft = useCallback(() => {
+  localStorage.removeItem("draftPrescription");
+  console.log("Draft cleared");
+}, []);
+
+const hasDraft = useCallback(() => {
+  try {
+    const saved = localStorage.getItem("draftPrescription");
+    return saved !== null && saved !== "null";
+  } catch {
+    return false;
+  }
+}, []);
+
+// Auto-cleanup old drafts (call this on app startup)
+const cleanupOldDrafts = useCallback(() => {
+  try {
+    const saved = localStorage.getItem("draftPrescription");
+    if (saved) {
+      const parsed = JSON.parse(saved);
+      const savedAt = new Date(parsed._savedAt);
+      const now = new Date();
+      const daysDiff = (now - savedAt) / (1000 * 60 * 60 * 24);
+      
+      // Remove drafts older than 7 days
+      if (daysDiff > 7) {
+        localStorage.removeItem("draftPrescription");
+        console.log("Old draft cleaned up");
+      }
+    }
+  } catch (error) {
+    console.error("Error cleaning up old drafts:", error);
+  }
+}, []);
+
+useEffect(() => {
+  const handleBeforeUnload = (e) => {
+    // Only show warning if there's unsaved data and it's been modified
+    const hasUnsavedData = hasDraft() && 
+      (prescriptionData.prescriptionItems.some(item => 
+        item.medicineName || 
+        item.additionalComments ||
+        item.rawMaterials.length > 0
+      ) || prescriptionData.notes);
+    
+    if (hasUnsavedData) {
+      e.preventDefault();
+      e.returnValue = ''; // Modern browsers require this
+      return '';
+    }
+  };
+
+  window.addEventListener('beforeunload', handleBeforeUnload);
+  return () => window.removeEventListener('beforeunload', handleBeforeUnload);
+}, [prescriptionData, hasDraft]);
+
+useEffect(() => {
+  cleanupOldDrafts();
+}, [cleanupOldDrafts]);
+
 
   // Form quantity mapping based on medicine form
   const getQuantityByForm = (form) => {
@@ -2100,66 +2225,6 @@ const PrescriptionWriting = () => {
     setCurrentRowIndex(null);
   };
 
-  // const saveDuration = (durationRanges) => {
-  //   if (currentItemForModal && currentRowIndex !== null) {
-  //     // Create proper duration text with raw material names
-  //     const durationText = durationRanges
-  //       .map((range) => {
-  //         const material = currentItemForModal.rawMaterials?.find(
-  //           (rm) => rm._id === range.rawMaterialId
-  //         );
-  //         return `${material?.name || "Unknown"}: Day ${range.startDay}-${
-  //           range.endDay
-  //         }`;
-  //       })
-  //       .join(", ");
-
-  //     // Extract selected days from ranges
-  //     const selectedDurationDays = [];
-  //     durationRanges.forEach((range) => {
-  //       if (range.startDay && range.endDay) {
-  //         for (let day = range.startDay; day <= range.endDay; day++) {
-  //           if (!selectedDurationDays.includes(day)) {
-  //             selectedDurationDays.push(day);
-  //           }
-  //         }
-  //       }
-  //     });
-
-  //     // Update specific item in prescription data
-  //     setPrescriptionData((prev) => ({
-  //       ...prev,
-  //       prescriptionItems: prev.prescriptionItems.map((item, index) => {
-  //         if (index === currentRowIndex) {
-  //           return {
-  //             ...item,
-  //             durationRanges,
-  //             duration:
-  //               durationRanges.length > 0 &&
-  //               durationText !== ": Day undefined-undefined"
-  //                 ? durationText
-  //                 : item.duration,
-  //             selectedDurationDays: selectedDurationDays.sort((a, b) => a - b),
-  //           };
-  //         }
-  //         return item;
-  //       }),
-  //     }));
-
-  //     // OPTIONAL: update global allDurationRanges if you're using it
-  //     setAllDurationRanges((prev) => {
-  //       const updated = [...prev];
-  //       updated[currentRowIndex] = durationRanges;
-  //       return updated;
-  //     });
-  //   }
-
-  //   // Close modal
-  //   setShowDurationModal(false);
-  //   setCurrentItemForModal(null);
-  //   setCurrentRowIndex(null);
-  // };
-
   const handleCreateNewPrescription = () => {
     setShowPrescriptionTable(false);
     setSelectedPrescriptionId(null);
@@ -2262,6 +2327,7 @@ const PrescriptionWriting = () => {
 
       if (response.data.success) {
         toast.success("Prescription saved successfully!");
+        clearDraft();
         navigate("/doctor-dashboard");
       } else {
         toast.error(response.data.message || "Failed to save prescription");
@@ -2281,6 +2347,38 @@ const PrescriptionWriting = () => {
       setSaving(false);
     }
   };
+
+  const restoreDraft = useCallback(() => {
+  try {
+    const saved = localStorage.getItem("draftPrescription");
+    if (saved) {
+      const parsed = JSON.parse(saved);
+      setPrescriptionData(prev => ({ ...prev, ...parsed }));
+      return true;
+    }
+  } catch (error) {
+    console.error("Failed to restore draft:", error);
+  }
+  return false;
+}, []);
+
+const getDraftInfo = useCallback(() => {
+  try {
+    const saved = localStorage.getItem("draftPrescription");
+    if (saved) {
+      const parsed = JSON.parse(saved);
+      return {
+        exists: true,
+        savedAt: parsed._savedAt,
+        patientId: parsed.patientId,
+        itemCount: parsed.prescriptionItems?.length || 0
+      };
+    }
+  } catch (error) {
+    console.error("Failed to get draft info:", error);
+  }
+  return { exists: false };
+}, []);
 
   // OPTIONAL: Helper function to validate frequency data structure
   const validateFrequencyData = (frequencies, frequencyType) => {
