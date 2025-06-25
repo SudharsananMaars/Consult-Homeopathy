@@ -19,7 +19,7 @@ import "react-toastify/dist/ReactToastify.css";
 import config from "../../config";
 import { duration } from "@mui/material";
 import { Plus } from "lucide-react";
-
+import LabelDropdown from "./LabelDropdown";
 // Auth helper to check token
 const checkAuth = () => {
   const token = localStorage.getItem("token");
@@ -1637,250 +1637,283 @@ const PrescriptionWriting = () => {
   const [allDurationRanges, setAllDurationRanges] = useState([]);
   const [currentMedicineIndex, setCurrentMedicineIndex] = useState(null);
   const [isDurationModalOpen, setIsDurationModalOpen] = useState(false);
-
   // Prescription details
-const [prescriptionData, setPrescriptionData] = useState(() => {
-  // Initialize with default structure
-  const defaultData = {
-    patientId: "",
-    consultingType: "",
-    consultingFor: "",
-    medicineCourse: 10,
-    action: {
-      status: "In Progress",
-      closeComment: "",
-    },
-    prescriptionItems: [
-      {
-        id: 1,
-        prescriptionType: "Only Prescription",
-        consumptionType: "Sequential",
-        medicineName: "",
-        form: "Tablets",
-        dispenseQuantity: 0,
-        rawMaterials: [],
-        preparationQuantity: [],
-        duration: "",
-        uom: "Pieces",
-        frequencyType: "standard",
-        frequencies: [],
-        standardSchedule: [],
-        frequentSchedule: [],
-        durationRanges: [],
-        price: 0,
-        medicineConsumption: "",
-        customConsumption: "",
-        label: "A",
-        additionalComments: "",
+  const [prescriptionData, setPrescriptionData] = useState(() => {
+    // Initialize with default structure
+    const defaultData = {
+      patientId: "",
+      consultingType: "",
+      consultingFor: "",
+      medicineCourse: 10,
+      action: {
+        status: "In Progress",
+        closeComment: "",
       },
-    ],
-    followUpDays: 10,
-    medicineCharges: 0,
-    shippingCharges: 0,
-    notes: "",
-    parentPrescriptionId: null,
-  };
-
-  // Try to load saved data
-  try {
-    const saved = localStorage.getItem("draftPrescription");
-    if (saved) {
-      const parsed = JSON.parse(saved);
-      
-      // Validate saved data structure
-      if (parsed && typeof parsed === 'object' && parsed.prescriptionItems && Array.isArray(parsed.prescriptionItems)) {
-        // Merge with default structure to ensure all fields exist
-        return {
-          ...defaultData,
-          ...parsed,
-          // Ensure prescriptionItems have all required fields
-          prescriptionItems: parsed.prescriptionItems.map(item => ({
-            ...defaultData.prescriptionItems[0],
-            ...item,
-            id: item.id || Date.now() + Math.random(), // Ensure unique ID
-          }))
-        };
-      }
-    }
-  } catch (error) {
-    console.error("Failed to parse saved prescription:", error);
-    // Clear corrupted data
-    localStorage.removeItem("draftPrescription");
-  }
-  
-  return defaultData;
-});
-  
-useEffect(() => {
-  if (patientData?._id && prescriptionData.patientId !== patientData._id) {
-    setPrescriptionData(prev => ({
-      ...prev,
-      patientId: patientData._id
-    }));
-  }
-}, [patientData?._id]);
-
-useEffect(() => {
-  const timeoutId = setTimeout(() => {
-    try {
-      // Add timestamp for cleanup purposes
-      const dataToSave = {
-        ...prescriptionData,
-        _savedAt: new Date().toISOString(),
-        _version: '1.0' // Add version for future migrations
-      };
-      
-      localStorage.setItem("draftPrescription", JSON.stringify(dataToSave));
-      console.log("Prescription draft saved successfully");
-    } catch (error) {
-      console.error("Failed to save prescription draft:", error);
-      // Handle storage quota exceeded
-      if (error.name === 'QuotaExceededError') {
-        alert('Storage limit exceeded. Please submit or clear your draft.');
-      }
-    }
-  }, 500); // 500ms debounce
-
-  return () => clearTimeout(timeoutId);
-}, [prescriptionData]);
-
-const clearDraft = useCallback(() => {
-  localStorage.removeItem("draftPrescription");
-  console.log("Draft cleared");
-}, []);
-
-const hasDraft = useCallback(() => {
-  try {
-    const saved = localStorage.getItem("draftPrescription");
-    return saved !== null && saved !== "null";
-  } catch {
-    return false;
-  }
-}, []);
-
-// Auto-cleanup old drafts (call this on app startup)
-const cleanupOldDrafts = useCallback(() => {
-  try {
-    const saved = localStorage.getItem("draftPrescription");
-    if (saved) {
-      const parsed = JSON.parse(saved);
-      const savedAt = new Date(parsed._savedAt);
-      const now = new Date();
-      const daysDiff = (now - savedAt) / (1000 * 60 * 60 * 24);
-      
-      // Remove drafts older than 7 days
-      if (daysDiff > 7) {
-        localStorage.removeItem("draftPrescription");
-        console.log("Old draft cleaned up");
-      }
-    }
-  } catch (error) {
-    console.error("Error cleaning up old drafts:", error);
-  }
-}, []);
-
-useEffect(() => {
-  const handleBeforeUnload = (e) => {
-    // Only show warning if there's unsaved data and it's been modified
-    const hasUnsavedData = hasDraft() && 
-      (prescriptionData.prescriptionItems.some(item => 
-        item.medicineName || 
-        item.additionalComments ||
-        item.rawMaterials.length > 0
-      ) || prescriptionData.notes);
-    
-    if (hasUnsavedData) {
-      e.preventDefault();
-      e.returnValue = ''; // Modern browsers require this
-      return '';
-    }
-  };
-
-  window.addEventListener('beforeunload', handleBeforeUnload);
-  return () => window.removeEventListener('beforeunload', handleBeforeUnload);
-}, [prescriptionData, hasDraft]);
-
-useEffect(() => {
-  cleanupOldDrafts();
-}, [cleanupOldDrafts]);
-
-
-  // Form quantity mapping based on medicine form
-  const getQuantityByForm = (form) => {
-    const quantityMap = {
-      Tablets: { quantity: 10, uom: "Graam" },
-      Pills: { quantity: 20, uom: "Dram" },
-      "Liquid form": { quantity: 100, uom: "ML" },
-      "Individual Medicine": { quantity: 1, uom: "Pieces" },
+      prescriptionItems: [
+        {
+          id: 1,
+          prescriptionType: "Only Prescription",
+          consumptionType: "Sequential",
+          medicineName: "",
+          form: "Tablets",
+          dispenseQuantity: 0,
+          rawMaterials: [],
+          preparationQuantity: [],
+          duration: "",
+          uom: "Pieces",
+          frequencyType: "standard",
+          frequencies: [],
+          standardSchedule: [],
+          frequentSchedule: [],
+          durationRanges: [],
+          price: 0,
+          medicineConsumption: "",
+          customConsumption: "",
+          label: "A",
+          additionalComments: "",
+        },
+      ],
+      followUpDays: 10,
+      medicineCharges: 0,
+      shippingCharges: 0,
+      notes: "",
+      parentPrescriptionId: null,
     };
-    return quantityMap[form] || { quantity: 1, uom: "Pieces" };
-  };
 
-  // Check authentication on component load
-  useEffect(() => {
-    if (!checkAuth()) {
-      toast.error("Please login to access this page");
-      navigate("/login", { state: { from: location.pathname } });
-      return;
-    }
-
-    if (!patientData || !patientData._id) {
-      toast.error("Patient data is missing");
-      navigate("/doctor-dashboard");
-      return;
-    }
-
-    fetchData();
-  }, [API_URL, navigate, location.pathname, patientData]);
-
-  // Fetch medicines, raw materials, and existing prescriptions
-  const fetchData = async () => {
+    // Try to load saved data
     try {
-      setLoading(true);
-      const authAxios = createAuthAxios();
+      const saved = localStorage.getItem("draftPrescription");
+      if (saved) {
+        const parsed = JSON.parse(saved);
 
-      const [medicinesRes, rawMaterialsRes, prescriptionsRes, appointmentRes] =
-        await Promise.all([
-          authAxios.get(`${API_URL}/api/prescriptionControl/medicines`),
-          authAxios.get(`${API_URL}/api/prescriptionControl/rawMaterials`),
-          authAxios.get(
-            `${API_URL}/api/prescriptionControl/patient/${patientData._id}`
-          ),
-          patientData.appointmentId
-            ? authAxios.get(
-                `${API_URL}/api/prescription/appointment/${patientData.appointmentId}`
-              )
-            : Promise.resolve(null),
-        ]);
-      // console.log("medicines: ", medicinesRes.data);
-      setMedicines(medicinesRes.data?.data || []);
-      setRawMaterials(rawMaterialsRes.data?.data || []);
-      setExistingPrescriptions(prescriptionsRes.data?.data || []);
-
-      if (appointmentRes) {
-        const appointment = appointmentRes.data?.data || {};
-        setAppointmentData(appointment);
-        setPrescriptionData((prev) => ({
-          ...prev,
-          consultingType: appointment.consultingType || "",
-          consultingFor: appointment.consultingFor || "",
-        }));
+        // Validate saved data structure
+        if (
+          parsed &&
+          typeof parsed === "object" &&
+          parsed.prescriptionItems &&
+          Array.isArray(parsed.prescriptionItems)
+        ) {
+          // Merge with default structure to ensure all fields exist
+          return {
+            ...defaultData,
+            ...parsed,
+            // Ensure prescriptionItems have all required fields
+            prescriptionItems: parsed.prescriptionItems.map((item) => ({
+              ...defaultData.prescriptionItems[0],
+              ...item,
+              id: item.id || Date.now() + Math.random(), // Ensure unique ID
+            })),
+          };
+        }
       }
-    } catch (err) {
-      console.error("Error fetching data:", err);
-      if (err.response?.status === 401) {
-        toast.error("Session expired. Please login again");
-        localStorage.removeItem("token");
-        navigate("/login");
-      } else {
-        setError("Failed to load prescription data. Please try again.");
-        toast.error("Failed to load prescription data");
-      }
-    } finally {
-      setLoading(false);
+    } catch (error) {
+      console.error("Failed to parse saved prescription:", error);
+      // Clear corrupted data
+      localStorage.removeItem("draftPrescription");
     }
+
+    return defaultData;
+  });
+
+  useEffect(() => {
+    if (patientData?._id && prescriptionData.patientId !== patientData._id) {
+      setPrescriptionData((prev) => ({
+        ...prev,
+        patientId: patientData._id,
+      }));
+    }
+  }, [patientData?._id]);
+
+  useEffect(() => {
+    const timeoutId = setTimeout(() => {
+      try {
+        // Add timestamp for cleanup purposes
+        const dataToSave = {
+          ...prescriptionData,
+          _savedAt: new Date().toISOString(),
+          _version: "1.0", // Add version for future migrations
+        };
+
+        localStorage.setItem("draftPrescription", JSON.stringify(dataToSave));
+        console.log("Prescription draft saved successfully");
+      } catch (error) {
+        console.error("Failed to save prescription draft:", error);
+        // Handle storage quota exceeded
+        if (error.name === "QuotaExceededError") {
+          alert("Storage limit exceeded. Please submit or clear your draft.");
+        }
+      }
+    }, 500); // 500ms debounce
+
+    return () => clearTimeout(timeoutId);
+  }, [prescriptionData]);
+
+  const clearDraft = useCallback(() => {
+    localStorage.removeItem("draftPrescription");
+    console.log("Draft cleared");
+  }, []);
+
+  const hasDraft = useCallback(() => {
+    try {
+      const saved = localStorage.getItem("draftPrescription");
+      return saved !== null && saved !== "null";
+    } catch {
+      return false;
+    }
+  }, []);
+
+  // Auto-cleanup old drafts (call this on app startup)
+  const cleanupOldDrafts = useCallback(() => {
+    try {
+      const saved = localStorage.getItem("draftPrescription");
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        const savedAt = new Date(parsed._savedAt);
+        const now = new Date();
+        const daysDiff = (now - savedAt) / (1000 * 60 * 60 * 24);
+
+        // Remove drafts older than 7 days
+        if (daysDiff > 7) {
+          localStorage.removeItem("draftPrescription");
+          console.log("Old draft cleaned up");
+        }
+      }
+    } catch (error) {
+      console.error("Error cleaning up old drafts:", error);
+    }
+  }, []);
+
+  useEffect(() => {
+    const handleBeforeUnload = (e) => {
+      // Only show warning if there's unsaved data and it's been modified
+      const hasUnsavedData =
+        hasDraft() &&
+        (prescriptionData.prescriptionItems.some(
+          (item) =>
+            item.medicineName ||
+            item.additionalComments ||
+            item.rawMaterials.length > 0
+        ) ||
+          prescriptionData.notes);
+
+      if (hasUnsavedData) {
+        e.preventDefault();
+        e.returnValue = ""; // Modern browsers require this
+        return "";
+      }
+    };
+
+    window.addEventListener("beforeunload", handleBeforeUnload);
+    return () => window.removeEventListener("beforeunload", handleBeforeUnload);
+  }, [prescriptionData, hasDraft]);
+
+  useEffect(() => {
+    cleanupOldDrafts();
+  }, [cleanupOldDrafts]);
+
+  const [prescriptionItems, setPrescriptionItems] = useState([]);
+  const [fieldVisibility, setFieldVisibility] = useState({
+    rawMaterial: true,
+    preparationQuantity: true,
+  });
+
+  // Helper function to convert drops to ml (1ml = 20 drops standard)
+  const dropsToMl = (drops) => {
+    return parseFloat(drops) / 20;
   };
 
+  // Helper function to convert ml to drops
+  const mlToDrops = (ml) => {
+    return parseFloat(ml) * 20;
+  };
+
+  const calculateDistilledWaterQuantity = (itemId) => {
+    setPrescriptionData((prev) => {
+      const updatedItems = prev.prescriptionItems.map((item) => {
+        if (
+          item.id !== itemId ||
+          item.form !== "Liquid form" ||
+          !item.dispenseQuantity
+        ) {
+          return item;
+        }
+
+        // Extract numeric value from dispense quantity (e.g., "15ml" -> 15)
+        const dispenseQuantityValue = parseFloat(
+          item.dispenseQuantity.replace(/[^0-9.]/g, "")
+        );
+
+        if (isNaN(dispenseQuantityValue) || dispenseQuantityValue <= 0) {
+          return item;
+        }
+
+        // Calculate total drops used by other materials (excluding distilled water)
+        let totalDropsUsed = 0;
+        const otherMaterials = item.preparationQuantity.filter(
+          (prep) => !prep.name.toLowerCase().includes("distilled water")
+        );
+
+        otherMaterials.forEach((prep) => {
+          const quantity = parseFloat(prep.quantity || 0);
+          if (!isNaN(quantity)) {
+            // FIXED: In your structure, ML unit quantities are already in drops
+            // So we don't need to convert ML to drops - they're already drops
+            totalDropsUsed += quantity;
+          }
+        });
+
+        // Convert total drops used to ml
+        const totalMlUsed = dropsToMl(totalDropsUsed);
+
+        // Calculate remaining ml needed
+        const remainingMl = dispenseQuantityValue - totalMlUsed;
+
+        // Convert remaining ml to drops for distilled water
+        const distilledWaterDrops = Math.max(0, mlToDrops(remainingMl));
+
+        // Update distilled water quantity in preparation
+        const updatedPreparationQuantity = item.preparationQuantity.map(
+          (prep) => {
+            if (prep.name.toLowerCase().includes("distilled water")) {
+              const parsedQuantity = parseFloat(distilledWaterDrops.toFixed(1));
+              const totalPrice = parsedQuantity * prep.pricePerUnit;
+              return {
+                ...prep,
+                quantity: parsedQuantity,
+                totalPrice: totalPrice,
+              };
+            }
+            return prep;
+          }
+        );
+
+        // Recalculate total price
+        const totalPrice = updatedPreparationQuantity.reduce(
+          (sum, rm) => sum + rm.totalPrice,
+          0
+        );
+
+        return {
+          ...item,
+          preparationQuantity: updatedPreparationQuantity,
+          price: totalPrice,
+        };
+      });
+
+      const totalMedicineCharges = updatedItems.reduce(
+        (sum, item) => sum + item.price,
+        0
+      );
+
+      return {
+        ...prev,
+        prescriptionItems: updatedItems,
+        medicineCharges: totalMedicineCharges,
+      };
+    });
+  };
+
+  // Rest of your functions remain the same...
   const handleRawMaterialSelection = (itemId, rawMaterialId, isChecked) => {
     setPrescriptionData((prev) => {
       const updatedItems = prev.prescriptionItems.map((item) => {
@@ -1942,6 +1975,16 @@ useEffect(() => {
         medicineCharges: totalMedicineCharges,
       };
     });
+
+    // Trigger distilled water calculation after material selection
+    setTimeout(() => {
+      const currentItem = prescriptionData.prescriptionItems.find(
+        (item) => item.id === itemId
+      );
+      if (currentItem && currentItem.form === "Liquid form") {
+        calculateDistilledWaterQuantity(itemId);
+      }
+    }, 100);
   };
 
   const updatePreparationQuantity = (itemId, rawMaterialId, quantity) => {
@@ -1984,6 +2027,25 @@ useEffect(() => {
         medicineCharges: totalMedicineCharges,
       };
     });
+
+    // Trigger distilled water calculation after quantity update
+    setTimeout(() => {
+      const currentItem = prescriptionData.prescriptionItems.find(
+        (item) => item.id === itemId
+      );
+      if (currentItem && currentItem.form === "Liquid form") {
+        // Don't recalculate if the changed item is distilled water itself
+        const changedMaterial = currentItem.preparationQuantity.find(
+          (prep) => prep._id === rawMaterialId
+        );
+        if (
+          changedMaterial &&
+          !changedMaterial.name.toLowerCase().includes("distilled water")
+        ) {
+          calculateDistilledWaterQuantity(itemId);
+        }
+      }
+    }, 50);
   };
 
   const updatePrescriptionItem = (itemId, field, value) => {
@@ -1994,7 +2056,6 @@ useEffect(() => {
           let updatedItem = { ...item };
 
           if (field === "frequencyData") {
-            // Handle frequency data update
             updatedItem = {
               ...updatedItem,
               frequencies: value.frequencies,
@@ -2006,7 +2067,6 @@ useEffect(() => {
             const formQuantity = getQuantityByForm(value);
             updatedItem = {
               ...updatedItem,
-              // 🔑 actually update the form
               form: value,
               dispenseQuantity: formQuantity.quantity,
               uom: formQuantity.uom,
@@ -2026,7 +2086,268 @@ useEffect(() => {
         return item;
       }),
     }));
+
+    // Trigger distilled water calculation for liquid forms when dispense quantity changes
+    if (field === "dispenseQuantity" || field === "form") {
+      setTimeout(() => {
+        const currentItem = prescriptionData.prescriptionItems.find(
+          (item) => item.id === itemId
+        );
+        if (currentItem && currentItem.form === "Liquid form") {
+          calculateDistilledWaterQuantity(itemId);
+        }
+      }, 100);
+    }
   };
+
+  // Form quantity mapping based on medicine form
+  const getQuantityByForm = (form) => {
+    const quantityMap = {
+      Tablets: { quantity: 10, uom: "Graam" },
+      Pills: { quantity: 20, uom: "Dram" },
+      "Liquid form": { quantity: 100, uom: "ML" },
+      "Individual Medicine": { quantity: 1, uom: "Pieces" },
+    };
+    return quantityMap[form] || { quantity: 1, uom: "Pieces" };
+  };
+
+  const LOCAL_STORAGE_KEY = "customConsumptionSuggestions";
+
+  // Inside your component
+  const [customSuggestions, setCustomSuggestions] = useState([]);
+
+  // Load from localStorage when component mounts
+  useEffect(() => {
+    const saved = localStorage.getItem(LOCAL_STORAGE_KEY);
+    if (saved) {
+      setCustomSuggestions(JSON.parse(saved));
+    }
+  }, []);
+
+  // Function to update and store new custom values
+  const addCustomSuggestion = (newVal) => {
+    const trimmed = newVal.trim();
+    if (
+      trimmed.length > 2 && // Optional: minimum length to avoid "a", "he", etc.
+      !customSuggestions.includes(trimmed)
+    ) {
+      const updated = [...customSuggestions, trimmed];
+      setCustomSuggestions(updated);
+      localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(updated));
+    }
+  };
+
+  // Check authentication on component load
+  useEffect(() => {
+    if (!checkAuth()) {
+      toast.error("Please login to access this page");
+      navigate("/login", { state: { from: location.pathname } });
+      return;
+    }
+
+    if (!patientData || !patientData._id) {
+      toast.error("Patient data is missing");
+      navigate(-1);
+      return;
+    }
+
+    fetchData();
+  }, [API_URL, navigate, location.pathname, patientData]);
+
+  // Fetch medicines, raw materials, and existing prescriptions
+  const fetchData = async () => {
+    try {
+      setLoading(true);
+      const authAxios = createAuthAxios();
+
+      const [medicinesRes, rawMaterialsRes, prescriptionsRes, appointmentRes] =
+        await Promise.all([
+          authAxios.get(`${API_URL}/api/prescriptionControl/medicines`),
+          authAxios.get(`${API_URL}/api/prescriptionControl/rawMaterials`),
+          authAxios.get(
+            `${API_URL}/api/prescriptionControl/patient/${patientData._id}`
+          ),
+          patientData.appointmentId
+            ? authAxios.get(
+                `${API_URL}/api/prescription/appointment/${patientData.appointmentId}`
+              )
+            : Promise.resolve(null),
+        ]);
+      // console.log("medicines: ", medicinesRes.data);
+      setMedicines(medicinesRes.data?.data || []);
+      setRawMaterials(rawMaterialsRes.data?.data || []);
+      setExistingPrescriptions(prescriptionsRes.data?.data || []);
+
+      if (appointmentRes) {
+        const appointment = appointmentRes.data?.data || {};
+        setAppointmentData(appointment);
+        setPrescriptionData((prev) => ({
+          ...prev,
+          consultingType: appointment.consultingType || "",
+          consultingFor: appointment.consultingFor || "",
+        }));
+      }
+    } catch (err) {
+      console.error("Error fetching data:", err);
+      if (err.response?.status === 401) {
+        toast.error("Session expired. Please login again");
+        localStorage.removeItem("token");
+        navigate("/login");
+      } else {
+        setError("Failed to load prescription data. Please try again.");
+        toast.error("Failed to load prescription data");
+      }
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // const handleRawMaterialSelection = (itemId, rawMaterialId, isChecked) => {
+  //   setPrescriptionData((prev) => {
+  //     const updatedItems = prev.prescriptionItems.map((item) => {
+  //       if (item.id === itemId) {
+  //         let updatedRawMaterials = [...item.rawMaterials];
+  //         let updatedPreparationQuantity = [...item.preparationQuantity];
+  //         const rawMaterial = rawMaterials.find(
+  //           (rm) => rm._id === rawMaterialId
+  //         );
+
+  //         if (isChecked && rawMaterial) {
+  //           if (!updatedRawMaterials.some((rm) => rm._id === rawMaterialId)) {
+  //             updatedRawMaterials.push({
+  //               _id: rawMaterialId,
+  //               name: rawMaterial.name,
+  //               selected: true,
+  //             });
+  //             updatedPreparationQuantity.push({
+  //               _id: rawMaterialId,
+  //               name: rawMaterial.name,
+  //               quantity: 1,
+  //               unit: rawMaterial.uom,
+  //               pricePerUnit: rawMaterial.costPerUnit,
+  //               totalPrice: rawMaterial.costPerUnit,
+  //             });
+  //           }
+  //         } else {
+  //           updatedRawMaterials = updatedRawMaterials.filter(
+  //             (rm) => rm._id !== rawMaterialId
+  //           );
+  //           updatedPreparationQuantity = updatedPreparationQuantity.filter(
+  //             (rm) => rm._id !== rawMaterialId
+  //           );
+  //         }
+
+  //         const totalPrice = updatedPreparationQuantity.reduce(
+  //           (sum, rm) => sum + rm.totalPrice,
+  //           0
+  //         );
+
+  //         return {
+  //           ...item,
+  //           rawMaterials: updatedRawMaterials,
+  //           preparationQuantity: updatedPreparationQuantity,
+  //           price: totalPrice,
+  //         };
+  //       }
+  //       return item;
+  //     });
+
+  //     const totalMedicineCharges = updatedItems.reduce(
+  //       (sum, item) => sum + item.price,
+  //       0
+  //     );
+
+  //     return {
+  //       ...prev,
+  //       prescriptionItems: updatedItems,
+  //       medicineCharges: totalMedicineCharges,
+  //     };
+  //   });
+  // };
+
+  // const updatePreparationQuantity = (itemId, rawMaterialId, quantity) => {
+  //   setPrescriptionData((prev) => {
+  //     const updatedItems = prev.prescriptionItems.map((item) => {
+  //       if (item.id === itemId) {
+  //         const updatedPreparationQuantity = item.preparationQuantity.map(
+  //           (rm) => {
+  //             if (rm._id === rawMaterialId) {
+  //               const parsedQuantity = parseFloat(quantity) || 0;
+  //               const totalPrice = parsedQuantity * rm.pricePerUnit;
+  //               return { ...rm, quantity: parsedQuantity, totalPrice };
+  //             }
+  //             return rm;
+  //           }
+  //         );
+
+  //         const totalPrice = updatedPreparationQuantity.reduce(
+  //           (sum, rm) => sum + rm.totalPrice,
+  //           0
+  //         );
+
+  //         return {
+  //           ...item,
+  //           preparationQuantity: updatedPreparationQuantity,
+  //           price: totalPrice,
+  //         };
+  //       }
+  //       return item;
+  //     });
+
+  //     const totalMedicineCharges = updatedItems.reduce(
+  //       (sum, item) => sum + item.price,
+  //       0
+  //     );
+
+  //     return {
+  //       ...prev,
+  //       prescriptionItems: updatedItems,
+  //       medicineCharges: totalMedicineCharges,
+  //     };
+  //   });
+  // };
+
+  // const updatePrescriptionItem = (itemId, field, value) => {
+  //   setPrescriptionData((prev) => ({
+  //     ...prev,
+  //     prescriptionItems: prev.prescriptionItems.map((item) => {
+  //       if (item.id === itemId) {
+  //         let updatedItem = { ...item };
+
+  //         if (field === "frequencyData") {
+  //           // Handle frequency data update
+  //           updatedItem = {
+  //             ...updatedItem,
+  //             frequencies: value.frequencies,
+  //             standardSchedule: value.standardSchedule,
+  //             frequentSchedule: value.frequentSchedule,
+  //             frequencyType: value.frequencyType,
+  //           };
+  //         } else if (field === "form") {
+  //           const formQuantity = getQuantityByForm(value);
+  //           updatedItem = {
+  //             ...updatedItem,
+  //             // 🔑 actually update the form
+  //             form: value,
+  //             dispenseQuantity: formQuantity.quantity,
+  //             uom: formQuantity.uom,
+  //             preparationQuantity: (item.preparationQuantity || []).map(
+  //               (prep) => ({
+  //                 ...prep,
+  //                 unit: formQuantity.uom,
+  //               })
+  //             ),
+  //           };
+  //         } else {
+  //           updatedItem[field] = value;
+  //         }
+
+  //         return updatedItem;
+  //       }
+  //       return item;
+  //     }),
+  //   }));
+  // };
 
   const addPrescriptionItem = () => {
     const newId =
@@ -2349,36 +2670,36 @@ useEffect(() => {
   };
 
   const restoreDraft = useCallback(() => {
-  try {
-    const saved = localStorage.getItem("draftPrescription");
-    if (saved) {
-      const parsed = JSON.parse(saved);
-      setPrescriptionData(prev => ({ ...prev, ...parsed }));
-      return true;
+    try {
+      const saved = localStorage.getItem("draftPrescription");
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        setPrescriptionData((prev) => ({ ...prev, ...parsed }));
+        return true;
+      }
+    } catch (error) {
+      console.error("Failed to restore draft:", error);
     }
-  } catch (error) {
-    console.error("Failed to restore draft:", error);
-  }
-  return false;
-}, []);
+    return false;
+  }, []);
 
-const getDraftInfo = useCallback(() => {
-  try {
-    const saved = localStorage.getItem("draftPrescription");
-    if (saved) {
-      const parsed = JSON.parse(saved);
-      return {
-        exists: true,
-        savedAt: parsed._savedAt,
-        patientId: parsed.patientId,
-        itemCount: parsed.prescriptionItems?.length || 0
-      };
+  const getDraftInfo = useCallback(() => {
+    try {
+      const saved = localStorage.getItem("draftPrescription");
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        return {
+          exists: true,
+          savedAt: parsed._savedAt,
+          patientId: parsed.patientId,
+          itemCount: parsed.prescriptionItems?.length || 0,
+        };
+      }
+    } catch (error) {
+      console.error("Failed to get draft info:", error);
     }
-  } catch (error) {
-    console.error("Failed to get draft info:", error);
-  }
-  return { exists: false };
-}, []);
+    return { exists: false };
+  }, []);
 
   // OPTIONAL: Helper function to validate frequency data structure
   const validateFrequencyData = (frequencies, frequencyType) => {
@@ -3111,13 +3432,13 @@ const getDraftInfo = useCallback(() => {
                           {item.form === "Liquid form" ? (
                             <select
                               value={item.dispenseQuantity}
-                              onChange={(e) =>
+                              onChange={(e) => {
                                 updatePrescriptionItem(
                                   item.id,
                                   "dispenseQuantity",
                                   e.target.value
-                                )
-                              }
+                                );
+                              }}
                               className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white hover:border-gray-300 transition-colors"
                             >
                               <option value="">Select quantity</option>
@@ -3295,15 +3616,19 @@ const getDraftInfo = useCallback(() => {
                                 <input
                                   type="number"
                                   value={prep.quantity}
-                                  onChange={(e) =>
+                                  onChange={(e) => {
                                     updatePreparationQuantity(
                                       item.id,
                                       prep._id,
                                       e.target.value
-                                    )
-                                  }
+                                    );
+                                  }}
                                   disabled={
-                                    !fieldVisibility.preparationQuantity
+                                    !fieldVisibility.preparationQuantity ||
+                                    (item.form === "Liquid form" &&
+                                      prep.name
+                                        .toLowerCase()
+                                        .includes("distilled water"))
                                   }
                                   className="w-20 border border-gray-200 rounded px-2 py-1 text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:bg-gray-100 disabled:cursor-not-allowed"
                                   min="0"
@@ -3312,6 +3637,14 @@ const getDraftInfo = useCallback(() => {
                                 <span className="text-sm text-gray-500">
                                   {prep.unit === "ML" ? "drops" : prep.unit}
                                 </span>
+                                {item.form === "Liquid form" &&
+                                  prep.name
+                                    .toLowerCase()
+                                    .includes("distilled water") && (
+                                    <span className="text-xs text-blue-600 ml-2">
+                                      (Auto)
+                                    </span>
+                                  )}
                               </div>
                             ))}
                             {item.preparationQuantity.length === 0 && (
@@ -3508,53 +3841,51 @@ const getDraftInfo = useCallback(() => {
                             {/* Show text box if 'Additional' is selected */}
                             {item.medicineConsumption === "Additional" &&
                               fieldVisibility.medicineConsumption && (
-                                <input
-                                  type="text"
-                                  value={item.customConsumption}
-                                  onChange={(e) =>
-                                    updatePrescriptionItem(
-                                      item.id,
-                                      "customConsumption",
-                                      e.target.value
-                                    )
-                                  }
-                                  className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white hover:border-gray-300 transition-colors"
-                                  placeholder="Enter custom instruction"
-                                />
+                                <>
+                                  <input
+                                    type="text"
+                                    list={`custom-suggestions-${item.id}`}
+                                    value={item.customConsumption}
+                                    onChange={(e) =>
+                                      updatePrescriptionItem(
+                                        item.id,
+                                        "customConsumption",
+                                        e.target.value
+                                      )
+                                    }
+                                    onBlur={(e) => {
+                                      const val = e.target.value.trim();
+                                      addCustomSuggestion(val);
+                                    }}
+                                    onKeyDown={(e) => {
+                                      if (e.key === "Enter") {
+                                        const val = e.target.value.trim();
+                                        addCustomSuggestion(val);
+                                      }
+                                    }}
+                                    className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white hover:border-gray-300 transition-colors"
+                                    placeholder="Enter custom instruction"
+                                  />
+                                  <datalist
+                                    id={`custom-suggestions-${item.id}`}
+                                  >
+                                    {customSuggestions.map(
+                                      (suggestion, idx) => (
+                                        <option key={idx} value={suggestion} />
+                                      )
+                                    )}
+                                  </datalist>
+                                </>
                               )}
                           </div>
                         </td>
 
-                        {/* Label */}
-                        <td
-                          className={`px-4 py-4 min-w-24 ${
-                            !fieldVisibility.label
-                              ? "opacity-30 pointer-events-none"
-                              : ""
-                          }`}
-                        >
-                          <select
-                            value={item.label}
-                            onChange={(e) =>
-                              updatePrescriptionItem(
-                                item.id,
-                                "label",
-                                e.target.value
-                              )
-                            }
-                            disabled={!fieldVisibility.label}
-                            className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white hover:border-gray-300 transition-colors disabled:bg-gray-100 disabled:cursor-not-allowed"
-                          >
-                            <option value="A">A</option>
-                            <option value="B">B</option>
-                            <option value="C">C</option>
-                            <option value="D">D</option>
-                            <option value="1">1</option>
-                            <option value="2">2</option>
-                            <option value="3">3</option>
-                            <option value="4">4</option>
-                          </select>
-                        </td>
+                        <LabelDropdown
+                          item={item}
+                          updatePrescriptionItem={updatePrescriptionItem}
+                          fieldVisibility={fieldVisibility}
+                        />
+
 
                         {/* Additional Comments */}
                         <td className="px-4 py-4 min-w-48">
