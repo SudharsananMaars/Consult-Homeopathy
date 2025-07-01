@@ -1,6 +1,13 @@
 import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { LuBox, LuSettings, LuCalendar, LuWallet } from "react-icons/lu";
+import {
+  LuBox,
+  LuSettings,
+  LuLayoutDashboard,
+  LuWallet,
+  LuCalendarCheck,
+  LuCalendarPlus,
+} from "react-icons/lu";
 import { GiMedicines } from "react-icons/gi";
 import { MdOutlineOndemandVideo } from "react-icons/md";
 import { Link, useLocation } from "react-router-dom";
@@ -31,30 +38,56 @@ const Sidebar = () => {
   }, [location.pathname]);
 
   const SIDEBAR_LINKS = [
-    { id: 2, path: "/home", name: "Home", icon: LuBox },
     {
       id: 1,
       path: "/consulthistory",
-      name: "ConsultationHistory",
+      name: "Consultation History",
       icon: LuBox,
+    },
+    {
+      id: 2,
+      path: "/home",
+      name: "Home",
+      icon: LuLayoutDashboard,
     },
     {
       id: 3,
       path: "/appointments/newappointment",
-      name: "Appointments",
-      icon: LuCalendar,
+      name: "Book Appointment",
+      icon: LuCalendarPlus,
     },
-    { id: 4, path: "/payments", name: "Payments", icon: LuWallet },
-    // { id: 4, path: "/invoices", name: "Invoices", icon: LuFileText },
-    { id: 5, path: "/medicine", name: "Medicine", icon: GiMedicines },
+    {
+      id: 4,
+      path: "/appointments/upcoming",
+      name: "Booked Appointments",
+      icon: LuCalendarCheck,
+    },
+    {
+      id: 5,
+      path: "/payments",
+      name: "Payments",
+      icon: LuWallet,
+    },
     {
       id: 6,
+      path: "/medicine",
+      name: "Medicine",
+      icon: GiMedicines,
+    },
+    {
+      id: 7,
       path: "/workshops",
       name: "Workshops",
       icon: MdOutlineOndemandVideo,
     },
-    { id: 7, path: "/settings", name: "Settings", icon: LuSettings },
+    {
+      id: 8,
+      path: "/settings",
+      name: "Settings",
+      icon: LuSettings,
+    },
   ];
+
   const handleLogout = async () => {
     const token = localStorage.getItem("token"); // Fetch token
     const handleLogout = async () => {
