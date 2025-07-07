@@ -79,7 +79,7 @@ import HRPage from "./pages/doctor pages/HRPage.jsx";
 import BreakTimer from "./pages/doctor pages/BreakTimer.jsx";
 import Payslip from "./pages/doctor pages/payslip.jsx";
 import NoteTaking from "./pages/doctor pages/NoteTaking.jsx";
-import PrescriptionWriting from "./components/calllog components/PrescriptionWriting.jsx";
+import PrescriptionWriting from "./components/PrescriptionModule/PrescriptionWriting.jsx";
 import MedicinePreparationView from "./pages/doctor pages/MedicinePreparationView.jsx";
 import InventoryPage from "./components/calllog components/InventoryPage.jsx";
 import "@fortawesome/fontawesome-free/css/all.min.css";

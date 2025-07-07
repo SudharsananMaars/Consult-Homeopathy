@@ -8,7 +8,7 @@ import { jwtDecode } from 'jwt-decode';
 import CommentCell from './CommentCell';
 import VideoCall from '../../pages/doctor pages/VideoCall';
 import DraftViewModal from './DraftViewModal'; // Make sure the path is correct
-import PrescriptionViewModal from './PrescriptionViewModal';
+import PrescriptionViewModal from '../PrescriptionModule/PrescriptionViewModal';
 import MedicinePreparationView from '../../pages/doctor pages/MedicinePreparationView';
 
 const WorkTable = () => {
