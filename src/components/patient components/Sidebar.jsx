@@ -13,6 +13,7 @@ import { MdOutlineOndemandVideo } from "react-icons/md";
 import { Link, useLocation } from "react-router-dom";
 import { CiLogout } from "react-icons/ci";
 import { FaUserFriends } from "react-icons/fa";
+import { FaPhotoVideo } from "react-icons/fa";
 import SidebarProfile from "./SidebarProfile"; // Import the Profile Component
 import axios from "axios";
 import config from "../../config";
@@ -80,8 +81,13 @@ const Sidebar = () => {
       name: "Workshops",
       icon: MdOutlineOndemandVideo,
     },
+    { id: 8, 
+      path: "/patientcontent",
+      name: "Content", 
+      icon: FaPhotoVideo,
+    },
     {
-      id: 8,
+      id: 9,
       path: "/settings",
       name: "Settings",
       icon: LuSettings,

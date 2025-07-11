@@ -1,147 +1,120 @@
-import React, { useState } from 'react';
-import DoctorLayout from "/src/components/doctor components/DoctorLayout.jsx";
+import React, { useEffect, useState } from 'react';
+import DoctorLayout from '/src/components/doctor components/DoctorLayout.jsx';
 import Nocontent from '/src/assets/images/doctor images/Nocontent.jpg';
-import PostPopup from '/src/pages/doctor pages/PostPopup.jsx'; // Import the new PostPopup component
+import PostPopup from '/src/pages/doctor pages/PostPopup.jsx';
+import deleteIcon from '/src/assets/images/doctor images/deleteIcon.png';
 
 const Content = () => {
-  const [videos, setVideos] = useState([]);
-  const [uploading, setUploading] = useState(false);
-  const [activeTab, setActiveTab] = useState('Videos');
-  const [isPostPopupOpen, setPostPopupOpen] = useState(false); // State for managing post popup visibility
+  const [isPostPopupOpen, setPostPopupOpen] = useState(false);
+  const [posts, setPosts] = useState([]);
 
-  const uploadVideo = (event) => {
-    const file = event.target.files[0];
-    if (file) {
-      setUploading(true);
-      setTimeout(() => {
-        const newVideo = {
-          name: file.name,
-          visibility: 'Public',
-          restrictions: 'None',
-          date: new Date().toLocaleDateString(),
-          views: 0,
-          comments: 0,
-          likes: 0
-        };
-        setVideos([...videos, newVideo]);
-        setUploading(false);
-      }, 2000);
-    }
-  };
+  useEffect(() => {
+    const fetchPosts = async () => {
+      try {
+        const res = await fetch('http://localhost:5000/api/post', {
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem('token')}`,
+          },
+        });
 
-  const openPostPopup = () => {
-    setPostPopupOpen(true);
-  };
+        const data = await res.json();
+        if (res.ok && data.posts) {
+          setPosts(data.posts);
+        }
+      } catch (err) {
+        console.error('Error fetching posts:', err);
+      }
+    };
 
-  const closePostPopup = () => {
+    fetchPosts();
+  }, []);
+
+  const handlePostSubmit = (newPost) => {
+    setPosts((prev) => [...prev, newPost]);
     setPostPopupOpen(false);
+  };
+
+  const handleDelete = async (postId) => {
+    try {
+      const res = await fetch(`http://localhost:5000/api/post/${postId}`, {
+        method: 'DELETE',
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem('token')}`,
+        },
+      });
+
+      const data = await res.json();
+      if (res.ok) {
+        setPosts((prev) => prev.filter((p) => p._id !== postId));
+      } else {
+        alert('Failed to delete post');
+      }
+    } catch (err) {
+      console.error('Delete error:', err);
+    }
   };
 
   return (
     <DoctorLayout>
-      <div className="min-h-screen flex flex-col p-7">
-        <h2 className="text-2xl font-bold mb-4">Channel content</h2>
-
-        {/* Tab Navigation */}
-        <div className="flex mb-4 border-b border-gray-300">
+      <div className="min-h-screen p-6">
+        <div className="flex justify-between items-center mb-6">
+          <h2 className="text-2xl font-bold">Posts</h2>
           <button
-            className={`py-2 px-4 focus:outline-none ${activeTab === 'Videos' ? 'border-b-2 border-blue-500 text-blue-500' : 'text-gray-500'}`}
-            onClick={() => setActiveTab('Videos')}
+            onClick={() => setPostPopupOpen(true)}
+            className="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded"
           >
-            Videos
-          </button>
-          <button
-            className={`py-2 px-4 focus:outline-none ${activeTab === 'Posts' ? 'border-b-2 border-blue-500 text-blue-500' : 'text-gray-500'}`}
-            onClick={() => setActiveTab('Posts')}
-          >
-            Posts
+            Add Post
           </button>
         </div>
 
-        {/* Conditionally Render Based on Active Tab */}
-        {activeTab === 'Videos' ? (
-          <div className="flex-grow flex flex-col">
-            {/* Video List Table */}
-            <div className="w-full bg-white mb-4">
-              <div className="flex text-sm font-medium bg-gray-100 text-grey-700 py-2 px-4">
-                <div className="w-5/12">Video</div>
-                <div className="w-2/12">Visibility</div>
-                <div className="w-2/12">Restrictions</div>
-                <div className="w-2/12">Date</div>
-                <div className="w-2/12">Views</div>
-                <div className="w-2/12">Comments</div>
-                <div className="w-2/12">Likes</div>
-              </div>
-
-              {videos.length > 0 ? (
-                videos.map((video, index) => (
-                  <div key={index} className="flex text-sm border-t py-2 px-4">
-                    <div className="w-5/12">{video.name}</div>
-                    <div className="w-2/12">{video.visibility}</div>
-                    <div className="w-2/12">{video.restrictions}</div>
-                    <div className="w-2/12">{video.date}</div>
-                    <div className="w-2/12">{video.views}</div>
-                    <div className="w-2/12">{video.comments}</div>
-                    <div className="w-2/12">{video.likes}</div>
-                  </div>
-                ))
-              ) : (
-                <div className="flex flex-grow flex-col items-center justify-end mb-8">
-                  <img
-                    src={Nocontent}
-                    alt="No content"
-                    className="w-24 h-24 mb-4"
-                  />
-                  <p className="text-gray-500">No content available</p>
-                </div>
-              )}
-            </div>
-
-            {/* Upload Section */}
-            <div className="border-t border-gray-50 pt-4">
-              <div className="flex justify-center items-center flex-col">
-                <label
-                  className="bg-blue-500 hover:bg-blue-600 text-white font-semibold py-2 px-4 rounded cursor-pointer"
-                  htmlFor="video-upload"
-                >
-                  {uploading ? 'Uploading...' : 'Upload Video'}
-                </label>
-                <input
-                  id="video-upload"
-                  type="file"
-                  accept="video/*"
-                  onChange={uploadVideo}
-                  className="hidden"
-                  disabled={uploading}
-                />
-                {uploading && (
-                  <p className="text-blue-500 mt-2">Uploading video...</p>
-                )}
-              </div>
-            </div>
+        {posts.length === 0 ? (
+          <div className="flex flex-col items-center mt-20">
+            <img src={Nocontent} alt="No content" className="w-24 h-24 mb-4" />
+            <p className="text-gray-500">No posts available</p>
           </div>
         ) : (
-          <div className="flex flex-col items-center justify-end mb-8">
-            <img
-              src={Nocontent}
-              alt="No content"
-              className="w-24 h-24 mb-4"
-            />
-            <p className="text-gray-500">No content available</p>
-            <button
-              className="mt-4 bg-blue-500 hover:bg-blue-600 text-white font-semibold py-2 px-4 rounded"
-              onClick={openPostPopup}
-            >
-              Add Post
-            </button>
+          <div className="space-y-4">
+            {posts.map((post) => (
+              <div
+                key={post._id}
+                className="flex justify-between border border-gray-200 rounded p-4 bg-white shadow"
+              >
+                <div className="flex space-x-4">
+                  {post.mediaUrl && (
+                    <img
+                      src={post.mediaUrl}
+                      alt="Post"
+                      className="w-20 h-20 object-cover rounded"
+                    />
+                  )}
+                  <div>
+                    <p className="text-gray-700 mb-1 break-words max-w-xs">{post.text}</p>
+                    <div className="text-sm text-gray-500 space-x-4">
+                      <span>❤️ {post.likes.length} {post.likes.length === 1 ? 'Like' : 'Likes'}</span>
+                      <span>💬 {post.comments.length} {post.comments.length === 1 ? 'Comment' : 'Comments'}</span>
+                      <span>🕒 {post.timeAgo}</span>
+                    </div>
+                  </div>
+                </div>
+                <button
+                  onClick={() => handleDelete(post._id)}
+                  className="hover:opacity-75"
+                  title="Delete"
+                >
+                  <img src={deleteIcon} alt="Delete" className="w-5 h-5" />
+                </button>
+              </div>
+            ))}
           </div>
         )}
 
-        {/* Render the PostPopup component */}
-        {isPostPopupOpen && <PostPopup onClose={closePostPopup} />}
+        {isPostPopupOpen && (
+          <PostPopup onClose={() => setPostPopupOpen(false)} onSubmit={handlePostSubmit} />
+        )}
       </div>
     </DoctorLayout>
   );
 };
 
-export default Content;
+export default Content;
+
