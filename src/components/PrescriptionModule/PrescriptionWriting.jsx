@@ -927,7 +927,7 @@ const prepareDataForBackend = (prescriptionData) => {
     ...prescriptionData,
     prescriptionItems: prescriptionData.prescriptionItems.map((item) => ({
       medicineName: item.medicineName || "",
-      rawMaterialDetails: (item.rawMaterialDetails || []).map((rm) => ({
+      rawMaterialDetails: (item.preparationQuantity || []).map((rm) => ({
         _id: rm._id,
         name: rm.name,
         quantity: rm.quantity || 0,

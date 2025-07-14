@@ -81,6 +81,7 @@ import Payslip from "./pages/doctor pages/payslip.jsx";
 import NoteTaking from "./pages/doctor pages/NoteTaking.jsx";
 import PrescriptionWriting from "./components/PrescriptionModule/PrescriptionWriting.jsx";
 import MedicinePreparationView from "./pages/doctor pages/MedicinePreparationView.jsx";
+import PrescriptionViewFix from "./components/PrescriptionModule/PrescriptionView1.jsx";
 import InventoryPage from "./components/calllog components/InventoryPage.jsx";
 import "@fortawesome/fontawesome-free/css/all.min.css";
 
@@ -811,6 +812,15 @@ function App() {
             </ProtectedRoute>
           }
         />
+
+        <Route 
+        path="/PrescriptionViewFix" 
+        element={
+          <ProtectedRoute allowedRoles={["Doctor"]}>
+            <PrescriptionViewFix />
+          </ProtectedRoute>
+        } 
+      />
 
         {/* Root redirect */}
         <Route path="/" element={<Navigate to="/login" replace />} />
