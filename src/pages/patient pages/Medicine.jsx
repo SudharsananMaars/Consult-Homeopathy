@@ -1,176 +1,262 @@
-import React, { useState } from "react";
-import Layout from "../../components/patient components/Layout";
-import delivery from "/src/assets/images/patient images/delivery.png"
+import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
+import { EyeIcon, XMarkIcon } from "@heroicons/react/24/outline";
+import Layout from "../../components/patient components/Layout";
+import axios from "axios";
+import config from "../../config";
+
+const API_URL = config.API_URL;
+const userId = localStorage.getItem("userId");
 
 const Medicine = () => {
-    const [activeTab,setActiveTab]= useState("orders");
-    const handleTabSwitch = (tab) => {
-        setActiveTab(tab);
-    };
-   const navigate = useNavigate();
-   const handleTracking = () => {
-   navigate('/track')
-   }
+  const [shippedData, setShippedData] = useState([]);
+  const [receivedData, setReceivedData] = useState([]);
+  const [activeTab, setActiveTab] = useState("shipped");
+  const [showModal, setShowModal] = useState(false);
+  const [modalItems, setModalItems] = useState([]);
+  const [isLoading, setIsLoading] = useState(true);
 
-    return (  
-        <div>      
-        <Layout>
-        <div className="p-6">
-            <h1 className="font-bold text-2xl pl-8 pt-8">Your Orders</h1>
-            <div className="flex space-x-4 mb-6 p-8">
-                    <button
-                        onClick={() => handleTabSwitch("orders")}
-                        className={`px-4 py-2 rounded-md ${
-                          activeTab === "orders" 
-                          ? "bg-blue-500 text-white" 
-                          : "bg-gray-200 text-gray-700"}
-                          hover:bg-blue-400 hover:text-white`}
-                    >
-                        Orders
-                    </button>
-                    <button
-                        onClick={() => handleTabSwitch("notshipped")}
-                        className={`px-4 py-2 rounded-md ${
-                          activeTab === "notshipped" 
-                          ? "bg-blue-500 text-white" 
-                          : "bg-gray-200 text-gray-700"}
-                          hover:bg-blue-400 hover:text-white`}
-                    >
-                        Not yet Shipped
-                    </button>
-                </div>
-                <div className="flex flex-col lg:flex-row justify-start max-h-screen p-4 space-y-6 lg:space-y-0 lg:space-x-12 mt-6">
-                <div className="lg:w-1/3"> 
-                  <img className="w-full h-auto mx-auto lg:mx-0" src={delivery} alt="Product"  />
-                </div>
-                <div className="w-full sm:w-2/3">
-                {activeTab === "orders" && (
-  <div className="px-4 py-6 w-full sm:w-full">
-    {/* Search and Filter Row */}
-    <div className="flex flex-col sm:flex-row items-center justify-between space-y-4 sm:space-y-0 sm:space-x-12">
-      {/* Search Input */}
-      <div className="w-full sm:w-full  border-2 rounded-lg">
-        <input
-          type="text"
-          placeholder="Search Orders"
-          className="w-full px-4 py-2 border rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-        />
+  const navigate = useNavigate();
+
+  const handleTabSwitch = (tab) => setActiveTab(tab);
+
+  const openItemsModal = (items) => {
+    setModalItems(items);
+    setShowModal(true);
+  };
+
+  const closeItemsModal = () => {
+    setShowModal(false);
+    setModalItems([]);
+  };
+
+  const markAsReceived = (consignmentId) => {
+    const consignment = shippedData.find((c) => c.id === consignmentId);
+    if (!consignment) return;
+    setShippedData((prev) => prev.filter((c) => c.id !== consignmentId));
+    setReceivedData((prev) => [
+      { ...consignment, isProductReceived: true },
+      ...prev,
+    ]);
+  };
+
+  useEffect(() => {
+    const fetchDeliveryStatus = async () => {
+      try {
+        const token = localStorage.getItem("token");
+
+        const response = await axios.get(
+          `${API_URL}/api/doctor/prescriptions/delivery-status/${userId}`,
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          }
+        );
+        const shipped = response.data.filter(
+          (item) => item.isProductReceived === false
+        );
+        const received = response.data.filter(
+          (item) => item.isProductReceived === true
+        );
+
+        console.log("shipped",shipped);
+        console.log("received",received);
+
+        setShippedData(shipped);
+        setReceivedData(received);
+      } catch (error) {
+        console.error("Error fetching delivery status:", error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchDeliveryStatus();
+  }, []);
+
+  const goToTracking = (trackingId) => navigate(`/track/${trackingId}`);
+
+  if (isLoading) {
+    return (
+      <div className="flex justify-center items-center h-screen">
+        <div className="animate-spin rounded-full h-32 w-32 border-t-2 border-b-2 border-indigo-300"></div>
+      </div>
+    );
+  }
+
+  return (
+    <Layout>
+      <div className="p-6">
+        <h1 className="font-bold text-2xl sm: pt-4">Medicine Shipments</h1>
+
+        <div className="flex space-x-4 my-6 ">
+          {[
+            { key: "shipped", label: "Shipped Medicines" },
+            { key: "received", label: "Received Medicines" },
+          ].map(({ key, label }) => (
+            <button
+              key={key}
+              onClick={() => handleTabSwitch(key)}
+              className={`px-4 py-2 rounded-md transition ${
+                activeTab === key
+                  ? "bg-blue-600 text-white"
+                  : "bg-gray-200 text-gray-700"
+              } hover:bg-blue-500 hover:text-white`}
+            >
+              {label}
+            </button>
+          ))}
+        </div>
+
+        <div className="overflow-x-auto">
+          {activeTab === "shipped" && (
+            <ShipmentTable
+              data={shippedData}
+              showActions
+              onMarkReceived={markAsReceived}
+              onOpenItems={openItemsModal}
+              onTrack={goToTracking}
+            />
+          )}
+
+          {activeTab === "received" && (
+            <ShipmentTable
+              data={receivedData}
+              showActions={false}
+              onOpenItems={openItemsModal}
+            />
+          )}
+        </div>
       </div>
 
-      {/* Filter Dropdown */}
-      <div className="w-full sm:w-1/2 sm:text-left">
-        <select
-          className="w-full sm:w-auto px-4 py-2 border-2 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+      {showModal && <ItemsModal items={modalItems} onClose={closeItemsModal} />}
+    </Layout>
+  );
+};
+
+const ShipmentTable = ({
+  data,
+  showActions = false,
+  onMarkReceived,
+  onOpenItems,
+  onTrack,
+}) => (
+  <table className="min-w-full text-sm border-collapse overflow-hidden rounded-lg shadow">
+    <thead className="bg-gray-100">
+      <tr>
+        <Th className="text-center">S.No</Th>
+        <Th className="text-center">Tracking ID</Th>
+        <Th className="text-center">Shipped Date</Th>
+        <Th className="text-center">Status</Th>
+        <Th className="text-center">Items</Th>
+        {showActions && <Th>Actions</Th>}
+      </tr>
+    </thead>
+    <tbody>
+      {data.length === 0 && (
+        <tr>
+          <td
+            colSpan={showActions ? 6 : 5}
+            className="text-center py-6 text-gray-500"
+          >
+            No records found.
+          </td>
+        </tr>
+      )}
+
+      {data.map((c, idx) => (
+        <tr
+          key={c.id}
+          className="even:bg-gray-50 hover:bg-blue-50 transition-colors"
         >
-          <option value="30days">Last 30 Days</option>
-          <option value="3months">Last 3 Months</option>
-          <option value="6months">Last 6 Months</option>
-        </select>
+          <Td className="text-center">{idx + 1}</Td>
+          <Td className="font-semibold text-center">{c.trackingId}</Td>
+          <Td>{formatDate(c.shippedDate)}</Td>
+          <Td>
+            <span
+              className={`px-2 py-1 rounded-md text-xs font-medium ${
+                c.isProductReceived === true
+                  ? "bg-emerald-100 text-emerald-700"
+                  : "bg-yellow-100 text-yellow-700"
+              }`}
+            >
+              {c.isProductReceived === true ? "Received" : "Shipped"}
+            </span>
+          </Td>
+          <Td>
+            <button
+              onClick={() => onOpenItems(c.items)}
+              className="p-1 rounded hover:bg-gray-200"
+              title="View items"
+            >
+              <EyeIcon className="w-6 h-6 text-blue-600" />
+            </button>
+          </Td>
+          {showActions && (
+            <Td>
+              <button
+                onClick={() => onMarkReceived && onMarkReceived(c.id)}
+                className="px-3 py-1 rounded bg-emerald-600 text-white text-xs hover:bg-emerald-500"
+              >
+                Mark Received
+              </button>
+            </Td>
+          )}
+        </tr>
+      ))}
+    </tbody>
+  </table>
+);
+
+const ItemsModal = ({ items, onClose }) => (
+  <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm">
+    <div className="bg-white w-[90vw] max-w-md rounded-lg shadow-lg relative">
+      <button
+        onClick={onClose}
+        className="absolute top-2 right-2 p-1 rounded hover:bg-gray-100"
+        aria-label="Close"
+      >
+        <XMarkIcon className="w-6 h-6 text-gray-600" />
+      </button>
+
+      <div className="p-6">
+        <h2 className="text-lg font-semibold mb-4">Medicines in This Parcel</h2>
+
+        <table className="min-w-full text-sm border-collapse rounded">
+          <thead className="bg-gray-100">
+            <tr>
+              <Th>#</Th>
+              <Th>Name</Th>
+              <Th>Qty</Th>
+              <Th>UoM</Th>
+            </tr>
+          </thead>
+          <tbody>
+            {items.map((m, idx) => (
+              <tr key={idx} className="even:bg-gray-50">
+                <Td>{idx + 1}</Td>
+                <Td>{m.name}</Td>
+                <Td>{m.qty}</Td>
+                <Td>{m.uom}</Td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
       </div>
     </div>
-
-    {/* Orders Details Row */}
-    <div className="p-2 sm:w-full sm:h-full border border-gray-300 rounded-lg shadow-sm bg-white mt-5">
-  {/* Top Section: Order Details */}
-  <div className="flex flex-row justify-between items-center pb-4 border-b border-gray-300 space-x-4 space-y-4 sm:space-y-0 w-full">
-  <div className="w-full sm:w-auto">
-    <p className="text-xs text-gray-600 font-semibold">DISPATCHED ON</p>
-    <p className="text-sm">20 December 2022</p>
   </div>
-  <div className="w-full sm:w-auto">
-    <p className="text-xs text-gray-600 font-semibold">TOTAL</p>
-    <p className="text-sm">Rs.400</p>
-  </div>
-  <div className="w-full sm:w-auto">
-    <p className="text-xs text-gray-600 font-semibold">DISPATCH TO</p>
-    <p className="text-sm text-blue-500">Rita</p>
-  </div>
-  <div className="w-full sm:w-auto">
-    <p className="text-blue-500 text-sm">Invoice</p>
-  </div>
-</div>
+);
+const Th = ({ children }) => (
+  <th className="text-left px-3 py-2 font-semibold text-gray-700 whitespace-nowrap text-center">
+    {children}
+  </th>
+);
+const Td = ({ children, className = "" }) => (
+  <td className={`px-3 py-2 whitespace-nowrap text-center ${className}`}>
+    {children}
+  </td>
+);
+const formatDate = (iso) => new Date(iso).toLocaleDateString();
 
-  {/* Middle Section: Delivery Details */}
-  <div className="py-4">
-    <p className="text-lg font-semibold">Delivered 22 December</p>
-    <p className="text-sm text-gray-600">Parcel was handed to resident.</p>
-  </div>
-
-  {/* Bottom Section: Product Details */}
-  <div className="flex flex-col sm:flex-row sm:space-x-4 items-center">
-    {/* Product Image */}
-    <img
-      className="w-20 h-20 sm:w-25 sm:25 object-cover rounded-lg"
-      src={delivery}
-      alt="Product"
-    />
-
-    {/* Product Description */}
-      <p className="text-blue-500 font-semibold">3 Products</p>
-
-  </div>
-
-</div>
-
-
-  </div>
-)}
- 
-{activeTab === "notshipped" && (
-        <div className="p-4 border border-gray-300 rounded-lg shadow-sm bg-white mt-5">
-        {/* Top Section: Order Details */}
-        <div className="flex justify-between items-center pb-4 border-b border-gray-300">
-          <div>
-            <p className="text-xs text-gray-600 font-semibold">DISPATCHED ON</p>
-            <p className="text-sm">20 December 2022</p>
-          </div>
-          <div>
-            <p className="text-xs text-gray-600 font-semibold">TOTAL</p>
-            <p className="text-sm">Rs.400</p>
-          </div>
-          <div>
-            <p className="text-xs text-gray-600 font-semibold">DISPATCH TO</p>
-            <p className="text-sm text-blue-500">Rita</p>
-          </div>
-          <div>
-            <p className="text-blue-500 text-sm">Invoice</p>
-          </div>
-        </div>
-      
-        {/* Middle Section: Delivery Details */}
-        <div className="py-4">
-          <p className="text-lg font-semibold"> Expected Delivery 22 December</p>
-        </div>
-      
-        {/* Bottom Section: Product Details */}
-        <div className="flex flex-col sm:flex-row sm:space-x-4 items-center">
-          {/* Product Image */}
-          <img
-            className="w-27 h-27 sm:w-20 sm:h-20 object-cover rounded-lg"
-            src={delivery}
-            alt="Product"
-          />
-      
-          {/* Product Description */}
-            <p className="text-blue-500 font-semibold">3 Products</p>
-            <button 
-            onClick={handleTracking}
-            className="px-4 py-2 rounded-md bg-blue-500 text-white hover:bg-blue-400 hover:text-white">Track Delivery</button>
-      
-        </div>
-      
-      </div>
-)}
-</div>
-</div>
-
- </div>
-
-    </Layout>
-
-        </div>
-)
-}
-
-export default Medicine ;
+export default Medicine;

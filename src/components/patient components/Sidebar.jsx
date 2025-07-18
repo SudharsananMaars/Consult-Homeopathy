@@ -71,7 +71,7 @@ const Sidebar = () => {
     {
       id: 6,
       path: "/medicine",
-      name: "Medicine",
+      name: "Medicine Shipments",
       icon: GiMedicines,
     },
     {

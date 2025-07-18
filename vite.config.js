@@ -8,10 +8,11 @@ export default defineConfig({
   server: {
     host: '0.0.0.0',
     port: 5173,
-    https: {
-      key: fs.readFileSync('server.key'),
-      cert: fs.readFileSync('server.crt')
-    }
+    // https: {
+    //   key: fs.readFileSync('server.key'),
+    //   cert: fs.readFileSync('server.crt')
+    // }
+    https : false,
   },
   css: {
     postcss: {

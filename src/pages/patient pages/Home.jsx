@@ -185,7 +185,7 @@ const Home = () => {
   useEffect(() => {
     const fetchPendingTransaction = async () => {
       try {
-        const token = await localStorage.getItem("token");
+        const token = localStorage.getItem("token");
         const response = await axios.get(
           `${API_URL}/api/patient/pendingTransactions`,
           {
