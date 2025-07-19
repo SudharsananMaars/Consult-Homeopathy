@@ -14,6 +14,7 @@ import { Link, useLocation } from "react-router-dom";
 import { CiLogout } from "react-icons/ci";
 import { FaUserFriends } from "react-icons/fa";
 import { FaPhotoVideo } from "react-icons/fa";
+import { FaPrescriptionBottleAlt } from "react-icons/fa";
 import SidebarProfile from "./SidebarProfile"; // Import the Profile Component
 import axios from "axios";
 import config from "../../config";
@@ -65,29 +66,35 @@ const Sidebar = () => {
     },
     {
       id: 5,
+      path: "/prescription",
+      name: "Prescription",
+      icon: FaPrescriptionBottleAlt, 
+    },
+    {
+      id: 6,
       path: "/payments",
       name: "Payments",
       icon: LuWallet,
     },
     {
-      id: 6,
+      id: 7,
       path: "/medicine",
       name: "Medicine",
       icon: GiMedicines,
     },
     {
-      id: 7,
+      id: 8,
       path: "/workshops",
       name: "Workshops",
       icon: MdOutlineOndemandVideo,
     },
-    { id: 8, 
+    { id: 9, 
       path: "/patientcontent",
       name: "Content", 
       icon: FaPhotoVideo,
     },
     {
-      id: 9,
+      id: 10,
       path: "/settings",
       name: "Settings",
       icon: LuSettings,

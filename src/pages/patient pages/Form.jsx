@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect} from 'react';
 import Select from 'react-select';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
@@ -7,48 +7,13 @@ import { Phone } from 'lucide-react';
 const Form= () => {
   const feetOptions = [...Array(10).keys()].map(i => ({ value: i+1, label: `${i+1} feet `}));
   const inchesOptions = [...Array(10).keys()].map(i => ({ value: i, label: `${i} inches `}));
-   const weightOptions = [...Array(151).keys()].slice(1).map(i => ({ value: i, label: `${i} kg `}));
-   const [isSubmitting, setIsSubmitting] = useState(false);
+  const weightOptions = [...Array(151).keys()].slice(1).map(i => ({ value: i, label: `${i} kg `}));
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [countryOptions, setCountryOptions] = useState([]);
+  const [stateOptions, setStateOptions] = useState([]);
+  const [cityOptions, setCityOptions] = useState([]);
 
-  const country = ["Afghanistan", "Albania", "Algeria", "Andorra", "Angola", "Antigua and Barbuda", "Argentina", "Armenia", "Australia", "Austria", "Azerbaijan", "Bahamas", "Bahrain", "Bangladesh", "Barbados", "Belarus", "Belgium", "Belize", "Benin", "Bhutan", "Bolivia", 
-    "Bosnia and Herzegovina", "Botswana", "Brazil", "Brunei", "Bulgaria", "Burkina Faso", "Burundi", "Cabo Verde", "Cambodia", "Cameroon", "Canada", "Central African Republic", "Chad", "Chile", "China", "Colombia", "Comoros", "Congo, Democratic Republic of the", 
-    "Congo, Republic of the", "Costa Rica", "Croatia", "Cuba", "Cyprus", "Czech Republic", "Denmark", "Djibouti", "Dominica", "Dominican Republic", "Ecuador", "Egypt", "El Salvador", "Equatorial Guinea", "Eritrea", "Estonia", "Eswatini", "Ethiopia", 
-    "Fiji", "Finland", "France", "Gabon", "Gambia", "Georgia", "Germany", "Ghana", "Greece", "Grenada", "Guatemala", "Guinea", "Guinea-Bissau", "Guyana", "Haiti", "Honduras", "Hungary", "Iceland", "India", "Indonesia", "Iran", "Iraq", "Ireland", 
-    "Israel", "Italy", "Jamaica", "Japan", "Jordan", "Kazakhstan", "Kenya", "Kiribati", "Korea, North", "Korea, South", "Kosovo", "Kuwait", "Kyrgyzstan", "Laos", "Latvia", "Lebanon", "Lesotho", "Liberia", "Libya", "Liechtenstein", "Lithuania", 
-    "Luxembourg", "Madagascar", "Malawi", "Malaysia", "Maldives", "Mali", "Malta", "Marshall Islands", "Mauritania", "Mauritius", "Mexico", "Micronesia", "Moldova", "Monaco", "Mongolia", "Montenegro", "Morocco", "Mozambique", "Myanmar", "Namibia", 
-    "Nauru", "Nepal", "Netherlands", "New Zealand", "Nicaragua", "Niger", "Nigeria", "North Macedonia", "Norway", "Oman", "Pakistan", "Palau", "Palestine", "Panama", "Papua New Guinea", "Paraguay", "Peru", "Philippines", "Poland", "Portugal", 
-    "Qatar", "Romania", "Russia", "Rwanda", "Saint Kitts and Nevis", "Saint Lucia", "Saint Vincent and the Grenadines", "Samoa", "San Marino", "Sao Tome and Principe", "Saudi Arabia", "Senegal", "Serbia", "Seychelles", "Sierra Leone", "Singapore", 
-    "Slovakia", "Slovenia", "Solomon Islands", "Somalia", "South Africa", "South Sudan", "Spain", "Sri Lanka", "Sudan", "Suriname", "Sweden", "Switzerland", "Syria", "Taiwan", "Tajikistan", "Tanzania", "Thailand", "Timor-Leste", "Togo", 
-    "Tonga", "Trinidad and Tobago", "Tunisia", "Turkey", "Turkmenistan", "Tuvalu", "Uganda", "Ukraine", "United Arab Emirates", "United Kingdom", "United States", "Uruguay", "Uzbekistan", "Vanuatu", "Vatican City", "Venezuela", "Vietnam", "Yemen", "Zambia", "Zimbabwe"];
-
-  const countryOptions = country.map(reason => ({
-    value: reason,
-    label: reason,
-  }));
-  const states = [
-    "Andhra Pradesh", "Arunachal Pradesh", "Assam", "Bihar", "Chhattisgarh", "Goa", "Gujarat", "Haryana", "Himachal Pradesh", "Jharkhand", 
-    "Karnataka", "Kerala", "Madhya Pradesh", "Maharashtra", "Manipur", "Meghalaya", "Mizoram", "Nagaland", "Odisha", "Punjab", 
-    "Rajasthan", "Sikkim", "Tamil Nadu", "Telangana", "Tripura", "Uttar Pradesh", "Uttarakhand", "West Bengal", "Andaman and Nicobar Islands", 
-    "Chandigarh", "Dadra and Nagar Haveli and Daman and Diu", "Lakshadweep", "Delhi", "Puducherry", "Ladakh", "Jammu and Kashmir"
-];
-
-const stateOptions = states.map(state => ({
-    value: state,
-    label: state,
-}));
-
-const cities = [
-  "Chennai", "Coimbatore", "Madurai", "Tiruchirappalli", "Salem", "Tirunelveli", "Erode", "Tiruppur", "Vellore", "Thoothukudi", 
-  "Nagercoil", "Thanjavur", "Dindigul", "Cuddalore", "Kanchipuram", "Kumarapalayam", "Hosur", "Karaikudi", "Neyveli", "Sivakasi", 
-  "Udhagamandalam (Ooty)", "Rajapalayam", "Pollachi", "Ambur", "Nagapattinam", "Pudukkottai", "Arakkonam", "Ariyalur", 
-  "Tiruvannamalai", "Kovilpatti", "Pattukkottai", "Ramanathapuram", "Vaniyambadi", "Perambalur", "Sivaganga", "Viluppuram", 
-  "Theni", "Namakkal", "Karur", "Udhampur", "Dharmapuri", "Krishnagiri", "Tiruchengode"
-];
-
-const cityOptions = cities.map(city => ({
-  value: city,
-  label: city,
-}));
+  
 
   const disease = [
     "Accidents", "Acute Back Pain", "Acute Bronchitis", "Acute Contact Dermatitis", "Acute migraine / headache", "Acute Eczema Flare-ups", "Acute Kidney Injury",
@@ -141,6 +106,70 @@ const cityOptions = cities.map(city => ({
     if (formData.clinicSource.length === 0) newErrors.clinicSource = 'At least one source is required';
     return newErrors;
   };
+
+useEffect(() => {
+  const fetchCountries = async () => {
+    try {
+      const response = await axios.get('https://countriesnow.space/api/v0.1/countries/iso');
+      const countries = response.data.data.map(country => ({
+        value: country.name,
+        label: country.name
+      }));
+      setCountryOptions(countries);
+    } catch (error) {
+      console.error('Failed to fetch countries:', error);
+    }
+  };
+
+  fetchCountries();
+}, []);
+
+useEffect(() => {
+  const fetchStates = async () => {
+    if (!formData.country) return; // Prevent running on load
+    try {
+      const response = await axios.post('https://countriesnow.space/api/v0.1/countries/states', {
+        country: formData.country.value
+      });
+      const states = response.data.data.states.map(state => ({
+        value: state.name,
+        label: state.name
+      }));
+      setStateOptions(states);
+    } catch (error) {
+      console.error('Failed to fetch states:', error);
+    }
+  };
+
+  fetchStates();
+}, [formData.country]);
+
+useEffect(() => {
+  const fetchCities = async () => {
+    if (!formData.country || !formData.state) return;
+
+    try {
+      const response = await axios.post(
+        'https://countriesnow.space/api/v0.1/countries/state/cities',
+        {
+          country: formData.country.value,
+          state: formData.state.value
+        }
+      );
+      const cities = response.data.data.map(city => ({
+        value: city,
+        label: city
+      }));
+      setCityOptions(cities);
+    } catch (error) {
+      console.error('Failed to fetch cities:', error);
+    }
+  };
+
+  fetchCities();
+}, [formData.state]);
+
+
 
   const handleChange = (field, value) => {
     setFormData(prevState => {

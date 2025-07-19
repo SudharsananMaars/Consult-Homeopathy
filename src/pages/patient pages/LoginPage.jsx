@@ -10,7 +10,7 @@ const LoginPage = () => {
   const [mobileNumber, setMobileNumber] = useState('');
   const [password, setPassword] = useState('');
   const [otp, setOtp] = useState('');
-  const [showPassword, setShowPassword] = useState(true); // Password field initially visible
+  const [showPassword, setShowPassword] = useState(false); // Password field initially visible
   const [errors, setErrors] = useState({ mobileNumber: '', password: '', otp: '' });
   const [showOtpInput, setShowOtpInput] = useState(false); // Controls when OTP field is shown
   const [otpSent, setOtpSent] = useState(false);
@@ -255,14 +255,27 @@ const LoginPage = () => {
                   <label className="block text-gray-700 mb-1" htmlFor="password">
                     Password
                   </label>
-                  <input
-                    type={showPassword ? 'text' : 'password'}
-                    id="password"
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
-                    placeholder="Enter your password"
-                  />
+<div className="relative">
+  <input
+    type={showPassword ? 'text' : 'password'}
+    id="password"
+    name="new-password"
+    autoComplete="new-password"
+    value={password}
+    onChange={(e) => setPassword(e.target.value)}
+    className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm pr-16"
+    placeholder="Enter your password"
+  />
+  <button
+    type="button"
+    onClick={() => setShowPassword(!showPassword)}
+    className="absolute inset-y-0 right-0 flex items-center px-3 text-sm text-gray-600 hover:text-blue-600 focus:outline-none"
+  >
+    {showPassword ? 'Hide' : 'Show'}
+  </button>
+</div>
+
+
                   {errors.password && <p className="text-red-500 text-xs mt-1">{errors.password}</p>}
                   <div className="mb-4 mt-2">
                 <input

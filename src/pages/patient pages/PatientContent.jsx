@@ -1,6 +1,10 @@
 import React, { useEffect, useState } from 'react';
 import Layout from "/src/components/patient components/Layout.jsx";
 import { Heart, HeartOff } from 'lucide-react';
+import config from "../../config";
+
+
+const API_URL = config.API_URL;
 
 const PatientContent = () => {
   const [posts, setPosts] = useState([]);
@@ -10,7 +14,7 @@ const PatientContent = () => {
 
   const fetchPosts = async () => {
     try {
-      const res = await fetch("http://localhost:5000/api/post/homePosts", {
+      const res = await fetch("${API_URL}/api/post/homePosts", {
         headers: { Authorization: `Bearer ${token}` },
       });
       const data = await res.json();
@@ -28,7 +32,7 @@ const PatientContent = () => {
 
   const handleLike = async (postId) => {
     try {
-      const res = await fetch(`http://localhost:5000/api/post/${postId}/like`, {
+      const res = await fetch(`${API_URL}/api/post/${postId}/like`, {
         method: 'POST',
         headers: { Authorization: `Bearer ${token}` },
       });
@@ -57,7 +61,7 @@ const PatientContent = () => {
     if (!commentText) return;
 
     try {
-      const res = await fetch(`http://localhost:5000/api/post/${postId}/comment`, {
+      const res = await fetch(`${API_URL}/api/post/${postId}/comment`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

@@ -3,6 +3,10 @@ import DoctorLayout from '/src/components/doctor components/DoctorLayout.jsx';
 import Nocontent from '/src/assets/images/doctor images/Nocontent.jpg';
 import PostPopup from '/src/pages/doctor pages/PostPopup.jsx';
 import deleteIcon from '/src/assets/images/doctor images/deleteIcon.png';
+import config from "../../config";
+
+
+const API_URL = config.API_URL;
 
 const Content = () => {
   const [isPostPopupOpen, setPostPopupOpen] = useState(false);
@@ -11,7 +15,7 @@ const Content = () => {
   useEffect(() => {
     const fetchPosts = async () => {
       try {
-        const res = await fetch('http://localhost:5000/api/post', {
+        const res = await fetch('${API_URL}/api/post', {
           headers: {
             Authorization: `Bearer ${localStorage.getItem('token')}`,
           },
@@ -36,7 +40,7 @@ const Content = () => {
 
   const handleDelete = async (postId) => {
     try {
-      const res = await fetch(`http://localhost:5000/api/post/${postId}`, {
+      const res = await fetch(`${API_URL}/api/post/${postId}`, {
         method: 'DELETE',
         headers: {
           Authorization: `Bearer ${localStorage.getItem('token')}`,
