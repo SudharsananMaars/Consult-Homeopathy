@@ -35,6 +35,8 @@ import FamilyTree from "./pages/patient pages/FamilyTree.jsx";
 import ConsultationHistory from "./pages/patient pages/ConsultationHistory.jsx";
 import PrescriptionView from "./pages/patient pages/PrescriptionView.jsx";
 import MedicinePaymentPage from "./pages/patient pages/MedicinePaymentPage.jsx";
+import PatientContent from "./pages/patient pages/PatientContent.jsx";
+import Prescription from "./pages/patient pages/Prescription.jsx";
 
 // import doctor website
 import DoctorLayout from "./components/doctor components/DoctorLayout.jsx";
@@ -120,6 +122,7 @@ import AddVendor from "./components/Vendor/AddVendor.jsx";
 import Navbar from "./components/Vendor/Navbar.jsx";
 import { ToastContainer } from "react-toastify";
 import 'react-toastify/dist/ReactToastify.css';
+
 
 // Error Fallback Component
 const ErrorFallback = () => <ServerError />;
@@ -255,7 +258,6 @@ function App() {
             </ProtectedRoute>
           }
         />
-
       <Route 
         path="/prescription/:appointmentId" 
         element={
@@ -320,6 +322,22 @@ function App() {
             </ProtectedRoute>
           }
         />
+        <Route
+          path="/patientcontent"
+          element={
+            <ProtectedRoute allowedRoles={["Patient"]}>
+              <PatientContent />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/prescription"
+          element={
+            <ProtectedRoute allowedRoles={["Patient"]}>
+              <Prescription />
+            </ProtectedRoute>
+          }
+        />                
         <Route
           path="/notification"
           element={

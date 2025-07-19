@@ -1,133 +1,119 @@
 import React, { useState } from 'react';
 
-const PostPopup = ({ onClose }) => {
-  const [username, setUsername] = useState('');
-  const [visibility, setVisibility] = useState('Public');
-  const [restrictions, setRestrictions] = useState('None');
-  const [postContent, setPostContent] = useState('');
-  const [likes, setLikes] = useState(0);
-  const [comments, setComments] = useState(0);
-  const [image, setImage] = useState(null);
-  const [imagePoll, setImagePoll] = useState(null);
+const PostPopup = ({ onClose, onSubmit }) => {
+  const [media, setMedia] = useState(null);
+  const [description, setDescription] = useState('');
+  const [shareToInstagram, setShareToInstagram] = useState(false); // ✅ Renamed
 
-  const handleImageUpload = (event) => {
-    setImage(event.target.files[0]);
+  const handleMediaUpload = (event) => {
+    setMedia(event.target.files[0]);
   };
 
-  const handleImagePollUpload = (event) => {
-    setImagePoll(event.target.files[0]);
+  const handleSubmit = async () => {
+    if (!media && !description.trim()) return;
+
+    const formData = new FormData();
+    if (media) formData.append('file', media);
+    formData.append('text', description);
+    formData.append('shareToInstagram', shareToInstagram); // ✅ Correct field name
+
+    try {
+      const res = await fetch('http://localhost:5000/api/posts', {
+        method: 'POST',
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem('token')}`,
+        },
+        body: formData,
+      });
+
+      const data = await res.json();
+
+      if (res.ok && data.post) {
+        onSubmit(data.post);
+        onClose();
+      } else {
+        alert('Failed to create post');
+      }
+    } catch (err) {
+      console.error('Error posting:', err);
+    }
   };
 
-  const handleSubmit = () => {
-    // Handle form submission here
-    console.log({
-      username,
-      visibility,
-      restrictions,
-      postContent,
-      likes,
-      comments,
-      image,
-      imagePoll
-    });
-    onClose(); // Close the popup after submission
+  const getMediaPreview = () => {
+    if (!media) return null;
+    const url = URL.createObjectURL(media);
+
+    if (media.type.startsWith('video')) {
+      return (
+        <video controls className="w-full max-h-96 rounded mb-4">
+          <source src={url} type={media.type} />
+          Your browser does not support the video tag.
+        </video>
+      );
+    }
+
+    return (
+      <img
+        src={url}
+        alt="Uploaded"
+        className="w-full max-h-96 object-contain rounded mb-4"
+      />
+    );
   };
 
   return (
-    <div className="fixed inset-0 flex items-center justify-center bg-gray-500 bg-opacity-75 z-50">
-      <div className="bg-white p-6 rounded shadow-lg w-1/2">
+    <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
+      <div className="bg-white p-6 rounded-xl shadow-md w-full max-w-lg">
         <div className="flex justify-between items-center mb-4">
-          <h3 className="text-lg font-semibold">Create Post</h3>
-          <button onClick={onClose} className="text-gray-500 hover:text-gray-700">
+          <h2 className="text-xl font-semibold">Create Post</h2>
+          <button
+            onClick={onClose}
+            className="text-2xl text-gray-500 hover:text-red-500"
+          >
             &times;
           </button>
         </div>
+
         <div className="mb-4">
-          <label className="block text-sm font-medium text-gray-700">Username</label>
           <input
-            type="text"
-            value={username}
-            onChange={(e) => setUsername(e.target.value)}
-            className="mt-1 block w-full border-gray-300 rounded-md shadow-sm"
+            type="file"
+            accept="image/*,video/*"
+            onChange={handleMediaUpload}
+            className="w-full"
           />
         </div>
+
+        {getMediaPreview()}
+
         <div className="mb-4">
-          <label className="block text-sm font-medium text-gray-700">Visibility</label>
-          <select
-            value={visibility}
-            onChange={(e) => setVisibility(e.target.value)}
-            className="mt-1 block w-full border-gray-300 rounded-md shadow-sm"
-          >
-            <option value="Public">Public</option>
-            <option value="Private">Private</option>
-            <option value="Restricted">Restricted</option>
-          </select>
-        </div>
-        <div className="mb-4">
-          <label className="block text-sm font-medium text-gray-700">Restrictions</label>
-          <select
-            value={restrictions}
-            onChange={(e) => setRestrictions(e.target.value)}
-            className="mt-1 block w-full border-gray-300 rounded-md shadow-sm"
-          >
-            <option value="None">None</option>
-            <option value="Age Restriction">Age Restriction</option>
-            <option value="Geographic Restriction">Geographic Restriction</option>
-          </select>
-        </div>
-        <div className="mb-4">
-          <label className="block text-sm font-medium text-gray-">Write Anything Here</label>
           <textarea
-            value={postContent}
-            onChange={(e) => setPostContent(e.target.value)}
-            className="mt-1 block w-full border-gray-300 rounded-md shadow-sm"
+            value={description}
+            onChange={(e) => setDescription(e.target.value)}
+            placeholder="Write a description..."
+            className="w-full border border-gray-300 rounded-md p-2"
             rows="4"
           />
         </div>
-        <div className="mb-4">
-          <label className="block text-sm font-medium text-gray-700">Likes</label>
+
+        {/* ✅ Instagram checkbox */}
+        <div className="mb-4 flex items-center gap-2">
           <input
-            type="number"
-            value={likes}
-            onChange={(e) => setLikes(e.target.value)}
-            className="mt-1 block w-full border-gray-300 rounded-md shadow-sm"
-            min="0"
+            type="checkbox"
+            id="instagram"
+            checked={shareToInstagram}
+            onChange={() => setShareToInstagram(!shareToInstagram)}
           />
+          <label htmlFor="instagram" className="text-sm text-gray-700">
+            Also post to Instagram
+          </label>
         </div>
-        <div className="mb-4">
-          <label className="block text-sm font-medium text-gray-700">Comments</label>
-          <input
-            type="number"
-            value={comments}
-            onChange={(e) => setComments(e.target.value)}
-            className="mt-1 block w-full border-gray-300 rounded-md shadow-sm"
-            min="0"
-          />
-        </div>
-        <div className="mb-4">
-          <label className="block text-sm font-medium text-gray-700">Upload Image</label>
-          <input
-            type="file"
-            accept="image/*"
-            onChange={handleImageUpload}
-            className="mt-1 block w-full"
-          />
-        </div>
-        <div className="mb-4">
-          <label className="block text-sm font-medium text-gray-700">Upload Image Poll</label>
-          <input
-            type="file"
-            accept="image/*"
-            onChange={handleImagePollUpload}
-            className="mt-1 block w-full"
-          />
-        </div>
+
         <div className="flex justify-end">
           <button
             onClick={handleSubmit}
-            className="bg-blue-500 hover:bg-blue-600 text-white font-semibold py-2 px-4 rounded"
+            className="bg-blue-600 hover:bg-blue-700 text-white py-2 px-4 rounded"
           >
-            Create Post
+            Post
           </button>
         </div>
       </div>
@@ -135,4 +121,7 @@ const PostPopup = ({ onClose }) => {
   );
 };
 
-export default PostPopup;
+export default PostPopup;
+
+
+

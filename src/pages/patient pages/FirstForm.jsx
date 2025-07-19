@@ -3,13 +3,6 @@ import Select from "react-select";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
 import config from "../../config";
-const countries = [
-  { code: "IN", name: "India", dialCode: "+91" },
-  { code: "US", name: "United States", dialCode: "+1" },
-  { code: "LK", name: "Sri Lanka", dialCode: "+94" },
-  { code: "CN", name: "China", dialCode: "+86" },
-  { code: "RU", name: "Russia", dialCode: "+7" },
-];
 
 const consultingPersons = [
   { value: "Self", label: "Self" },
@@ -137,6 +130,7 @@ const patientEntryOptions = [
 ];
 
 const FirstForm = () => {
+  const [countries, setCountries] = useState([]);
   const navigate = useNavigate();
   const API_URL = config.API_URL;
   const [formData, setFormData] = useState({
@@ -157,7 +151,9 @@ const FirstForm = () => {
   const [formError, setFormError] = useState({});
   const [selectedCountry, setSelectedCountry] = useState("+91");
   const [selectedCountryWhatsApp, setSelectedCountryWhatsApp] = useState("+91");
-
+  const [selectedCountryCode, setSelectedCountryCode] = useState("IN");
+  const [selectedCountryCodeWhatsApp, setSelectedCountryCodeWhatsApp] = useState("IN");
+  const [locationSuggestions, setLocationSuggestions] = useState([]);
   const [isWhatsAppSame, setIsWhatsAppSame] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [prediction, setPrediction] = useState(null);
@@ -167,57 +163,91 @@ const FirstForm = () => {
   const [isGenderPrefilled, setIsGenderPrefilled] = useState(false); // NEW
   const [patientEntryPrefill, setPatientEntryPrefill] = useState(""); // NEW
 
-  useEffect(() => {
-    const urlParams = new URLSearchParams(window.location.search);
-    const referralCode = urlParams.get("code");
-    const familyToken = urlParams.get("familyToken");
+ useEffect(() => {
+  const urlParams = new URLSearchParams(window.location.search);
+  const referralCode = urlParams.get("code");
+  const familyToken = urlParams.get("familyToken");
 
-    if (referralCode) {
-      axios
-        .get(`${API_URL}/api/patient/validateCoupon?code=${referralCode}`)
-        .then((res) => {
-          if (res.data.success && res.data.data) {
-            const { referredFriendName, referredFriendPhone } = res.data.data;
-            setFormData((prev) => ({
-              ...prev,
-              fullName: referredFriendName || "",
-              mobileNumber: referredFriendPhone || "",
-              patientEntry: "Referral",
-            }));
-            setIsPhonePrefilled(true);
-            setPatientEntryPrefill("Referral");
-          }
-        })
-        .catch((err) => {
-          console.error("Error validating referral:", err);
-        });
-    }
+  // 1. Handle referral code
+  if (referralCode) {
+    axios
+      .get(`${API_URL}/api/patient/validateCoupon?code=${referralCode}`)
+      .then((res) => {
+        if (res.data.success && res.data.data) {
+          const { referredFriendName, referredFriendPhone } = res.data.data;
+          setFormData((prev) => ({
+            ...prev,
+            fullName: referredFriendName || "",
+            mobileNumber: referredFriendPhone || "",
+            patientEntry: "Referral",
+          }));
+          setIsPhonePrefilled(true);
+          setPatientEntryPrefill("Referral");
+        }
+      })
+      .catch((err) => {
+        console.error("Error validating referral:", err);
+      });
+  }
 
-    if (familyToken) {
-      axios
-        .get(
-          `${API_URL}/api/patient/fetchFamilyDetails?familyToken=${familyToken}`
-        )
-        .then((res) => {
-          if (res.data.success && res.data.data) {
-            const { name, phone, gender } = res.data.data;
-            setFormData((prev) => ({
-              ...prev,
-              fullName: name || "",
-              mobileNumber: phone || "",
-              gender: gender || "",
-              patientEntry: "Family Member",
-            }));
-            setIsPhonePrefilled(true);
-            setIsGenderPrefilled(true);
-            setPatientEntryPrefill("Family Member");
-          }
-        })
-        .catch((err) => {
-          console.error("Error fetching family details:", err);
-        });
+  // 2. Handle family token
+  if (familyToken) {
+    axios
+      .get(`${API_URL}/api/patient/fetchFamilyDetails?familyToken=${familyToken}`)
+      .then((res) => {
+        if (res.data.success && res.data.data) {
+          const { name, phone, gender } = res.data.data;
+          setFormData((prev) => ({
+            ...prev,
+            fullName: name || "",
+            mobileNumber: phone || "",
+            gender: gender || "",
+            patientEntry: "Family Member",
+          }));
+          setIsPhonePrefilled(true);
+          setIsGenderPrefilled(true);
+          setPatientEntryPrefill("Family Member");
+        }
+      })
+      .catch((err) => {
+        console.error("Error fetching family details:", err);
+      });
+  }
+
+  // 3. Fetch country list for dial codes
+const fetchCountries = async () => {
+  try {
+    const response = await axios.get(
+      "https://countriesnow.space/api/v0.1/countries/codes"
+    );
+
+    const countryData = response.data.data
+      .map((country) => ({
+        name: country.name,
+        dialCode: country.dial_code,
+        code: country.code,
+      }))
+      .filter((c) => c.dialCode);
+
+    countryData.sort((a, b) => a.name.localeCompare(b.name));
+
+    setCountries(countryData);
+
+    const india = countryData.find((c) => c.code === "IN");
+    if (india) {
+      setSelectedCountry(india.dialCode);
+      setSelectedCountryWhatsApp(india.dialCode);
+      setSelectedCountryCode(india.code);
+      setSelectedCountryCodeWhatsApp(india.code);
     }
-  }, []);
+  } catch (error) {
+    console.error("Error fetching country list:", error);
+  }
+};
+
+  fetchCountries();
+}, []);
+
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
@@ -246,19 +276,21 @@ const FirstForm = () => {
     }
   };
 
-  const handleCountryChange = (e) => {
-    const selected = countries.find(
-      (country) => country.code === e.target.value
-    );
+const handleCountryChange = (e) => {
+  setSelectedCountryCode(e.target.value);
+  const selected = countries.find((country) => country.code === e.target.value);
+  if (selected) {
     setSelectedCountry(selected.dialCode);
-  };
+  }
+};
 
-  const handleCountryChangeWhatsApp = (e) => {
-    const selected = countries.find(
-      (country) => country.code === e.target.value
-    );
+const handleCountryChangeWhatsApp = (e) => {
+  setSelectedCountryCodeWhatsApp(e.target.value);
+  const selected = countries.find((country) => country.code === e.target.value);
+  if (selected) {
     setSelectedCountryWhatsApp(selected.dialCode);
-  };
+  }
+};
 
   const handleWhatsAppSameChange = (e) => {
     const isChecked = e.target.checked;
@@ -276,6 +308,39 @@ const FirstForm = () => {
       }));
     }
   };
+
+  const handleLocationChange = async (e) => {
+  const value = e.target.value;
+  setFormData({ ...formData, currentLocation: value });
+
+  if (value.length < 3) {
+    setLocationSuggestions([]);
+    return;
+  }
+
+  try {
+    const response = await axios.get("https://api.geoapify.com/v1/geocode/autocomplete", {
+      params: {
+        text: value,
+        apiKey: "f80c6a54092647aea9b6da80796c69ad",
+        limit: 5,
+        lang: "en",
+        type: "city", // narrow down to cities
+        filter: "countrycode:in", // optional, restrict to India or your preferred country
+      },
+    });
+
+    const suggestions = response.data.features.map((feature) => ({
+      label: `${feature.properties.city || feature.properties.name}, ${feature.properties.state || feature.properties.country}`,
+      value: feature.properties.formatted,
+    }));
+
+    setLocationSuggestions(suggestions);
+  } catch (error) {
+    console.error("Error fetching location suggestions:", error);
+  }
+};
+
 
   const sendMessage = async (formData, patientId) => {
     try {
@@ -607,25 +672,29 @@ const FirstForm = () => {
               Mobile Number <span className="text-red-500">*</span>
             </label>
             <div className="flex">
-              {/* <select
-                name="countryCode"
-                onChange={handleCountryChange}
-                value={
-                  countries.find(
-                    (country) => country.dialCode === selectedCountry
-                  )?.code
-                }
-                className="rounded-l-md border-r-0 border-gray-300 bg-gray-50 text-gray-700 text-sm focus:ring-blue-500 focus:border-blue-500 py-2 px-3"
-              >
-                {countries.map((country) => (
-                  <option key={country.code} value={country.code}>
-                    {country.dialCode} {country.name}
-                  </option>
-                ))}
-              </select> */}
-              <span className="inline-flex items-center rounded-l-md border border-gray-300 bg-gray-50 text-gray-700 text-sm px-3">
-                +91
-              </span>
+<div className="relative w-full">
+  {/* Actual select - hidden but functional */}
+  <select
+    name="countryCode"
+    onChange={handleCountryChange}
+    value={selectedCountryCode}
+    className="absolute inset-0 opacity-0 z-10 w-full h-full cursor-pointer"
+  >
+    {countries.map((country) => (
+      <option key={country.code} value={country.code}>
+        {`${country.dialCode} ${country.name}`}
+      </option>
+    ))}
+  </select>
+
+  {/* Visible display box */}
+  <div className="flex items-center justify-between rounded-l-md border-r-0 border border-gray-300 bg-gray-50 text-gray-700 text-sm py-2 px-3 pointer-events-none">
+    <span>{selectedCountry}</span>
+    <span className="ml-2 text-gray-500">▼</span> {/* Dropdown icon */}
+  </div>
+</div>
+
+
 
               <input
                 type="text"
@@ -673,28 +742,33 @@ const FirstForm = () => {
               WhatsApp Number
             </label>
             <div className="flex">
-              {/* <select
-                name="whatsappCountryCode"
-                onChange={handleCountryChangeWhatsApp}
-                value={
-                  countries.find(
-                    (country) => country.dialCode === selectedCountryWhatsApp
-                  )?.code
-                }
-                disabled={isWhatsAppSame}
-                className={`rounded-l-md border-r-0 border-gray-300 text-gray-700 text-sm py-2 px-3 ${
-                  isWhatsAppSame ? "bg-gray-100" : "bg-gray-50"
-                }`}
-              >
-                {countries.map((country) => (
-                  <option key={country.code} value={country.code}>
-                    {country.dialCode} {country.name}
-                  </option>
-                ))}
-              </select> */}
-              <span className="inline-flex items-center rounded-l-md border border-gray-300 bg-gray-50 text-gray-700 text-sm px-3">
-                +91
-              </span>
+<div className="relative w-full">
+  {/* Native select - hidden but functional */}
+  <select
+    name="whatsappCountryCode"
+    onChange={handleCountryChangeWhatsApp}
+    value={selectedCountryCodeWhatsApp}
+    disabled={isWhatsAppSame}
+    className="absolute inset-0 opacity-0 z-10 w-full h-full cursor-pointer"
+  >
+    {countries.map((country) => (
+      <option key={country.code} value={country.code}>
+        {`${country.dialCode} ${country.name}`}
+      </option>
+    ))}
+  </select>
+
+  {/* Custom visible display */}
+  <div
+    className={`flex items-center justify-between border border-r-0 rounded-l-md text-sm py-2 px-3 ${
+      isWhatsAppSame ? "bg-gray-100 text-gray-400" : "bg-gray-50 text-gray-700"
+    } pointer-events-none`}
+  >
+    <span>{selectedCountryWhatsApp}</span>
+    <span className="ml-2 text-gray-500">▼</span>
+  </div>
+</div>
+
 
               <input
                 type="text"
@@ -788,28 +862,44 @@ const FirstForm = () => {
           )}
 
           {/* Current Location */}
-          <div className="col-span-1">
-            <label
-              htmlFor="currentLocation"
-              className="block text-sm font-medium text-gray-700 mb-1"
-            >
-              Current Location <span className="text-red-500">*</span>
-            </label>
-            <input
-              type="text"
-              id="currentLocation"
-              name="currentLocation"
-              value={formData.currentLocation}
-              onChange={handleInputChange}
-              className="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm py-2 px-3 border"
-              placeholder="City, State, Country"
-            />
-            {formError.currentLocation && (
-              <div className="mt-1 text-sm text-red-600">
-                {formError.currentLocation}
-              </div>
-            )}
-          </div>
+  <div className="col-span-1 relative">
+  <label
+    htmlFor="currentLocation"
+    className="block text-sm font-medium text-gray-700 mb-1"
+  >
+    Current Location <span className="text-red-500">*</span>
+  </label>
+  <input
+    type="text"
+    id="currentLocation"
+    name="currentLocation"
+    value={formData.currentLocation}
+    onChange={handleLocationChange}
+    className="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm py-2 px-3 border"
+    placeholder="City, State"
+    autoComplete="off"
+  />
+  {locationSuggestions.length > 0 && (
+    <ul className="absolute z-10 bg-white border border-gray-300 rounded-md mt-1 w-full max-h-60 overflow-auto shadow-lg">
+      {locationSuggestions.map((item, index) => (
+        <li
+          key={index}
+          onClick={() => {
+            setFormData({ ...formData, currentLocation: item.label });
+            setLocationSuggestions([]);
+          }}
+          className="px-3 py-2 cursor-pointer hover:bg-blue-100 text-sm text-gray-800"
+        >
+          {item.label}
+        </li>
+      ))}
+    </ul>
+  )}
+  {formError.currentLocation && (
+    <div className="mt-1 text-sm text-red-600">{formError.currentLocation}</div>
+  )}
+</div>
+
 
           {/* Patient Entry */}
           <div className="col-span-1">

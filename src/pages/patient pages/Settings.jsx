@@ -2,23 +2,27 @@ import React, { useState } from "react";
 import Layout from "../../components/patient components/Layout";
 
 const Settings = () => {
-  const [activeTab, setActiveTab] = useState("password"); // Track active tab
+  const [activeTab, setActiveTab] = useState("password");
 
-  // States for change password form
+  // Change password
   const [oldPassword, setOldPassword] = useState("");
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
-  
-  // States for notification settings
+
+  // General notification settings
   const [emailNotifications, setEmailNotifications] = useState(false);
   const [smsNotifications, setSmsNotifications] = useState(false);
   const [postNotifications, setpostNotifications] = useState(false);
 
-  // Handle form submissions for password change
+  // Pills reminder notification settings
+  const [notificationTab, setNotificationTab] = useState("general");
+  const [preAlertTime, setPreAlertTime] = useState("5");
+  const [ringtone, setRingtone] = useState("");
+  const [voiceAlerts, setVoiceAlerts] = useState(false);
+
   const handlePasswordChange = (e) => {
     e.preventDefault();
     if (newPassword === confirmPassword) {
-      // Add password change logic here (send to backend)
       alert("Password changed successfully!");
     } else {
       alert("New passwords do not match!");
@@ -27,7 +31,7 @@ const Settings = () => {
 
   return (
     <div>
-      <Layout> 
+      <Layout>
         <div className="p-8">
           <h1 className="text-2xl font-semibold mb-4">Settings</h1>
 
@@ -36,7 +40,9 @@ const Settings = () => {
             <button
               onClick={() => setActiveTab("password")}
               className={`px-4 py-2 text-sm font-medium ${
-                activeTab === "password" ? "border-b-2 border-blue-600 text-blue-600" : "text-gray-600"
+                activeTab === "password"
+                  ? "border-b-2 border-blue-600 text-blue-600"
+                  : "text-gray-600"
               }`}
             >
               Change Password
@@ -44,14 +50,16 @@ const Settings = () => {
             <button
               onClick={() => setActiveTab("notifications")}
               className={`px-4 py-2 text-sm font-medium ${
-                activeTab === "notifications" ? "border-b-2 border-blue-600 text-blue-600" : "text-gray-600"
+                activeTab === "notifications"
+                  ? "border-b-2 border-blue-600 text-blue-600"
+                  : "text-gray-600"
               }`}
             >
               Notification Settings
             </button>
           </div>
 
-          {/* Tab Content */}
+          {/* Change Password Tab */}
           {activeTab === "password" && (
             <div className="mb-8">
               <h2 className="text-xl font-semibold mb-2">Change Password</h2>
@@ -97,63 +105,138 @@ const Settings = () => {
                     required
                   />
                 </div>
+
                 <div className="mb-4 mt-10 flex justify-center">
-                <button
-                  type="submit"
-                  className="bg-blue-600 text-white py-2 px-4 rounded-full shadow-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
-                >
-                  Change Password
-                </button>
+                  <button
+                    type="submit"
+                    className="bg-blue-600 text-white py-2 px-4 rounded-full shadow-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+                  >
+                    Change Password
+                  </button>
                 </div>
               </form>
             </div>
           )}
 
+          {/* Notifications Tab */}
           {activeTab === "notifications" && (
             <div className="mt-8">
-              <h2 className="text-xl font-semibold mb-2 mt-4">Notification Settings</h2>
-              <div className="mb-4 flex items-center">
-                <input
-                    type="checkbox"
-                    checked={emailNotifications}
-                    onChange={(e) => setEmailNotifications(e.target.checked)}
-                    className="h-4 w-4 text-blue-600 focus:ring-indigo-500 border-gray-300 rounded"
-                />
-                <label className="ml-2 mt-2 text-sm font-medium text-gray-700">
-                    Email Notifications
-                </label>
-                </div>
+              {/* Sub-tabs */}
+              <div className="flex space-x-4 border-b pb-2 mb-6">
+                <button
+                  className={`pb-1 border-b-2 ${
+                    notificationTab === "general"
+                      ? "border-blue-600 text-blue-600"
+                      : "border-transparent text-gray-600"
+                  }`}
+                  onClick={() => setNotificationTab("general")}
+                >
+                  General Notifications
+                </button>
+                <button
+                  className={`pb-1 border-b-2 ${
+                    notificationTab === "pills"
+                      ? "border-blue-600 text-blue-600"
+                      : "border-transparent text-gray-600"
+                  }`}
+                  onClick={() => setNotificationTab("pills")}
+                >
+                  Pills Reminder Notifications
+                </button>
+              </div>
 
-                <div className="mb-4 flex items-center">
-                <input
-                    type="checkbox"
-                    checked={smsNotifications}
-                    onChange={(e) => setSmsNotifications(e.target.checked)}
-                    className="h-4 w-4 text-blue-600 focus:ring-indigo-500 border-gray-300 rounded"
-                />
-                <label className="ml-2 mt-2 text-sm font-medium text-gray-700">
-                    SMS Notifications
-                </label>
-                </div>
+              {/* General Notifications */}
+              {notificationTab === "general" && (
+                <>
+                  <div className="mb-4 flex items-center">
+                    <input
+                      type="checkbox"
+                      checked={emailNotifications}
+                      onChange={(e) => setEmailNotifications(e.target.checked)}
+                      className="h-4 w-4 text-blue-600 focus:ring-indigo-500 border-gray-300 rounded"
+                    />
+                    <label className="ml-2 mt-2 text-sm font-medium text-gray-700">
+                      Email Notifications
+                    </label>
+                  </div>
 
-                <div className="mb-4 flex items-center">
-                <input
-                    type="checkbox"
-                    checked={postNotifications}
-                    onChange={(e) => setpostNotifications(e.target.checked)}
-                    className="h-4 w-4 text-blue-600 focus:ring-indigo-500 border-gray-300 rounded"
-                />
-                <label className="ml-2 mt-2 text-sm font-medium text-gray-700">
-                     Posts/Videos
-                </label>
-                </div>
+                  <div className="mb-4 flex items-center">
+                    <input
+                      type="checkbox"
+                      checked={smsNotifications}
+                      onChange={(e) => setSmsNotifications(e.target.checked)}
+                      className="h-4 w-4 text-blue-600 focus:ring-indigo-500 border-gray-300 rounded"
+                    />
+                    <label className="ml-2 mt-2 text-sm font-medium text-gray-700">
+                      SMS Notifications
+                    </label>
+                  </div>
 
+                  <div className="mb-4 flex items-center">
+                    <input
+                      type="checkbox"
+                      checked={postNotifications}
+                      onChange={(e) => setpostNotifications(e.target.checked)}
+                      className="h-4 w-4 text-blue-600 focus:ring-indigo-500 border-gray-300 rounded"
+                    />
+                    <label className="ml-2 mt-2 text-sm font-medium text-gray-700">
+                      Posts/Videos
+                    </label>
+                  </div>
+                </>
+              )}
+
+              {/* Pills Reminder Notifications */}
+              {notificationTab === "pills" && (
+                <>
+                  <div className="mb-4">
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Pre-alert Time</label>
+                    <select
+                      className="w-full border border-gray-300 rounded-md px-3 py-2"
+                      value={preAlertTime}
+                      onChange={(e) => setPreAlertTime(e.target.value)}
+                    >
+                      <option value="5">5 mins</option>
+                      <option value="10">10 mins</option>
+                      <option value="15">15 mins</option>
+                    </select>
+                  </div>
+
+                  <div className="mb-4">
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Ringtone</label>
+                    <select
+                      className="w-full border border-gray-300 rounded-md px-3 py-2"
+                      value={ringtone}
+                      onChange={(e) => setRingtone(e.target.value)}
+                    >
+                      <option value="">-- Select --</option>
+                    </select>
+                  </div>
+
+                  {/* iOS-style Toggle */}
+                  <div className="mb-4 flex items-center justify-between">
+                    <label className="text-sm font-medium text-gray-700">Enable Voice Alerts</label>
+                    <div
+                      onClick={() => setVoiceAlerts(!voiceAlerts)}
+                      className={`relative inline-block w-12 h-6 transition duration-200 ease-in-out ${
+                        voiceAlerts ? "bg-green-500" : "bg-gray-300"
+                      } rounded-full cursor-pointer`}
+                    >
+                      <span
+                        className={`absolute left-1 top-1 w-4 h-4 bg-white rounded-full shadow-md transform transition-transform duration-200 ease-in-out ${
+                          voiceAlerts ? "translate-x-6" : ""
+                        }`}
+                      ></span>
+                    </div>
+                  </div>
+                </>
+              )}
 
               <button
                 className="bg-green-600 text-white py-2 px-4 rounded-full shadow-md hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500"
-                onClick={() => alert('Notification settings saved!')}
+                onClick={() => alert("Notification settings saved!")}
               >
-                Save Notification Settings
+                Save 
               </button>
             </div>
           )}
@@ -164,3 +247,4 @@ const Settings = () => {
 };
 
 export default Settings;
+

@@ -1,54 +1,65 @@
-import React, { useState } from "react";
-import { FaPills, FaBell, FaClipboard, FaUsers } from "react-icons/fa";
+import React, { useState, useEffect } from "react";
+import { FaPills } from "react-icons/fa";
+import axios from "axios";
+import config from "../../config";
+
+const API_URL = config.API_URL;
+const doctorId = localStorage.getItem("userId"); // Change this if passed via props
 
 const Notification = ({ togglePopup }) => {
-  // Notification data
-  const [notifications] = useState([
-    { id: 1, type: "medicine", message: "Patient John missed taking medicine.", icon: FaPills, time: "2 mins ago" },
-    { id: 2, type: "assistant", message: "Assistant Dr.Smith prepared medicines.", icon: FaClipboard, time: "10 mins ago" },
-    { id: 3, type: "inventory", message: "Low inventory alert: Ibuprofen stock is low.", icon: FaPills, time: "1 hour ago" },
-    { id: 4, type: "education", message: "Education session 'Patient Care' starts in 30 minutes.", icon: FaUsers, time: "2 hours ago" },
-    { id: 5, type: "meeting", message: "Meeting with patient Doe in 15 minutes.", icon: FaBell, time: "3 hours ago" },
-    { id: 6, type: "medicine", message: "Patient John missed taking medicine.", icon: FaPills, time: "2 mins ago" },
-    { id: 7, type: "assistant", message: "Assistant Dr.Smith prepared medicines.", icon: FaClipboard, time: "10 mins ago" },
-    { id: 8, type: "inventory", message: "Low inventory alert: Ibuprofen stock is low.", icon: FaPills, time: "1 hour ago" },
-    { id: 9, type: "education", message: "Education session 'Patient Care' starts in 30 minutes.", icon: FaUsers, time: "2 hours ago" },
-    { id: 10, type: "meeting", message: "Meeting with patient Doe in 15 minutes.", icon: FaBell, time: "3 hours ago" },
-  ]);
+  const [notifications, setNotifications] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
-  // Define icon colors for each notification type
-  const iconColors = {
-    medicine: "text-green-500", // Red color for medicine notifications
-    assistant: "text-purple-500", // Green color for assistant-related notifications
-    inventory: "text-red-500", // Yellow color for inventory notifications
-    education: "text-violet-500", // Purple color for education session notifications
-    meeting: "text-blue-500", // Blue color for meeting notifications
-  };
+  useEffect(() => {
+    const fetchNotifications = async () => {
+      try {
+        const res = await axios.get(`${API_URL}/api/medication/schedule/notify-doctor/${doctorId}`);
+        if (res.data && Array.isArray(res.data.notifications)) {
+          setNotifications(res.data.notifications);
+        } else {
+          setNotifications([]);
+        }
+      } catch (err) {
+        setError("Failed to load notifications.");
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchNotifications();
+  }, []);
 
   return (
-    <div className="fixed top-12 right-5 w-1/7 bg-white shadow-lg rounded-lg overflow-hidden z-50">
-      <div className="p-4 bg-blue-400 text-white">
+    <div className="fixed top-12 right-5 w-96 bg-white shadow-lg rounded-lg overflow-hidden z-50 border border-gray-200">
+      <div className="p-4 bg-blue-500 text-white">
         <h3 className="text-lg font-bold">Notifications</h3>
       </div>
-      <div className="max-h-96 overflow-y-auto p-4">
-        {notifications.map((notification) => (
-          <div
-            key={notification.id}
-            className="flex items-center border-b py-2"
-          >
-            {/* Apply the icon with dynamic color */}
-            <span className={`text-xl mr-3 ${iconColors[notification.type]}`}>
-              {React.createElement(notification.icon)}
+      <div className="max-h-96 overflow-y-auto p-4 space-y-3 scrollbar-thin scrollbar-thumb-blue-400 scrollbar-track-blue-100">
+        {loading && <p className="text-gray-500 text-sm">Loading...</p>}
+        {error && <p className="text-red-500 text-sm">{error}</p>}
+        {!loading && notifications.length === 0 && (
+          <p className="text-gray-500 text-sm">No notifications found.</p>
+        )}
+        {notifications.map((message, index) => (
+          <div key={index} className="flex items-start border-b pb-3">
+            <span className="text-2xl mt-1 mr-3 text-red-500">
+              <FaPills />
             </span>
-            <div>
-              <p className="text-sm font-semibold">{notification.message}</p>
-              <p className="text-xs text-gray-500">{notification.time}</p>
+            <div className="flex-1">
+              <div className="flex items-center justify-between mb-1">
+                <span className="text-xs bg-red-100 text-red-600 px-2 py-0.5 rounded-full">
+                  Missed Dose
+                </span>
+                <span className="text-xs text-gray-400">Just now</span>
+              </div>
+              <p className="text-sm text-gray-800">{message}</p>
             </div>
           </div>
         ))}
       </div>
       <button
-        className="w-full p-2 bg-blue-100 text-blue-500 hover:bg-blue-200"
+        className="w-full p-2 bg-blue-100 text-blue-600 font-medium hover:bg-blue-200 transition"
         onClick={togglePopup}
       >
         Close
