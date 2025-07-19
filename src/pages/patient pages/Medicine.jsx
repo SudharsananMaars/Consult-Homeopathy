@@ -1,5 +1,4 @@
 import React, { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
 import { EyeIcon, XMarkIcon } from "@heroicons/react/24/outline";
 import Layout from "../../components/patient components/Layout";
 import axios from "axios";
@@ -16,8 +15,6 @@ const Medicine = () => {
   const [modalItems, setModalItems] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
 
-  const navigate = useNavigate();
-
   const handleTabSwitch = (tab) => setActiveTab(tab);
 
   const openItemsModal = (items) => {
@@ -30,52 +27,57 @@ const Medicine = () => {
     setModalItems([]);
   };
 
-  const markAsReceived = (consignmentId) => {
-    const consignment = shippedData.find((c) => c.id === consignmentId);
-    if (!consignment) return;
-    setShippedData((prev) => prev.filter((c) => c.id !== consignmentId));
-    setReceivedData((prev) => [
-      { ...consignment, isProductReceived: true },
-      ...prev,
-    ]);
+  const markAsReceived = async (prescriptionId) => {
+    try {
+      const token = localStorage.getItem("token");
+      const response = await axios.patch(
+        `https://clinic-backend-jdob.onrender.com/api/patient/prescriptions/${prescriptionId}/receive`,
+        { isProductReceived: true },
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+
+      fetchDeliveryStatus();
+    } catch (error) {
+      console.error("Failed to mark product as received:", error);
+      throw error;
+    }
+  };
+
+  const fetchDeliveryStatus = async () => {
+    try {
+      const token = localStorage.getItem("token");
+
+      const response = await axios.get(
+        `${API_URL}/api/doctor/prescriptions/delivery-status/${userId}`,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+      const shipped = response.data.filter(
+        (item) => item.isProductReceived === false
+      );
+      const received = response.data.filter(
+        (item) => item.isProductReceived === true
+      );
+
+      setShippedData(shipped);
+      setReceivedData(received);
+    } catch (error) {
+      console.error("Error fetching delivery status:", error);
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   useEffect(() => {
-    const fetchDeliveryStatus = async () => {
-      try {
-        const token = localStorage.getItem("token");
-
-        const response = await axios.get(
-          `${API_URL}/api/doctor/prescriptions/delivery-status/${userId}`,
-          {
-            headers: {
-              Authorization: `Bearer ${token}`,
-            },
-          }
-        );
-        const shipped = response.data.filter(
-          (item) => item.isProductReceived === false
-        );
-        const received = response.data.filter(
-          (item) => item.isProductReceived === true
-        );
-
-        console.log("shipped",shipped);
-        console.log("received",received);
-
-        setShippedData(shipped);
-        setReceivedData(received);
-      } catch (error) {
-        console.error("Error fetching delivery status:", error);
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
     fetchDeliveryStatus();
   }, []);
-
-  const goToTracking = (trackingId) => navigate(`/track/${trackingId}`);
 
   if (isLoading) {
     return (
@@ -90,19 +92,19 @@ const Medicine = () => {
       <div className="p-6">
         <h1 className="font-bold text-2xl sm: pt-4">Medicine Shipments</h1>
 
-        <div className="flex space-x-4 my-6 ">
+        <div className="flex space-x-6 border-b border-gray-300 my-6">
           {[
-            { key: "shipped", label: "Shipped Medicines" },
-            { key: "received", label: "Received Medicines" },
+            { key: "shipped", label: "Shipped Medicines" },
+            { key: "received", label: "Received Medicines" },
           ].map(({ key, label }) => (
             <button
               key={key}
               onClick={() => handleTabSwitch(key)}
-              className={`px-4 py-2 rounded-md transition ${
+              className={`pb-2 transition font-medium border-b-2 text-[0.9rem] ${
                 activeTab === key
-                  ? "bg-blue-600 text-white"
-                  : "bg-gray-200 text-gray-700"
-              } hover:bg-blue-500 hover:text-white`}
+                  ? "border-blue-600 text-blue-600"
+                  : "border-transparent text-gray-500 hover:text-blue-600 hover:border-blue-300"
+              }`}
             >
               {label}
             </button>
@@ -116,7 +118,6 @@ const Medicine = () => {
               showActions
               onMarkReceived={markAsReceived}
               onOpenItems={openItemsModal}
-              onTrack={goToTracking}
             />
           )}
 
@@ -140,14 +141,13 @@ const ShipmentTable = ({
   showActions = false,
   onMarkReceived,
   onOpenItems,
-  onTrack,
 }) => (
   <table className="min-w-full text-sm border-collapse overflow-hidden rounded-lg shadow">
     <thead className="bg-gray-100">
       <tr>
         <Th className="text-center">S.No</Th>
-        <Th className="text-center">Tracking ID</Th>
-        <Th className="text-center">Shipped Date</Th>
+        <Th className="text-center">Tracking ID</Th>
+        <Th className="text-center">Shipped Date</Th>
         <Th className="text-center">Status</Th>
         <Th className="text-center">Items</Th>
         {showActions && <Th>Actions</Th>}
@@ -187,10 +187,10 @@ const ShipmentTable = ({
           <Td>
             <button
               onClick={() => onOpenItems(c.items)}
-              className="p-1 rounded hover:bg-gray-200"
+              className="py-1 px-2 rounded text-xs font-medium bg-blue-600 text-white hover:bg-blue-500 transition"
               title="View items"
             >
-              <EyeIcon className="w-6 h-6 text-blue-600" />
+              View
             </button>
           </Td>
           {showActions && (
@@ -198,8 +198,9 @@ const ShipmentTable = ({
               <button
                 onClick={() => onMarkReceived && onMarkReceived(c.id)}
                 className="px-3 py-1 rounded bg-emerald-600 text-white text-xs hover:bg-emerald-500"
+                title="Mark as Received"
               >
-                Mark Received
+                Mark Received
               </button>
             </Td>
           )}
@@ -221,12 +222,12 @@ const ItemsModal = ({ items, onClose }) => (
       </button>
 
       <div className="p-6">
-        <h2 className="text-lg font-semibold mb-4">Medicines in This Parcel</h2>
+        <h2 className="text-lg font-semibold mb-4">Medicines in this Parcel</h2>
 
         <table className="min-w-full text-sm border-collapse rounded">
           <thead className="bg-gray-100">
             <tr>
-              <Th>#</Th>
+              <Th>S.No.</Th>
               <Th>Name</Th>
               <Th>Qty</Th>
               <Th>UoM</Th>

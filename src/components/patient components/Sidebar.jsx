@@ -89,17 +89,17 @@ const Sidebar = () => {
   ];
 
   const handleLogout = async () => {
-    const token = localStorage.getItem("token"); // Fetch token
+    const token = localStorage.getItem("token"); 
     const handleLogout = async () => {
-      const token = localStorage.getItem("token"); // Fetch token
+      const token = localStorage.getItem("token"); 
 
       try {
         const response = await axios.post(
           "/api/otp/logout",
-          {}, // no body
+          {},
           {
             headers: {
-              Authorization: `Bearer ${token}`, // Attach token in header
+              Authorization: `Bearer ${token}`,
             },
           }
         );
