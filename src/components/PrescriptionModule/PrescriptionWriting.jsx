@@ -23,6 +23,7 @@ import LabelDropdown from "./LabelDropdown";
 import MedicineConsumptionSelector from "./MedicineConsumptionSelector";
 import FrequencyModal from "./FrequencyModal";
 import DurationModal from "./DurationModal";
+
 // Auth helper to check token
 const checkAuth = () => {
   const token = localStorage.getItem("token");
@@ -1000,7 +1001,7 @@ const handleSavePrescription = async () => {
 
     // Use the updated data preparation function
     const apiData = prepareDataForBackend(prescriptionData);
-
+    console.log("Final Data: ", apiData);
     const response = await authAxios.post(
       `${API_URL}/api/prescriptionControl/create`,
       apiData
@@ -1499,6 +1500,9 @@ const getMedicineCount = () => {
                       Medicine Course
                     </th>
                     <th className="border border-gray-300 px-4 py-2 text-left">
+                      View Prescription
+                    </th>
+                    <th className="border border-gray-300 px-4 py-2 text-left">
                       Action Status
                     </th>
                     <th className="border border-gray-300 px-4 py-2 text-left">
@@ -1523,7 +1527,14 @@ const getMedicineCount = () => {
                       <td className="border border-gray-300 px-4 py-2">
                         {prescription.medicineCourse} days
                       </td>
-
+                      <td className="border border-gray-300 px-4 py-2">
+                        <button
+                          onClick={() => navigate(`/view-prescription/${prescription._id}`)}
+                          className="text-blue-600 hover:underline"
+                        >
+                          View Prescription
+                        </button>
+                      </td>
                       <div>
                         <td className="border border-gray-300 px-4 py-2 text-center">
                           {prescription.action?.status === "In Progress" ? (
