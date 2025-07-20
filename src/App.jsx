@@ -120,7 +120,7 @@ import VendorDashboard from "./components/Vendor/VendorDashboard.jsx";
 import AddVendor from "./components/Vendor/AddVendor.jsx";
 import Navbar from "./components/Vendor/Navbar.jsx";
 import { ToastContainer } from "react-toastify";
-import 'react-toastify/dist/ReactToastify.css';
+import "react-toastify/dist/ReactToastify.css";
 
 // Error Fallback Component
 const ErrorFallback = () => <ServerError />;
@@ -142,7 +142,7 @@ function App() {
         <Route path="/maintenance" element={<Maintenance />} />
         <Route path="/login" element={<LoginPage />} />
         <Route path="/admin-login" element={<AdminLoginPage />} />
-        <Route path="/firstform" element={<FirstForm />}/>
+        <Route path="/firstform" element={<FirstForm />} />
 
         <Route
           path="/vendors"
@@ -159,7 +159,7 @@ function App() {
               <AddVendor />
             </ProtectedRoute>
           }
-        />  
+        />
         <Route
           path="/vendors/edit/:id"
           element={
@@ -168,7 +168,7 @@ function App() {
             </ProtectedRoute>
           }
         />
-        
+
         {/* Patient Protected Routes */}
         <Route
           path="/form"
@@ -202,7 +202,7 @@ function App() {
             </ProtectedRoute>
           }
         />
-        
+
         <Route
           path="/appointments/newappointment"
           element={
@@ -257,22 +257,22 @@ function App() {
           }
         />
 
-      <Route 
-        path="/prescription/:appointmentId" 
-        element={
-          <ProtectedRoute allowedRoles={["Patient"]}>
-            <PrescriptionView />
-          </ProtectedRoute>
-        } 
-      />
-      <Route 
-        path="/payment/:appointmentId" 
-        element={
-          <ProtectedRoute allowedRoles={["Patient"]}>
-            <MedicinePaymentPage />
-          </ProtectedRoute>
-        }
-      />
+        <Route
+          path="/prescription/:appointmentId"
+          element={
+            <ProtectedRoute allowedRoles={["Patient"]}>
+              <PrescriptionView />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/payment/:appointmentId"
+          element={
+            <ProtectedRoute allowedRoles={["Patient"]}>
+              <MedicinePaymentPage />
+            </ProtectedRoute>
+          }
+        />
         <Route
           path="/payments"
           element={
@@ -372,7 +372,7 @@ function App() {
         <Route
           path="/family"
           element={
-            <ProtectedRoute allowedRoles={["Patient"]}> 
+            <ProtectedRoute allowedRoles={["Patient"]}>
               <FamilyTree />
             </ProtectedRoute>
           }
@@ -813,13 +813,13 @@ function App() {
           }
         />
 
-        <Route 
-          path="/view-prescription/:prescriptionId" 
+        <Route
+          path="/view-prescription/:prescriptionId"
           element={
-            <ProtectedRoute allowedRoles={["Doctor"]}>
+            <ProtectedRoute allowedRoles={["Doctor", "Patient"]}>
               <PrescriptionViewModal />
             </ProtectedRoute>
-          } 
+          }
         />
 
         {/* Root redirect */}
@@ -834,7 +834,7 @@ function App() {
     <div>
       <ErrorBoundary FallbackComponent={ErrorFallback}>
         <AuthProvider>
-            <MaintenanceCheck />
+          <MaintenanceCheck />
         </AuthProvider>
       </ErrorBoundary>
     </div>

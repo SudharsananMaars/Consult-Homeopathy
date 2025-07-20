@@ -1,6 +1,12 @@
 import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { LuBox, LuSettings, LuCalendar, LuWallet } from "react-icons/lu";
+import {
+  LuBox,
+  LuSettings,
+  LuCalendar,
+  LuWallet,
+  LuClock,
+} from "react-icons/lu";
 import { GiMedicines } from "react-icons/gi";
 import { MdOutlineOndemandVideo } from "react-icons/md";
 import { Link, useLocation } from "react-router-dom";
@@ -33,16 +39,16 @@ const Sidebar = () => {
   const SIDEBAR_LINKS = [
     { id: 2, path: "/home", name: "Home", icon: LuBox },
     {
-      id: 1,
-      path: "/consulthistory",
-      name: "ConsultationHistory",
-      icon: LuBox,
-    },
-    {
       id: 3,
       path: "/appointments/newappointment",
-      name: "Appointments",
+      name: "Book appointment",
       icon: LuCalendar,
+    },
+    {
+      id: 1,
+      path: "/consulthistory",
+      name: "Consultation history",
+      icon: LuBox,
     },
     { id: 4, path: "/payments", name: "Payments", icon: LuWallet },
     // { id: 4, path: "/invoices", name: "Invoices", icon: LuFileText },
