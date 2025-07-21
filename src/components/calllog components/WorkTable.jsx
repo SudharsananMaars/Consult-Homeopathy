@@ -1,26 +1,37 @@
-import React, { useEffect, useState } from 'react';
-import axios from 'axios';
-import { IoIosSearch, IoIosWarning, IoIosHourglass } from 'react-icons/io';
-import {FaUserInjured, FaUserPlus, FaFileMedical, FaPhoneAlt, FaRecordVinyl, FaCheck, FaDownload, FaPencilAlt} from 'react-icons/fa';
-import config from '../../config';
-import { useLocation, useNavigate } from 'react-router-dom';
-import { jwtDecode } from 'jwt-decode';
-import CommentCell from './CommentCell';
-import VideoCall from '../../pages/doctor pages/VideoCall';
-import DraftViewModal from './DraftViewModal'; // Make sure the path is correct
-import PrescriptionViewModal from '../PrescriptionModule/PrescriptionViewModal';
-import MedicinePreparationView from '../../pages/doctor pages/MedicinePreparationView';
+import React, { useEffect, useState } from "react";
+import axios from "axios";
+import { IoIosSearch, IoIosWarning, IoIosHourglass } from "react-icons/io";
+import {
+  FaUserInjured,
+  FaUserPlus,
+  FaFileMedical,
+  FaPhoneAlt,
+  FaRecordVinyl,
+  FaCheck,
+  FaDownload,
+  FaPencilAlt,
+} from "react-icons/fa";
+import config from "../../config";
+import { useLocation, useNavigate } from "react-router-dom";
+import { jwtDecode } from "jwt-decode";
+import CommentCell from "./CommentCell";
+import VideoCall from "../../pages/doctor pages/VideoCall";
+import DraftViewModal from "./DraftViewModal"; // Make sure the path is correct
+import PrescriptionViewModal from "../PrescriptionModule/PrescriptionViewModal";
+import MedicinePreparationView from "../../pages/doctor pages/MedicinePreparationView";
 
 const WorkTable = () => {
   const [patients, setPatients] = useState([]);
-  const [specialAllocationPatients, setSpecialAllocationPatients] = useState([]);
-  const [currentDoctorId, setCurrentDoctorId] = useState('');
-  const [searchTerm, setSearchTerm] = useState('');
+  const [specialAllocationPatients, setSpecialAllocationPatients] = useState(
+    []
+  );
+  const [currentDoctorId, setCurrentDoctorId] = useState("");
+  const [searchTerm, setSearchTerm] = useState("");
   const [followTypes, setFollowTypes] = useState([]);
-  const [selectedFollowType, setSelectedFollowType] = useState('');
+  const [selectedFollowType, setSelectedFollowType] = useState("");
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [userRole, setUserRole] = useState('');
+  const [userRole, setUserRole] = useState("");
   const API_URL = config.API_URL;
   const [doctors, setDoctors] = useState([]);
   const [isDraftModalOpen, setIsDraftModalOpen] = useState(false);
@@ -30,7 +41,7 @@ const WorkTable = () => {
   const [modalContent, setModalContent] = useState(null);
 
   const location = useLocation();
-  const userId = localStorage.getItem('userId');
+  const userId = localStorage.getItem("userId");
   const storageKey = `selectedFollowType_${userId}`;
 
   const fetchDoctors = async () => {
@@ -43,37 +54,37 @@ const WorkTable = () => {
     }
   };
   const getToken = () => {
-    return localStorage.getItem('token');
+    return localStorage.getItem("token");
   };
 
-useEffect(() => {
-  const queryParams = new URLSearchParams(location.search);
-  const followFromUrl = queryParams.get('follow');
-  const savedFollow = localStorage.getItem(storageKey);
+  useEffect(() => {
+    const queryParams = new URLSearchParams(location.search);
+    const followFromUrl = queryParams.get("follow");
+    const savedFollow = localStorage.getItem(storageKey);
 
-  if (followTypes.length === 0) return; // Wait for fetch to finish
+    if (followTypes.length === 0) return; // Wait for fetch to finish
 
-  if (followFromUrl && followTypes.includes(followFromUrl)) {
-    setSelectedFollowType(followFromUrl);
-    localStorage.setItem(storageKey, followFromUrl);
-  } else if (savedFollow && followTypes.includes(savedFollow)) {
-    setSelectedFollowType(savedFollow);
-  }
-}, [location.search, followTypes]);
+    if (followFromUrl && followTypes.includes(followFromUrl)) {
+      setSelectedFollowType(followFromUrl);
+      localStorage.setItem(storageKey, followFromUrl);
+    } else if (savedFollow && followTypes.includes(savedFollow)) {
+      setSelectedFollowType(savedFollow);
+    }
+  }, [location.search, followTypes]);
 
   const handleFollowChange = (e) => {
     const newType = e.target.value;
     setSelectedFollowType(newType);
     localStorage.setItem(storageKey, newType);
     const params = new URLSearchParams(location.search);
-    params.set('follow', newType);
+    params.set("follow", newType);
     navigate(`${location.pathname}?${params.toString()}`, { replace: true });
   };
 
   useEffect(() => {
     fetchDoctors();
     const token = getToken();
-    const userId = localStorage.getItem('userId');
+    const userId = localStorage.getItem("userId");
     // console.log("Token:", token);
     if (token) {
       const decodedToken = jwtDecode(token);
@@ -89,22 +100,24 @@ useEffect(() => {
     }
     fetchDoctorFollowTypes();
     fetchPatients();
-  }, []);  
+  }, []);
 
   const fetchSpecialAllocations = async (doctorId) => {
     try {
-      const response = await axios.get(`${API_URL}/api/assign/special/${doctorId}`);
+      const response = await axios.get(
+        `${API_URL}/api/assign/special/${doctorId}`
+      );
       setSpecialAllocationPatients(response.data);
     } catch (error) {
       console.error("Error fetching special allocations:", error);
       setError("Failed to load special allocations");
     }
   };
-  
+
   const handleDoctorChange = async (patientId, doctorId) => {
     try {
       await axios.post(`${API_URL}/api/assign/allocations`, {
-        allocations: [{ role: 'patient', doctorId, patientId }]
+        allocations: [{ role: "patient", doctorId, patientId }],
       });
       // Refresh the patient list or update the local state
       fetchPatients();
@@ -113,64 +126,77 @@ useEffect(() => {
       setError("Failed to update doctor allocation. Please try again.");
     }
   };
-  
-const fetchDoctorFollowTypes = async () => {
-  try {
-    const token = getToken();
-    if (!token) {
-      throw new Error('No authorization token found');
+
+  const fetchDoctorFollowTypes = async () => {
+    try {
+      const token = getToken();
+      if (!token) {
+        throw new Error("No authorization token found");
+      }
+
+      const response = await axios.get(
+        `${API_URL}/api/doctor/getDoctorFollow`,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+
+      let followTypesArray = response.data.follow.split(", ");
+
+      // Handle Follow up-C expansion
+      if (followTypesArray.includes("Follow up-C")) {
+        const index = followTypesArray.indexOf("Follow up-C");
+        followTypesArray.splice(
+          index,
+          1,
+          "Follow up-C-New",
+          "Follow up-C-Existing"
+        );
+      }
+
+      followTypesArray.push("Special Allocation");
+      if (userRole === "admin-doctor") {
+        followTypesArray.push("View All");
+      }
+
+      setFollowTypes(followTypesArray);
+
+      // ✅ Do not overwrite selectedFollowType if already set from URL or localStorage
+      const savedFollow = localStorage.getItem(storageKey);
+      const queryParams = new URLSearchParams(location.search);
+      const followFromUrl = queryParams.get("follow");
+
+      if (!followFromUrl && !savedFollow) {
+        setSelectedFollowType(followTypesArray[0]);
+        localStorage.setItem(storageKey, followTypesArray[0]);
+      }
+    } catch (error) {
+      console.error(
+        "Error fetching doctor follow-up types:",
+        error.response ? error.response.data : error.message
+      );
+      setError(error.message);
+    } finally {
+      setIsLoading(false);
     }
-
-    const response = await axios.get(`${API_URL}/api/doctor/getDoctorFollow`, {
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
-    });
-
-    let followTypesArray = response.data.follow.split(', ');
-
-    // Handle Follow up-C expansion
-    if (followTypesArray.includes('Follow up-C')) {
-      const index = followTypesArray.indexOf('Follow up-C');
-      followTypesArray.splice(index, 1, 'Follow up-C-New', 'Follow up-C-Existing');
-    }
-
-    followTypesArray.push('Special Allocation');
-    if (userRole === 'admin-doctor') {
-      followTypesArray.push('View All');
-    }
-
-    setFollowTypes(followTypesArray);
-
-    // ✅ Do not overwrite selectedFollowType if already set from URL or localStorage
-    const savedFollow = localStorage.getItem(storageKey);
-    const queryParams = new URLSearchParams(location.search);
-    const followFromUrl = queryParams.get('follow');
-
-    if (!followFromUrl && !savedFollow) {
-      setSelectedFollowType(followTypesArray[0]);
-      localStorage.setItem(storageKey, followTypesArray[0]);
-    }
-  } catch (error) {
-    console.error('Error fetching doctor follow-up types:', error.response ? error.response.data : error.message);
-    setError(error.message);
-  } finally {
-    setIsLoading(false);
-  }
-};
-
+  };
 
   const fetchPatients = async () => {
     try {
       let url = `${API_URL}/api/doctor/getAllAppointmentsWithPatientData`;
-      if (selectedFollowType === 'View All') {
+      if (selectedFollowType === "View All") {
         url = `${API_URL}/api/log/list?appointmentFixed=Yes`;
       }
       const response = await axios.get(url);
       console.log(response.data);
       setPatients(response.data);
     } catch (error) {
-      console.error('Error fetching patients:', error.response ? error.response.data : error.message);
+      console.error(
+        "Error fetching patients:",
+        error.response ? error.response.data : error.message
+      );
       setError(error.message);
     } finally {
       setIsLoading(false);
@@ -181,30 +207,45 @@ const fetchDoctorFollowTypes = async () => {
     fetchPatients();
   }, [selectedFollowType]);
 
-  const filteredPatients = patients.filter(
-    (patient) => {
-
-      if (selectedFollowType === 'View All') {
-        return true;
-      }
-
-      const isMatchingFollowType = 
-        // (selectedFollowType === 'Follow up-C-New' && patient.follow === 'Follow up-C' && patient.newExisting === 'New') ||
-        // (selectedFollowType === 'Follow up-C-Existing' && patient.follow === 'Follow up-C' && patient.newExisting === 'Existing') ||
-        // (selectedFollowType !== 'Follow up-C-New' && selectedFollowType !== 'Follow up-C-Existing' && patient.follow === selectedFollowType);
-      
-        (selectedFollowType === 'Follow up-Chronic-New' && patient.medicalDetails.diseaseType.name === 'Chronic' && patient.medicalDetails.follow === 'Follow up-C' && patient.newExisting === 'New') ||
-        (selectedFollowType === 'Follow up-Chronic-Existing' && patient.medicalDetails.diseaseType.name === 'Chronic' && patient.medicalDetails.follow === 'Follow up-C' && patient.newExisting === 'Existing') ||
-        (selectedFollowType === 'Follow up-Acute-New' && patient.medicalDetails.diseaseType.name === 'Acute'  && patient.medicalDetails.follow === 'Follow up-C' && patient.newExisting === 'New') ||
-        (selectedFollowType === 'Follow up-Acute-Existing' && patient.medicalDetails.diseaseType.name === 'Acute'  && patient.medicalDetails.follow === 'Follow up-C' && patient.newExisting === 'Existing') ||
-        (selectedFollowType !== 'Follow up-Chronic-New' && selectedFollowType !== 'Follow up-Chronic-Existing' && selectedFollowType !== 'Follow up-Acute-New' && selectedFollowType !== 'Follow up-Acute-Existing' && patient.medicalDetails.follow === selectedFollowType);
-// console.log("Checking patient: ",patient);
-      return isMatchingFollowType &&
-        (searchTerm === '' ||
-          patient.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-          patient.phone.includes(searchTerm));
+  const filteredPatients = patients.filter((patient) => {
+    if (selectedFollowType === "View All") {
+      return true;
     }
-  );
+
+    const isMatchingFollowType =
+      // (selectedFollowType === 'Follow up-C-New' && patient.follow === 'Follow up-C' && patient.newExisting === 'New') ||
+      // (selectedFollowType === 'Follow up-C-Existing' && patient.follow === 'Follow up-C' && patient.newExisting === 'Existing') ||
+      // (selectedFollowType !== 'Follow up-C-New' && selectedFollowType !== 'Follow up-C-Existing' && patient.follow === selectedFollowType);
+
+      (selectedFollowType === "Follow up-Chronic-New" &&
+        patient.medicalDetails.diseaseType.name === "Chronic" &&
+        patient.medicalDetails.follow === "Follow up-C" &&
+        patient.newExisting === "New") ||
+      (selectedFollowType === "Follow up-Chronic-Existing" &&
+        patient.medicalDetails.diseaseType.name === "Chronic" &&
+        patient.medicalDetails.follow === "Follow up-C" &&
+        patient.newExisting === "Existing") ||
+      (selectedFollowType === "Follow up-Acute-New" &&
+        patient.medicalDetails.diseaseType.name === "Acute" &&
+        patient.medicalDetails.follow === "Follow up-C" &&
+        patient.newExisting === "New") ||
+      (selectedFollowType === "Follow up-Acute-Existing" &&
+        patient.medicalDetails.diseaseType.name === "Acute" &&
+        patient.medicalDetails.follow === "Follow up-C" &&
+        patient.newExisting === "Existing") ||
+      (selectedFollowType !== "Follow up-Chronic-New" &&
+        selectedFollowType !== "Follow up-Chronic-Existing" &&
+        selectedFollowType !== "Follow up-Acute-New" &&
+        selectedFollowType !== "Follow up-Acute-Existing" &&
+        patient.medicalDetails.follow === selectedFollowType);
+    // console.log("Checking patient: ",patient);
+    return (
+      isMatchingFollowType &&
+      (searchTerm === "" ||
+        patient.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        patient.phone.includes(searchTerm))
+    );
+  });
 
   const navigate = useNavigate();
   const handleJoinRoom = (patient) => {
@@ -222,52 +263,58 @@ const fetchDoctorFollowTypes = async () => {
   
   const isOneHourPassed = (followUpTimestamp) => {
     if (!followUpTimestamp) return true; // If no timestamp, enable the button
-    
+
     const followTime = new Date(followUpTimestamp);
     const now = new Date();
     const timeDifference = now - followTime;
-    
+
     return timeDifference >= 3600000; // 3600000 ms = 1 hour
   };
 
   // Helper function to get remaining time in a human-readable format
   const getRemainingTime = (followUpTimestamp) => {
     const followTime = new Date(followUpTimestamp);
-    const now = new Date(); 
+    const now = new Date();
     const remainingMs = 3600000 - (now - followTime);
-    
-    if (remainingMs <= 0) return "0 minutes";
-    
-    const minutes = Math.floor(remainingMs / 60000);
-    return `${minutes} minute${minutes !== 1 ? 's' : ''}`;
-  };
 
+    if (remainingMs <= 0) return "0 minutes";
+
+    const minutes = Math.floor(remainingMs / 60000);
+    return `${minutes} minute${minutes !== 1 ? "s" : ""}`;
+  };
 
   const getTableConfig = () => {
     const getActionButtons = (item) => {
-      const isMshipTable = selectedFollowType === 'Follow up-Mship';
-      const isVoiceCallDisabled = isMshipTable && !isOneHourPassed(item.followUpTimestamp);
+      const isMshipTable = selectedFollowType === "Follow up-Mship";
+      const isVoiceCallDisabled =
+        isMshipTable && !isOneHourPassed(item.followUpTimestamp);
       return [
         <div className="action-buttons" key="viewDraft">
-          {renderButton('View draft', () => handleAction('ViewDraft', item))}
+          {renderButton("View draft", () => handleAction("ViewDraft", item))}
         </div>,
         <div className="action-buttons" key="videoCall">
-          {renderButton('Make video call', () => handleAction('VideoCall', item))}
+          {renderButton("Make video call", () =>
+            handleAction("VideoCall", item)
+          )}
         </div>,
         <div className="action-buttons" key="voiceCall">
-          {renderButton('Make Voice Call', () => handleAction('VoiceCall', item), isVoiceCallDisabled)}
+          {renderButton(
+            "Make Voice Call",
+            () => handleAction("VoiceCall", item),
+            isVoiceCallDisabled
+          )}
         </div>,
         <div className="action-buttons" key="recordings">
-          {renderButton('Recordings', () => handleAction('Recordings', item))}
+          {renderButton("Recordings", () => handleAction("Recordings", item))}
         </div>,
         <div className="action-buttons" key="markDone">
-          {renderButton('Mark Done', () => handleAction('MarkDone', item))}
-        </div>
+          {renderButton("Mark Done", () => handleAction("MarkDone", item))}
+        </div>,
       ];
     };
     const doctorDropdown = (item) => (
       <select
-        value={item.assignedDoctor || ''}
+        value={item.assignedDoctor || ""}
         onChange={(e) => handleDoctorChange(item._id, e.target.value)}
         className="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
       >
@@ -279,251 +326,285 @@ const fetchDoctorFollowTypes = async () => {
         ))}
       </select>
     );
-    switch (selectedFollowType){
-      case 'Follow up-Chronic-New':
-      case 'Follow up-Chronic-Existing':
-      case 'Follow up-Acute-New':
-      case 'Follow up-Acute-Existing':
+    switch (selectedFollowType) {
+      case "Follow up-Chronic-New":
+      case "Follow up-Chronic-Existing":
+      case "Follow up-Acute-New":
+      case "Follow up-Acute-Existing":
         return {
           head: [
-            'S.no',
-            'Omni channel',
-            'Patient Type',
-            'Who is the Consultation for',
-            'Appointment Date',
-            'Appointment Timing',
-            'Name',
-            'Phone Number',
-            'Whatsapp Number',
-            'Email',
-            'Consulting For',
-            'If diseaseType is not available',
-            'Age',
-            'Gender',
-            'Current location',
+            "S.no",
+            "Omni channel",
+            "Patient Type",
+            "Who is the Consultation for",
+            "Appointment Date",
+            "Appointment Timing",
+            "Name",
+            "Phone Number",
+            "Whatsapp Number",
+            "Email",
+            "Consulting For",
+            "If diseaseType is not available",
+            "Age",
+            "Gender",
+            "Current location",
             // 'Message sent',
             // 'Time stamp',
-            'Acute/Chronic',
-            'Follow',
-            'Follow comment',
-            'Out of network',
-            'Patient profile',
-            'Enquiry status',
-            'App downloaded status',
-            'Consultation payment',
-            'Appointment fixed',
-            'Medicine Payment confirmation',
-            'Call attempted tracking',
-            'Comments',
-            'View Drafts',
-            'Video Call',
-            'Voice call',
-            'Recordings',
-            'Mark Done',
+            "Acute/Chronic",
+            "Follow",
+            "Follow comment",
+            "Out of network",
+            "Patient profile",
+            "Enquiry status",
+            "App downloaded status",
+            "Consultation payment",
+            "Appointment fixed",
+            "Medicine Payment confirmation",
+            "Call attempted tracking",
+            "Comments",
+            "View Drafts",
+            "Video Call",
+            "Voice call",
+            "Recordings",
+            "Mark Done",
           ],
           data: filteredPatients.map((item, index) => [
             index + 1,
-            item.patientEntry || '---',
-            item.newExisting || '',
-            item.medicalDetails.consultingFor || '',
-            item.medicalDetails.appointmentDate.split('T')[0] || '',
-            item.medicalDetails.timeSlot || '',
-            item.name || '',
-            item.phone || '',
-            item.whatsappNumber || '',
-            item.email || '',
-            item.medicalDetails.diseaseName || '',
-            item.medicalDetails.diseaseTypeAvailable ? 'Yes' : 'No',
-            item.age || '',
-            item.gender || '',
-            item.currentLocation || '',
+            item.patientEntry || "---",
+            item.newExisting || "",
+            item.medicalDetails.consultingFor || "",
+            item.medicalDetails.appointmentDate.split("T")[0] || "",
+            item.medicalDetails.timeSlot || "",
+            item.name || "",
+            item.phone || "",
+            item.whatsappNumber || "",
+            item.email || "",
+            item.medicalDetails.diseaseName || "",
+            item.medicalDetails.diseaseTypeAvailable ? "Yes" : "No",
+            item.age || "",
+            item.gender || "",
+            item.currentLocation || "",
             // item.medicalDetails.messageSent.message || '---',
             // item.medicalDetails.messageSent.timeStamp || '---',
-            item.medicalDetails.diseaseType.name || '',
-            item.medicalDetails.follow || '',
-            item.medicalDetails.followComment || '',
-            '--',
-            item.patientProfile || 'No',
-            item.medicalDetails.enquiryStatus || '',
-            item.appDownload != '0' ? 'Yes' : 'No',
-            item.appointmentFixed || '',
-            item.appointmentFixed || '',
-            item.medicinePaymentConfirmation ? 'Confirmed' : 'Pending',
+            item.medicalDetails.diseaseType.name || "",
+            item.medicalDetails.follow || "",
+            item.medicalDetails.followComment || "",
+            "--",
+            item.patientProfile || "No",
+            item.medicalDetails.enquiryStatus || "",
+            item.appDownload != "0" ? "Yes" : "No",
+            item.appointmentFixed || "",
+            item.appointmentFixed || "",
+            item.medicinePaymentConfirmation ? "Confirmed" : "Pending",
             // item.callStatus || '',
             // item.conversionStatus || '',
-            item.medicalDetails.callCount || '0',
+            item.medicalDetails.callCount || "0",
             // item.comments.text || '--',
-            <CommentCell 
-              patient={item} 
+            <CommentCell
+              patient={item}
               API_URL={API_URL}
               onCommentAdded={(updatedPatient) => {
-                setPatients(prevPatients => 
-                  prevPatients.map(p => p._id === updatedPatient._id ? updatedPatient : p)
+                setPatients((prevPatients) =>
+                  prevPatients.map((p) =>
+                    p._id === updatedPatient._id ? updatedPatient : p
+                  )
                 );
-              }} 
+              }}
             />,
             <div className="action-buttons">
-              {renderButton('View draft', () => handleAction('ViewDraft', item))}
-            </div>,
-            <div className="action-buttons">
-                {renderButton('Make video call', () => handleAction('VideoCall', item))}
-            </div>,
-            <div className="action-buttons">
-                {renderButton('Make Voice Call', () => handleAction('VoiceCall', item))}
-            </div>,
-            <div className="action-buttons">
-                {renderButton('Recordings', () => handleAction('Recordings', item))}
-            </div>,
-            <div className="action-buttons">
-                {renderButton('Mark Done', () => handleAction('MarkDone', item))}
-            </div>,
-          ]),
-        };
-      case 'Follow up-P':
-        return {
-          head: [
-            'S.no',
-            'Who is the Consultation for',
-            'Patient Type',
-            'Name',
-            'Phone Number',
-            'Email',
-            'Consulting For',
-            'If diseaseType is not available',
-            'Age',
-            'Gender',
-            'Acute/Chronic',
-            'Follow',
-            'Follow comment',
-            'Medicine Payment confirmation',
-            // 'Conversion Status',
-            'Call attempted tracking',
-            'Comments',
-            'View Drafts',
-            'Attach prescription',
-            'Voice call',
-            'Recordings',
-            'Mark Done',
-          ],
-          data: filteredPatients.map((item, index) => [
-            index + 1,
-            item.medicalDetails.consultingFor || '',
-            item.name || '',
-            item.newExisting || '',
-            item.phone || '',
-            item.email || '',
-            item.medicalDetails.consultingFor || '',
-            item.medicalDetails.consultingFor || '',
-            // item.diseaseTypeAvailable ? 'Yes' ? <FaCheckCircle /> : <FaTimesCircle /> : 'No',
-            item.age || '',
-            item.gender || '',
-            item.medicalDetails.diseaseType.name || '',
-            item.follow || '',
-            item.medicalDetails.followComment || '',
-            item.medicinePaymentConfirmation ? 'Confirmed' : 'Pending',
-            // item.conversionStatus || '',
-            item.medicalDetails.callCount || '',
-            // '--',// item.comments.text || '--',
-            <CommentCell 
-              patient={item} 
-              API_URL={API_URL}
-              onCommentAdded={(updatedPatient) => {
-                setPatients(prevPatients => 
-                  prevPatients.map(p => p._id === updatedPatient._id ? updatedPatient : p)
-                );
-              }} 
-            />,
-            
-            <div className="action-buttons">
-              {renderButton('View draft', () => handleAction('ViewDraft', item))}
-            </div>,
-            <div className="action-buttons">
-              {item.medicalDetails?.prescriptionCreated ? (
-                <button className="btn btn-success" disabled>Prescription written</button>
-              ) : (
-                renderButton('Attach prescription', () => handleAction('AttachPrescription', item))
+              {renderButton("View draft", () =>
+                handleAction("ViewDraft", item)
               )}
             </div>,
             <div className="action-buttons">
-                {renderButton('Make Voice Call', () => handleAction('VoiceCall', item))}
+              {renderButton("Make video call", () =>
+                handleAction("VideoCall", item)
+              )}
             </div>,
             <div className="action-buttons">
-                {renderButton('Recordings', () => handleAction('Recordings', item))}
+              {renderButton("Make Voice Call", () =>
+                handleAction("VoiceCall", item)
+              )}
             </div>,
             <div className="action-buttons">
-                {renderButton('Mark Done', () => handleAction('MarkDone', item))}
+              {renderButton("Recordings", () =>
+                handleAction("Recordings", item)
+              )}
+            </div>,
+            <div className="action-buttons">
+              {renderButton("Mark Done", () => handleAction("MarkDone", item))}
             </div>,
           ]),
         };
-      case 'Follow up-MP':
+      case "Follow up-P":
         return {
           head: [
-            'S.no',
-            'Who is the Consultation for',
-            'Patient Type',
-            'Name',
-            'Phone Number',
-            'Email',
-            'Consulting For',
-            'If diseaseType is not available',
-            'Age',
-            'Gender',
-            'Acute/Chronic',
-            'Follow',
-            'Follow comment',
-            'Medicine Payment confirmation',
-            'Call attempted tracking',
-            'Comments',
-            'View Drafts',
-            'View prescription',
-            'Prepare Medicine',
-            'Voice call',
-            'Recordings',
-            'Mark Done',
+            "S.no",
+            "Who is the Consultation for",
+            "Patient Type",
+            "Name",
+            "Phone Number",
+            "Email",
+            "Consulting For",
+            "If diseaseType is not available",
+            "Age",
+            "Gender",
+            "Acute/Chronic",
+            "Follow",
+            "Follow comment",
+            "Medicine Payment confirmation",
+            // 'Conversion Status',
+            "Call attempted tracking",
+            "Comments",
+            "View Drafts",
+            "Attach prescription",
+            "Voice call",
+            "Recordings",
+            "Mark Done",
           ],
           data: filteredPatients.map((item, index) => [
             index + 1,
-            item.medicalDetails.consultingFor || '',
-            item.name || '',
-            item.newExisting || '',
-            item.phone || '',
-            item.email || '',
-            item.medicalDetails.consultingFor || '',
-            item.medicalDetails.diseaseTypeAvailable ? 'Yes' : 'No',
-            item.age || '',
-            item.gender || '',
-            item.medicalDetails.diseaseType.name || '',
-            item.medicalDetails.follow || '',
-            item.medicalDetails.followComment || '',
-            item.medicinePaymentConfirmation ? 'Confirmed' : 'Pending',
-            item.medicalDetails.callCount || '',
-            // item.medicalDetails.comments.text || '',
-            <CommentCell 
-              patient={item} 
+            item.medicalDetails.consultingFor || "",
+            item.name || "",
+            item.newExisting || "",
+            item.phone || "",
+            item.email || "",
+            item.medicalDetails.consultingFor || "",
+            item.medicalDetails.consultingFor || "",
+            // item.diseaseTypeAvailable ? 'Yes' ? <FaCheckCircle /> : <FaTimesCircle /> : 'No',
+            item.age || "",
+            item.gender || "",
+            item.medicalDetails.diseaseType.name || "",
+            item.follow || "",
+            item.medicalDetails.followComment || "",
+            item.medicinePaymentConfirmation ? "Confirmed" : "Pending",
+            // item.conversionStatus || '',
+            item.medicalDetails.callCount || "",
+            // '--',// item.comments.text || '--',
+            <CommentCell
+              patient={item}
               API_URL={API_URL}
               onCommentAdded={(updatedPatient) => {
-                setPatients(prevPatients => 
-                  prevPatients.map(p => p._id === updatedPatient._id ? updatedPatient : p)
+                setPatients((prevPatients) =>
+                  prevPatients.map((p) =>
+                    p._id === updatedPatient._id ? updatedPatient : p
+                  )
                 );
-              }} 
+              }}
+            />,
+
+            <div className="action-buttons">
+              {renderButton("View draft", () =>
+                handleAction("ViewDraft", item)
+              )}
+            </div>,
+            <div className="action-buttons">
+              {item.medicalDetails?.prescriptionCreated ? (
+                <button className="btn btn-success" disabled>
+                  Prescription written
+                </button>
+              ) : (
+                renderButton("Attach prescription", () =>
+                  handleAction("AttachPrescription", item)
+                )
+              )}
+            </div>,
+            <div className="action-buttons">
+              {renderButton("Make Voice Call", () =>
+                handleAction("VoiceCall", item)
+              )}
+            </div>,
+            <div className="action-buttons">
+              {renderButton("Recordings", () =>
+                handleAction("Recordings", item)
+              )}
+            </div>,
+            <div className="action-buttons">
+              {renderButton("Mark Done", () => handleAction("MarkDone", item))}
+            </div>,
+          ]),
+        };
+      case "Follow up-MP":
+        return {
+          head: [
+            "S.no",
+            "Who is the Consultation for",
+            "Patient Type",
+            "Name",
+            "Phone Number",
+            "Email",
+            "Consulting For",
+            "If diseaseType is not available",
+            "Age",
+            "Gender",
+            "Acute/Chronic",
+            "Follow",
+            "Follow comment",
+            "Medicine Payment confirmation",
+            "Call attempted tracking",
+            "Comments",
+            "View Drafts",
+            "View prescription",
+            "Prepare Medicine",
+            "Voice call",
+            "Recordings",
+            "Mark Done",
+          ],
+          data: filteredPatients.map((item, index) => [
+            index + 1,
+            item.medicalDetails.consultingFor || "",
+            item.name || "",
+            item.newExisting || "",
+            item.phone || "",
+            item.email || "",
+            item.medicalDetails.consultingFor || "",
+            item.medicalDetails.diseaseTypeAvailable ? "Yes" : "No",
+            item.age || "",
+            item.gender || "",
+            item.medicalDetails.diseaseType.name || "",
+            item.medicalDetails.follow || "",
+            item.medicalDetails.followComment || "",
+            item.medicinePaymentConfirmation ? "Confirmed" : "Pending",
+            item.medicalDetails.callCount || "",
+            // item.medicalDetails.comments.text || '',
+            <CommentCell
+              patient={item}
+              API_URL={API_URL}
+              onCommentAdded={(updatedPatient) => {
+                setPatients((prevPatients) =>
+                  prevPatients.map((p) =>
+                    p._id === updatedPatient._id ? updatedPatient : p
+                  )
+                );
+              }}
             />,
             <div className="action-buttons">
-              {renderButton('View draft', () => handleAction('ViewDraft', item))}
+              {renderButton("View draft", () =>
+                handleAction("ViewDraft", item)
+              )}
             </div>,
             <div className="action-buttons">
-                {renderButton('View prescription', () => handleAction('ViewPrescription', item))}
+              {renderButton("View prescription", () =>
+                handleAction("ViewPrescription", item)
+              )}
             </div>,
             <div className="action-buttons">
-                {renderButton('Prepare Medicine', () => handleAction('PrepareMedicine', item))}
+              {renderButton("Prepare Medicine", () =>
+                handleAction("PrepareMedicine", item)
+              )}
             </div>,
             <div className="action-buttons">
-                {renderButton('Make Voice Call', () => handleAction('VoiceCall', item))}
+              {renderButton("Make Voice Call", () =>
+                handleAction("VoiceCall", item)
+              )}
             </div>,
             <div className="action-buttons">
-                {renderButton('Recordings', () => handleAction('Recordings', item))}
+              {renderButton("Recordings", () =>
+                handleAction("Recordings", item)
+              )}
             </div>,
             <div className="action-buttons">
-                {renderButton('Mark Done', () => handleAction('MarkDone', item))} 
+              {renderButton("Mark Done", () => handleAction("MarkDone", item))}
             </div>,
           ]),
         };
@@ -970,185 +1051,209 @@ const fetchDoctorFollowTypes = async () => {
   };
       case 'View All':
         return {
-        head: [
-          'S.no',
-          'Omni channel',
-          'Patient Type',
-          'Who is the Consultation for',
-          'Name',
-          'Phone Number',
-          'Whatsapp Number',
-          'Email',
-          'Consulting For',
-          'If diseaseType is not available',
-          'Age',
-          'Gender',
-          'Current location',
-          // 'Message sent',
-          // 'Time stamp',
-          'Acute/Chronic',
-          'Follow',
-          'Follow comment',
-          'Out of network',
-          'Patient profile',
-          'Enquiry status',
-          'App downloaded status',
-          'Consultation payment',
-          'Appointment fixed',
-          'Medicine Payment confirmation',
-          'Call attempted tracking',
-          'Comments',
-          'View Allocations',
-          'View Drafts',
-          'Video Call',
-          'Voice call',
-          'Recordings',
-          'Mark Done',
-        ],
-        data: filteredPatients.map((item, index) => [
-          index + 1,
-          item.patientEntry || '---',
-          item.newExisting || '',
-          item.medicalDetails.consultingFor || '',
-          item.name || '',
-          item.phone || '',
-          item.whatsappNumber || '',
-          item.email || '',
-          item.medicalDetails.diseaseName || '',
-          item.medicalDetails.diseaseTypeAvailable ? 'Yes' : 'No',
-          item.age || '',
-          item.gender || '',
-          item.currentLocation || '',
-          // item.medicalDetails.messageSent.message || '---',
-          // item.medicalDetails.messageSent.timeStamp || '---',
-          item.medicalDetails.diseaseType.name || '',
-          item.medicalDetails.follow || '',
-          item.medicalDetails.followComment || '',
-          '--',
-          item.patientProfile || 'No',
-          item.medicalDetails.enquiryStatus || '',
-          item.appDownload != '0' ? 'Yes' : 'No',
-          item.appointmentFixed || '',
-          item.appointmentFixed || '',
-          item.medicalDetails.medicalPayment ? 'Confirmed' : 'Pending',
-          // item.callStatus || '',
-          // item.conversionStatus || '',
-          item.medicalDetails.callCount || '0',
-          // item.medicalDetails.comments.text || '--',
-          <CommentCell 
-              patient={item} 
-              API_URL={API_URL}
-              onCommentAdded={(updatedPatient) => {
-                setPatients(prevPatients => 
-                  prevPatients.map(p => p._id === updatedPatient._id ? updatedPatient : p)
-                );
-              }} 
-            />,
-          doctorDropdown(item),
-          <div className="action-buttons">
-            {renderButton('View draft', () => handleAction('ViewDraft', item))}
-          </div>,
-          <div className="action-buttons">
-              {renderButton('Make video call', () => handleAction('VideoCall', item))}
-          </div>,
-          <div className="action-buttons">
-              {renderButton('Make Voice Call', () => handleAction('VoiceCall', item))}
-          </div>,
-          <div className="action-buttons">
-              {renderButton('Recordings', () => handleAction('Recordings', item))}
-          </div>,
-          <div className="action-buttons">
-              {renderButton('Mark Done', () => handleAction('MarkDone', item))}
-          </div>,
-        ]),
-      };
-      case 'Special Allocation':
-        return {
           head: [
-            'S.no',
-            'Omni channel',
-            'Patient Type',
-            'Who is the Consultation for',
-            'Name',
-            'Phone Number',
-            'Whatsapp Number',
-            'Email',
-            'Consulting For',
-            'If diseaseType is not available',
-            'Age',
-            'Gender',
-            'Current location',
+            "S.no",
+            "Omni channel",
+            "Patient Type",
+            "Who is the Consultation for",
+            "Name",
+            "Phone Number",
+            "Whatsapp Number",
+            "Email",
+            "Consulting For",
+            "If diseaseType is not available",
+            "Age",
+            "Gender",
+            "Current location",
             // 'Message sent',
             // 'Time stamp',
-            'Acute/Chronic',
-            'Follow',
-            'Follow comment',
-            'Out of network',
-            'Patient profile',
-            'Enquiry status',
-            'App downloaded status',
-            'Consultation payment',
-            'Appointment fixed',
-            'Medicine Payment confirmation',
-            'Call attempted tracking',
-            'Comments',
-            'View Drafts',
-            'Video Call',
-            'Voice call',
-            'Recordings',
-            'Mark Done',
+            "Acute/Chronic",
+            "Follow",
+            "Follow comment",
+            "Out of network",
+            "Patient profile",
+            "Enquiry status",
+            "App downloaded status",
+            "Consultation payment",
+            "Appointment fixed",
+            "Medicine Payment confirmation",
+            "Call attempted tracking",
+            "Comments",
+            "View Allocations",
+            "View Drafts",
+            "Video Call",
+            "Voice call",
+            "Recordings",
+            "Mark Done",
           ],
-          data: specialAllocationPatients.length > 0 ? 
-            specialAllocationPatients.map((item, index) => [
-              index + 1,
-              item.patientEntry || '---',
-              item.newExisting || '',
-              item.medicalDetails.consultingFor || '',
-              item.name || '',
-              item.phone || '',
-              item.whatsappNumber || '',
-              item.email || '',
-              item.medicalDetails.diseaseName || '',
-              item.medicalDetails.diseaseTypeAvailable ? 'Yes' : 'No',
-              item.age || '',
-              item.gender || '',
-              item.currentLocation || '',
-              // item.medicalDetails.messageSent?.message || '---',
-              // item.medicalDetails.messageSent?.timeStamp || '---',
-              item.medicalDetails.diseaseType?.name || '',
-              item.medicalDetails.follow || '',
-              item.medicalDetails.followComment || '',
-              '--',
-              item.patientProfile || 'No',
-              item.medicalDetails.enquiryStatus || '',
-              item.appDownload != '0' ? 'Yes' : 'No',
-              item.appointmentFixed || '',
-              item.appointmentFixed || '',
-              item.medicalDetails.medicalPayment ? 'Confirmed' : 'Pending',
-              item.medicalDetails.callCount || '0',
-              item.medicalDetails.comments?.text || '--',
-              <div className="action-buttons">
-                {renderButton('View draft', () => handleAction('ViewDraft', item))}
-              </div>,
-              <div className="action-buttons">
-                {renderButton('Make video call', () => handleAction('VideoCall', item))}
-              </div>,
-              <div className="action-buttons">
-                {renderButton('Make Voice Call', () => handleAction('VoiceCall', item))}
-              </div>,
-              <div className="action-buttons">
-                {renderButton('Recordings', () => handleAction('Recordings', item))}
-              </div>,
-              <div className="action-buttons">
-                {renderButton('Mark Done', () => handleAction('MarkDone', item))}
-              </div>,
-            ]) : [[
-              <td colSpan="31" className="text-center py-4">
-                No special allocations found
-              </td>
-            ]]
+          data: filteredPatients.map((item, index) => [
+            index + 1,
+            item.patientEntry || "---",
+            item.newExisting || "",
+            item.medicalDetails.consultingFor || "",
+            item.name || "",
+            item.phone || "",
+            item.whatsappNumber || "",
+            item.email || "",
+            item.medicalDetails.diseaseName || "",
+            item.medicalDetails.diseaseTypeAvailable ? "Yes" : "No",
+            item.age || "",
+            item.gender || "",
+            item.currentLocation || "",
+            // item.medicalDetails.messageSent.message || '---',
+            // item.medicalDetails.messageSent.timeStamp || '---',
+            item.medicalDetails.diseaseType.name || "",
+            item.medicalDetails.follow || "",
+            item.medicalDetails.followComment || "",
+            "--",
+            item.patientProfile || "No",
+            item.medicalDetails.enquiryStatus || "",
+            item.appDownload != "0" ? "Yes" : "No",
+            item.appointmentFixed || "",
+            item.appointmentFixed || "",
+            item.medicalDetails.medicalPayment ? "Confirmed" : "Pending",
+            // item.callStatus || '',
+            // item.conversionStatus || '',
+            item.medicalDetails.callCount || "0",
+            // item.medicalDetails.comments.text || '--',
+            <CommentCell
+              patient={item}
+              API_URL={API_URL}
+              onCommentAdded={(updatedPatient) => {
+                setPatients((prevPatients) =>
+                  prevPatients.map((p) =>
+                    p._id === updatedPatient._id ? updatedPatient : p
+                  )
+                );
+              }}
+            />,
+            doctorDropdown(item),
+            <div className="action-buttons">
+              {renderButton("View draft", () =>
+                handleAction("ViewDraft", item)
+              )}
+            </div>,
+            <div className="action-buttons">
+              {renderButton("Make video call", () =>
+                handleAction("VideoCall", item)
+              )}
+            </div>,
+            <div className="action-buttons">
+              {renderButton("Make Voice Call", () =>
+                handleAction("VoiceCall", item)
+              )}
+            </div>,
+            <div className="action-buttons">
+              {renderButton("Recordings", () =>
+                handleAction("Recordings", item)
+              )}
+            </div>,
+            <div className="action-buttons">
+              {renderButton("Mark Done", () => handleAction("MarkDone", item))}
+            </div>,
+          ]),
         };
-        default:
+      case "Special Allocation":
+        return {
+          head: [
+            "S.no",
+            "Omni channel",
+            "Patient Type",
+            "Who is the Consultation for",
+            "Name",
+            "Phone Number",
+            "Whatsapp Number",
+            "Email",
+            "Consulting For",
+            "If diseaseType is not available",
+            "Age",
+            "Gender",
+            "Current location",
+            // 'Message sent',
+            // 'Time stamp',
+            "Acute/Chronic",
+            "Follow",
+            "Follow comment",
+            "Out of network",
+            "Patient profile",
+            "Enquiry status",
+            "App downloaded status",
+            "Consultation payment",
+            "Appointment fixed",
+            "Medicine Payment confirmation",
+            "Call attempted tracking",
+            "Comments",
+            "View Drafts",
+            "Video Call",
+            "Voice call",
+            "Recordings",
+            "Mark Done",
+          ],
+          data:
+            specialAllocationPatients.length > 0
+              ? specialAllocationPatients.map((item, index) => [
+                  index + 1,
+                  item.patientEntry || "---",
+                  item.newExisting || "",
+                  item.medicalDetails.consultingFor || "",
+                  item.name || "",
+                  item.phone || "",
+                  item.whatsappNumber || "",
+                  item.email || "",
+                  item.medicalDetails.diseaseName || "",
+                  item.medicalDetails.diseaseTypeAvailable ? "Yes" : "No",
+                  item.age || "",
+                  item.gender || "",
+                  item.currentLocation || "",
+                  // item.medicalDetails.messageSent?.message || '---',
+                  // item.medicalDetails.messageSent?.timeStamp || '---',
+                  item.medicalDetails.diseaseType?.name || "",
+                  item.medicalDetails.follow || "",
+                  item.medicalDetails.followComment || "",
+                  "--",
+                  item.patientProfile || "No",
+                  item.medicalDetails.enquiryStatus || "",
+                  item.appDownload != "0" ? "Yes" : "No",
+                  item.appointmentFixed || "",
+                  item.appointmentFixed || "",
+                  item.medicalDetails.medicalPayment ? "Confirmed" : "Pending",
+                  item.medicalDetails.callCount || "0",
+                  item.medicalDetails.comments?.text || "--",
+                  <div className="action-buttons">
+                    {renderButton("View draft", () =>
+                      handleAction("ViewDraft", item)
+                    )}
+                  </div>,
+                  <div className="action-buttons">
+                    {renderButton("Make video call", () =>
+                      handleAction("VideoCall", item)
+                    )}
+                  </div>,
+                  <div className="action-buttons">
+                    {renderButton("Make Voice Call", () =>
+                      handleAction("VoiceCall", item)
+                    )}
+                  </div>,
+                  <div className="action-buttons">
+                    {renderButton("Recordings", () =>
+                      handleAction("Recordings", item)
+                    )}
+                  </div>,
+                  <div className="action-buttons">
+                    {renderButton("Mark Done", () =>
+                      handleAction("MarkDone", item)
+                    )}
+                  </div>,
+                ])
+              : [
+                  [
+                    <td colSpan="31" className="text-center py-4">
+                      No special allocations found
+                    </td>,
+                  ],
+                ],
+        };
+      default:
         return { head: [], data: [] };
     }
   };
@@ -1159,52 +1264,51 @@ const fetchDoctorFollowTypes = async () => {
       disabled={disabled}
       className={`inline-flex items-center px-2.5 py-1.5 border text-xs font-medium rounded-[5px] 
                   transition-all duration-300 ${
-                    disabled 
-                      ? 'bg-gray-300 text-gray-500 cursor-not-allowed' 
-                      : 'text-[#f5f5f5] bg-[#1a237e] hover:bg-[#534bae] border-transparent focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#534bae]'
+                    disabled
+                      ? "bg-gray-300 text-gray-500 cursor-not-allowed"
+                      : "text-[#f5f5f5] bg-[#1a237e] hover:bg-[#534bae] border-transparent focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#534bae]"
                   }`}
     >
       {text}
     </button>
   );
 
-  
-
   const handleAction = async (action, item) => {
-    const isMshipTable = selectedFollowType === 'Follow up-Mship';
-    
-    if (isMshipTable && action === 'VoiceCall' && !isOneHourPassed(item.followUpTimestamp)) {
+    const isMshipTable = selectedFollowType === "Follow up-Mship";
+
+    if (
+      isMshipTable &&
+      action === "VoiceCall" &&
+      !isOneHourPassed(item.followUpTimestamp)
+    ) {
       const remainingTime = getRemainingTime(item.followUpTimestamp);
       alert(`Voice call will be available in ${remainingTime}`);
       return;
     }
     switch (action) {
-      case 'ViewDraft':
+      case "ViewDraft":
         // alert(`Viewing draft for ${item.name}`);
         setSelectedPatient(item);
         setIsDraftModalOpen(true);
         break;
-      case 'VideoCall':
+      case "VideoCall":
         alert(`Starting video call with ${item.name}`);
         handleJoinRoom(item);
         break;
-      case 'VoiceCall':
+      case "VoiceCall":
         alert(`Calling ${item.phone}`);
         break;
-      case 'Recordings':
+      case "Recordings":
         alert(`Viewing recordings for ${item.name}`);
         break;
-      case 'AttachPrescription':
-        // alert(`Attaching prescription for ${item.name}`);
-        const d = localStorage.getItem('accessToken');
-        console.log("d", d);
-        navigate('/prescription-writing', { 
-          state: { 
-            patientData: item
-          }
+      case "AttachPrescription":
+        navigate("/prescription-writing", {
+          state: {
+            patientData: item,
+          },
         });
         break;
-      case 'ViewPrescription':
+      case "ViewPrescription":
         const appointmentId = item.medicalDetails._id;
         setModalContent(
           <PrescriptionViewModal
@@ -1215,18 +1319,20 @@ const fetchDoctorFollowTypes = async () => {
         );
         setShowModal(true);
         break;
-      case 'PrepareMedicine':
+      case "PrepareMedicine":
         const appointment_Id = item.medicalDetails._id;
         navigate(`/prepare-medicine/${appointment_Id}`);
         break;
-      case 'MarkDone':
+      case "MarkDone":
         try {
-          const response = await axios.put(`${API_URL}/api/patient/updateFollowUp/${item.medicalDetails._id}`);
-          alert('Follow-up status updated for ' + item.name);
+          const response = await axios.put(
+            `${API_URL}/api/patient/updateFollowUp/${item.medicalDetails._id}`
+          );
+          alert("Follow-up status updated for " + item.name);
           fetchPatients();
         } catch (error) {
-          console.error('Error updating follow-up status:', error);
-          alert('Failed to update follow-up status');
+          console.error("Error updating follow-up status:", error);
+          alert("Failed to update follow-up status");
         }
         break;
       default:
@@ -1271,8 +1377,10 @@ const fetchDoctorFollowTypes = async () => {
         </div>
 
         <select value={selectedFollowType} onChange={handleFollowChange}>
-          {followTypes.map(type => (
-            <option key={type} value={type}>{type}</option>
+          {followTypes.map((type) => (
+            <option key={type} value={type}>
+              {type}
+            </option>
           ))}
         </select>
       </div>
@@ -1294,10 +1402,7 @@ const fetchDoctorFollowTypes = async () => {
           <tbody>
             {tableConfig.data.length > 0 ? (
               tableConfig.data.map((row, rowIndex) => (
-                <tr 
-                  key={rowIndex} 
-                  className="border-b hover:bg-blue-50"
-                >
+                <tr key={rowIndex} className="border-b hover:bg-blue-50">
                   {row.map((cell, cellIndex) => (
                     <td
                       key={cellIndex}
@@ -1321,7 +1426,7 @@ const fetchDoctorFollowTypes = async () => {
           </tbody>
         </table>
       </div>
-      <DraftViewModal 
+      <DraftViewModal
         isOpen={isDraftModalOpen}
         onClose={() => setIsDraftModalOpen(false)}
         patientData={selectedPatient}

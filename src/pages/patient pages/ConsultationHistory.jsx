@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import Layout from "/src/components/patient components/Layout.jsx";
-import { FaDownload, FaEye, FaCreditCard } from "react-icons/fa";
+import { FaDownload, FaEye, FaCreditCard, FaFileMedical } from "react-icons/fa";
 import axios from "axios";
 import moment from "moment";
 import config from "../../config";
@@ -20,11 +20,14 @@ const ConsultationHistory = () => {
     const fetchAppointments = async () => {
       try {
         setLoading(true);
-        const response = await axios.get(`${API_URL}/api/patient/getUserAppointments?filter=${filter}`, {
-          headers: {
-            Authorization: `Bearer ${localStorage.getItem("token")}`,
-          },
-        });
+        const response = await axios.get(
+          `${API_URL}/api/patient/getUserAppointments?filter=${filter}`,
+          {
+            headers: {
+              Authorization: `Bearer ${localStorage.getItem("token")}`,
+            },
+          }
+        );
         // setConsultations(response.data);
         setConsultations(Array.isArray(response.data) ? response.data : []);
         setLoading(false);
@@ -59,8 +62,8 @@ const ConsultationHistory = () => {
   const paginate = (pageNumber) => setCurrentPage(pageNumber);
 
   // Handle viewing prescription
-  const handleViewPrescription = (appointmentId) => {
-    navigate(`/prescription/${appointmentId}`);
+  const handleViewPrescription = (prescriptionID) => {
+    navigate(`/view-prescription/${prescriptionID}`);
   };
 
   // Handle payment
@@ -72,9 +75,10 @@ const ConsultationHistory = () => {
   const exportToCSV = () => {
     // Create CSV content
     let csvContent = "data:text/csv;charset=utf-8,";
-    csvContent += "Consultation No,Date,Time,Consulting Doctor,Consulting For,Medical Payment,Prescription Status\n";
-    
-    consultations.forEach(consultation => {
+    csvContent +=
+      "Consultation No,Date,Time,Consulting Doctor,Consulting For,Medical Payment,Prescription Status\n";
+
+    consultations.forEach((consultation) => {
       const row = [
         consultation._id,
         moment(consultation.appointmentDate).format("YYYY-MM-DD"),
@@ -82,7 +86,7 @@ const ConsultationHistory = () => {
         consultation.doctor?.name || "N/A",
         consultation.consultingFor || "N/A",
         consultation.medicalPayment || "No",
-        consultation.prescriptionCreated ? "Created" : "Not Created"
+        consultation.prescriptionCreated ? "Created" : "Not Created",
       ];
       csvContent += row.join(",") + "\n";
     });
@@ -91,7 +95,10 @@ const ConsultationHistory = () => {
     const encodedUri = encodeURI(csvContent);
     const link = document.createElement("a");
     link.setAttribute("href", encodedUri);
-    link.setAttribute("download", `consultation_history_${moment().format("YYYY-MM-DD")}.csv`);
+    link.setAttribute(
+      "download",
+      `consultation_history_${moment().format("YYYY-MM-DD")}.csv`
+    );
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
@@ -101,8 +108,10 @@ const ConsultationHistory = () => {
     <Layout>
       <div className="p-7">
         <div className="flex justify-between mb-6">
-          <h1 className="text-2xl font-bold text-gray-800">Consultation History</h1>
-          <button 
+          <h1 className="text-2xl font-bold text-gray-800">
+            Consultation History
+          </h1>
+          <button
             onClick={exportToCSV}
             className="flex items-center space-x-2 text-white bg-blue-500 hover:bg-blue-600 py-2 px-4 rounded shadow transition duration-300"
           >
@@ -127,7 +136,7 @@ const ConsultationHistory = () => {
               <option value="thisMonth">This Month</option>
             </select>
           </div>
-          
+
           <select
             value={entriesPerPage}
             onChange={handleEntriesPerPageChange}
@@ -155,48 +164,75 @@ const ConsultationHistory = () => {
               <table className="w-full table-auto border-collapse shadow-sm rounded-lg overflow-hidden">
                 <thead>
                   <tr className="bg-gray-100 text-left">
-                    <th className="px-4 py-3 text-gray-700 font-medium">Consultation No</th>
-                    <th className="px-4 py-3 text-gray-700 font-medium">Date</th>
-                    <th className="px-4 py-3 text-gray-700 font-medium">Time</th>
-                    <th className="px-4 py-3 text-gray-700 font-medium">Consulting Doctor</th>
-                    <th className="px-4 py-3 text-gray-700 font-medium">Consulting For</th>
-                    <th className="px-4 py-3 text-gray-700 font-medium">Medical Payment</th>
-                    <th className="px-4 py-3 text-gray-700 font-medium">Actions</th>
+                    <th className="px-4 py-3 text-gray-700 font-medium">
+                      Consultation No
+                    </th>
+                    <th className="px-4 py-3 text-gray-700 font-medium">
+                      Date
+                    </th>
+                    <th className="px-4 py-3 text-gray-700 font-medium">
+                      Time
+                    </th>
+                    <th className="px-4 py-3 text-gray-700 font-medium">
+                      Consulting Doctor
+                    </th>
+                    <th className="px-4 py-3 text-gray-700 font-medium">
+                      Consulting For
+                    </th>
+                    <th className="px-4 py-3 text-gray-700 font-medium">
+                      Medical Payment
+                    </th>
+                    <th className="px-4 py-3 text-gray-700 font-medium">
+                      Actions
+                    </th>
                   </tr>
                 </thead>
                 <tbody>
                   {currentConsultations.length > 0 ? (
                     currentConsultations.map((consultation) => (
-                      <tr key={consultation._id} className="border-b hover:bg-gray-50 transition-colors">
-                        <td className="px-4 py-4">{consultation._id.substring(0, 8)}...</td>
-                        <td className="px-4 py-4">{moment(consultation.appointmentDate).format("YYYY-MM-DD")}</td>
-                        <td className="px-4 py-4">{consultation.timeSlot}</td>
-                        <td className="px-4 py-4">{consultation.doctor?.name || "N/A"}</td>
-                        <td className="px-4 py-4">{consultation.consultingFor || "N/A"}</td>
+                      <tr
+                        key={consultation._id}
+                        className="border-b hover:bg-gray-50 transition-colors"
+                      >
                         <td className="px-4 py-4">
-                          <span 
+                          {consultation._id.substring(0, 8)}...
+                        </td>
+                        <td className="px-4 py-4">
+                          {moment(consultation.appointmentDate).format(
+                            "YYYY-MM-DD"
+                          )}
+                        </td>
+                        <td className="px-4 py-4">{consultation.timeSlot}</td>
+                        <td className="px-4 py-4">
+                          {consultation.doctor?.name || "N/A"}
+                        </td>
+                        <td className="px-4 py-4">
+                          {consultation.consultingFor || "N/A"}
+                        </td>
+                        <td className="px-4 py-4">
+                          <span
                             className={`px-2 py-1 rounded-full text-xs ${
-                              consultation.medicalPayment === "Yes" 
-                                ? "bg-green-100 text-green-800" 
+                              consultation.medicalPayment === "Yes"
+                                ? "bg-green-100 text-green-800"
                                 : "bg-red-100 text-red-800"
                             }`}
                           >
-                            {consultation.medicalPayment === "Yes" ? "Paid" : "Unpaid"}
+                            {consultation.medicalPayment === "Yes"
+                              ? "Paid"
+                              : "Unpaid"}
                           </span>
                         </td>
                         <td className="px-4 py-4 space-x-2 flex">
-                          {consultation.prescriptionCreated ? (
+                          {!consultation.prescriptionCreated ? (
                             <button
-                              onClick={() => handleViewPrescription(consultation._id)}
-                              className="text-white bg-green-500 hover:bg-green-600 py-2 px-3 rounded flex items-center space-x-1 transition duration-300"
-                              title="View Prescription"
+                              className="bg-gray-400 text-white py-2 px-3 rounded flex items-center space-x-1 cursor-not-allowed opacity-70"
+                              title="Prescription is being processed"
+                              disabled
                             >
-                              <FaEye size={14} />
-                              <span>View</span>
+                              <FaFileMedical size={14} />
+                              <span>Processing</span>
                             </button>
-                          ) : null}
-                          
-                          {consultation.medicalPayment !== "Yes" && (
+                          ) : consultation.medicalPayment !== "Yes" ? (
                             <button
                               onClick={() => handlePayment(consultation._id)}
                               className="text-white bg-blue-500 hover:bg-blue-600 py-2 px-3 rounded flex items-center space-x-1 transition duration-300"
@@ -205,13 +241,29 @@ const ConsultationHistory = () => {
                               <FaCreditCard size={14} />
                               <span>Pay</span>
                             </button>
+                          ) : (
+                            <button
+                              onClick={() =>
+                                handleViewPrescription(
+                                  consultation.prescriptionID
+                                )
+                              }
+                              className="text-white bg-green-500 hover:bg-green-600 py-2 px-3 rounded flex items-center space-x-1 transition duration-300"
+                              title="View Prescription"
+                            >
+                              <FaEye size={14} />
+                              <span>View</span>
+                            </button>
                           )}
                         </td>
                       </tr>
                     ))
                   ) : (
                     <tr>
-                      <td colSpan="7" className="text-center text-gray-500 py-6">
+                      <td
+                        colSpan="7"
+                        className="text-center text-gray-500 py-6"
+                      >
                         No Consultations Found
                       </td>
                     </tr>
@@ -240,7 +292,7 @@ const ConsultationHistory = () => {
                   >
                     Prev
                   </button>
-                  
+
                   {Array.from({ length: totalPages }, (_, i) => (
                     <button
                       key={i + 1}
@@ -254,9 +306,11 @@ const ConsultationHistory = () => {
                       {i + 1}
                     </button>
                   ))}
-                  
+
                   <button
-                    onClick={() => currentPage < totalPages && paginate(currentPage + 1)}
+                    onClick={() =>
+                      currentPage < totalPages && paginate(currentPage + 1)
+                    }
                     disabled={currentPage === totalPages}
                     className={`px-3 py-1 border rounded ${
                       currentPage === totalPages

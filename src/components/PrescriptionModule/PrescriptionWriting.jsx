@@ -1,4 +1,10 @@
-import React, { useState, useEffect, useRef, useCallback, useMemo } from "react";
+import React, {
+  useState,
+  useEffect,
+  useRef,
+  useCallback,
+  useMemo,
+} from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import axios from "axios";
 import {
@@ -23,6 +29,7 @@ import LabelDropdown from "./LabelDropdown";
 import MedicineConsumptionSelector from "./MedicineConsumptionSelector";
 import FrequencyModal from "./FrequencyModal";
 import DurationModal from "./DurationModal";
+
 // Auth helper to check token
 const checkAuth = () => {
   const token = localStorage.getItem("token");
@@ -148,16 +155,19 @@ const PrescriptionWriting = () => {
     return defaultData;
   });
 
-  const initialPatientId = useMemo(() => patientData?._id || "", [patientData?._id]);
+  const initialPatientId = useMemo(
+    () => patientData?._id || "",
+    [patientData?._id]
+  );
 
-useEffect(() => {
-  if (initialPatientId) {
-    setPrescriptionData(prev => ({
-      ...prev,
-      patientId: initialPatientId,
-    }));
-  }
-}, [initialPatientId]);
+  useEffect(() => {
+    if (initialPatientId) {
+      setPrescriptionData((prev) => ({
+        ...prev,
+        patientId: initialPatientId,
+      }));
+    }
+  }, [initialPatientId]);
 
   useEffect(() => {
     const timeoutId = setTimeout(() => {
@@ -529,57 +539,57 @@ useEffect(() => {
     }, 50);
   };
 
-const updatePrescriptionItem = (itemId, field, value) => {
-  setPrescriptionData((prev) => ({
-    ...prev,
-    prescriptionItems: prev.prescriptionItems.map((item) => {
-      if (item.id === itemId) {
-        let updatedItem = { ...item };
+  const updatePrescriptionItem = (itemId, field, value) => {
+    setPrescriptionData((prev) => ({
+      ...prev,
+      prescriptionItems: prev.prescriptionItems.map((item) => {
+        if (item.id === itemId) {
+          let updatedItem = { ...item };
 
-        if (field === "frequencies") {
-          // Store frequencies directly without transformation
-          updatedItem.frequencies = value;
-          
-          // Update frequencyType from the first frequency
-          if (value && value.length > 0) {
-            updatedItem.frequencyType = value[0].frequencyType;
+          if (field === "frequencies") {
+            // Store frequencies directly without transformation
+            updatedItem.frequencies = value;
+
+            // Update frequencyType from the first frequency
+            if (value && value.length > 0) {
+              updatedItem.frequencyType = value[0].frequencyType;
+            }
+          } else if (field === "form") {
+            const formQuantity = getQuantityByForm(value);
+            updatedItem = {
+              ...updatedItem,
+              form: value,
+              dispenseQuantity: formQuantity.quantity,
+              uom: formQuantity.uom,
+              preparationQuantity: (item.preparationQuantity || []).map(
+                (prep) => ({
+                  ...prep,
+                  unit: formQuantity.uom,
+                })
+              ),
+            };
+          } else {
+            updatedItem[field] = value;
           }
-        } else if (field === "form") {
-          const formQuantity = getQuantityByForm(value);
-          updatedItem = {
-            ...updatedItem,
-            form: value,
-            dispenseQuantity: formQuantity.quantity,
-            uom: formQuantity.uom,
-            preparationQuantity: (item.preparationQuantity || []).map(
-              (prep) => ({
-                ...prep,
-                unit: formQuantity.uom,
-              })
-            ),
-          };
-        } else {
-          updatedItem[field] = value;
+
+          return updatedItem;
         }
+        return item;
+      }),
+    }));
 
-        return updatedItem;
-      }
-      return item;
-    }),
-  }));
-
-  // Trigger distilled water calculation for liquid forms when dispense quantity changes
-  if (field === "dispenseQuantity" || field === "form") {
-    setTimeout(() => {
-      const currentItem = prescriptionData.prescriptionItems.find(
-        (item) => item.id === itemId
-      );
-      if (currentItem && currentItem.form === "Liquid form") {
-        calculateDistilledWaterQuantity(itemId);
-      }
-    }, 100);
-  }
-};
+    // Trigger distilled water calculation for liquid forms when dispense quantity changes
+    if (field === "dispenseQuantity" || field === "form") {
+      setTimeout(() => {
+        const currentItem = prescriptionData.prescriptionItems.find(
+          (item) => item.id === itemId
+        );
+        if (currentItem && currentItem.form === "Liquid form") {
+          calculateDistilledWaterQuantity(itemId);
+        }
+      }, 100);
+    }
+  };
 
   // Form quantity mapping based on medicine form
   const getQuantityByForm = (form) => {
@@ -812,31 +822,38 @@ const updatePrescriptionItem = (itemId, field, value) => {
     }
   };
 
-const saveFrequency = (frequencies) => {
-  if (currentItemForModal) {
-    console.log("Saving frequencies:", frequencies);
+  const saveFrequency = (frequencies) => {
+    if (currentItemForModal) {
+      console.log("Saving frequencies:", frequencies);
 
-    // No transformation needed - save frequencies as-is
-    updatePrescriptionItem(currentItemForModal.id, "frequencies", frequencies);
-
-    // Update parallel schedule if needed
-    setPrescriptionData((prev) => {
-      const hasParallelItems = prev.prescriptionItems.some(item => 
-        item.consumptionType === "Parallel" && 
-        item.frequencies?.some(freq => freq.parallelConsumption)
+      // No transformation needed - save frequencies as-is
+      updatePrescriptionItem(
+        currentItemForModal.id,
+        "frequencies",
+        frequencies
       );
-      
-      if (hasParallelItems) {
-        const updatedItems = generatePrescriptionWideParallelSchedule(prev.prescriptionItems);
-        return { ...prev, prescriptionItems: updatedItems };
-      }
-      return prev;
-    });
-  }
 
-  setShowFrequencyModal(false);
-  setCurrentItemForModal(null);
-};
+      // Update parallel schedule if needed
+      setPrescriptionData((prev) => {
+        const hasParallelItems = prev.prescriptionItems.some(
+          (item) =>
+            item.consumptionType === "Parallel" &&
+            item.frequencies?.some((freq) => freq.parallelConsumption)
+        );
+
+        if (hasParallelItems) {
+          const updatedItems = generatePrescriptionWideParallelSchedule(
+            prev.prescriptionItems
+          );
+          return { ...prev, prescriptionItems: updatedItems };
+        }
+        return prev;
+      });
+    }
+
+    setShowFrequencyModal(false);
+    setCurrentItemForModal(null);
+  };
 
   const saveDuration = (
     durationRanges,
@@ -922,112 +939,113 @@ const saveFrequency = (frequencies) => {
     }));
   };
 
-const prepareDataForBackend = (prescriptionData) => {
-  const backendData = {
-    ...prescriptionData,
-    prescriptionItems: prescriptionData.prescriptionItems.map((item) => ({
-      medicineName: item.medicineName || "",
-      rawMaterialDetails: (item.rawMaterialDetails || []).map((rm) => ({
-        _id: rm._id,
-        name: rm.name,
-        quantity: rm.quantity || 0,
-        pricePerUnit: rm.pricePerUnit || 0,
-        totalPrice: rm.totalPrice || 0,
+  const prepareDataForBackend = (prescriptionData) => {
+    const backendData = {
+      appointmentID: patientData.medicalDetails._id,
+      ...prescriptionData,
+      prescriptionItems: prescriptionData.prescriptionItems.map((item) => ({
+        medicineName: item.medicineName || "",
+        rawMaterialDetails: (item.preparationQuantity || []).map((rm) => ({
+          _id: rm._id,
+          name: rm.name,
+          quantity: rm.quantity || 0,
+          pricePerUnit: rm.pricePerUnit || 0,
+          totalPrice: rm.totalPrice || 0,
+        })),
+        form: item.form || "Tablets",
+        dispenseQuantity: item.dispenseQuantity || "",
+        duration: item.duration || "",
+        uom: item.uom || "Pieces",
+        price: item.price || 0,
+        additionalComments: item.additionalComments || "",
+        // Send frequencies directly - no transformation
+        frequencies: item.frequencies || [],
+        frequencyType: item.frequencyType || "standard",
+
+        // Keep legacy fields for backward compatibility
+        standardSchedule: item.standardSchedule || [],
+        frequentSchedule: item.frequentSchedule || [],
+        parallelConsumption: item.parallelConsumption || null,
+
+        prescriptionType: item.prescriptionType || "Only Prescription",
+        consumptionType: item.consumptionType || "Sequential",
+        medicineConsumption: item.medicineConsumption || "",
+        label: item.label || "A",
+        durationRanges: item.durationRanges || [],
+        gapRanges: item.gapRanges || [],
+        selectedDurationDays: item.selectedDurationDays || [],
       })),
-      form: item.form || "Tablets",
-      dispenseQuantity: item.dispenseQuantity || "",
-      duration: item.duration || "",
-      uom: item.uom || "Pieces",
-      price: item.price || 0,
-      additionalComments: item.additionalComments || "",
-      
-      // Send frequencies directly - no transformation
-      frequencies: item.frequencies || [],
-      frequencyType: item.frequencyType || "standard",
-      
-      // Keep legacy fields for backward compatibility
-      standardSchedule: item.standardSchedule || [],
-      frequentSchedule: item.frequentSchedule || [],
-      parallelConsumption: item.parallelConsumption || null,
-      
-      prescriptionType: item.prescriptionType || "Only Prescription",
-      consumptionType: item.consumptionType || "Sequential",
-      label: item.label || "A",
-      durationRanges: item.durationRanges || [],
-      gapRanges: item.gapRanges || [],
-      selectedDurationDays: item.selectedDurationDays || [],
-    })),
+    };
+
+    console.log("Backend data prepared:", backendData);
+    return backendData;
   };
 
-  console.log("Backend data prepared:", backendData);
-  return backendData;
-};
+  const handleSavePrescription = async () => {
+    try {
+      setSaving(true);
 
-const handleSavePrescription = async () => {
-  try {
-    setSaving(true);
+      if (!prescriptionData.prescriptionItems.length) {
+        toast.error("Please add at least one prescription item");
+        return;
+      }
 
-    if (!prescriptionData.prescriptionItems.length) {
-      toast.error("Please add at least one prescription item");
-      return;
-    }
+      const validationErrors = [];
+      prescriptionData.prescriptionItems.forEach((item, index) => {
+        if (!item.medicineName?.trim()) {
+          validationErrors.push(
+            `Medicine name is required for item ${index + 1}`
+          );
+        }
+        if (!item.duration?.trim()) {
+          validationErrors.push(`Duration is required for item ${index + 1}`);
+        }
+        if (!item.frequencies || item.frequencies.length === 0) {
+          validationErrors.push(
+            `Frequency configuration is required for item ${index + 1}`
+          );
+        }
+      });
 
-    const validationErrors = [];
-    prescriptionData.prescriptionItems.forEach((item, index) => {
-      if (!item.medicineName?.trim()) {
-        validationErrors.push(
-          `Medicine name is required for item ${index + 1}`
+      if (validationErrors.length > 0) {
+        toast.error(
+          `Please fix the following:\n${validationErrors.join("\n")}`
         );
+        return;
       }
-      if (!item.duration?.trim()) {
-        validationErrors.push(`Duration is required for item ${index + 1}`);
+
+      const authAxios = createAuthAxios();
+
+      // Use the updated data preparation function
+      const apiData = prepareDataForBackend(prescriptionData);
+      console.log("Final Data: ", apiData);
+      const response = await authAxios.post(
+        `${API_URL}/api/prescriptionControl/create`,
+        apiData
+      );
+
+      if (response.data.success) {
+        toast.success("Prescription saved successfully!");
+        clearDraft();
+        navigate("/doctor-dashboard/myAllocation?follow=Follow+up-P");
+      } else {
+        toast.error(response.data.message || "Failed to save prescription");
       }
-      if (!item.frequencies || item.frequencies.length === 0) {
-        validationErrors.push(
-          `Frequency configuration is required for item ${index + 1}`
+    } catch (err) {
+      console.error("Error saving prescription:", err);
+      if (err.response) {
+        toast.error(
+          err.response.data?.message || `Server Error: ${err.response.status}`
         );
+      } else if (err.request) {
+        toast.error("Network error. Please check your connection.");
+      } else {
+        toast.error(err.message || "An unexpected error occurred");
       }
-    });
-
-    if (validationErrors.length > 0) {
-      toast.error(
-        `Please fix the following:\n${validationErrors.join("\n")}`
-      );
-      return;
+    } finally {
+      setSaving(false);
     }
-
-    const authAxios = createAuthAxios();
-
-    // Use the updated data preparation function
-    const apiData = prepareDataForBackend(prescriptionData);
-
-    const response = await authAxios.post(
-      `${API_URL}/api/prescriptionControl/create`,
-      apiData
-    );
-
-    if (response.data.success) {
-      toast.success("Prescription saved successfully!");
-      clearDraft();
-      navigate("/doctor-dashboard/myAllocation?follow=Follow+up-P");
-    } else {
-      toast.error(response.data.message || "Failed to save prescription");
-    }
-  } catch (err) {
-    console.error("Error saving prescription:", err);
-    if (err.response) {
-      toast.error(
-        err.response.data?.message || `Server Error: ${err.response.status}`
-      );
-    } else if (err.request) {
-      toast.error("Network error. Please check your connection.");
-    } else {
-      toast.error(err.message || "An unexpected error occurred");
-    }
-  } finally {
-    setSaving(false);
-  }
-};
+  };
 
   // OPTIONAL: Helper function to validate frequency data structure
   const validateFrequencyData = (frequencies, frequencyType) => {
@@ -1287,124 +1305,139 @@ const handleSavePrescription = async () => {
     }));
   };
 
-const generatePrescriptionWideParallelSchedule = (prescriptionItems) => {
-  const parallelItems = prescriptionItems.filter(item => 
-    item.consumptionType === "Parallel" && 
-    item.frequencies?.some(freq => freq.frequencyType === "frequent")
-  );
- 
-  if (parallelItems.length < 2) return prescriptionItems;
- 
-  const updatedItems = [...prescriptionItems];
-  
-  // Process each day separately
-  const allDays = [...new Set(parallelItems.flatMap(item => 
-    item.frequencies.map(freq => freq.day)
-  ))];
-  
-  allDays.forEach(day => {
-    const daySchedules = [];
-    
-    // Collect all doses for this day from all parallel medicines
-    parallelItems.forEach((item, itemIndex) => {
-      const dayFrequency = item.frequencies.find(freq => freq.day === day);
-      if (dayFrequency && dayFrequency.frequentFrequency) {
-        const config = dayFrequency.frequentFrequency;
-        const totalDoses = config.doses || 1;
-        const intervalMinutes = (config.hours || 0) * 60 + (config.minutes || 0);
-        
-        for (let dose = 1; dose <= totalDoses; dose++) {
-          daySchedules.push({
-            itemIndex,
-            medicineName: item.medicineName,
-            day: day,
-            doseNumber: dose,
-            intervalMinutes: intervalMinutes,
-            originalItemIndex: prescriptionItems.findIndex(p => p.id === item.id)
+  const generatePrescriptionWideParallelSchedule = (prescriptionItems) => {
+    const parallelItems = prescriptionItems.filter(
+      (item) =>
+        item.consumptionType === "Parallel" &&
+        item.frequencies?.some((freq) => freq.frequencyType === "frequent")
+    );
+
+    if (parallelItems.length < 2) return prescriptionItems;
+
+    const updatedItems = [...prescriptionItems];
+
+    // Process each day separately
+    const allDays = [
+      ...new Set(
+        parallelItems.flatMap((item) =>
+          item.frequencies.map((freq) => freq.day)
+        )
+      ),
+    ];
+
+    allDays.forEach((day) => {
+      const daySchedules = [];
+
+      // Collect all doses for this day from all parallel medicines
+      parallelItems.forEach((item, itemIndex) => {
+        const dayFrequency = item.frequencies.find((freq) => freq.day === day);
+        if (dayFrequency && dayFrequency.frequentFrequency) {
+          const config = dayFrequency.frequentFrequency;
+          const totalDoses = config.doses || 1;
+          const intervalMinutes =
+            (config.hours || 0) * 60 + (config.minutes || 0);
+
+          for (let dose = 1; dose <= totalDoses; dose++) {
+            daySchedules.push({
+              itemIndex,
+              medicineName: item.medicineName,
+              day: day,
+              doseNumber: dose,
+              intervalMinutes: intervalMinutes,
+              originalItemIndex: prescriptionItems.findIndex(
+                (p) => p.id === item.id
+              ),
+            });
+          }
+        }
+      });
+
+      // Sort by medicine index and dose number for proper interleaving
+      daySchedules.sort((a, b) => {
+        if (a.itemIndex !== b.itemIndex) return a.itemIndex - b.itemIndex;
+        return a.doseNumber - b.doseNumber;
+      });
+
+      // Calculate interleaved times
+      const baseTime = new Date();
+      baseTime.setHours(8, 0, 0, 0);
+
+      daySchedules.forEach((schedule, index) => {
+        // Space doses 1 hour apart between different medicines
+        const offsetMinutes = index * 60;
+        const doseTime = new Date(baseTime.getTime() + offsetMinutes * 60000);
+        schedule.assignedTime = doseTime.toTimeString().slice(0, 5);
+      });
+
+      // Update each medicine's frequency parallel consumption data
+      daySchedules.forEach((schedule) => {
+        const item = updatedItems[schedule.originalItemIndex];
+        const dayFrequency = item.frequencies.find(
+          (freq) => freq.day === schedule.day
+        );
+
+        if (dayFrequency) {
+          if (!dayFrequency.parallelConsumption) {
+            dayFrequency.parallelConsumption = {
+              type: "parallel",
+              schedule: [],
+              autoGenerated: true,
+            };
+          }
+
+          dayFrequency.parallelConsumption.schedule.push({
+            day: schedule.day,
+            doseNumber: schedule.doseNumber,
+            time: schedule.assignedTime,
+            medicineIndex: schedule.itemIndex,
+            medicineName: schedule.medicineName,
+            type: "parallel",
+            isOverlapping: false,
           });
         }
-      }
+      });
     });
-    
-    // Sort by medicine index and dose number for proper interleaving
-    daySchedules.sort((a, b) => {
-      if (a.itemIndex !== b.itemIndex) return a.itemIndex - b.itemIndex;
-      return a.doseNumber - b.doseNumber;
-    });
-    
-    // Calculate interleaved times
-    const baseTime = new Date();
-    baseTime.setHours(8, 0, 0, 0);
-    
-    daySchedules.forEach((schedule, index) => {
-      // Space doses 1 hour apart between different medicines
-      const offsetMinutes = index * 60;
-      const doseTime = new Date(baseTime.getTime() + offsetMinutes * 60000);
-      schedule.assignedTime = doseTime.toTimeString().slice(0, 5);
-    });
-    
-    // Update each medicine's frequency parallel consumption data
-    daySchedules.forEach(schedule => {
-      const item = updatedItems[schedule.originalItemIndex];
-      const dayFrequency = item.frequencies.find(freq => freq.day === schedule.day);
-      
-      if (dayFrequency) {
-        if (!dayFrequency.parallelConsumption) {
-          dayFrequency.parallelConsumption = {
-            type: "parallel",
-            schedule: [],
-            autoGenerated: true
-          };
+
+    return updatedItems;
+  };
+
+  const getMedicineCount = () => {
+    console.log(
+      "Calculating medicine count...",
+      prescriptionData.prescriptionItems.length
+    );
+    // if (!prescriptionData || !prescriptionData.prescriptionItems) {
+    //   return 0;
+    // }
+    return prescriptionData.prescriptionItems.length;
+  };
+
+  // Update the FrequencyModal props
+  {
+    showFrequencyModal && (
+      <FrequencyModal
+        isOpen={showFrequencyModal}
+        onClose={() => setShowFrequencyModal(false)}
+        onSave={saveFrequency}
+        selectedDurationDays={
+          currentItemForModal?.selectedDurationDays ||
+          getSelectedDaysFromDurationRanges(
+            currentItemForModal?.durationRanges
+          ) ||
+          []
         }
-        
-        dayFrequency.parallelConsumption.schedule.push({
-          day: schedule.day,
-          doseNumber: schedule.doseNumber,
-          time: schedule.assignedTime,
-          medicineIndex: schedule.itemIndex,
-          medicineName: schedule.medicineName,
-          type: "parallel",
-          isOverlapping: false
-        });
-      }
-    });
-  });
- 
-  return updatedItems;
-};
-
-const getMedicineCount = () => {
-  console.log("Calculating medicine count...", prescriptionData.prescriptionItems.length);
-  // if (!prescriptionData || !prescriptionData.prescriptionItems) {
-  //   return 0;
-  // }
-  return prescriptionData.prescriptionItems.length;
-};
-
-// Update the FrequencyModal props
-{showFrequencyModal && (
-  <FrequencyModal
-    isOpen={showFrequencyModal}
-    onClose={() => setShowFrequencyModal(false)}
-    onSave={saveFrequency}
-    selectedDurationDays={
-      currentItemForModal?.selectedDurationDays ||
-      getSelectedDaysFromDurationRanges(
-        currentItemForModal?.durationRanges
-      ) ||
-      []
-    }
-    consumptionType={
-      currentItemForModal.medicineConsumptionType || "Sequential"
-    }
-    currentFrequencies={currentItemForModal?.frequencies || []}
-    frequencyType={currentItemForModal?.frequencyType || "standard"}
-    medicineName={currentItemForModal?.medicineName || ""}
-    itemIndex={currentItemForModal?.id || 0}
-    totalMedicines={getMedicineCount()} // Add this line
-    allMedicines={prescriptionData.prescriptionItems} // Add this line
-  />
-)}
+        consumptionType={
+          currentItemForModal.medicineConsumptionType || "Sequential"
+        }
+        currentFrequencies={currentItemForModal?.frequencies || []}
+        frequencyType={currentItemForModal?.frequencyType || "standard"}
+        medicineName={currentItemForModal?.medicineName || ""}
+        itemIndex={currentItemForModal?.id || 0}
+        totalMedicines={getMedicineCount()} // Add this line
+        allMedicines={prescriptionData.prescriptionItems} // Add this line
+      />
+    );
+  }
 
   if (loading) {
     return (
@@ -1499,6 +1532,9 @@ const getMedicineCount = () => {
                       Medicine Course
                     </th>
                     <th className="border border-gray-300 px-4 py-2 text-left">
+                      View Prescription
+                    </th>
+                    <th className="border border-gray-300 px-4 py-2 text-left">
                       Action Status
                     </th>
                     <th className="border border-gray-300 px-4 py-2 text-left">
@@ -1523,7 +1559,16 @@ const getMedicineCount = () => {
                       <td className="border border-gray-300 px-4 py-2">
                         {prescription.medicineCourse} days
                       </td>
-
+                      <td className="border border-gray-300 px-4 py-2">
+                        <button
+                          onClick={() =>
+                            navigate(`/view-prescription/${prescription._id}`)
+                          }
+                          className="text-blue-600 hover:underline"
+                        >
+                          View Prescription
+                        </button>
+                      </td>
                       <div>
                         <td className="border border-gray-300 px-4 py-2 text-center">
                           {prescription.action?.status === "In Progress" ? (

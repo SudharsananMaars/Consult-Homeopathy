@@ -83,6 +83,7 @@ import Payslip from "./pages/doctor pages/payslip.jsx";
 import NoteTaking from "./pages/doctor pages/NoteTaking.jsx";
 import PrescriptionWriting from "./components/PrescriptionModule/PrescriptionWriting.jsx";
 import MedicinePreparationView from "./pages/doctor pages/MedicinePreparationView.jsx";
+import PrescriptionViewModal from "./components/PrescriptionModule/PrescriptionViewModal.jsx";
 import InventoryPage from "./components/calllog components/InventoryPage.jsx";
 import "@fortawesome/fontawesome-free/css/all.min.css";
 
@@ -121,7 +122,7 @@ import VendorDashboard from "./components/Vendor/VendorDashboard.jsx";
 import AddVendor from "./components/Vendor/AddVendor.jsx";
 import Navbar from "./components/Vendor/Navbar.jsx";
 import { ToastContainer } from "react-toastify";
-import 'react-toastify/dist/ReactToastify.css';
+import "react-toastify/dist/ReactToastify.css";
 
 
 // Error Fallback Component
@@ -144,7 +145,7 @@ function App() {
         <Route path="/maintenance" element={<Maintenance />} />
         <Route path="/login" element={<LoginPage />} />
         <Route path="/admin-login" element={<AdminLoginPage />} />
-        <Route path="/firstform" element={<FirstForm />}/>
+        <Route path="/firstform" element={<FirstForm />} />
 
         <Route
           path="/vendors"
@@ -161,7 +162,7 @@ function App() {
               <AddVendor />
             </ProtectedRoute>
           }
-        />  
+        />
         <Route
           path="/vendors/edit/:id"
           element={
@@ -170,7 +171,7 @@ function App() {
             </ProtectedRoute>
           }
         />
-        
+
         {/* Patient Protected Routes */}
         <Route
           path="/form"
@@ -204,7 +205,7 @@ function App() {
             </ProtectedRoute>
           }
         />
-        
+
         <Route
           path="/appointments/newappointment"
           element={
@@ -389,7 +390,7 @@ function App() {
         <Route
           path="/family"
           element={
-            <ProtectedRoute allowedRoles={["Patient"]}> 
+            <ProtectedRoute allowedRoles={["Patient"]}>
               <FamilyTree />
             </ProtectedRoute>
           }
@@ -830,6 +831,15 @@ function App() {
           }
         />
 
+        <Route
+          path="/view-prescription/:prescriptionId"
+          element={
+            <ProtectedRoute allowedRoles={["Doctor", "Patient"]}>
+              <PrescriptionViewModal />
+            </ProtectedRoute>
+          }
+        />
+
         {/* Root redirect */}
         <Route path="/" element={<Navigate to="/login" replace />} />
 
@@ -842,7 +852,7 @@ function App() {
     <div>
       <ErrorBoundary FallbackComponent={ErrorFallback}>
         <AuthProvider>
-            <MaintenanceCheck />
+          <MaintenanceCheck />
         </AuthProvider>
       </ErrorBoundary>
     </div>
