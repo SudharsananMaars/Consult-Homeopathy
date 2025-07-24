@@ -60,8 +60,9 @@ const Medicine = () => {
         }
       );
       const shipped = response.data.filter(
-        (item) => item.isProductReceived === false
+        (item) => item.isProductReceived === false || item.isProductReceived === null 
       );
+      console.log(shipped);
       const received = response.data.filter(
         (item) => item.isProductReceived === true
       );

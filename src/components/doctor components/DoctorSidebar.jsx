@@ -15,7 +15,7 @@ import {
 import { CiLogout } from "react-icons/ci";
 import { FaUserFriends, FaStethoscope } from "react-icons/fa";
 import { AiOutlineMedicineBox } from "react-icons/ai";
-import { MdAccountBalance } from "react-icons/md";
+import { MdAccountBalance, MdDashboard } from "react-icons/md";
 import { FaPhotoVideo } from "react-icons/fa";
 import { FaUserDoctor, FaPeopleGroup } from "react-icons/fa6";
 import { motion, AnimatePresence } from "framer-motion";
@@ -77,37 +77,43 @@ const Sidebar = ({ role }) => {
           { id: 5, path: "/docpayments", name: "Payments", icon: LuWallet },
           {
             id: 6,
+            path: "/overview",
+            name: "Overview",
+            icon: MdDashboard,
+          },
+          {
+            id: 7,
             path: "/raw-materials",
             name: "Inventory",
             icon: AiOutlineMedicineBox,
           },
           {
-            id: 7,
+            id: 8,
             path: "/workshoppage",
             name: "Workshops",
             icon: MdOutlineOndemandVideo,
           },
-          { id: 8, path: "/content", name: "Content", icon: FaPhotoVideo },
+          { id: 9, path: "/content", name: "Content", icon: FaPhotoVideo },
           {
-            id: 9,
+            id: 10,
             path: "/accounts",
             name: "Accounts",
             icon: MdAccountBalance,
           },
           {
-            id: 10,
+            id: 11,
             path: "/doctor-dashboard/all",
             name: "Doctor CRM",
             icon: FaUserDoctor,
           },
           {
-            id: 11,
+            id: 12,
             path: "/allocation",
             name: "Doctor Allocation",
             icon: MdOutlineDashboardCustomize,
           },
-          { id: 12, path: "/docsettings", name: "Settings", icon: LuSettings },
-          { id: 13, path: "/hrm", name: "HR Management", icon: FaPeopleGroup },
+          { id: 13, path: "/docsettings", name: "Settings", icon: LuSettings },
+          { id: 14, path: "/hrm", name: "HR Management", icon: FaPeopleGroup },
         ]
       : role === "assistant-doctor"
       ? [

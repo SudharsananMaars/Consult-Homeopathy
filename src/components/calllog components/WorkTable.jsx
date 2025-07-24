@@ -690,7 +690,7 @@ const WorkTable = () => {
         const prescriptionId = '6879eec76716cae54357165b';
         
         // Option 2: Use the current item's ID (uncomment to test)
-        // const prescriptionId = item._id;
+        //const prescriptionId = item._id;
         
         console.log('=== DEBUGGING INFO ===');
         console.log('Prescription ID being sent:', prescriptionId);
@@ -1154,7 +1154,7 @@ const WorkTable = () => {
           ]),
         };
       case "Special Allocation":
-        return {
+        /*return {
           head: [
             "S.no",
             "Omni channel",
@@ -1252,7 +1252,7 @@ const WorkTable = () => {
                     </td>,
                   ],
                 ],
-        };
+        };   */
       default:
         return { head: [], data: [] };
     }

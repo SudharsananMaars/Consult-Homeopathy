@@ -76,6 +76,7 @@ import AdminLeaveManagement from "./pages/doctor pages/AdminLeaveManagement.jsx"
 import LeaveSettingsForm from "./pages/doctor pages/LeaveSettingsForm.jsx";
 import PayrollSettings from "./pages/doctor pages/payrollsettings.jsx";
 import Payroll from "./pages/doctor pages/payroll.jsx";
+import Overview from "./pages/doctor pages/Overview.jsx";
 import SalaryStructure from "./pages/doctor pages/salarystructure.jsx";
 import HRPage from "./pages/doctor pages/HRPage.jsx";
 import BreakTimer from "./pages/doctor pages/BreakTimer.jsx";
@@ -485,6 +486,14 @@ function App() {
             </ProtectedRoute>
           }
         />
+        <Route
+          path="/overview"
+          element={
+            <ProtectedRoute allowedRoles={["Doctor"]}>
+              <Overview />
+            </ProtectedRoute>
+          }
+        />        
         <Route
           path="/inventry"
           element={
