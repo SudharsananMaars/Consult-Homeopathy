@@ -614,7 +614,60 @@ const WorkTable = () => {
       'S.no', 'Who is the Consultation for', 'Name', 'Patient Type', 'Phone Number',
       'Email', 'Consulting For', 'If diseaseType is not available',
       'Age', 'Gender', 'Acute/Chronic', 'Follow', 'Follow comment',
-      'Medicine Payment confirmation', 'Call attempted tracking', 
+      'Medicine Payment confirmation', 'Call attempted tracking',
+      'Comments', 'View Prescription', 'Voice call',
+      'Recordings', 'Mark Done'
+    ],
+    data: filteredPatients.map((item, index) => {
+      return [
+        index + 1,
+        item.medicalDetails.consultingFor || '',
+        item.name || '',
+        item.newExisting || '',
+        item.phone || '',
+        item.email || '',
+        item.medicalDetails.consultingFor || '',
+        item.medicalDetails.diseaseTypeAvailable ? 'Yes' : 'No',
+        item.age || '',
+        item.gender || '',
+        item.medicalDetails.diseaseType.name || '',
+        item.medicalDetails.follow || '',
+        item.medicalDetails.followComment || '',
+        item.medicinePaymentConfirmation ? 'Confirmed' : 'Pending',
+        item.medicalDetails.callCount || '',
+        <CommentCell 
+          key={`comment-${item._id}`}
+          patient={item} 
+          API_URL={API_URL}
+          onCommentAdded={(updatedPatient) => {
+            setPatients(prevPatients => 
+              prevPatients.map(p => p._id === updatedPatient._id ? updatedPatient : p)
+            );
+          }} 
+        />,
+        <div key={`view-prescription-${item._id}`} className="action-buttons">
+          {renderButton('View Prescription', () => handleAction('ViewPrescription', item))}
+        </div>,
+        <div key={`voice-call-${item._id}`} className="action-buttons">
+          {renderButton('Make Voice Call', () => handleAction('VoiceCall', item))}
+        </div>,
+        <div key={`recordings-${item._id}`} className="action-buttons">
+          {renderButton('Recordings', () => handleAction('Recordings', item))}
+        </div>,
+        <div key={`mark-done-${item._id}`} className="action-buttons">
+          {renderButton('Mark Done', () => handleAction('MarkDone', item))} 
+        </div>
+      ];
+    }),
+  };
+
+  case 'Follow up-ship':
+  return {
+    head: [
+      'S.no', 'Who is the Consultation for', 'Name', 'Patient Type', 'Phone Number',
+      'Email', 'Consulting For', 'If diseaseType is not available',
+      'Age', 'Gender', 'Acute/Chronic', 'Follow', 'Follow comment',
+      'Medicine Payment confirmation', 'Call attempted tracking',
       'Comments', 'Shipment ID', 'View Prescription', 'Voice call',
       'Recordings', 'Mark Done'
     ],
@@ -645,167 +698,98 @@ const WorkTable = () => {
             );
           }} 
         />,
-        // Replace your existing shipment ID section with this updated code:
+        // Shipment ID input + save logic
+        <div key={`shipment-${item._id}`} style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+          <input
+            id={`shipment-input-${item._id}`}
+            type="text"
+            defaultValue={item.shipmentId || ''}
+            required
+            placeholder="Enter Shipment ID"
+            style={{ 
+              padding: '4px 8px', 
+              border: '1px solid #ccc', 
+              borderRadius: '4px',
+              minWidth: '120px'
+            }}
+          />
+          <button
+            onClick={async (event) => {
+              const input = document.getElementById(`shipment-input-${item._id}`);
+              const shipmentId = input?.value.trim();
 
-<div key={`shipment-${item._id}`} style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
-  <input
-    id={`shipment-input-${item._id}`}
-    type="text"
-    defaultValue={item.shipmentId || ''}
-    required
-    placeholder="Enter Shipment ID"
-    style={{ 
-      padding: '4px 8px', 
-      border: '1px solid #ccc', 
-      borderRadius: '4px',
-      minWidth: '120px'
-    }}
-  />
-  <button
-    onClick={async (event) => {
-      const input = document.getElementById(`shipment-input-${item._id}`);
-      const shipmentId = input?.value.trim();
-      
-      if (!shipmentId) {
-        alert('Shipment ID is required.');
-        return;
-      }
+              if (!shipmentId) {
+                alert('Shipment ID is required.');
+                return;
+              }
 
-      try {
-        // Show loading state
-        const button = event.target;
-        const originalText = button.textContent;
-        button.textContent = 'Saving...';
-        button.disabled = true;
+              const button = event.target;
+              const originalText = button.textContent;
+              button.textContent = 'Saving...';
+              button.disabled = true;
 
-        // Get the token from localStorage
-        const token = localStorage.getItem('token') || localStorage.getItem('authToken') || sessionStorage.getItem('token');
-        
-        if (!token) {
-          throw new Error('No authentication token found. Please login again.');
-        }
+              try {
+                const token = localStorage.getItem('token') || localStorage.getItem('authToken') || sessionStorage.getItem('token');
+                if (!token) throw new Error('No authentication token found.');
 
-        // DEBUGGING: Try different prescription IDs
-        // Option 1: Use the specific prescription ID
-        const prescriptionId = '6879eec76716cae54357165b';
-        
-        // Option 2: Use the current item's ID (uncomment to test)
-        //const prescriptionId = item._id;
-        
-        console.log('=== DEBUGGING INFO ===');
-        console.log('Prescription ID being sent:', prescriptionId);
-        console.log('Shipment ID:', shipmentId);
-        console.log('Token exists:', !!token);
-        console.log('Token preview:', token ? token.substring(0, 20) + '...' : 'No token');
-        console.log('Current item._id:', item._id);
-        console.log('Current item object keys:', Object.keys(item));
+                const prescriptionId = item.prescriptionId || item.medicalDetails?.prescriptionId || ''; // <-- dynamic ID
 
-        // Construct the correct API URL
-        const apiUrl = `https://clinic-backend-jdob.onrender.com/api/doctor/prescriptions/${prescriptionId}/tracking`;
-        console.log('API URL:', apiUrl);
+                if (!prescriptionId) throw new Error('Prescription ID not found for this patient.');
 
-        // Test if the backend is reachable first
-        console.log('Testing backend connection...');
-        
-        const response = await fetch(apiUrl, {
-          method: 'PATCH',
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${token}`
-          },
-          body: JSON.stringify({ 
-            trackingId: shipmentId,
-            isProductReceived: false
-          })
-        });
+                const apiUrl = `https://clinic-backend-jdob.onrender.com/api/doctor/prescriptions/${prescriptionId}/tracking`;
 
-        console.log('Response status:', response.status);
-        console.log('Response status text:', response.statusText);
-        console.log('Response ok:', response.ok);
-        console.log('Response headers:', Object.fromEntries(response.headers.entries()));
+                const response = await fetch(apiUrl, {
+                  method: 'PATCH',
+                  headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`
+                  },
+                  body: JSON.stringify({ 
+                    trackingId: shipmentId,
+                    isProductReceived: false
+                  })
+                });
 
-        // Get response text first
-        const responseText = await response.text();
-        console.log('Raw response text:', responseText);
+                const responseText = await response.text();
 
-        // Check if response is empty
-        if (!responseText) {
-          throw new Error('Empty response from server');
-        }
+                if (!response.ok) {
+                  let errorMessage = `HTTP ${response.status}`;
+                  try {
+                    const errData = JSON.parse(responseText);
+                    errorMessage = errData.message || errData.error || errorMessage;
+                  } catch {}
+                  throw new Error(errorMessage);
+                }
 
-        if (!response.ok) {
-          let errorMessage = `HTTP ${response.status}: ${response.statusText}`;
-          
-          // Try to parse error response
-          try {
-            const errorData = JSON.parse(responseText);
-            errorMessage = errorData.message || errorData.error || errorMessage;
-            console.log('Parsed error data:', errorData);
-          } catch (parseError) {
-            console.log('Could not parse error response as JSON:', parseError);
-            errorMessage = responseText || errorMessage;
-          }
-          
-          throw new Error(errorMessage);
-        }
+                setPatients(prevPatients =>
+                  prevPatients.map(p => 
+                    p._id === item._id 
+                      ? { ...p, shipmentId: shipmentId } 
+                      : p
+                  )
+                );
 
-        // Parse successful response
-        let data;
-        try {
-          data = JSON.parse(responseText);
-          console.log('Parsed success data:', data);
-        } catch (parseError) {
-          console.log('Could not parse success response as JSON:', parseError);
-          data = { message: 'Success', raw: responseText };
-        }
-
-        console.log('Shipment ID saved successfully:', data);
-
-        // Update local state
-        setPatients(prevPatients =>
-          prevPatients.map(p => 
-            p._id === item._id 
-              ? { ...p, shipmentId: shipmentId } 
-              : p
-          )
-        );
-
-        alert('Shipment ID saved successfully!');
-        
-        // Reset button
-        button.textContent = originalText;
-        button.disabled = false;
-
-      } catch (error) {
-        console.error('=== ERROR DETAILS ===');
-        console.error('Error message:', error.message);
-        console.error('Error stack:', error.stack);
-        console.error('Full error object:', error);
-        
-        // Show detailed error to user
-        alert(`Failed to save Shipment ID: ${error.message}\n\nCheck browser console for more details.`);
-        
-        // Reset button on error
-        const button = event.target;
-        if (button) {
-          button.textContent = 'Save';
-          button.disabled = false;
-        }
-      }
-    }}
-    style={{ 
-      padding: '4px 12px', 
-      cursor: 'pointer',
-      backgroundColor: '#007bff',
-      color: 'white',
-      border: 'none',
-      borderRadius: '4px',
-      fontSize: '12px'
-    }}
-  >
-    Save
-  </button>
-</div>,
+                alert('Shipment ID saved successfully!');
+              } catch (err) {
+                alert(`Failed to save Shipment ID: ${err.message}`);
+              } finally {
+                button.textContent = originalText;
+                button.disabled = false;
+              }
+            }}
+            style={{ 
+              padding: '4px 12px', 
+              cursor: 'pointer',
+              backgroundColor: '#007bff',
+              color: 'white',
+              border: 'none',
+              borderRadius: '4px',
+              fontSize: '12px'
+            }}
+          >
+            Save
+          </button>
+        </div>,
         <div key={`view-prescription-${item._id}`} className="action-buttons">
           {renderButton('View Prescription', () => handleAction('ViewPrescription', item))}
         </div>,
@@ -821,6 +805,7 @@ const WorkTable = () => {
       ];
     }),
   };
+
 
  case 'Follow up-PCare':
   return {

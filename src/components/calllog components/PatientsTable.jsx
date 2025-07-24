@@ -115,25 +115,27 @@ console.log("userId", userId);
   };
   
 
-  const prioritizePatients = (patientsList) => {
-    return patientsList.sort((a, b) => {
-      const priorityMap = {
-        "Follow up-Mship": 1,
-        "Follow up-C": 2,
-        "Follow up-PCall": 3,
-        "Follow up-Potential": 4,
-        "Follow up-PCare": 5,
-      };
+const prioritizePatients = (patientsList) => {
+  return patientsList.sort((a, b) => {
+    const priorityMap = {
+      "Follow up-Mship": 1,
+      "Follow up-ship": 2,        // ✅ NEW STAGE
+      "Follow up-C": 3,
+      "Follow up-PCall": 4,
+      "Follow up-Potential": 5,
+      "Follow up-PCare": 6,
+    };
 
-      const getPriority = (patient) => {
-        if (patient.follow === 'Follow up-Mship' && patient.medicalPayment === 'no') return 1;
-        if (patient.follow === 'Follow up-C' && patient.appointmentFixed === 'no') return 2;
-        return priorityMap[patient.follow] || 6;
-      };
+    const getPriority = (patient) => {
+      if (patient.follow === 'Follow up-Mship' && patient.medicalPayment === 'no') return 1;
+      if (patient.follow === 'Follow up-ship') return 2; // ✅ Prioritize if in shipment stage
+      if (patient.follow === 'Follow up-C' && patient.appointmentFixed === 'no') return 3;
+      return priorityMap[patient.follow] || 99;
+    };
 
-      return getPriority(a) - getPriority(b);
-    });
-  };
+    return getPriority(a) - getPriority(b);
+  });
+};
 
   const filteredPatients = prioritizePatients(patients.filter(patient => {
     const matchesSearchTerm =
