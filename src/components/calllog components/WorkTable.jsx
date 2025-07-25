@@ -718,10 +718,7 @@ const WorkTable = () => {
               const input = document.getElementById(`shipment-input-${item._id}`);
               const shipmentId = input?.value.trim();
 
-              if (!shipmentId) {
-                alert('Shipment ID is required.');
-                return;
-              }
+    
 
               const button = event.target;
               const originalText = button.textContent;
@@ -732,7 +729,7 @@ const WorkTable = () => {
                 const token = localStorage.getItem('token') || localStorage.getItem('authToken') || sessionStorage.getItem('token');
                 if (!token) throw new Error('No authentication token found.');
 
-                const prescriptionId = item.prescriptionId || item.medicalDetails?.prescriptionId || ''; // <-- dynamic ID
+                const prescriptionId = item.medicalDetails.prescription_id; // <-- dynamic ID
 
                 if (!prescriptionId) throw new Error('Prescription ID not found for this patient.');
 
@@ -887,7 +884,7 @@ const WorkTable = () => {
               }
 
               // Use hardcoded prescription ID as requested
-              const prescriptionId = '6879eec76716cae54357165b';
+              const prescriptionId = item.medicalDetails.prescription_id;
               
               console.log('=== START DATE API CALL ===');
               console.log('Patient ID:', item._id);

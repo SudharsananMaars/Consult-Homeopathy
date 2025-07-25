@@ -56,14 +56,15 @@ const PrescriptionViewModal = () => {
     }
   }, [prescriptionId, apiUrl, accessToken]);
 
-  const formatDate = (dateObj) => {
-    if (!dateObj || !dateObj.$date) return "N/A";
-    return new Date(dateObj.$date).toLocaleDateString("en-US", {
-      year: "numeric",
-      month: "short",
-      day: "numeric",
-    });
-  };
+const formatDate = (dateString) => {
+  if (!dateString) return "N/A";
+  return new Date(dateString).toLocaleDateString("en-US", {
+    year: "numeric",
+    month: "short",
+    day: "numeric",
+  });
+};
+
 
   const renderTimingForSlot = (slot, standardSchedule) => {
     if (!standardSchedule || standardSchedule.length === 0) return null;
@@ -251,6 +252,19 @@ const PrescriptionViewModal = () => {
               ID: {prescriptionData._id.slice(-8)}
             </div>
           </div>
+          {/* Start and End Dates */}
+<div className="flex justify-center gap-6 mb-6 text-sm text-gray-700">
+  <div className="flex items-center gap-2">
+    <Calendar className="w-4 h-4 text-blue-700" />
+    <span className="font-medium">Start Date:</span>
+    <span>{formatDate(prescriptionData.startDate)}</span>
+  </div>
+  <div className="flex items-center gap-2">
+    <Calendar className="w-4 h-4 text-blue-700" />
+    <span className="font-medium">End Date:</span>
+    <span>{formatDate(prescriptionData.endDate)}</span>
+  </div>
+</div>
 
           <div className="border border-gray-300 overflow-x-auto">
             <table className="w-full border-collapse text-xs">
@@ -370,48 +384,6 @@ const PrescriptionViewModal = () => {
                   <span>Course Duration:</span>
                   <span className="font-medium">
                     {prescriptionData.medicineCourse} days
-                  </span>
-                </div>
-              </div>
-            </div>
-
-            <div className="bg-green-50 p-4 rounded-lg border">
-              <h4 className="font-semibold text-green-900 mb-3">
-                Billing Details
-              </h4>
-              <div className="space-y-2">
-                <div className="flex justify-between">
-                  <span>Medicine Cost:</span>
-                  <span className="font-medium">
-                    ₹{prescriptionData.medicineCharges}
-                  </span>
-                </div>
-                <div className="flex justify-between">
-                  <span>Shipping:</span>
-                  <span className="font-medium">
-                    ₹{prescriptionData.shippingCharges}
-                  </span>
-                </div>
-                <div className="flex justify-between font-semibold border-t pt-2">
-                  <span>Total:</span>
-                  <span>
-                    ₹
-                    {(
-                      prescriptionData.medicineCharges +
-                      prescriptionData.shippingCharges
-                    ).toFixed(2)}
-                  </span>
-                </div>
-                <div className="flex justify-between">
-                  <span>Payment Status:</span>
-                  <span
-                    className={`px-2 py-1 rounded text-xs font-medium ${
-                      prescriptionData.isPayementDone
-                        ? "bg-green-100 text-green-800"
-                        : "bg-red-100 text-red-800"
-                    }`}
-                  >
-                    {prescriptionData.isPayementDone ? "Paid" : "Pending"}
                   </span>
                 </div>
               </div>
