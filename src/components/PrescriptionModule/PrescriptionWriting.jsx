@@ -119,6 +119,7 @@ const PrescriptionWriting = () => {
       followUpDays: 10,
       medicineCharges: 0,
       shippingCharges: 0,
+      additionalCharges: 0,
       notes: "",
       parentPrescriptionId: null,
     };
@@ -2403,7 +2404,25 @@ const PrescriptionWriting = () => {
                   }
                   className="w-full border rounded px-3 py-2"
                   min="0"
-                  step="0.01"
+                  step="1"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium mb-1">
+                  Additional Charges
+                </label>
+                <input
+                  type="number"
+                  value={prescriptionData.additionalChargesCharges}
+                  onChange={(e) =>
+                    setPrescriptionData((prev) => ({
+                      ...prev,
+                      additionalCharges: parseFloat(e.target.value) || 0,
+                    }))
+                  }
+                  className="w-full border rounded px-3 py-2"
+                  min="0"
+                  step="1"
                 />
               </div>
               <div>
@@ -2414,7 +2433,8 @@ const PrescriptionWriting = () => {
                   type="number"
                   value={
                     prescriptionData.medicineCharges +
-                    prescriptionData.shippingCharges
+                    prescriptionData.shippingCharges +
+                    prescriptionData.additionalCharges
                   }
                   readOnly
                   className="w-full border rounded px-3 py-2 bg-gray-100 font-medium"

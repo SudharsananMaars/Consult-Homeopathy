@@ -21,6 +21,26 @@ import config from "../../config";
 
 const API_URL = config.API_URL;
 const patientId = localStorage.getItem("userId");
+const medicineColors = [
+  'bg-blue-100 text-blue-800',
+  'bg-green-100 text-green-800',
+  'bg-yellow-100 text-yellow-800',
+  'bg-purple-100 text-purple-800',
+  'bg-pink-100 text-pink-800',
+  'bg-indigo-100 text-indigo-800',
+  'bg-orange-100 text-orange-800',
+];
+
+// Helper function to get consistent color index for a medicine name
+const getMedicineColorIndex = (medicineName) => {
+  let hash = 0;
+  for (let i = 0; i < medicineName.length; i++) {
+    const char = medicineName.charCodeAt(i);
+    hash = ((hash << 5) - hash) + char;
+    hash = hash & hash; // Convert to 32-bit integer
+  }
+  return Math.abs(hash) % medicineColors.length;
+};
 
 const Prescription = () => {
   const [activeTab, setActiveTab] = useState('Prescription');
@@ -34,6 +54,7 @@ const Prescription = () => {
   const [medicationSummary, setMedicationSummary] = useState(null);
   const [metrics, setMetrics] = useState({ adherence: 0, missed: 0 });
   const [selectedDate, setSelectedDate] = useState(() => new Date().toISOString().split('T')[0]);
+  let globalIndex = 0;
 
   useEffect(() => {
   const fetchMedicationSummary = async () => {
@@ -211,7 +232,9 @@ useEffect(() => {
         medicationSummary?.viewMedications?.length > 0 ? (
           medicationSummary.viewMedications.map((med, index) => (
             <tr key={index}>
-              <td className="px-4 py-2 border text-center">{med.medicineName}</td>
+              <td className={`px-4 py-2 border text-center ${
+    medicineColors[getMedicineColorIndex(med.medicineName)]
+  } font-semibold rounded`}>{med.medicineName}</td>
               <td className="px-4 py-2 border text-center">{med.doseTime}</td>
               <td className="px-4 py-2 border text-center">
                 <span
@@ -257,9 +280,28 @@ useEffect(() => {
 
               {meds.map((med, j) => (
                 <tr key={`med-${i}-${j}`}>
-                  <td className="px-4 py-2 border text-center">{med.medicineName}</td>
+                  <td className={`px-4 py-2 border text-center ${
+    medicineColors[getMedicineColorIndex(med.medicineName)]
+  } font-semibold rounded`}>{med.medicineName}</td>
                   <td className="px-4 py-2 border text-center">{med.doseTime}</td>
-                  <td className="px-4 py-2 border text-center text-gray-400">—</td>
+                    <td className="px-4 py-2 border text-center">
+  <span
+    className={`px-2 py-0.5 rounded-full text-xs font-semibold ${
+      med.status === true
+        ? 'bg-green-100 text-green-700'
+        : med.status === false
+        ? 'bg-red-100 text-red-700'
+        : 'bg-yellow-100 text-yellow-700'
+    }`}
+  >
+    {med.status === true
+      ? 'Taken'
+      : med.status === false
+      ? 'Missed'
+      : 'Pending'}
+  </span>
+</td>
+
                 </tr>
               ))}
             </>

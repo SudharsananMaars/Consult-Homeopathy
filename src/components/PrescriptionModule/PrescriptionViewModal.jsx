@@ -244,6 +244,12 @@ const PrescriptionViewModal = () => {
     return renderTimingForSlot(slot, item.standardSchedule);
   };
 
+  // Check if prescription has any frequent frequency items
+  const hasFrequentItems = () => {
+    if (!prescriptionData || !prescriptionData.prescriptionItems) return false;
+    return prescriptionData.prescriptionItems.some(item => item.frequencyType === "frequent");
+  };
+
   if (loading) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
@@ -361,18 +367,26 @@ const PrescriptionViewModal = () => {
                   <th className="border px-3 py-2 font-semibold text-gray-700 text-left">
                     Duration
                   </th>
-                  <th className="border px-3 py-2 font-semibold text-gray-700 text-left">
-                    Morning
-                  </th>
-                  <th className="border px-3 py-2 font-semibold text-gray-700 text-left">
-                    Noon
-                  </th>
-                  <th className="border px-3 py-2 font-semibold text-gray-700 text-left">
-                    Evening
-                  </th>
-                  <th className="border px-3 py-2 font-semibold text-gray-700 text-left">
-                    Night
-                  </th>
+                  {hasFrequentItems() ? (
+                    <th className="border px-3 py-2 font-semibold text-gray-700 text-left">
+                      Dosage
+                    </th>
+                  ) : (
+                    <>
+                      <th className="border px-3 py-2 font-semibold text-gray-700 text-left">
+                        Morning
+                      </th>
+                      <th className="border px-3 py-2 font-semibold text-gray-700 text-left">
+                        Noon
+                      </th>
+                      <th className="border px-3 py-2 font-semibold text-gray-700 text-left">
+                        Evening
+                      </th>
+                      <th className="border px-3 py-2 font-semibold text-gray-700 text-left">
+                        Night
+                      </th>
+                    </>
+                  )}
                   <th className="border px-3 py-2 font-semibold text-gray-700 text-left">
                     Consumption
                   </th>
@@ -410,26 +424,40 @@ const PrescriptionViewModal = () => {
                             </div>
                           )}
                         </td>
-                        {item.frequentSchedule &&
-                        item.frequentSchedule.length > 0 ? (
-                          <td className="border px-3 py-2" colSpan={4}>
-                            {renderGroupedSchedule(item, "morning")}
+                        {hasFrequentItems() ? (
+                          <td className="border px-3 py-2">
+                            {item.frequencyType === "frequent" ? (
+                              renderGroupedSchedule(item, "morning")
+                            ) : (
+                              <div className="space-y-1">
+                                <div><strong>Morning:</strong> {renderGroupedSchedule(item, "morning")}</div>
+                                <div><strong>Noon:</strong> {renderGroupedSchedule(item, "afternoon")}</div>
+                                <div><strong>Evening:</strong> {renderGroupedSchedule(item, "evening")}</div>
+                                <div><strong>Night:</strong> {renderGroupedSchedule(item, "night")}</div>
+                              </div>
+                            )}
                           </td>
                         ) : (
-                          <>
-                            <td className="border px-3 py-2">
+                          item.frequentSchedule && item.frequentSchedule.length > 0 ? (
+                            <td className="border px-3 py-2" colSpan={4}>
                               {renderGroupedSchedule(item, "morning")}
                             </td>
-                            <td className="border px-3 py-2">
-                              {renderGroupedSchedule(item, "afternoon")}
-                            </td>
-                            <td className="border px-3 py-2">
-                              {renderGroupedSchedule(item, "evening")}
-                            </td>
-                            <td className="border px-3 py-2">
-                              {renderGroupedSchedule(item, "night")}
-                            </td>
-                          </>
+                          ) : (
+                            <>
+                              <td className="border px-3 py-2">
+                                {renderGroupedSchedule(item, "morning")}
+                              </td>
+                              <td className="border px-3 py-2">
+                                {renderGroupedSchedule(item, "afternoon")}
+                              </td>
+                              <td className="border px-3 py-2">
+                                {renderGroupedSchedule(item, "evening")}
+                              </td>
+                              <td className="border px-3 py-2">
+                                {renderGroupedSchedule(item, "night")}
+                              </td>
+                            </>
+                          )
                         )}
                         <td className="border px-3 py-2 text-gray-700">
                           {item.medicineConsumption || "N/A"}
@@ -439,10 +467,9 @@ const PrescriptionViewModal = () => {
                         prescriptionData.prescriptionItems.length - 1 && (
                         <tr>
                           <td
-                            colSpan="11"
+                            colSpan={hasFrequentItems() ? "8" : "11"}
                             className="border px-3 py-1 text-gray-500 bg-gray-50 text-center"
                           >
-                            ——— Next Day ———
                           </td>
                         </tr>
                       )}
