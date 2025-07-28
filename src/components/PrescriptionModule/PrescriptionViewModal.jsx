@@ -12,24 +12,27 @@ import {
 import axios from "axios";
 import config from "../../config";
 import { useParams } from "react-router-dom";
-import { use } from "react";
+
 const PrescriptionViewModal = () => {
   const [prescriptionData, setPrescriptionData] = useState(null);
+  const [groupedPrescriptionData, setGroupedPrescriptionData] = useState(null);
   const [loading, setLoading] = useState(false);
-  // { prescriptionId, apiUrl, accessToken }
+  
   const { prescriptionId } = useParams();
   const apiUrl = config.API_URL;
   const accessToken = localStorage.getItem("token");
 
   useEffect(() => {
-    const fetchPrescription = async () => {
+    const fetchPrescriptionData = async () => {
       try {
         setLoading(true);
+        
+        // Fetch from first API (existing)
         console.log(
           "Prescription api:",
           `${apiUrl}/api/prescriptionControl/prescription/${prescriptionId}`
         );
-        const response = await axios.get(
+        const firstResponse = await axios.get(
           `${apiUrl}/api/prescriptionControl/prescription/${prescriptionId}`,
           {
             headers: {
@@ -37,12 +40,45 @@ const PrescriptionViewModal = () => {
             },
           }
         );
-        const data = response.data;
-        console.log("Prescription data:", data);
-        if (data.success) {
-          setPrescriptionData(data.data);
+        
+        const firstData = firstResponse.data;
+        console.log("First API - Prescription data:", firstData);
+        
+        if (firstData.success) {
+          setPrescriptionData(firstData.data);
+          
+          // Get userId from localStorage for second API call
+          const userId = localStorage.getItem("userId");
+          
+          if (userId) {
+            // Fetch from second API
+            console.log(
+              "Second API call:",
+              `${apiUrl}/api/patient/prescriptions/grouped/${userId}`
+            );
+            
+            try {
+              const secondResponse = await axios.get(
+                `${apiUrl}/api/patient/prescriptions/grouped/${userId}`,
+                {
+                  headers: {
+                    Authorization: `Bearer ${accessToken}`,
+                  },
+                }
+              );
+              
+              const secondData = secondResponse.data;
+              console.log("Second API - Grouped prescription data:", secondData);
+              setGroupedPrescriptionData(secondData);
+            } catch (secondApiError) {
+              console.error("Failed to fetch from second API:", secondApiError);
+              // Continue with first API data even if second API fails
+            }
+          } else {
+            console.warn("userId not found in localStorage, skipping second API call");
+          }
         } else {
-          console.error("Error:", data.message);
+          console.error("Error:", firstData.message);
         }
       } catch (err) {
         console.error("Failed to load prescription data", err);
@@ -52,19 +88,55 @@ const PrescriptionViewModal = () => {
     };
 
     if (prescriptionId && apiUrl && accessToken) {
-      fetchPrescription();
+      fetchPrescriptionData();
     }
   }, [prescriptionId, apiUrl, accessToken]);
 
-const formatDate = (dateString) => {
-  if (!dateString) return "N/A";
-  return new Date(dateString).toLocaleDateString("en-US", {
-    year: "numeric",
-    month: "short",
-    day: "numeric",
-  });
-};
+  // Function to get medicine duration from second API
+  const getMedicineDuration = (medicineName, prescriptionId) => {
+    if (!groupedPrescriptionData || !groupedPrescriptionData.prescriptions) {
+      return null;
+    }
 
+    // Find the prescription data for the current prescriptionId
+    const currentPrescription = groupedPrescriptionData.prescriptions[prescriptionId];
+    
+    if (!currentPrescription || !currentPrescription.medicineDurations) {
+      return null;
+    }
+
+    // Find the medicine duration for the specific medicine
+    const medicineDuration = currentPrescription.medicineDurations.find(
+      (duration) => duration.medicineName.toLowerCase() === medicineName.toLowerCase()
+    );
+
+    return medicineDuration;
+  };
+
+  // Function to format date range
+  const formatDateRange = (startDate, endDate) => {
+    if (!startDate || !endDate) return "N/A";
+    
+    const start = new Date(startDate).toLocaleDateString("en-US", {
+      month: "short",
+      day: "numeric",
+    });
+    const end = new Date(endDate).toLocaleDateString("en-US", {
+      month: "short",
+      day: "numeric",
+    });
+    
+    return `${start} - ${end}`;
+  };
+
+  const formatDate = (dateString) => {
+    if (!dateString) return "N/A";
+    return new Date(dateString).toLocaleDateString("en-US", {
+      year: "numeric",
+      month: "short",
+      day: "numeric",
+    });
+  };
 
   const renderTimingForSlot = (slot, standardSchedule) => {
     if (!standardSchedule || standardSchedule.length === 0) return null;
@@ -252,19 +324,20 @@ const formatDate = (dateString) => {
               ID: {prescriptionData._id.slice(-8)}
             </div>
           </div>
+          
           {/* Start and End Dates */}
-<div className="flex justify-center gap-6 mb-6 text-sm text-gray-700">
-  <div className="flex items-center gap-2">
-    <Calendar className="w-4 h-4 text-blue-700" />
-    <span className="font-medium">Start Date:</span>
-    <span>{formatDate(prescriptionData.startDate)}</span>
-  </div>
-  <div className="flex items-center gap-2">
-    <Calendar className="w-4 h-4 text-blue-700" />
-    <span className="font-medium">End Date:</span>
-    <span>{formatDate(prescriptionData.endDate)}</span>
-  </div>
-</div>
+          <div className="flex justify-center gap-6 mb-6 text-sm text-gray-700">
+            <div className="flex items-center gap-2">
+              <Calendar className="w-4 h-4 text-blue-700" />
+              <span className="font-medium">Start Date:</span>
+              <span>{formatDate(prescriptionData.startDate)}</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <Calendar className="w-4 h-4 text-blue-700" />
+              <span className="font-medium">End Date:</span>
+              <span>{formatDate(prescriptionData.endDate)}</span>
+            </div>
+          </div>
 
           <div className="border border-gray-300 overflow-x-auto">
             <table className="w-full border-collapse text-xs">
@@ -275,6 +348,9 @@ const formatDate = (dateString) => {
                   </th>
                   <th className="border px-3 py-2 font-semibold text-gray-700 text-center">
                     Label
+                  </th>
+                  <th className="border px-3 py-2 font-semibold text-gray-700 text-center">
+                    Date
                   </th>
                   <th className="border px-3 py-2 font-semibold text-gray-700 text-left">
                     Medicine Name
@@ -305,12 +381,22 @@ const formatDate = (dateString) => {
               <tbody>
                 {prescriptionData.prescriptionItems.map((item, index) => {
                   const timing = item.standardSchedule?.[0]?.timing || {};
+                  
+                  // Get medicine duration from second API
+                  const medicineDuration = getMedicineDuration(item.medicineName, prescriptionData._id);
+                  const dateRange = medicineDuration 
+                    ? formatDateRange(medicineDuration.startDate, medicineDuration.endDate)
+                    : item.label; // Fallback to label if no duration found
+                  
                   return (
                     <React.Fragment key={index}>
                       <tr>
                         <td className="border px-3 py-2">{index + 1}</td>
                         <td className="border px-3 py-2 font-bold text-center">
                           {item.label}
+                        </td>
+                        <td className="border px-3 py-2 font-bold text-center text-blue-700">
+                          {dateRange}
                         </td>
                         <td className="border px-3 py-2">
                           {item.medicineName}
@@ -353,7 +439,7 @@ const formatDate = (dateString) => {
                         prescriptionData.prescriptionItems.length - 1 && (
                         <tr>
                           <td
-                            colSpan="10"
+                            colSpan="11"
                             className="border px-3 py-1 text-gray-500 bg-gray-50 text-center"
                           >
                             ——— Next Day ———
@@ -386,6 +472,11 @@ const formatDate = (dateString) => {
                     {prescriptionData.medicineCourse} days
                   </span>
                 </div>
+                {groupedPrescriptionData && (
+                  <div className="flex justify-between">
+                    
+                  </div>
+                )}
               </div>
             </div>
           </div>
@@ -404,7 +495,7 @@ const formatDate = (dateString) => {
                 {prescriptionData.action.status}
               </span>
             </div>
-            <div className="text-rig6ht">
+            <div className="text-right">
               <div className="border-t border-gray-300 pt-2 mt-8 w-48">
                 <div className="text-sm font-medium">
                   Dr. Katyayani Shrivastava
