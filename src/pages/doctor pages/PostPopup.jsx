@@ -1,4 +1,7 @@
 import React, { useState } from 'react';
+import config from "../../config";
+
+const API_URL = config.API_URL;
 
 const PostPopup = ({ onClose, onSubmit }) => {
   const [media, setMedia] = useState(null);
@@ -18,7 +21,7 @@ const PostPopup = ({ onClose, onSubmit }) => {
     formData.append('shareToInstagram', shareToInstagram); // ✅ Correct field name
 
     try {
-      const res = await fetch('http://localhost:5000/api/posts', {
+      const res = await fetch(`${API_URL}/api/posts`, {
         method: 'POST',
         headers: {
           Authorization: `Bearer ${localStorage.getItem('token')}`,

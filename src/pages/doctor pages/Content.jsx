@@ -15,7 +15,7 @@ const Content = () => {
   useEffect(() => {
     const fetchPosts = async () => {
       try {
-        const res = await fetch('${API_URL}/api/post', {
+        const res = await fetch('${API_URL}/api/posts', {
           headers: {
             Authorization: `Bearer ${localStorage.getItem('token')}`,
           },
