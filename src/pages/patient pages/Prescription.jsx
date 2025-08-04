@@ -59,7 +59,10 @@ const Prescription = () => {
   useEffect(() => {
   const fetchMedicationSummary = async () => {
     try {
-      const response = await fetch(`${API_URL}/api/patient/medication-summary/${patientId}?date=${selectedDate}`);
+      const response = await fetch(`${API_URL}/api/patient/medication-summary/${patientId}?date=${selectedDate}`,
+        {
+        headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
+      });
       const data = await response.json();
       setMedicationSummary(data);
       const total = data?.viewMedications?.length || 0;
@@ -81,7 +84,11 @@ const Prescription = () => {
   useEffect(() => {
   const fetchPrescriptions = async () => {
     try {
-      const response = await fetch(`${API_URL}/api/patient/prescriptions/grouped/${patientId}`);
+      const response = await fetch(`${API_URL}/api/patient/prescriptions/grouped/${patientId}`,
+        {
+        headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
+      }
+      );
       const data = await response.json();
 
       const extractedPrescriptions = Object.entries(data.prescriptions).map(([id, details]) => ({
@@ -103,7 +110,10 @@ const Prescription = () => {
 useEffect(() => {
   const fetchWeeklyData = async () => {
     try {
-      const response = await fetch(`${API_URL}/api/patient/prescriptions/week-view/${patientId}`);
+      const response = await fetch(`${API_URL}/api/patient/prescriptions/week-view/${patientId}`,
+        {
+        headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
+      });
       const data = await response.json();
       const keys = Object.keys(data);
       setWeeklyData(data);

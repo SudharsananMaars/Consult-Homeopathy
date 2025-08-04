@@ -1,31 +1,33 @@
 import React, { useState, useEffect } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
 import { api } from '../services/api';
 import Barcode from 'react-barcode';
 
-const RawMaterialForm = ({ isEdit = false }) => {
+const RawMaterialVerify = () => {
   const { id } = useParams();
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  
+  // Check if this is verify mode (edit but no barcode) vs verify-and-change mode (edit + barcode)
+  const isVerifyMode = searchParams.get('verify') === 'true';
 
   const initialState = {
     name: '',
     type: '',
     category: '',
     packageSize: '',
-    quantity: '',
-    currentQuantity: '',
+    quantity: '0',
+    currentQuantity: '0',
     thresholdQuantity: '80',
     expiryDate: '',
     costPerUnit: ''
   };
 
   const [formData, setFormData] = useState(initialState);
-  const [loading, setLoading] = useState(isEdit);
+  const [originalData, setOriginalData] = useState(initialState); // Store original data for comparison
+  const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [submitting, setSubmitting] = useState(false);
-  const [preview, setPreview] = useState(null);
-  const [imageFile, setImageFile] = useState(null);
-
   
   // New states for two-step process
   const [currentStep, setCurrentStep] = useState(1); // 1 = form, 2 = barcode display
@@ -37,22 +39,10 @@ const RawMaterialForm = ({ isEdit = false }) => {
     'Packaging': ['Wrapper', 'Cardboard Box']
   };
 
-  // UOM mapping based on category
-  const getUOMByCategory = (category) => {
-    const uomMap = {
-      'Liquid': 'ml',
-      'Tablets': 'gms',
-      'Pills': 'gms',
-      'Individual Medicine': 'pieces',
-      'Wrapper': 'pieces',
-      'Cardboard Box': 'pieces'
-    };
-    return uomMap[category] || '';
-  };
-
+  // Fetch raw material data on component mount
   useEffect(() => {
     const fetchRawMaterial = async () => {
-      if (isEdit && id) {
+      if (id) {
         try {
           setLoading(true);
           const data = await api.getRawMaterial(id);
@@ -61,6 +51,7 @@ const RawMaterialForm = ({ isEdit = false }) => {
             expiryDate: new Date(data.expiryDate).toISOString().split('T')[0]
           };
           setFormData(formatted);
+          setOriginalData(formatted); // Store original data for comparison
           console.log('Loaded raw material:', data);
           setLoading(false);
         } catch (err) {
@@ -70,7 +61,25 @@ const RawMaterialForm = ({ isEdit = false }) => {
       }
     };
     fetchRawMaterial();
-  }, [isEdit, id]);
+  }, [id]);
+
+  // Function to check if data has been modified
+  const hasDataChanged = () => {
+    return JSON.stringify(formData) !== JSON.stringify(originalData);
+  };
+
+  // UOM mapping based on category
+  const getUOMByCategory = (category) => {
+    const uomMap = {
+      'Liquid': 'ml',
+      'Tablets': 'gram',
+      'Pills': 'dram',
+      'Individual Medicine': 'pieces',
+      'Wrapper': 'pieces',
+      'Cardboard Box': 'pieces'
+    };
+    return uomMap[category] || '';
+  };
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -119,40 +128,46 @@ const RawMaterialForm = ({ isEdit = false }) => {
     
     if (currentStep === 2) {
       // Step 2: Finish button clicked, navigate to raw materials
-      navigate('/raw-materials');
+      navigate('/raw-materials/quality-check');
       return;
     }
 
-    // Step 1: Generate barcode
+    // In verify mode, update and go back without generating barcode
+    if (isVerifyMode) {
+      try {
+        setSubmitting(true);
+        const dataToSubmit = {
+          ...formData,
+          quantity: Number(formData.quantity),
+          costPerUnit: Number(formData.costPerUnit),
+          uom: getUOMByCategory(formData.category),
+          IsAmendment: hasDataChanged() // Set amendment to true if data has changed
+        };
+
+        await api.updateRawMaterial(id, dataToSubmit);
+        
+        // Navigate back without going to barcode step
+        navigate('/raw-materials/quality-check');
+        return;
+      } catch (err) {
+        setError(err.message);
+        setSubmitting(false);
+        return;
+      }
+    }
+
+    // Step 1: Generate barcode (only for verify and change mode)
     try {
       setSubmitting(true);
-      
-      // Create FormData instead of regular object when there's an image
-      const formDataToSubmit = new FormData();
-      
-      // Append all form fields
-      formDataToSubmit.append('name', formData.name);
-      formDataToSubmit.append('type', formData.type);
-      formDataToSubmit.append('category', formData.category);
-      formDataToSubmit.append('packageSize', formData.packageSize);
-      formDataToSubmit.append('quantity', Number(formData.quantity));
-      formDataToSubmit.append('currentQuantity', Number(formData.currentQuantity));
-      formDataToSubmit.append('thresholdQuantity', Number(formData.thresholdQuantity));
-      formDataToSubmit.append('expiryDate', formData.expiryDate);
-      formDataToSubmit.append('costPerUnit', Number(formData.costPerUnit));
-      formDataToSubmit.append('uom', getUOMByCategory(formData.category));
-      
-      // Append the image file if it exists
-      if (imageFile) {
-        formDataToSubmit.append('productImage', imageFile);
-      }
+      const dataToSubmit = {
+        ...formData,
+        quantity: Number(formData.quantity),
+        costPerUnit: Number(formData.costPerUnit),
+        uom: getUOMByCategory(formData.category),
+        IsAmendment: hasDataChanged() // Set amendment to true if data has changed
+      };
 
-      let response;
-      if (isEdit) {
-        response = await api.updateRawMaterial(id, formDataToSubmit);
-      } else {
-        response = await api.createRawMaterial(formDataToSubmit);
-      }
+      const response = await api.updateRawMaterial(id, dataToSubmit);
       
       // Set the barcode image URL from API response
       setBarcodeImageUrl(response.barcodeImageUrl);
@@ -182,8 +197,8 @@ const RawMaterialForm = ({ isEdit = false }) => {
 
   if (loading) return <div className="text-center text-gray-600 py-10">Loading raw material data...</div>;
 
-  // Step 2: Barcode display
-  if (currentStep === 2) {
+  // Step 2: Barcode display (only for verify and change mode)
+  if (currentStep === 2 && !isVerifyMode) {
     return (
       <div className="max-w-3xl mx-auto mt-10 p-6 bg-white rounded-2xl shadow-md">
         <h2 className="text-2xl font-bold mb-6 text-gray-800 text-center">
@@ -256,8 +271,17 @@ const RawMaterialForm = ({ isEdit = false }) => {
   return (
     <div className="max-w-3xl mx-auto mt-10 p-6 bg-white rounded-2xl shadow-md">
       <h2 className="text-2xl font-bold mb-6 text-gray-800">
-        {isEdit ? 'Edit Raw Material' : 'Add New Raw Material'}
+        {isVerifyMode ? 'Verify Raw Material' : 'Verify Raw Material'}
       </h2>
+
+      {/* Show info banner for verify mode */}
+      {isVerifyMode && (
+        <div className="mb-4 p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
+          <p className="text-yellow-800 text-sm">
+             Make your changes and update. 
+          </p>
+        </div>
+      )}
 
       {error && <div className="mb-4 text-red-600 font-medium">{error}</div>}
 
@@ -406,57 +430,26 @@ const RawMaterialForm = ({ isEdit = false }) => {
           />
         </div>
 
-        {/* Product Image Upload */}
-        <div>
-          <label className="block mb-2 text-sm font-medium text-gray-700">
-            Product Image:
-          </label>
-          <input
-            type="file"
-            accept="image/*"
-            onChange={(e) => {
-              const file = e.target.files[0];
-              if (file) {
-                const reader = new FileReader();
-                reader.onloadend = () => {
-                  setPreview(reader.result);
-                  setImageFile(file);
-                };
-                reader.readAsDataURL(file);
-              }
-            }}
-            className="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4
-            file:rounded-lg file:border-0
-            file:text-sm file:font-semibold
-            file:bg-blue-50 file:text-blue-700
-            hover:file:bg-blue-100"
-          />
-          {preview && (
-            <div className="mt-4">
-              <img
-                src={preview}
-                alt="Product preview"
-                className="w-full max-w-xs rounded-lg shadow-md"
-              />
-            </div>
-          )}
-        </div>
-
         {/* Buttons */}
         <div className="flex justify-end gap-4 mt-6">
           <button
             type="button"
-            onClick={() => navigate('/raw-materials')}
+            onClick={() => navigate('/raw-materials/quality-check')}
             className="px-6 py-2 rounded-lg border border-gray-300 text-gray-700 hover:bg-gray-100 transition"
           >
-            Cancel
+            {isVerifyMode ? 'Back' : 'Cancel'}
           </button>
           <button
             type="submit"
             disabled={submitting}
             className="px-6 py-2 rounded-lg bg-blue-600 text-white hover:bg-blue-700 transition"
           >
-            {submitting ? 'Generating...' : isEdit ? 'Update' : 'Generate Barcode'}
+            {isVerifyMode 
+              ? submitting ? 'Updating...' : 'Update'
+              : submitting 
+                ? 'Updating...' 
+                : 'Update & Generate Barcode'
+            }
           </button>
         </div>
       </form>
@@ -464,4 +457,4 @@ const RawMaterialForm = ({ isEdit = false }) => {
   );
 };
 
-export default RawMaterialForm;
+export default RawMaterialVerify;

@@ -14,26 +14,44 @@ const RawMaterialsList = () => {
 
   useEffect(() => {
     const queryParams = new URLSearchParams(location.search);
-    if (queryParams.get("filter") === "expiring") {
+    const filterParam = queryParams.get("filter");
+    if (filterParam === "expiring") {
       setFilter("expiring");
+    } else if (filterParam === "lowstock") {
+      setFilter("lowstock");
     }
   }, [location]);
 
   useEffect(() => {
-    const fetchRawMaterials = async () => {
-      try {
-        setLoading(true);
-        const data = await api.getRawMaterials();
-        setRawMaterials(data);
-        setLoading(false);
-      } catch (err) {
-        setError(err.message);
-        setLoading(false);
-      }
-    };
+  const fetchRawMaterials = async () => {
+    try {
+      setLoading(true);
+      const [allMaterials, lowStockResponse] = await Promise.all([
+        api.getRawMaterials(),
+        api.getThresholdStock(), 
+      ]);
 
-    fetchRawMaterials();
-  }, []);
+      // Flatten and normalize low stock items
+      const lowStockSet = new Set(
+        lowStockResponse.rawmaterial.map((item) => item._id.name.toLowerCase())
+      );
+
+      // Add isLowStock flag to materials based on name match
+      const enrichedMaterials = allMaterials.map((material) => ({
+        ...material,
+        isLowStock: lowStockSet.has(material.name.toLowerCase()),
+      }));
+
+      setRawMaterials(enrichedMaterials);
+      setLoading(false);
+    } catch (err) {
+      setError(err.message);
+      setLoading(false);
+    }
+  };
+
+  fetchRawMaterials();
+}, []);
 
   const handleDelete = async (id) => {
     if (window.confirm("Are you sure you want to delete this raw material?")) {
@@ -46,34 +64,43 @@ const RawMaterialsList = () => {
     }
   };
 
-  const filterMaterials = () => {
-    let filtered = [...rawMaterials];
-    
-    if (filter === "expiring") {
-      const nextMonth = new Date();
-      nextMonth.setMonth(nextMonth.getMonth() + 1);
-      filtered = filtered.filter(
-        (material) => new Date(material.expiryDate) < nextMonth
-      );
-    }
-  
-    if (typeFilter !== "all") {
-      filtered = filtered.filter((material) => material.type === typeFilter);
-    }
-  
-    return filtered;
-  };  
-
-  const handleFilterChange = (newFilter) => {
-    setFilter(newFilter);
-    navigate(newFilter === "expiring" ? "?filter=expiring" : "");
-  };
-
-  const calculateStockStatus = (material) => {
+  /*const calculateStockStatus = (material) => {
     const { quantity, currentQuantity, thresholdQuantity } = material;
     if (!quantity || !thresholdQuantity) return null;
     const usedPercentage = ((quantity - currentQuantity) / quantity) * 100;
     return usedPercentage >= thresholdQuantity ? "low" : "ok";
+  };*/
+
+  const filterMaterials = () => {
+  let filtered = [...rawMaterials];
+
+  if (filter === "expiring") {
+    const nextMonth = new Date();
+    nextMonth.setMonth(nextMonth.getMonth() + 1);
+    filtered = filtered.filter(
+      (material) => new Date(material.expiryDate) < nextMonth
+    );
+  } else if (filter === "lowstock") {
+    filtered = filtered.filter((material) => material.isLowStock);
+  }
+
+  if (typeFilter !== "all") {
+    filtered = filtered.filter((material) => material.type === typeFilter);
+  }
+
+  return filtered;
+};
+
+
+  const handleFilterChange = (newFilter) => {
+    setFilter(newFilter);
+    if (newFilter === "expiring") {
+      navigate("?filter=expiring");
+    } else if (newFilter === "lowstock") {
+      navigate("?filter=lowstock");
+    } else {
+      navigate("");
+    }
   };
 
   if (loading)
@@ -100,7 +127,7 @@ const RawMaterialsList = () => {
           <div className="flex items-center gap-4">
             <div className="flex items-center gap-4">
               <div className="flex items-center gap-2">
-                <label htmlFor="filter" className="text-sm font-medium text-gray-700">Expiry:</label>
+                <label htmlFor="filter" className="text-sm font-medium text-gray-700"></label>
                 <select
                   id="filter"
                   value={filter}
@@ -109,6 +136,7 @@ const RawMaterialsList = () => {
                 >
                   <option value="all">All</option>
                   <option value="expiring">Expiring Soon</option>
+                  <option value="lowstock">Low Stock</option>
                 </select>
               </div>
 
@@ -126,12 +154,12 @@ const RawMaterialsList = () => {
                 </select>
               </div>
             </div>
-          <Link
+          {/*<Link
             to="/raw-materials/new"
             className="bg-blue-600 hover:bg-blue-700 text-white text-sm px-4 py-2 rounded-lg shadow"
           >
             + Add Raw Material
-          </Link>
+          </Link>*/}
         </div>
       </div>
 
@@ -150,7 +178,7 @@ const RawMaterialsList = () => {
                 <th className="px-4 py-3 text-left">Package Size</th>
                 <th className="px-4 py-3 text-left">Stock</th>
                 <th className="px-4 py-3 text-left">Quantity</th>
-                <th className="px-4 py-3 text-left">Threshold</th>
+                {/*<th className="px-4 py-3 text-left">Threshold</th>*/}
                 <th className="px-4 py-3 text-left">Cost/Unit</th>
                 <th className="px-4 py-3 text-left">Barcode</th>
                 <th className="px-4 py-3 text-left">Expiry Date</th>
@@ -161,8 +189,7 @@ const RawMaterialsList = () => {
             </thead>
             <tbody>
               {filteredMaterials.map((material) => {
-                const stockStatus = calculateStockStatus(material);
-                const isLow = stockStatus === "low";
+                const isLow = material.isLowStock;
 
                 return (
                   <tr
@@ -178,12 +205,12 @@ const RawMaterialsList = () => {
                     <td className="px-4 py-3">{material.category}</td>
                     <td className="px-4 py-3">{material.packageSize}</td>
                     <td className="px-4 py-3">
-                      {material.currentQuantity} {material.uom}
+                      {material.currentQuantity} 
                     </td>
                     <td className="px-4 py-3">
-                      {material.quantity} {material.uom}
+                      {material.quantity} 
                     </td>
-                    <td className="px-4 py-3">{material.thresholdQuantity}%</td>
+                    {/*<td className="px-4 py-3">{material.thresholdQuantity}%</td>*/}
                     <td className="px-4 py-3">{material.costPerUnit}</td>
                     <td className="px-4 py-3">{material.barcode}</td>
                     <td className="px-4 py-3">
@@ -210,12 +237,12 @@ const RawMaterialsList = () => {
                       >
                         View
                       </Link>
-                      <Link
+                      {/*<Link
                         to={`/raw-materials/${material._id}/edit`}
                         className="bg-yellow-500 hover:bg-yellow-600 text-white px-3 py-1 rounded"
                       >
                         Edit
-                      </Link>
+                      </Link>*/}
                       <button
                         onClick={() => handleDelete(material._id)}
                         className="bg-red-500 hover:bg-red-600 text-white px-3 py-1 rounded"

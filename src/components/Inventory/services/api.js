@@ -15,26 +15,39 @@ export const api = {
     if (!response.ok) throw new Error('Failed to fetch raw material');
     return response.json();
   },
+
+
+  getThresholdStock: async () => {
+  const response = await fetch(`${API_URL}/threshold`);
+  if (!response.ok) throw new Error("Failed to fetch low stock data");
+  return await response.json();
+},
+
+
+createRawMaterial: async (data) => {
+  const isFormData = data instanceof FormData;
   
-  createRawMaterial: async (data) => {
-    const response = await fetch(`${API_URL}/raw-materials`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(data)
-    });
-    if (!response.ok) throw new Error('Failed to create raw material');
-    return response.json();
-  },
+  const response = await fetch(`${API_URL}/raw-materials`, {
+    method: 'POST',
+    ...(isFormData ? {} : { headers: { 'Content-Type': 'application/json' } }),
+    body: isFormData ? data : JSON.stringify(data)
+  });
+  if (!response.ok) throw new Error('Failed to create raw material');
+  return response.json();
+},
+
+updateRawMaterial: async (id, data) => {
+  const isFormData = data instanceof FormData;
   
-  updateRawMaterial: async (id, data) => {
-    const response = await fetch(`${API_URL}/raw-materials/${id}`, {
-      method: 'PUT',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(data)
-    });
-    if (!response.ok) throw new Error('Failed to update raw material');
-    return response.json();
-  },
+  const response = await fetch(`${API_URL}/raw-materials/${id}`, {
+    method: 'PUT',
+    ...(isFormData ? {} : { headers: { 'Content-Type': 'application/json' } }),
+    body: isFormData ? data : JSON.stringify(data)
+  });
+  if (!response.ok) throw new Error('Failed to update raw material');
+  return response.json();
+},
+
   
   deleteRawMaterial: async (id) => {
     const response = await fetch(`${API_URL}/raw-materials/${id}`, {

@@ -94,13 +94,16 @@ import "@fortawesome/fontawesome-free/css/all.min.css";
 // Inventory module
 import InventoryLayout from "./components/Inventory/Layout.jsx";
 import InventoryDashboard from "./components/Inventory/InventoryDashBoard.jsx";
+import QualityCheck from "./components/Inventory/QualityCheck.jsx";
 import RawMaterialsList from "./components/Inventory/RawMaterials/RawMaterialsList.jsx";
 import RawMaterialForm from "./components/Inventory/RawMaterials/RawMaterialForm.jsx";
 import RawMaterialDetail from "./components/Inventory/RawMaterials/RawMaterialDetail.jsx";
+import RawMaterialVerify from "./components/Inventory/RawMaterials/RawMaterialVerify.jsx";
 import MedicinesList from "./components/Inventory/Medicine/MedicinesList.jsx";
 import MedicineDetail from "./components/Inventory/Medicine/MedicineDetail.jsx";
 import MedicineForm from "./components/Inventory/Medicine/MedicineForm.jsx";
 import PriceCalculator from "./components/Inventory/Medicine/PriceCalculator.jsx";
+import AmendmentLog from "./components/Inventory/AmendmentLog.jsx";
 import OrderRawMaterials from "./components/Inventory/Order/OrderRawMaterials.jsx";
 import EditVendor from "./components/Vendor/EditVendor.jsx";
 // Error Pages
@@ -124,6 +127,8 @@ import AddVendor from "./components/Vendor/AddVendor.jsx";
 import Navbar from "./components/Vendor/Navbar.jsx";
 import { ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
+import DetailsBarcode from "./components/Inventory/RawMaterials/DetailsBarcode.jsx";
+import UnusedDetails from "./components/Inventory/UnusedDetails.jsx";
 
 
 // Error Fallback Component
@@ -679,6 +684,30 @@ function App() {
           }
         />
         <Route
+          path="/raw-materials/quality-check"
+          element={
+            <ProtectedRoute allowedRoles={["Doctor", "admin"]}>
+              <QualityCheck />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/amendmentlog"
+          element={
+            <ProtectedRoute allowedRoles={["Doctor", "admin"]}>
+              <AmendmentLog />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/raw-materials/:id/verify"
+          element={
+            <ProtectedRoute allowedRoles={["Doctor", "admin"]}>
+              <RawMaterialVerify />
+            </ProtectedRoute>
+          }
+        />
+        <Route
           path="/raw-materials/:id/edit"
           element={
             <ProtectedRoute allowedRoles={["Doctor", "admin"]}>
@@ -691,6 +720,22 @@ function App() {
           element={
             <ProtectedRoute allowedRoles={["Doctor", "admin"]}>
               <MedicinesList />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/barcode-details/:id"
+          element={
+            <ProtectedRoute allowedRoles={["Doctor", "admin"]}>
+              <DetailsBarcode />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/unused-details/:id"
+          element={
+            <ProtectedRoute allowedRoles={["Doctor", "admin"]}>
+              <UnusedDetails />
             </ProtectedRoute>
           }
         />
