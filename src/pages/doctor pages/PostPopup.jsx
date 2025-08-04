@@ -18,10 +18,10 @@ const PostPopup = ({ onClose, onSubmit }) => {
     const formData = new FormData();
     if (media) formData.append('file', media);
     formData.append('text', description);
-    formData.append('shareToInstagram', shareToInstagram); // ✅ Correct field name
+    formData.append('shareToInstagram', shareToInstagram); 
 
     try {
-      const res = await fetch(`${API_URL}/api/posts`, {
+      const res = await fetch(`${API_URL}/api/post`, {
         method: 'POST',
         headers: {
           Authorization: `Bearer ${localStorage.getItem('token')}`,
