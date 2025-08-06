@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useMemo } from "react";
 import { FaArrowLeft, FaPlus, FaMinus, FaTrash, FaShoppingCart, FaCheck, FaExclamationTriangle } from "react-icons/fa";
 import moment from "moment";
@@ -20,65 +19,81 @@ const MedicinePreparationView = () => {
   const API_URL = config.API_URL; // Replace with your actual API URL
   const onClose =  false;
   const { appointmentId } = useParams();
-  useEffect(() => {
-    const fetchData = async () => {
-      try {
-        setLoading(true);
-        const token = localStorage.getItem('token');
-        
-        // Fetch appointment details
-        const appointmentResponse = await fetch(`${API_URL}/api/patient/appointment/${appointmentId}`, {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        });
-        
-        if (!appointmentResponse.ok) {
-          throw new Error('Failed to fetch appointment details');
-        }
-        
-        const appointmentData = await appointmentResponse.json();
-        setAppointment(appointmentData);
-        
-        // Fetch prescription
-        const prescriptionResponse = await fetch(`${API_URL}/api/prescription/appointment/${appointmentId}`, {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        });
-        
-        if (!prescriptionResponse.ok) {
-          throw new Error('Failed to fetch prescription');
-        }
-        
-        const prescriptionData = await prescriptionResponse.json();
-        console.log("prescriptionData", prescriptionData);
-        setPrescription(prescriptionData);
-        
-        // Fetch all raw materials
-        const rawMaterialsResponse = await fetch(`${API_URL}/api/inventory/raw-materials`, {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        });
-        
-        if (!rawMaterialsResponse.ok) {
-          throw new Error('Failed to fetch raw materials');
-        }
-        
-        const rawMaterialsData = await rawMaterialsResponse.json();
-        setRawMaterials(rawMaterialsData);
-        
-        setLoading(false);
-      } catch (err) {
-        console.error("Error fetching data:", err);
-        setError(err.message || "Failed to fetch data");
-        setLoading(false);
+ useEffect(() => {
+  const fetchData = async () => {
+    try {
+      setLoading(true);
+      const token = localStorage.getItem('token');
+      
+      // Fetch appointment details
+      const appointmentResponse = await fetch(`${API_URL}/api/patient/appointment/${appointmentId}`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+      
+      if (!appointmentResponse.ok) {
+        throw new Error('Failed to fetch appointment details');
       }
-    };
+      
+      const appointmentData = await appointmentResponse.json();
+      setAppointment(appointmentData);
+      
+      // Fetch prescription
+      const prescriptionResponse = await fetch(`${API_URL}/api/prescription/appointment/${appointmentId}`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+      
+      if (!prescriptionResponse.ok) {
+        throw new Error('Failed to fetch prescription');
+      }
+      
+      const prescriptionData = await prescriptionResponse.json();
+      console.log("prescriptionData", prescriptionData);
+      setPrescription(prescriptionData);
 
-    fetchData();
-  }, [appointmentId, API_URL]);
+      // 👇 Sync cart if prescription already has rawMaterialDetails
+      if (prescriptionData.prescriptionItems && selectedMedicine) {
+        const selectedPrescriptionItem = prescriptionData.prescriptionItems.find(
+          item => item.medicineName === selectedMedicine
+        );
+        
+        if (selectedPrescriptionItem) {
+          setCart(selectedPrescriptionItem.rawMaterialDetails || []);
+        } else {
+          setCart([]); // No raw materials found for this medicine
+        }
+      }
+
+      // Fetch all raw materials
+      const rawMaterialsResponse = await fetch(`${API_URL}/api/inventory/raw-materials`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+      
+      if (!rawMaterialsResponse.ok) {
+        throw new Error('Failed to fetch raw materials');
+      }
+      
+      const rawMaterialsData = await rawMaterialsResponse.json();
+      setRawMaterials(rawMaterialsData);
+      
+      setLoading(false);
+    } catch (err) {
+      console.error("Error fetching data:", err);
+      setError(err.message || "Failed to fetch data");
+      setLoading(false);
+    }
+  };
+
+  fetchData();
+}, [appointmentId, API_URL, selectedMedicine]); // 👈 Add selectedMedicineName here
+
+
+
 console.log("prescription:", prescription);
   // Sort raw materials based on prioritization logic
   const sortedRawMaterials = useMemo(() => {
@@ -107,33 +122,36 @@ console.log("prescription:", prescription);
     });
   }, [rawMaterials]);
 
-  const filteredRawMaterials = useMemo(() => {
-    if (!selectedMedicine || !rawMaterials.length) return [];
-    
-    // Get prescription medicine names to filter by
-    const prescriptionMedicineNames = prescription?.prescriptionItems?.map(item => 
-      item.name?.toLowerCase() || item.rawMaterialName?.toLowerCase()
-    ) || [];
-    console.log("prescriptionMedicineNames", prescriptionMedicineNames);
-    // Filter raw materials that match prescription medicines
-    let filtered = sortedRawMaterials.filter(material => 
-      prescriptionMedicineNames.some(name => 
-        material.name.toLowerCase().includes(name) || 
-        name.includes(material.name.toLowerCase())
-      )
+const filteredRawMaterials = useMemo(() => {
+  if (!selectedMedicine || !rawMaterials.length) return [];
+
+  // ✅ Fixed: extract raw material names from prescriptionItems
+  const prescriptionMedicineNames = prescription?.prescriptionItems?.flatMap(item => {
+    return (item.rawMaterialDetails || []).map(material => 
+      material.name ? material.name.toLowerCase() : null
     );
-    
-    // Apply search term filter
-    if (searchTerm.trim()) {
-      filtered = filtered.filter(material => 
-        material.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        material.type?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        material.category?.toLowerCase().includes(searchTerm.toLowerCase())
-      );
-    }
-    
-    return filtered;
-  }, [sortedRawMaterials, searchTerm, selectedMedicine, prescription]);
+  }).filter(name => name !== null) || [];
+
+  // Filter raw materials that match prescription raw material names
+  let filtered = sortedRawMaterials.filter(material => 
+    prescriptionMedicineNames.some(name => 
+      material.name && material.name.toLowerCase().includes(name) || 
+      name.includes(material.name.toLowerCase())
+    )
+  );
+
+  // Apply search term filter
+  if (searchTerm.trim()) {
+    filtered = filtered.filter(material => 
+      (material.name && material.name.toLowerCase().includes(searchTerm.toLowerCase())) ||
+      (material.type && material.type.toLowerCase().includes(searchTerm.toLowerCase())) ||
+      (material.category && material.category.toLowerCase().includes(searchTerm.toLowerCase()))
+    );
+  }
+
+  return filtered;
+}, [sortedRawMaterials, searchTerm, selectedMedicine, prescription]);
+
 
   const handleSelectMedicine = (medicine) => {
     setSelectedMedicine(medicine);
@@ -219,8 +237,9 @@ console.log("prescription:", prescription);
     }
       
       // Create prescription item with raw materials
+      
       const prescriptionItem = {
-        medicineName: selectedMedicine.name,
+        medicineName: selectedMedicine.medicineName || selectedMedicine.name,
         rawMaterialDetails: cart.map(item => ({
           _id: item._id,
           name: item.name,
@@ -230,9 +249,12 @@ console.log("prescription:", prescription);
         })),
         form: selectedMedicine.form || "Tablets",
         uom: selectedMedicine.uom || "Gram",
+        dispenseQuantity: selectedMedicine.dispenseQuantity || "N/A",
         frequency: selectedMedicine.frequency,
-        Duration: selectedMedicine.duration
+        duration: selectedMedicine.duration,
+        frequencyType: selectedMedicine.frequencyType || "standard"
       };
+
       
       // Update prescription with the prepared medicine
       await fetch(`${API_URL}/api/prescription/${prescription._id}/prepare`, {
@@ -241,7 +263,7 @@ console.log("prescription:", prescription);
           'Content-Type': 'application/json',
           Authorization: `Bearer ${token}`,
         },
-        body: JSON.stringify({ prescriptionItem })
+        body: JSON.stringify(prescriptionItem)
       });
       
       // Update inventory quantities
@@ -397,13 +419,22 @@ console.log("prescription:", prescription);
               >
                 <p className="font-medium">{item.medicineName}</p>
                 <div className="grid grid-cols-2 text-xs text-gray-600">
-                  <p>Raw Material: {item.rawMaterialName}</p>
-                  <p>Form: {item.form}</p>
-                  <p>UOM: {item.uom}</p>
-                  <p>Quantity: {item.quantity}</p>
-                  <p>Frequency Duration: {item.frequencyDuration}</p>
-                </div>
-                <p className="mt-1 text-xs text-gray-600">Steps: {item.preparationSteps}</p>
+  <p>
+  Raw Material:{" "}
+  {item.rawMaterialDetails && item.rawMaterialDetails.length > 0
+    ? item.rawMaterialDetails
+        .map((rm) => `${rm.name} (${rm.quantity})`)
+        .join(", ")
+    : "N/A"}
+</p>
+
+  <p>Form: {item.form}</p>
+  <p>UOM: {item.uom}</p>
+  <p>Quantity: {item.dispenseQuantity || "N/A"}</p>
+  <p>Duration: {item.duration.replace(/\s*\(.*?\)/, '')}</p>
+</div>
+
+                {/*<p className="mt-1 text-xs text-gray-600">Steps: {item.preparationSteps}</p>*/}
                 {step === 1 && (
                   <button
                     className="mt-2 w-full py-1 bg-blue-500 text-white text-sm rounded hover:bg-blue-600 transition"
@@ -439,7 +470,7 @@ console.log("prescription:", prescription);
           {step === 2 && (
             <div className="bg-white p-4 rounded-lg shadow-sm">
               <h2 className="text-xl font-semibold text-gray-800 mb-4">
-                Add Raw Materials for {selectedMedicine?.name}
+                Add Raw Materials 
               </h2>
               
               {/* Search box */}
