@@ -83,37 +83,43 @@ const Sidebar = ({ role }) => {
           },
           {
             id: 7,
+            path: "/medicine-preparation",
+            name: "Medicine Preparation",
+            icon: MdDashboard,
+          },
+          {
+            id: 8,
             path: "/raw-materials",
             name: "Inventory",
             icon: AiOutlineMedicineBox,
           },
           {
-            id: 8,
+            id: 9,
             path: "/workshoppage",
             name: "Workshops",
             icon: MdOutlineOndemandVideo,
           },
-          { id: 9, path: "/content", name: "Content", icon: FaPhotoVideo },
+          { id: 10, path: "/content", name: "Content", icon: FaPhotoVideo },
           {
-            id: 10,
+            id: 11,
             path: "/accounts",
             name: "Accounts",
             icon: MdAccountBalance,
           },
           {
-            id: 11,
+            id: 12,
             path: "/doctor-dashboard/all",
             name: "Doctor CRM",
             icon: FaUserDoctor,
           },
           {
-            id: 12,
+            id: 13,
             path: "/allocation",
             name: "Doctor Allocation",
             icon: MdOutlineDashboardCustomize,
           },
-          { id: 13, path: "/docsettings", name: "Settings", icon: LuSettings },
-          { id: 14, path: "/hrm", name: "HR Management", icon: FaPeopleGroup },
+          { id: 14, path: "/docsettings", name: "Settings", icon: LuSettings },
+          { id: 15, path: "/hrm", name: "HR Management", icon: FaPeopleGroup },
         ]
       : role === "assistant-doctor"
       ? [

@@ -15,6 +15,8 @@ const InventoryDashboard = () => {
   const [showBarcodeModal, setShowBarcodeModal] = useState(false);
   const [barcodeInput, setBarcodeInput] = useState('');
   
+
+
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -62,7 +64,6 @@ const InventoryDashboard = () => {
   const handleBarcodeSubmit = (e) => {
     e.preventDefault();
     if (barcodeInput.trim()) {
-      // Navigate to barcode details page with the barcode as a parameter
       navigate(`/barcode-details/${encodeURIComponent(barcodeInput.trim())}`);
       setShowBarcodeModal(false);
       setBarcodeInput('');
@@ -72,6 +73,26 @@ const InventoryDashboard = () => {
   const closeBarcodeModal = () => {
     setShowBarcodeModal(false);
     setBarcodeInput('');
+  };
+
+  const getStatusColor = (status) => {
+    switch (status) {
+      case 'critical': return 'text-red-600';
+      case 'high': return 'text-orange-600';
+      case 'medium': return 'text-yellow-600';
+      case 'low': return 'text-green-600';
+      default: return 'text-gray-600';
+    }
+  };
+
+  const getStatusBgColor = (status) => {
+    switch (status) {
+      case 'critical': return 'bg-red-100';
+      case 'high': return 'bg-orange-100';
+      case 'medium': return 'bg-yellow-100';
+      case 'low': return 'bg-green-100';
+      default: return 'bg-gray-100';
+    }
   };
 
   if (loading) return <div className="text-center py-10 text-lg font-medium text-gray-600">Loading dashboard data...</div>;
@@ -107,13 +128,12 @@ const InventoryDashboard = () => {
         </div>
       </div>
 
-      <div className="bg-white rounded-2xl shadow p-6">
+      <div className="bg-white rounded-2xl shadow p-6 mb-6">
         <h3 className="text-xl font-semibold text-gray-800 mb-4">Quick Actions</h3>
         <div className="flex flex-col md:flex-row gap-4 justify-center">
           <Link to="/raw-materials/new" className="bg-blue-600 hover:bg-blue-700 text-white text-sm px-5 py-2 rounded-lg shadow">Add Raw Material</Link>
-          {/*<Link to="/medicines/new" className="bg-green-600 hover:bg-green-700 text-white text-sm px-5 py-2 rounded-lg shadow">Add Medicine</Link>*/}
-          {/*<Link to="/medicines/calculate-price" className="bg-indigo-600 hover:bg-indigo-700 text-white text-sm px-5 py-2 rounded-lg shadow">Calculate Price</Link>*/}
           <Link to="/raw-materials/quality-check" className="bg-red-600 hover:bg-red-700 text-white text-sm px-5 py-2 rounded-lg shadow">Stock Audit</Link>
+          <Link to="/lekagedetection" className="bg-purple-600 hover:bg-purple-700 text-white text-sm px-5 py-2 rounded-lg shadow">Leakage Detection</Link>
           <button 
             onClick={() => setShowBarcodeModal(true)}
             className="bg-green-600 hover:bg-green-700 text-white text-sm px-5 py-2 rounded-lg shadow"
@@ -123,6 +143,8 @@ const InventoryDashboard = () => {
         </div>
       </div>
 
+      {/* Leakage Alert Section */}
+      
       {/* Barcode Modal */}
       {showBarcodeModal && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">

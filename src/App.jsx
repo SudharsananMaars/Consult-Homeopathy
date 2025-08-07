@@ -83,6 +83,7 @@ import BreakTimer from "./pages/doctor pages/BreakTimer.jsx";
 import Payslip from "./pages/doctor pages/payslip.jsx";
 import NoteTaking from "./pages/doctor pages/NoteTaking.jsx";
 import PrescriptionWriting from "./components/PrescriptionModule/PrescriptionWriting.jsx";
+import MedicinePreparation from './pages/doctor pages/MedicinePreparation.jsx';
 import MedicinePreparationView from "./pages/doctor pages/MedicinePreparationView.jsx";
 import PrescriptionViewModal from "./components/PrescriptionModule/PrescriptionViewModal.jsx";
 import InventoryPage from "./components/calllog components/InventoryPage.jsx";
@@ -106,6 +107,7 @@ import PriceCalculator from "./components/Inventory/Medicine/PriceCalculator.jsx
 import AmendmentLog from "./components/Inventory/AmendmentLog.jsx";
 import OrderRawMaterials from "./components/Inventory/Order/OrderRawMaterials.jsx";
 import EditVendor from "./components/Vendor/EditVendor.jsx";
+import LeakageDetection from './components/Inventory/Lekagedetection.jsx';
 // Error Pages
 import NotFound from "./pages/AuthPages/NotFound.jsx";
 import Forbidden from "./pages/AuthPages/Forbidden.jsx";
@@ -884,6 +886,21 @@ function App() {
             </ProtectedRoute>
           }
         />
+
+    <Route
+  path="/lekagedetection"
+  element={
+    <ProtectedRoute allowedRoles={["Doctor", "admin"]}>
+      <LeakageDetection />
+    </ProtectedRoute>
+  }
+/>
+
+<Route path="/medicine-preparation" element={
+  <ProtectedRoute allowedRoles={["Doctor", "admin"]}>
+    <MedicinePreparation />
+  </ProtectedRoute>
+} />
 
         <Route
           path="/view-prescription/:prescriptionId"
