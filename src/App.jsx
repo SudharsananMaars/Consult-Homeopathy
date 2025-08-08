@@ -85,6 +85,7 @@ import NoteTaking from "./pages/doctor pages/NoteTaking.jsx";
 import PrescriptionWriting from "./components/PrescriptionModule/PrescriptionWriting.jsx";
 import MedicinePreparation from './pages/doctor pages/MedicinePreparation.jsx';
 import MedicinePreparationView from "./pages/doctor pages/MedicinePreparationView.jsx";
+import MedicinePackaging from "./pages/doctor pages/MedicinePackaging.jsx";
 import PrescriptionViewModal from "./components/PrescriptionModule/PrescriptionViewModal.jsx";
 import InventoryPage from "./components/calllog components/InventoryPage.jsx";
 import "@fortawesome/fontawesome-free/css/all.min.css";
@@ -650,6 +651,14 @@ function App() {
           element={
             <ProtectedRoute allowedRoles={["Doctor"]}>
               <MedicinePreparationView />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/medicinepackaging"
+          element={
+            <ProtectedRoute allowedRoles={["Doctor"]}>
+              <MedicinePackaging />
             </ProtectedRoute>
           }
         />

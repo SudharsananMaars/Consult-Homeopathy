@@ -16,7 +16,8 @@ const RawMaterialForm = ({ isEdit = false }) => {
     currentQuantity: '',
     thresholdQuantity: '80',
     expiryDate: '',
-    costPerUnit: ''
+    costPerUnit: '',
+    isAlcohol: false
   };
 
   const [formData, setFormData] = useState(initialState);
@@ -138,9 +139,11 @@ const RawMaterialForm = ({ isEdit = false }) => {
       formDataToSubmit.append('quantity', Number(formData.quantity));
       formDataToSubmit.append('currentQuantity', Number(formData.currentQuantity));
       formDataToSubmit.append('thresholdQuantity', Number(formData.thresholdQuantity));
+      formDataToSubmit.append('totalWeight', Number(formData.totalWeight));
       formDataToSubmit.append('expiryDate', formData.expiryDate);
       formDataToSubmit.append('costPerUnit', Number(formData.costPerUnit));
       formDataToSubmit.append('uom', getUOMByCategory(formData.category));
+      formDataToSubmit.append('isAlcohol', formData.isAlcohol);
       
       // Append the image file if it exists
       if (imageFile) {
@@ -310,6 +313,26 @@ const RawMaterialForm = ({ isEdit = false }) => {
           </select>
         </div>
 
+        {/* Alcohol checkbox - only shows when category is "Liquid" */}
+        {formData.category === 'Liquid' && (
+          <div className="flex items-center space-x-2">
+            <input
+              type="checkbox"
+              id="isAlcohol"
+              name="isAlcohol"
+              checked={!formData.isAlcohol}
+              onChange={(e) => setFormData(prev => ({
+                ...prev,
+                isAlcohol: !e.target.checked
+              }))}
+              className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+            />
+            <label htmlFor="isAlcohol" className="font-medium text-gray-700">
+              Is your liquid alcohol based?
+            </label>
+          </div>
+        )}
+
         {/* Package Size */}
         <div>
           <label htmlFor="packageSize" className="block font-medium text-gray-700">
@@ -376,6 +399,21 @@ const RawMaterialForm = ({ isEdit = false }) => {
             />
           </div>
         </div>
+
+        {/* Total Weight */}
+        <div>
+          <label htmlFor="totalWeight" className="block font-medium text-gray-700">Total Weight</label>
+          <input
+          type="number"
+          id="totalWeight"
+          name="totalWeight"
+          value={formData.totalWeight}
+          onChange={handleChange}
+          required
+          placeholder="Enter Total Weight"
+          className="w-full border border-gray-300 rounded-lg px-4 py-2 mt-1 focus:outline-none focus:ring-2 focus:ring-blue-500"
+          />
+          </div>
 
         {/* Expiry Date */}
         <div>

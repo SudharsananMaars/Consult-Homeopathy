@@ -589,8 +589,14 @@ const WorkTable = () => {
               )}
             </div>,
             <div className="action-buttons">
-              {renderButton("Prepare Medicine", () =>
-                handleAction("PrepareMedicine", item)
+              {item.medicalDetails?.medicinePrepared ? (
+                <button className="btn btn-success" disabled>
+                  Medicine Prepared
+                </button>
+              ) : (
+                renderButton("Prepare Medicine", () =>
+                  handleAction("PrepareMedicine", item)
+                )
               )}
             </div>,
             <div className="action-buttons">
