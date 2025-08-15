@@ -1,9 +1,11 @@
 import { useState } from "react";
 import { useParams } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import config from "../../config";
 
 export default function ShippingForm() {
   const { id } = useParams();
+  const navigate = useNavigate();
   const API_URL = config.API_URL;
   const [formData, setFormData] = useState({
     trackingId: "",
@@ -22,28 +24,29 @@ export default function ShippingForm() {
   };
 
   const handleFinish = async () => {
-    setIsLoading(true);
-    try {
-      const response = await fetch(`${API_URL}/api/doctor/prescriptions/${id}/tracking`, {
-        method: 'PATCH',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(formData)
-      });
-      
-      if (response.ok) {
-        console.log('Tracking information updated successfully');
-        // Handle success (redirect, show message, etc.)
-      } else {
-        console.error('Failed to update tracking information');
-      }
-    } catch (error) {
-      console.error('Error:', error);
-    } finally {
-      setIsLoading(false);
+  setIsLoading(true);
+  try {
+    const response = await fetch(`${API_URL}/api/doctor/prescriptions/${id}/tracking`, {
+      method: 'PATCH',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(formData),
+    });
+
+    if (response.ok) {
+      console.log('Tracking information updated successfully');
+      navigate("/medicine-preparation/preparation"); // ✅ Only navigate on success
+    } else {
+      console.error('Failed to update tracking information');
     }
-  };
+  } catch (error) {
+    console.error('Error:', error);
+  } finally {
+    setIsLoading(false);
+  }
+};
+
 
   const handleCancel = () => {
     // Handle cancel action

@@ -137,12 +137,12 @@ const handleReturnToCRM = async () => {
   try {
     // First API call - Add packaging data
     const packagingPayload = {
-  prescriptionID: id,
+  prescriptionId: id,
   packagingData: originalData.map((material) => ({
     materialId: material._id,
     materialName: material.name,
     quantityUsed: 1, 
-    currentQuantity: material.currentQuantity
+    presentQuantity: material.currentQuantity
   })),
   packedImage: uploadedFile
 };
@@ -150,7 +150,7 @@ const handleReturnToCRM = async () => {
 
     // Create FormData for file upload
     const formData = new FormData();
-    formData.append('prescriptionID', id);
+    formData.append('prescriptionId', id);
     formData.append('packagingData', JSON.stringify(packagingPayload.packagingData));
     if (uploadedFile) {
       formData.append('packedImage', uploadedFile);
