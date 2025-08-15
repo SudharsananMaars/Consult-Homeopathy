@@ -79,10 +79,13 @@ const MedicinePreparation = () => {
     setIsDropdownOpen(prev => ({ ...prev, status: false }));
   };
 
-  const getStatusBadgeClass = (status) => {
+  const getStatusBadgeClass = (status, isClickable = true) => {
+    const baseClass = 'px-4 py-2 rounded-full text-sm font-medium transition-all duration-200';
+    const clickableClass = isClickable ? 'cursor-pointer hover:shadow-md hover:scale-105' : 'cursor-default';
+    
     return status === 'Completed' 
-      ? 'bg-green-500 text-white px-4 py-2 rounded-full text-sm font-medium'
-      : 'bg-orange-400 text-white px-4 py-2 rounded-full text-sm font-medium';
+      ? `bg-green-500 text-white ${baseClass} cursor-default opacity-75`
+      : `bg-orange-400 text-white ${baseClass} ${clickableClass}`;
   };
 
   // Convert boolean values to status text
@@ -100,9 +103,23 @@ const MedicinePreparation = () => {
 
   const filteredPrescriptions = getFilteredPrescriptions();
 
-  // Handle row click navigation
-  const handleRowClick = (appointmentId) => {
-    navigate(`/prepare-medicine/${appointmentId}`);
+  // Handle medicine preparation status button click
+  const handleMedicineStatusClick = (e, appointmentId, prescriptionId, isCompleted) => {
+    e.stopPropagation(); // Prevent any parent click events
+    if (!isCompleted) {
+      navigate(`/prepare-medicine/${appointmentId}`);
+    }
+  };
+
+  // Handle shipping status button click - UPDATED to pass prescription ID via state
+  const handleShippingStatusClick = (e, appointmentId, prescriptionId, isCompleted) => {
+    e.stopPropagation(); // Prevent any parent click events
+    if (!isCompleted) {
+      // Pass prescription ID via navigation state
+      navigate(`/shipping/${appointmentId}`, { 
+        state: { prescriptionId: prescriptionId } 
+      });
+    }
   };
 
   // Close dropdowns when clicking outside
@@ -217,12 +234,6 @@ const MedicinePreparation = () => {
                   </div>
                 )}
               </div>
-
-              {/* Cancel Button */}
-              <button className="flex items-center gap-2 px-4 py-2 text-blue-600 bg-blue-50 border border-blue-200 rounded-xl hover:bg-blue-100 focus:outline-none transition-colors text-sm font-medium">
-                <span className="text-lg leading-none">×</span>
-                <span>Cancel</span>
-              </button>
             </div>
           </div>
 
@@ -259,21 +270,12 @@ const MedicinePreparation = () => {
               <div className="text-center font-bold text-gray-900 text-base">Shipping Status</div>
             </div>
 
-            {/* Table Body - Card Style with clickable rows */}
+            {/* Table Body - Card Style with clickable status buttons */}
             <div className="space-y-3">
               {filteredPrescriptions.map((prescription, index) => (
                 <div 
                   key={index} 
-                  className="bg-white rounded-2xl p-6 hover:bg-blue-50 hover:shadow-sm transition-all duration-200 cursor-pointer border border-transparent hover:border-blue-100"
-                  onClick={() => handleRowClick(prescription.appointmentId)}
-                  role="button"
-                  tabIndex={0}
-                  onKeyDown={(e) => {
-                    if (e.key === 'Enter' || e.key === ' ') {
-                      e.preventDefault();
-                      handleRowClick(prescription.appointmentId);
-                    }
-                  }}
+                  className="bg-white rounded-2xl p-6 transition-all duration-200 border border-transparent"
                 >
                   <div className="grid grid-cols-3 gap-8 items-center">
                     <div className="font-medium text-gray-900 text-base px-4">
@@ -281,15 +283,25 @@ const MedicinePreparation = () => {
                     </div>
                     
                     <div className="text-center">
-                      <span className={getStatusBadgeClass(getStatusText(prescription.medicinePrepared))}>
+                      <button
+                        onClick={(e) => handleMedicineStatusClick(e, prescription.appointmentId, prescription.prescriptionId, prescription.medicinePrepared)}
+                        className={getStatusBadgeClass(getStatusText(prescription.medicinePrepared))}
+                        title={prescription.medicinePrepared ? "Medicine preparation completed" : "Click to manage medicine preparation"}
+                        disabled={prescription.medicinePrepared}
+                      >
                         {getStatusText(prescription.medicinePrepared)}
-                      </span>
+                      </button>
                     </div>
                     
                     <div className="text-center">
-                      <span className={getStatusBadgeClass(getStatusText(prescription.shipmentStatus))}>
+                      <button
+                        onClick={(e) => handleShippingStatusClick(e, prescription.appointmentId, prescription.prescriptionId, prescription.shipmentStatus)}
+                        className={getStatusBadgeClass(getStatusText(prescription.shipmentStatus))}
+                        title={prescription.shipmentStatus ? "Shipping completed" : "Click to manage shipping status"}
+                        disabled={prescription.shipmentStatus}
+                      >
                         {getStatusText(prescription.shipmentStatus)}
-                      </span>
+                      </button>
                     </div>
                   </div>
                 </div>

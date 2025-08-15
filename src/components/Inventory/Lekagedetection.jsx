@@ -361,10 +361,10 @@ const LeakageDetection = () => {
                       Type
                     </th>
                     <th className="bg-gray-100 text-center p-4 font-bold text-gray-700 text-sm">
-                      Total Quality
+                      Total Quantity
                     </th>
                     <th className="bg-white text-center p-4 font-bold text-gray-700 text-sm">
-                      Current Quality
+                      Current Quantity
                     </th>
                     <th className="bg-gray-100 text-center p-4 font-bold text-gray-700 text-sm">
                       Barcode
@@ -376,10 +376,10 @@ const LeakageDetection = () => {
                       Prescribed Qty
                     </th>
                     <th className="bg-white text-center p-4 font-bold text-gray-700 text-sm">
-                      Quality Used
+                      Quantity Used
                     </th>
                     <th className="bg-gray-100 text-center p-4 font-bold text-gray-700 text-sm">
-                      Quality Leaked
+                      Quantity Leaked
                     </th>
                     <th className="bg-white text-center p-4 font-bold text-gray-700 text-sm">
                       Leaked %

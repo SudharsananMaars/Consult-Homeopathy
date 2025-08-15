@@ -555,7 +555,7 @@ const stopRecording = () => {
         <div className="grid grid-cols-4 gap-6 mb-6">
           <div className="p-4 rounded-lg border bg-[#3489FD4D] border-gray-200 text-center">
             <h3 className="text-sm font-bold mb-2 text-[#3489FD]">Total Items</h3>
-            <p className="text-2xl font-semibold text-[#3489FD]">3</p>
+            <p className="text-2xl font-semibold text-[#3489FD]">2</p>
           </div>
           <div className="p-4 rounded-lg border bg-[#22C55E4D] border-gray-200 text-center">
             <h3 className="text-sm text-[#22C55E] mb-2 text-[18px] font-bold">Completed</h3>
@@ -563,11 +563,11 @@ const stopRecording = () => {
           </div>
           <div className="p-4 rounded-lg border bg-[#EFBB554D] border-gray-200 text-center">
             <h3 className="text-sm text-[#EFBB55] mb-2 text-[18px] font-bold">Pending</h3>
-            <p className="text-2xl font-semibold text-[#EFBB55]">2</p>
+            <p className="text-2xl font-semibold text-[#EFBB55]">1</p>
           </div>
           <div className="p-4 rounded-lg border bg-[#F031314D] border-gray-200 text-center">
             <h3 className="text-sm text-[#F03131] mb-2 text-[18px] font-bold">Attempts</h3>
-            <p className="text-2xl font-semibold text-[#F03131]">1</p>
+            <p className="text-2xl font-semibold text-[#F03131]">0</p>
           </div>
         </div>
       </div>
@@ -851,22 +851,26 @@ const stopRecording = () => {
             Name
           </th>
           <th className="bg-white text-center p-4 font-bold text-gray-700 text-sm">
-            Category
+            Type
           </th>
+          
           <th className="bg-gray-100 text-center p-4 font-bold text-gray-700 text-sm">
-            Stock
+            Scan
           </th>
           <th className="bg-white text-center p-4 font-bold text-gray-700 text-sm">
-            Action
+            Current Stock
           </th>
           <th className="bg-gray-100 text-center p-4 font-bold text-gray-700 text-sm">
             Pre‑Weight
           </th>
           <th className="bg-white text-center p-4 font-bold text-gray-700 text-sm">
-            Prescribed Quantity
+            Dispense Quantity
           </th>
           <th className="bg-gray-100 text-center p-4 font-bold text-gray-700 text-sm">
             Post‑Weight
+          </th>
+          <th className="bg-white text-center p-4 font-bold text-gray-700 text-sm">
+            Stock to be Shelfed
           </th>
         </tr>
       </thead>
@@ -916,21 +920,10 @@ const stopRecording = () => {
                 {material.category || "N/A"}
               </td>
 
-              {/* Stock */}
-              <td className="bg-gray-100 p-4 text-center">
-                <span
-                  className={
-                    isLowStock(material.currentQuantity, material.quantity)
-                      ? "text-yellow-700 font-semibold"
-                      : "text-gray-800"
-                  }
-                >
-                  {material.currentQuantity} / {material.packageSize || "units"}
-                </span>
-              </td>
+             
 
               {/* Action */}
-              <td className="bg-white p-4 text-center">
+              <td className="bg-gray-100 p-4 text-center">
                 {verifiedMaterials.includes(material.rawMaterialId) ? (
                   <span className="bg-green-100 text-green-600 font-semibold px-4 py-1 rounded-full text-xs shadow">
                     Verified
@@ -943,6 +936,19 @@ const stopRecording = () => {
                     Scan
                   </button>
                 )}
+              </td>
+
+               {/* Stock */}
+              <td className="bg-white p-4 text-center">
+                <span
+                  className={
+                    isLowStock(material.currentQuantity, material.quantity)
+                      ? "text-yellow-700 font-semibold"
+                      : "text-gray-800"
+                  }
+                >
+                  {material.currentQuantity} / {material.packageSize || "units"}
+                </span>
               </td>
 
               {/* Pre‑Weight */}
