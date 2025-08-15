@@ -100,18 +100,6 @@ const RawMaterialDetail = () => {
             value={`$${(rawMaterial.quantity * rawMaterial.costPerUnit).toFixed(2)}`}
           />
           <Detail label="Barcode" value={rawMaterial.barcode || '—'} />
-        </Section>
-
-        {/* System Info */}
-        <Section title="🛠️ System Information">
-          <Detail
-            label="Created At"
-            value={new Date(rawMaterial.createdAt).toLocaleString()}
-          />
-          <Detail
-            label="Last Updated"
-            value={new Date(rawMaterial.updatedAt).toLocaleString()}
-          />
           <Detail
             label="Expiry Date"
             value={
@@ -120,6 +108,26 @@ const RawMaterialDetail = () => {
                 : '—'
             }
           />
+        </Section>
+
+        {/* Vendor Information */}
+        <Section title="🏢 Vendor Information">
+          <Detail label="Vendor Name" value={rawMaterial.vendorName || '—'} />
+          <Detail label="Vendor Location" value={rawMaterial.vendorLocation || '—'} />
+          <Detail label="Vendor Phone" value={rawMaterial.vendorPhone || '—'} />
+        </Section>
+
+        {/* System Info */}
+        <Section title="⚙️ System Information">
+          <Detail
+            label="Created At"
+            value={new Date(rawMaterial.createdAt).toLocaleString()}
+          />
+          <Detail
+            label="Last Updated"
+            value={new Date(rawMaterial.updatedAt).toLocaleString()}
+          />
+          
         </Section>
       </div>
 

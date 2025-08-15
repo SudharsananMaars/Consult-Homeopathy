@@ -182,6 +182,9 @@ const RawMaterialsList = () => {
                 <th className="px-4 py-3 text-left">Cost/Unit</th>
                 <th className="px-4 py-3 text-left">Barcode</th>
                 <th className="px-4 py-3 text-left">Expiry Date</th>
+                <th className="px-4 py-3 text-left">Vendor Name</th>
+                <th className="px-4 py-3 text-left">Vendor Location</th>
+                <th className="px-4 py-3 text-left">Vendor Phone</th>
                 <th className="px-4 py-3 text-left">Created At</th>
                 <th className="px-4 py-3 text-left">Status</th>
                 <th className="px-4 py-3 text-left">Actions</th>
@@ -216,6 +219,9 @@ const RawMaterialsList = () => {
                     <td className="px-4 py-3">
                       {new Date(material.expiryDate).toLocaleDateString()}
                     </td>
+                    <td className="px-4 py-3">{material.vendorName || "—"}</td>
+                    <td className="px-4 py-3">{material.vendorLocation || "—"}</td>
+                    <td className="px-4 py-3">{material.vendorPhone || "—"}</td>
                     <td className="px-4 py-3">
                       {material.createdAt
                         ? new Date(material.createdAt).toLocaleDateString()

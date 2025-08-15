@@ -17,7 +17,10 @@ const RawMaterialForm = ({ isEdit = false }) => {
     thresholdQuantity: '80',
     expiryDate: '',
     costPerUnit: '',
-    isAlcohol: false
+    isAlcohol: false,
+    vendorName: '',
+    vendorLocation: '',
+    vendorPhone: ''
   };
 
   const [formData, setFormData] = useState(initialState);
@@ -144,6 +147,9 @@ const RawMaterialForm = ({ isEdit = false }) => {
       formDataToSubmit.append('costPerUnit', Number(formData.costPerUnit));
       formDataToSubmit.append('uom', getUOMByCategory(formData.category));
       formDataToSubmit.append('isAlcohol', formData.isAlcohol);
+      formDataToSubmit.append('vendorName', formData.vendorName);
+      formDataToSubmit.append('vendorPhone', formData.vendorPhone);
+      formDataToSubmit.append('vendorLocation', formData.vendorLocation);
       
       // Append the image file if it exists
       if (imageFile) {
@@ -221,6 +227,10 @@ const RawMaterialForm = ({ isEdit = false }) => {
               <span className="font-medium">{formData.category}</span>
               <span className="text-gray-600">Package Size:</span>
               <span className="font-medium">{formData.packageSize}</span>
+              <span className="text-gray-600">Vendor Name:</span>
+              <span className="font-medium">{formData.vendorName}</span>
+              <span className="text-gray-600">Vendor Location:</span>
+              <span className="font-medium">{formData.vendorLocation}</span>
             </div>
           </div>
           
@@ -350,6 +360,8 @@ const RawMaterialForm = ({ isEdit = false }) => {
           />
         </div>
 
+
+
         {/* Quantity, Current Quantity, and Threshold */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <div>
@@ -478,6 +490,55 @@ const RawMaterialForm = ({ isEdit = false }) => {
               />
             </div>
           )}
+        </div>
+
+        {/* Vendor Information Section */}
+        <div className="border-t border-gray-200 pt-6">
+          <h3 className="text-lg font-semibold text-gray-800 mb-4">Vendor Information</h3>
+          
+          {/* Vendor Name */}
+          <div className="mb-4">
+            <label htmlFor="vendorName" className="block font-medium text-gray-700">Vendor Name</label>
+            <input
+              type="text"
+              id="vendorName"
+              name="vendorName"
+              value={formData.vendorName}
+              onChange={handleChange}
+              required
+              className="w-full border border-gray-300 rounded-lg px-4 py-2 mt-1 focus:outline-none focus:ring-2 focus:ring-blue-500"
+            />
+          </div>
+
+          {/* Vendor Location */}
+          <div className="mb-4">
+            <label htmlFor="vendorLocation" className="block font-medium text-gray-700">Vendor Location</label>
+            <input
+              type="text"
+              id="vendorLocation"
+              name="vendorLocation"
+              value={formData.vendorLocation}
+              onChange={handleChange}
+              required
+              className="w-full border border-gray-300 rounded-lg px-4 py-2 mt-1 focus:outline-none focus:ring-2 focus:ring-blue-500"
+            />
+          </div>
+
+          {/* Vendor Mobile Number */}
+          <div className="mb-4">
+            <label htmlFor="vendorPhone" className="block font-medium text-gray-700">Vendor Mobile Number</label>
+            <input
+              type="tel"
+              id="vendorPhone"
+              name="vendorPhone"
+              value={formData.vendorPhone}
+              onChange={handleChange}
+              required
+              pattern="[0-9]{10}"
+              placeholder="Enter 10-digit mobile number"
+              className="w-full border border-gray-300 rounded-lg px-4 py-2 mt-1 focus:outline-none focus:ring-2 focus:ring-blue-500"
+            />
+          </div>
         </div>
 
         {/* Buttons */}
