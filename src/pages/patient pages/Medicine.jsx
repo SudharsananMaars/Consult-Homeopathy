@@ -137,6 +137,8 @@ const Medicine = () => {
   );
 };
 
+// Update the ShipmentTable component - replace the existing one with this:
+
 const ShipmentTable = ({
   data,
   showActions = false,
@@ -148,7 +150,9 @@ const ShipmentTable = ({
       <tr>
         <Th className="text-center">S.No</Th>
         <Th className="text-center">Tracking ID</Th>
+        <Th className="text-center">Shipping Partner</Th>
         <Th className="text-center">Shipped Date</Th>
+        <Th className="text-center">Arrival Date</Th>
         <Th className="text-center">Status</Th>
         <Th className="text-center">Items</Th>
         {showActions && <Th>Actions</Th>}
@@ -158,7 +162,7 @@ const ShipmentTable = ({
       {data.length === 0 && (
         <tr>
           <td
-            colSpan={showActions ? 6 : 5}
+            colSpan={showActions ? 8 : 7}
             className="text-center py-6 text-gray-500"
           >
             No records found.
@@ -173,8 +177,18 @@ const ShipmentTable = ({
         >
           <Td className="text-center">{idx + 1}</Td>
           <Td className="font-semibold text-center">{c.trackingId}</Td>
-          <Td>{formatDate(c.shippedDate)}</Td>
-          <Td>
+          <Td className="font-semibold text-center">
+            {c.packagingDetails && c.packagingDetails.length > 0 
+              ? c.packagingDetails[0].deliveryPartner 
+              : 'N/A'}
+          </Td>
+          <Td className="text-center">{formatDate(c.shippedDate)}</Td>
+          <Td className="font-semibold text-center">
+            {c.packagingDetails && c.packagingDetails.length > 0 
+              ? formatDate(c.packagingDetails[0].arrivalDate) 
+              : 'N/A'}
+          </Td>
+          <Td className="text-center">
             <span
               className={`px-2 py-1 rounded-md text-xs font-medium ${
                 c.isProductReceived === true
@@ -185,7 +199,8 @@ const ShipmentTable = ({
               {c.isProductReceived === true ? "Received" : "Shipped"}
             </span>
           </Td>
-          <Td>
+
+          <Td className="text-center">
             <button
               onClick={() => onOpenItems(c.items)}
               className="py-1 px-2 rounded text-xs font-medium bg-blue-600 text-white hover:bg-blue-500 transition"
@@ -195,7 +210,7 @@ const ShipmentTable = ({
             </button>
           </Td>
           {showActions && (
-            <Td>
+            <Td className="text-center">
               <button
                 onClick={() => onMarkReceived && onMarkReceived(c.id)}
                 className="px-3 py-1 rounded bg-emerald-600 text-white text-xs hover:bg-emerald-500"
@@ -210,6 +225,8 @@ const ShipmentTable = ({
     </tbody>
   </table>
 );
+
+
 
 const ItemsModal = ({ items, onClose }) => (
   <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm">

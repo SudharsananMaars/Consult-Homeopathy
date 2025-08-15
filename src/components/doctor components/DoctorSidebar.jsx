@@ -102,24 +102,30 @@ const Sidebar = ({ role }) => {
           { id: 10, path: "/content", name: "Content", icon: FaPhotoVideo },
           {
             id: 11,
+            path: "/lekagedetection",
+            name: "Leakage Detection",
+            icon: MdDashboard,
+          },
+          {
+            id: 12,
             path: "/accounts",
             name: "Accounts",
             icon: MdAccountBalance,
           },
           {
-            id: 12,
+            id: 13,
             path: "/doctor-dashboard/all",
             name: "Doctor CRM",
             icon: FaUserDoctor,
           },
           {
-            id: 13,
+            id: 14,
             path: "/allocation",
             name: "Doctor Allocation",
             icon: MdOutlineDashboardCustomize,
           },
-          { id: 14, path: "/docsettings", name: "Settings", icon: LuSettings },
-          { id: 15, path: "/hrm", name: "HR Management", icon: FaPeopleGroup },
+          { id: 15, path: "/docsettings", name: "Settings", icon: LuSettings },
+          { id: 16, path: "/hrm", name: "HR Management", icon: FaPeopleGroup },
         ]
       : role === "assistant-doctor"
       ? [
