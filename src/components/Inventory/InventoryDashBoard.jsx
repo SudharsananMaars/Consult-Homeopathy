@@ -133,7 +133,7 @@ const InventoryDashboard = () => {
         <div className="flex flex-col md:flex-row gap-4 justify-center">
           <Link to="/raw-materials/new" className="bg-blue-600 hover:bg-blue-700 text-white text-sm px-5 py-2 rounded-lg shadow">Add Raw Material</Link>
           <Link to="/raw-materials/quality-check" className="bg-red-600 hover:bg-red-700 text-white text-sm px-5 py-2 rounded-lg shadow">Stock Audit</Link>
-          <Link to="/lekagedetection" className="bg-purple-600 hover:bg-purple-700 text-white text-sm px-5 py-2 rounded-lg shadow">Leakage Detection</Link>
+          
           <button 
             onClick={() => setShowBarcodeModal(true)}
             className="bg-green-600 hover:bg-green-700 text-white text-sm px-5 py-2 rounded-lg shadow"

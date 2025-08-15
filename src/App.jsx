@@ -83,7 +83,7 @@ import BreakTimer from "./pages/doctor pages/BreakTimer.jsx";
 import Payslip from "./pages/doctor pages/payslip.jsx";
 import NoteTaking from "./pages/doctor pages/NoteTaking.jsx";
 import PrescriptionWriting from "./components/PrescriptionModule/PrescriptionWriting.jsx";
-import MedicinePreparation from './pages/doctor pages/MedicinePreparation.jsx';
+import MedicinePreparation from "./pages/doctor pages/MedicinePreparation.jsx";
 import MedicinePreparationView from "./pages/doctor pages/MedicinePreparationView.jsx";
 import MedicinePackaging from "./pages/doctor pages/MedicinePackaging.jsx";
 import PrescriptionViewModal from "./components/PrescriptionModule/PrescriptionViewModal.jsx";
@@ -108,7 +108,7 @@ import PriceCalculator from "./components/Inventory/Medicine/PriceCalculator.jsx
 import AmendmentLog from "./components/Inventory/AmendmentLog.jsx";
 import OrderRawMaterials from "./components/Inventory/Order/OrderRawMaterials.jsx";
 import EditVendor from "./components/Vendor/EditVendor.jsx";
-import LeakageDetection from './components/Inventory/Lekagedetection.jsx';
+import LeakageDetection from "./components/Inventory/Lekagedetection.jsx";
 // Error Pages
 import NotFound from "./pages/AuthPages/NotFound.jsx";
 import Forbidden from "./pages/AuthPages/Forbidden.jsx";
@@ -133,6 +133,9 @@ import "react-toastify/dist/ReactToastify.css";
 import DetailsBarcode from "./components/Inventory/RawMaterials/DetailsBarcode.jsx";
 import UnusedDetails from "./components/Inventory/UnusedDetails.jsx";
 
+//Medicine Preparation
+import MedicinePreparationLogin from "./pages/MedicinePreparationPages/MedicinePreparationlogin";
+import Preparation from "./pages/MedicinePreparationPages/preparation";
 
 // Error Fallback Component
 const ErrorFallback = () => <ServerError />;
@@ -268,22 +271,22 @@ function App() {
             </ProtectedRoute>
           }
         />
-      <Route 
-        path="/prescription/:appointmentId" 
-        element={
-          <ProtectedRoute allowedRoles={["Patient"]}>
-            <PrescriptionView />
-          </ProtectedRoute>
-        } 
-      />
-      <Route 
-        path="/payment/:appointmentId" 
-        element={
-          <ProtectedRoute allowedRoles={["Patient"]}>
-            <MedicinePaymentPage />
-          </ProtectedRoute>
-        }
-      />
+        <Route
+          path="/prescription/:appointmentId"
+          element={
+            <ProtectedRoute allowedRoles={["Patient"]}>
+              <PrescriptionView />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/payment/:appointmentId"
+          element={
+            <ProtectedRoute allowedRoles={["Patient"]}>
+              <MedicinePaymentPage />
+            </ProtectedRoute>
+          }
+        />
         <Route
           path="/payments"
           element={
@@ -347,7 +350,7 @@ function App() {
               <Prescription />
             </ProtectedRoute>
           }
-        />                
+        />
         <Route
           path="/notification"
           element={
@@ -501,7 +504,7 @@ function App() {
               <Overview />
             </ProtectedRoute>
           }
-        />        
+        />
         <Route
           path="/inventry"
           element={
@@ -896,20 +899,23 @@ function App() {
           }
         />
 
-    <Route
-  path="/lekagedetection"
-  element={
-    <ProtectedRoute allowedRoles={["Doctor", "admin"]}>
-      <LeakageDetection />
-    </ProtectedRoute>
-  }
-/>
+        <Route
+          path="/lekagedetection"
+          element={
+            <ProtectedRoute allowedRoles={["Doctor", "admin"]}>
+              <LeakageDetection />
+            </ProtectedRoute>
+          }
+        />
 
-<Route path="/medicine-preparation" element={
-  <ProtectedRoute allowedRoles={["Doctor", "admin"]}>
-    <MedicinePreparation />
-  </ProtectedRoute>
-} />
+        <Route
+          path="/medicine-preparation"
+          element={
+            <ProtectedRoute allowedRoles={["Doctor", "admin"]}>
+              <MedicinePreparation />
+            </ProtectedRoute>
+          }
+        />
 
         <Route
           path="/view-prescription/:prescriptionId"
@@ -919,6 +925,21 @@ function App() {
             </ProtectedRoute>
           }
         />
+
+        {/* Medicine Preparation */}
+       <Route
+  path="/medicine-preparation/login"
+  element={<MedicinePreparationLogin />}  // Remove ProtectedRoute wrapper
+/>
+
+<Route
+  path="/medicine-preparation/preparation" 
+  element={
+    <ProtectedRoute allowedRoles={["Doctor", "Med-Prep"]}>
+      <Preparation />
+    </ProtectedRoute>
+  }
+/>
 
         {/* Root redirect */}
         <Route path="/" element={<Navigate to="/login" replace />} />
