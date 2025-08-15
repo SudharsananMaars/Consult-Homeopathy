@@ -65,6 +65,7 @@ import Content from "./pages/doctor pages/Content.jsx";
 import Doctors from "./pages/doctor pages/Doctors.jsx";
 import Patientcard from "./pages/doctor pages/Patientcard.jsx";
 import Allocation from "./pages/doctor pages/Allocation.jsx";
+import Shipping from "./pages/doctor pages/Shipping.jsx";
 import VideoCall from "./pages/doctor pages/VideoCall.jsx";
 import AdminLoginPage from "./pages/doctor pages/AdminLogin.jsx";
 import AdminDashboard from "/src/pages/doctor pages/AdminDashboard.jsx";
@@ -649,16 +650,24 @@ function App() {
         <Route
           path="/prepare-medicine/:appointmentId"
           element={
-            <ProtectedRoute allowedRoles={["Doctor"]}>
+            <ProtectedRoute allowedRoles={["Doctor","Med-Prep"]}>
               <MedicinePreparationView />
             </ProtectedRoute>
           }
         />
         <Route
-          path="/medicinepackaging"
+          path="/medicinepackaging/:id"
           element={
-            <ProtectedRoute allowedRoles={["Doctor"]}>
+            <ProtectedRoute allowedRoles={["Doctor","Med-Prep"]}>
               <MedicinePackaging />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/shipping/:id"
+          element={
+            <ProtectedRoute allowedRoles={["Doctor","Med-Prep"]}>
+              <Shipping />
             </ProtectedRoute>
           }
         />
