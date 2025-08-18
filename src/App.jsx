@@ -37,6 +37,7 @@ import PrescriptionView from "./pages/patient pages/PrescriptionView.jsx";
 import MedicinePaymentPage from "./pages/patient pages/MedicinePaymentPage.jsx";
 import PatientContent from "./pages/patient pages/PatientContent.jsx";
 import Prescription from "./pages/patient pages/Prescription.jsx";
+import PatientInventory from "./pages/patient pages/PatientInventory.jsx"
 
 // import doctor website
 import DoctorLayout from "./components/doctor components/DoctorLayout.jsx";
@@ -65,6 +66,7 @@ import Content from "./pages/doctor pages/Content.jsx";
 import Doctors from "./pages/doctor pages/Doctors.jsx";
 import Patientcard from "./pages/doctor pages/Patientcard.jsx";
 import Allocation from "./pages/doctor pages/Allocation.jsx";
+import DoctorInventory from "./pages/doctor pages/DoctorInventory.jsx";
 import Shipping from "./pages/doctor pages/Shipping.jsx";
 import VideoCall from "./pages/doctor pages/VideoCall.jsx";
 import AdminLoginPage from "./pages/doctor pages/AdminLogin.jsx";
@@ -349,6 +351,14 @@ function App() {
           element={
             <ProtectedRoute allowedRoles={["Patient"]}>
               <Prescription />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/patient-inventory"
+          element={
+            <ProtectedRoute allowedRoles={["Patient"]}>
+              <PatientInventory />
             </ProtectedRoute>
           }
         />
@@ -904,6 +914,14 @@ function App() {
           element={
             <ProtectedRoute allowedRoles={["Doctor"]}>
               <Payslip />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/doctor-inventory"
+          element={
+            <ProtectedRoute allowedRoles={["Doctor"]}>
+              <DoctorInventory />
             </ProtectedRoute>
           }
         />
