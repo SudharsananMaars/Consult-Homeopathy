@@ -1,7 +1,7 @@
 import FeedbackPanel from './Feedback.jsx';
 import AppointmentBookingPanel from './AppointmentBookingPanel.jsx';
 
-const Messenger = () => {
+const MessengerSettings = () => {
   return (
   <div > 
     <h2 className='font-bold text-xl'>Messanger</h2>
@@ -12,4 +12,4 @@ const Messenger = () => {
   );
 };
 
-export default Messenger;
+export default MessengerSettings;

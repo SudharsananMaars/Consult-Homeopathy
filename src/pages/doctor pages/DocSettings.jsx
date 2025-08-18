@@ -1,7 +1,7 @@
 import React, {useState} from "react";
 import DoctorLayout from "/src/components/doctor components/DoctorLayout.jsx";
 import VideoSettings from "/src/pages/doctor pages/VideoSettings.jsx"
-import Messenger from "./Messenger.jsx"; // Import the new Messenger component
+import MessengerSettings from "./MessengerSettings.jsx"; // Import the new Messenger component
 import config from "../../config";
 
 const DocSettings = () => {
@@ -135,7 +135,7 @@ const DocSettings = () => {
                   activeTab === "messengers" ? "border-b-2 border-blue-600 text-blue-600" : "text-gray-600"
                 }`}
               >
-                Messengers
+                Messenger Settings
               </button>
             </div>
   
@@ -352,7 +352,7 @@ const DocSettings = () => {
             )}
 
             {activeTab === "messengers" && (
-              <Messenger />
+              <MessengerSettings />
             )}
           </div>
         </DoctorLayout>

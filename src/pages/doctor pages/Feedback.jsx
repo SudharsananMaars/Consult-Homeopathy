@@ -88,10 +88,10 @@ const FeedbackPanel = () => {
   return (
     <div className="bg-gray-50 p-6">
       <div className="border rounded-xl shadow-lg bg-white p-6 space-y-8">
-        <h2 className="text-2xl font-bold text-gray-800">Feedback Panel</h2>
+       <h2 className="text-[20px] font-semibold text-gray-800">Feedback Panel</h2>
 
         <div className="border rounded-lg shadow-sm bg-white">
-          <div className="bg-indigo-500 text-white font-bold p-3 rounded-t-lg flex justify-between items-center text-lg">
+          <div className="bg-indigo-500 text-white font-bold p-3 rounded-t-lg flex justify-between items-center text-[16px]">
             <span>Messenger Use Case</span>
             <span>On / Off</span>
           </div>
