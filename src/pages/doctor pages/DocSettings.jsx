@@ -1,22 +1,22 @@
 import React, {useState} from "react";
 import DoctorLayout from "/src/components/doctor components/DoctorLayout.jsx";
 import VideoSettings from "/src/pages/doctor pages/VideoSettings.jsx"
+import Messenger from "./Messenger.jsx"; // Import the new Messenger component
 import config from "../../config";
 
 const DocSettings = () => {
     const [activeTab, setActiveTab] = useState("password"); 
   
-    // States for change password form
+
     const [oldPassword, setOldPassword] = useState("");
     const [newPassword, setNewPassword] = useState("");
     const [confirmPassword, setConfirmPassword] = useState("");
-    
-    // States for notification settings
+ 
     const [emailNotifications, setEmailNotifications] = useState(false);
     const [smsNotifications, setSmsNotifications] = useState(false);
     const [postNotifications, setpostNotifications] = useState(false);
 
-    // States for medicine preparation settings
+
     const [dispenseBottleChecklist, setDispenseBottleChecklist] = useState([]);
     const [materialLeakageChecklist, setMaterialLeakageChecklist] = useState([]);
     const [newDispenseItem, setNewDispenseItem] = useState("");
@@ -24,18 +24,16 @@ const DocSettings = () => {
     const [isSavingMedicineSettings, setIsSavingMedicineSettings] = useState(false);
     const API_URL = config.API_URL;
   
-    // Handle form submissions for password change
     const handlePasswordChange = (e) => {
       e.preventDefault();
       if (newPassword === confirmPassword) {
-        // Add password change logic here (send to backend)
+ 
         alert("Password changed successfully!");
       } else {
         alert("New passwords do not match!");
       }
     };
 
-    // Handle adding new checklist items
     const addDispenseItem = () => {
       if (newDispenseItem.trim()) {
         setDispenseBottleChecklist([...dispenseBottleChecklist, newDispenseItem.trim()]);
@@ -50,7 +48,7 @@ const DocSettings = () => {
       }
     };
 
-    // Handle removing checklist items
+
     const removeDispenseItem = (index) => {
       setDispenseBottleChecklist(dispenseBottleChecklist.filter((_, i) => i !== index));
     };
@@ -59,7 +57,7 @@ const DocSettings = () => {
       setMaterialLeakageChecklist(materialLeakageChecklist.filter((_, i) => i !== index));
     };
 
-    // Handle saving medicine preparation settings
+
     const saveMedicinePreparationSettings = async () => {
       setIsSavingMedicineSettings(true);
       
@@ -97,7 +95,7 @@ const DocSettings = () => {
           <div className="p-8">
             <h1 className="text-2xl font-semibold mb-4">Settings</h1>
   
-            {/* Tab Navigation */}
+   
             <div className="flex border-b border-gray-300 mb-4">
               <button
                 onClick={() => setActiveTab("password")}
@@ -131,9 +129,17 @@ const DocSettings = () => {
               >
                 Medicine Preparation Settings
               </button>
+              <button
+                onClick={() => setActiveTab("messengers")}
+                className={`px-4 py-2 text-sm font-medium ${
+                  activeTab === "messengers" ? "border-b-2 border-blue-600 text-blue-600" : "text-gray-600"
+                }`}
+              >
+                Messengers
+              </button>
             </div>
   
-            {/* Tab Content */}
+    
             {activeTab === "password" && (
               <div className="mb-8">
                 <h2 className="text-xl font-semibold mb-2">Change Password</h2>
@@ -343,6 +349,10 @@ const DocSettings = () => {
                   </button>
                 </div>
               </div>
+            )}
+
+            {activeTab === "messengers" && (
+              <Messenger />
             )}
           </div>
         </DoctorLayout>
