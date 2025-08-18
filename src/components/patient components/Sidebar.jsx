@@ -9,7 +9,7 @@ import {
   LuCalendarPlus,
 } from "react-icons/lu";
 import { GiMedicines } from "react-icons/gi";
-import { MdOutlineOndemandVideo } from "react-icons/md";
+import { MdOutlineOndemandVideo, MdInventory } from "react-icons/md";
 import { Link, useLocation } from "react-router-dom";
 import { CiLogout } from "react-icons/ci";
 import { FaUserFriends } from "react-icons/fa";
@@ -72,29 +72,35 @@ const Sidebar = () => {
     },
     {
       id: 6,
+      path: "/patient-inventory",
+      name: "Inventory",
+      icon: MdInventory, 
+    },
+    {
+      id: 7,
       path: "/payments",
       name: "Payments",
       icon: LuWallet,
     },
     {
-      id: 7,
+      id: 8,
       path: "/medicine",
       name: "Medicine Shipments",
       icon: GiMedicines,
     },
     {
-      id: 8,
+      id: 9,
       path: "/workshops",
       name: "Workshops",
       icon: MdOutlineOndemandVideo,
     },
-    { id: 9, 
+    { id: 10, 
       path: "/patientcontent",
       name: "Content", 
       icon: FaPhotoVideo,
     },
     {
-      id: 10,
+      id: 11,
       path: "/settings",
       name: "Settings",
       icon: LuSettings,

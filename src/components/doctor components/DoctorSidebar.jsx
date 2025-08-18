@@ -95,7 +95,7 @@ const Sidebar = ({ role }) => {
           },
           {
             id: 9,
-            path: "/raw-materials",
+            path: "/doctor-inventory",
             name: "Inventory",
             icon: AiOutlineMedicineBox,
           },

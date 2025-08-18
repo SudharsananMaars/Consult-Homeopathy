@@ -572,6 +572,7 @@ const PrescriptionWriting = () => {
           } else {
             updatedItem[field] = value;
           }
+          console.log("Updating", field, "with", value);
 
           return updatedItem;
         }
@@ -1465,8 +1466,15 @@ const PrescriptionWriting = () => {
       </div>
     );
   }
+  const formToUOM = {
+  Tablets: "tablets",
+  Pills: "pills",
+  "Liquid form": "drops",
+  "Individual Medicine": "" // no unit
+};
 
   return (
+    
     <div className="max-w-9xl mx-auto p-6">
       <ToastContainer position="top-right" autoClose={1000} />
 
@@ -1649,6 +1657,7 @@ const PrescriptionWriting = () => {
           )}
         </div>
       )}
+      
 
       {showAddMedicineModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-40">
@@ -1800,7 +1809,7 @@ const PrescriptionWriting = () => {
                       Label
                     </th>
                     <th className="border-b border-gray-200 px-4 py-4 text-sm font-semibold text-gray-700 text-left">
-                      Additional Comments
+                      Instructions
                     </th>
                     <th className="border-b border-gray-200 px-4 py-4 text-sm font-semibold text-gray-700 text-left">
                       Actions
@@ -1915,28 +1924,25 @@ const PrescriptionWriting = () => {
                             </button>
                           </div>
                         </td>
+                        
 
                         {/* Medicine Form */}
                         <td className="px-4 py-4 min-w-36">
-                          <select
-                            value={item.form}
-                            onChange={(e) =>
-                              updatePrescriptionItem(
-                                item.id,
-                                "form",
-                                e.target.value
-                              )
-                            }
-                            className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white hover:border-gray-300 transition-colors"
-                          >
-                            <option value="Tablets">Tablets</option>
-                            <option value="Pills">Pills</option>
-                            <option value="Liquid form">Liquid form</option>
-                            <option value="Individual Medicine">
-                              Individual Medicine
-                            </option>
-                          </select>
-                        </td>
+  <select
+    value={item.form}
+    onChange={(e) =>
+      updatePrescriptionItem(item.id, "form", e.target.value)
+    }
+    className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm 
+               focus:ring-2 focus:ring-blue-500 focus:border-transparent 
+               bg-white hover:border-gray-300 transition-colors"
+  >
+    <option value="Tablets">Tablets</option>
+    <option value="Pills">Pills</option>
+    <option value="Liquid form">Liquid form</option>
+    <option value="Individual Medicine">Individual Medicine</option>
+  </select>
+</td>
 
                         {/* Dispense Quantity */}
                         <td className="px-4 py-4 min-w-32">
@@ -2290,35 +2296,35 @@ const PrescriptionWriting = () => {
 
                         {/* Medicine Consumption */}
                         <td
-                          className={`px-4 py-4 min-w-64 ${
-                            !fieldVisibility.medicineConsumption
-                              ? "opacity-30 pointer-events-none"
-                              : ""
-                          }`}
-                        >
-                          <MedicineConsumptionSelector
-                            form={item.form}
-                            value={item.medicineConsumption}
-                            customValue={item.customConsumption}
-                            onChange={(val) =>
-                              updatePrescriptionItem(
-                                item.id,
-                                "medicineConsumption",
-                                val
-                              )
-                            }
-                            onCustomChange={(val) =>
-                              updatePrescriptionItem(
-                                item.id,
-                                "customConsumption",
-                                val
-                              )
-                            }
-                            disabled={!fieldVisibility.medicineConsumption}
-                            itemId={item.id}
-                          />
-                        </td>
-
+  className={`px-4 py-4 min-w-64 ${
+    !fieldVisibility.medicineConsumption
+      ? "opacity-30 pointer-events-none"
+      : ""
+  }`}
+>
+  <div className="flex items-center gap-2">
+    <MedicineConsumptionSelector
+      form={item.form}
+      value={item.medicineConsumption}
+      customValue={item.customConsumption}
+      onChange={(val) =>
+        updatePrescriptionItem(item.id, "medicineConsumption", val)
+      }
+      onCustomChange={(val) =>
+        updatePrescriptionItem(item.id, "customConsumption", val)
+      }
+      disabled={!fieldVisibility.medicineConsumption}
+      itemId={item.id}
+    />
+    
+    {/* Unit of measure text */}
+    {formToUOM[item.form] && (
+      <span className="text-gray-600 text-sm">
+        {formToUOM[item.form]}
+      </span>
+    )}
+  </div>
+</td>
                         <LabelDropdown
                           item={item}
                           updatePrescriptionItem={updatePrescriptionItem}
@@ -2338,7 +2344,7 @@ const PrescriptionWriting = () => {
                             }
                             className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none bg-white hover:border-gray-300 transition-colors"
                             rows="2"
-                            placeholder="Additional notes..."
+                            placeholder="Instructions..."
                           />
                         </td>
 
