@@ -1,4 +1,4 @@
-import React, {useState} from "react";
+import {useState} from "react";
 import DoctorLayout from "/src/components/doctor components/DoctorLayout.jsx";
 import VideoSettings from "/src/pages/doctor pages/VideoSettings.jsx"
 import Messenger from "./Messenger.jsx"; // Import the new Messenger component
