@@ -269,7 +269,7 @@ const RawMaterialForm = ({ isEdit = false }) => {
   return (
     <div className="max-w-3xl mx-auto mt-10 p-6 bg-white rounded-2xl shadow-md">
       <h2 className="text-2xl font-bold mb-6 text-gray-800">
-        {isEdit ? 'Edit Raw Material' : 'Add New Raw Material'}
+        {isEdit ? 'Edit Raw Material' : 'Add Raw Material'}
       </h2>
 
       {error && <div className="mb-4 text-red-600 font-medium">{error}</div>}
@@ -443,7 +443,7 @@ const RawMaterialForm = ({ isEdit = false }) => {
 
         {/* Cost Per Unit */}
         <div>
-          <label htmlFor="costPerUnit" className="block font-medium text-gray-700">Cost Per Unit</label>
+          <label htmlFor="costPerUnit" className="block font-medium text-gray-700">Total Cost</label>
           <input
             type="number"
             id="costPerUnit"
