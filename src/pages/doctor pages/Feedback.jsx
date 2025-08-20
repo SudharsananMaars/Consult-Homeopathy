@@ -95,6 +95,41 @@ const FeedbackPanel = () => {
   const isGenerateDisabled =
     !selectedUseCase || !feedbackPurpose || !totalQuestions || loading;
 
+  const regenerateQuestion = async (
+    oldQuestion,
+    questionIndex,
+    messengerUseCase,
+    feedbackPurpose
+  ) => {
+    try {
+      const response = await axios.post(
+        `${API_URL}/api/doctorAppointmentSettings/regenerateParticularQuestion`,
+        {
+          oldQuestion: oldQuestion,
+          questionId: questionIndex,
+          messengerUseCase,
+          feedbackPurpose,
+        },
+        {
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem("token")}`,
+          },
+        }
+      );
+
+      if (response.data && response.data.regeneratedQuestions) {
+        setQuestions((prev) =>
+          prev.map((q, i) =>
+            i === questionIndex ? response.data.regeneratedQuestions : q
+          )
+        );
+      }
+    } catch (error) {
+      console.error("Error regenerating question:", error);
+      throw error;
+    }
+  };
+
   const getMessengerUseCase = async () => {
     try {
       const response = await axios.get(
@@ -155,6 +190,42 @@ const FeedbackPanel = () => {
     else if (e.key === "Escape") setEditingIndex(null);
   };
 
+  const createDoctorFeedback = async () => {
+    try {
+      const payload = {
+        messengerUsecase: selectedUseCase,
+        purpose: feedbackPurpose,
+        totalQuestions: totalQuestions,
+        afterXhours: afterXHours === "immediate" ? 0 : xHours, 
+        feedbackName: feedbackName,
+        questions: questions.map((q) => ({ question: q })),
+      };
+
+      const response = await axios.post(
+        `${API_URL}/api/doctorAppointmentSettings/createDoctorFeedback`,
+        payload,
+        {
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem("token")}`,
+          },
+        }
+      );
+
+      if (response.data) {
+        setSelectedUseCase("");
+        setFeedbackPurpose("");
+        setTotalQuestions(0);
+        setAfterXHours(""); 
+        setXHours(1);
+        setFeedbackName("");
+        setQuestions([]);
+      }
+    } catch (error) {
+      console.error("Error creating doctor feedback:", error);
+      throw error;
+    }
+  };
+
   useEffect(() => {
     getMessengerUseCase();
   }, []);
@@ -186,145 +257,6 @@ const FeedbackPanel = () => {
             ))}
           </div>
         </div>
-
-        {/* <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          <div className="lg:col-span-1 border rounded-lg shadow-sm bg-white p-6 space-y-4">
-            <select
-              value={selectedUseCase}
-              onChange={(e) => setSelectedUseCase(e.target.value)}
-              className="w-full p-3 border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 bg-white font-bold text-sm"
-            >
-              <option value="">Select Messenger Use Case</option>
-              {useCases
-                .filter((uc) => uc.isAvailable)
-                .map((uc) => (
-                  <option key={uc._id} value={uc.msgUseCase}>
-                    {uc.msgUseCase}
-                  </option>
-                ))}
-            </select>
-
-            <select
-              value={afterXHours}
-              onChange={(e) => setAfterXHours(e.target.value)}
-              className="w-full p-3 border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 bg-white font-bold text-sm"
-            >
-              <option value="immediate">Immediate after closure</option>
-              <option value="after">After X hours</option>
-            </select>
-
-            <div className="flex items-center space-x-4">
-              <label className="text-sm font-bold text-gray-700 w-32">
-                X hours
-              </label>
-              <select
-                value={xHours}
-                onChange={(e) => setXHours(Number(e.target.value))}
-                disabled={afterXHours !== "after"}
-                className={`flex-1 p-3 border rounded-md shadow-sm font-bold text-sm
-      ${
-        afterXHours !== "after"
-          ? "bg-gray-100 border-gray-200 text-gray-400 cursor-not-allowed"
-          : "bg-white border-gray-300 focus:ring-indigo-500 focus:border-indigo-500 text-gray-700"
-      }`}
-              >
-                {[...Array(24).keys()].map((i) => (
-                  <option key={i + 1} value={i + 1}>
-                    {i + 1}
-                  </option>
-                ))}
-              </select>
-            </div>
-
-            <input
-              type="text"
-              value={feedbackPurpose}
-              onChange={(e) => setFeedbackPurpose(e.target.value)}
-              placeholder="Feedback Purpose"
-              className="w-full p-3 border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 font-semibold text-sm"
-            />
-
-            <div className="flex items-center space-x-4">
-              <label className="text-sm font-bold text-gray-700 w-32">
-                Total Questions
-              </label>
-              <select
-                value={totalQuestions}
-                onChange={(e) => setTotalQuestions(Number(e.target.value))}
-                className="flex-1 p-3 border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 bg-white font-bold text-sm"
-              >
-                {[...Array(10).keys()].map((i) => (
-                  <option key={i + 1} value={i + 1}>
-                    {i + 1}
-                  </option>
-                ))}
-              </select>
-            </div>
-
-            <div className="flex justify-end">
-              <button className="bg-yellow-400 text-white font-bold py-3 px-6 rounded-md hover:bg-yellow-500 transition-colors flex items-center gap-2 shadow-sm text-sm">
-                <Sparkles className="w-4 h-3 text-white" />
-                Generate Questions
-              </button>
-            </div>
-          </div>
-
-          <div className="lg:col-span-2 border rounded-lg bg-white">
-            <div className="bg-[#837BFF] text-white p-3 rounded-t-lg flex justify-between items-center">
-              <span className="font-bold text-base">Feedback Name</span>
-              <span className="font-bold text-base">Edit / Recreate</span>
-            </div>
-            <div className="divide-y divide-gray-200">
-              {questions.map((question, index) => (
-                <div
-                  key={index}
-                  className="flex items-center gap-3 p-4 hover:bg-gray-50 transition-colors"
-                >
-                  <DragDots />
-                  <div className="flex-1">
-                    {editingIndex === index ? (
-                      <input
-                        type="text"
-                        value={editingText}
-                        onChange={(e) => setEditingText(e.target.value)}
-                        onKeyDown={(e) => handleKeyDown(e, index)}
-                        className="w-full border border-gray-300 rounded-md p-2 text-sm font-semibold focus:ring-indigo-500 focus:border-indigo-500"
-                        autoFocus
-                      />
-                    ) : (
-                      <span className="text-gray-800 text-sm font-semibold">
-                        <span className="font-bold text-gray-600">
-                          Q{index + 1}:
-                        </span>{" "}
-                        {question}
-                      </span>
-                    )}
-                  </div>
-                  <div className="flex items-center gap-3">
-                    {editingIndex === index ? (
-                      <button
-                        onClick={() => handleSave(index)}
-                        className="text-gray-500 hover:text-green-600 transition-colors"
-                      >
-                        <Check size={18} />
-                      </button>
-                    ) : (
-                      <button
-                        onClick={() => handleEditClick(index)}
-                        className="text-gray-500 hover:text-indigo-600 transition-colors"
-                      >
-                        <Edit2 size={18} />
-                      </button>
-                    )}
-                    <button className="text-gray-500 hover:text-green-600 transition-colors mr-10">
-                      <RotateCcw size={18} />
-                    </button>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-        </div> */}
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           <div className="lg:col-span-1 border rounded-lg shadow-sm bg-white p-6 space-y-4">
@@ -473,7 +405,17 @@ const FeedbackPanel = () => {
                           <Edit2 size={18} />
                         </button>
                       )}
-                      <button className="text-gray-500 hover:text-green-600 transition-colors mr-10">
+                      <button
+                        onClick={() =>
+                          regenerateQuestion(
+                            question,
+                            index,
+                            selectedUseCase,
+                            feedbackPurpose
+                          )
+                        }
+                        className="text-gray-500 hover:text-green-600 transition-colors mr-10"
+                      >
                         <RotateCcw size={18} />
                       </button>
                     </div>
@@ -490,7 +432,8 @@ const FeedbackPanel = () => {
             <div className="flex justify-end p-4 pb-0 pt-5">
               <button
                 disabled={questions.length === 0}
-              className={`font-bold py-3 px-6 rounded-md transition-colors flex items-center gap-2 shadow-sm text-sm
+                onClick={createDoctorFeedback}
+                className={`font-bold py-3 px-6 rounded-md transition-colors flex items-center gap-2 shadow-sm text-sm
             ${
               questions.length === 0
                 ? "bg-gray-400 cursor-not-allowed text-white"
