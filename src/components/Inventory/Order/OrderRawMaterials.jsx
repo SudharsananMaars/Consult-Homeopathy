@@ -1,9 +1,12 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { api } from "../services/api";
+import config from "../../../config";
 
 const OrderRawMaterials = () => {
   const navigate = useNavigate();
+  const token = localStorage.getItem("token");
+  const API_URL= config.API_URL;
   const [currentStep, setCurrentStep] = useState(1);
   const [rawMaterials, setRawMaterials] = useState([]);
   const [selectedMaterials, setSelectedMaterials] = useState([]);
@@ -88,7 +91,7 @@ const OrderRawMaterials = () => {
       setLoading(true);
       
       // Get vendor information for selected materials
-      const vendors = await api.getVendors();
+      const vendors = await api.getVendors(token);
       setVendors(vendors);
       
       // Create a comparison object for each material
@@ -175,31 +178,79 @@ const OrderRawMaterials = () => {
     });
   };
 
-  const handleSubmitOrder = async () => {
-    try {
-      setLoading(true);
-      
-      // Create order objects for each vendor
-      const orderPromises = orderSummary.vendors.map(vendorOrder => {
-        return api.createOrder({
-          vendorId: vendorOrder.vendorId,
-          items: vendorOrder.items,
-          totalAmount: vendorOrder.subtotal,
-          status: "pending"
-        });
-      });
-      
-      await Promise.all(orderPromises);
-      setLoading(false);
-      
-      // Navigate back to raw materials page or show success message
-      alert("Order placed successfully!");
-      navigate("/raw-materials");
-    } catch (err) {
-      setError(err.message);
-      setLoading(false);
+  const createOrder = async (orderData) => {
+  try {
+    const response = await fetch(`${API_URL}/api/vendor/create-order`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${localStorage.getItem('token')}` // Add token if needed
+      },
+      body: JSON.stringify(orderData)
+    });
+
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
     }
+
+    const result = await response.json();
+    return result;
+  } catch (error) {
+    console.error('Error creating order:', error);
+    throw error;
+  }
+};
+
+// Transform orderSummary data to match API payload format
+const transformOrderData = (orderSummary) => {
+  const items = [];
+  
+  orderSummary.vendors.forEach(vendor => {
+    vendor.items.forEach(item => {
+      items.push({
+        vendorId: vendor.vendorId,
+        vendorName: vendor.vendorName,
+        productId: item.materialId, // Using materialId as productId
+        rawMaterialName: item.materialName,
+        quantity: item.quantity,
+        unitPrice: item.unitPrice
+      });
+    });
+  });
+
+  return {
+    totalOrderValue: orderSummary.totalCost,
+    items: items
   };
+};
+  const handleSubmitOrder = async () => {
+  try {
+    setLoading(true);
+    
+    // Transform the orderSummary data to match API payload format
+    const orderPayload = transformOrderData(orderSummary);
+    
+    console.log('Sending order payload:', orderPayload); // For debugging
+    
+    // Call the API
+    const result = await createOrder(orderPayload);
+    
+    // Handle success
+    console.log('Order created successfully:', result);
+    
+    // Show success message and navigate
+    alert("Order placed successfully!");
+    navigate("/inventory");
+    
+  } catch (err) {
+    // Handle error
+    console.error('Failed to submit order:', err);
+    setError(err.message);
+    alert('Failed to submit order. Please try again.');
+  } finally {
+    setLoading(false);
+  }
+};
 
   const nextStep = () => {
     if (currentStep === 1 && selectedMaterials.length === 0) {

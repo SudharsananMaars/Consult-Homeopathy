@@ -149,6 +149,7 @@ const InventoryDashboard = () => {
           >
             Scan Barcode
           </button>
+          <Link to="/orderhistory" className="bg-yellow-600 hover:bg-yellow-700 text-white text-sm px-5 py-2 rounded-lg shadow">Order History</Link>
         </div>
       </div>
 

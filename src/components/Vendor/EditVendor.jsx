@@ -31,7 +31,7 @@ const EditVendor = () => {
   const fetchVendorDetails = async () => {
     try {
       setLoading(true);
-      const response = await axios.get(`${API_URL}/api/vendor/vendors/${id}`, {
+      const response = await axios.get(`${API_URL}/api/vendor/${id}`, {
         headers: {
           Authorization: `Bearer ${token}`,
         },
@@ -113,7 +113,7 @@ const EditVendor = () => {
         products: products
       };
       
-      await axios.patch(`${API_URL}/api/vendor/vendors/${id}`, requestBody, {
+      await axios.patch(`${API_URL}/api/vendor/edit-vendor/${id}`, requestBody, {
         headers: {
           Authorization: `Bearer ${token}`,
           'Content-Type': 'application/json',

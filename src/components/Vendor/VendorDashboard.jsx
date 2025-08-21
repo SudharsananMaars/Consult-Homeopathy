@@ -121,18 +121,27 @@ const VendorDashboard = () => {
   return (
     <div className="max-w-full p-6 bg-gray-50 min-h-screen">
       <div className="mb-8 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
-        <div>
-          <h1 className="text-2xl font-bold text-gray-800">Vendor Management Dashboard</h1>
-          <p className="text-gray-500 mt-1">Monitor and manage your vendor relationships</p>
-        </div>
-        <Link 
-          to="/vendors/add" 
-          className="inline-flex items-center px-4 py-2 bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-700 transition-colors focus:ring-4 focus:ring-blue-300"
-        >
-          <Plus className="w-5 h-5 mr-2" />
-          Add New Vendor
-        </Link>
-      </div>
+  <div>
+    <h1 className="text-2xl font-bold text-gray-800">Vendor Management Dashboard</h1>
+    <p className="text-gray-500 mt-1">Monitor and manage your vendor relationships</p>
+  </div>
+  <div className="flex gap-3">
+    <Link
+      to="/vendors/add"
+      className="inline-flex items-center px-4 py-2 bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-700 transition-colors focus:ring-4 focus:ring-blue-300"
+    >
+      <Plus className="w-5 h-5 mr-2" />
+      Add New Vendor
+    </Link>
+    <Link
+      to="/amendmenthistory"
+      className="inline-flex items-center px-4 py-2 bg-gray-600 text-white font-medium rounded-lg hover:bg-gray-700 transition-colors focus:ring-4 focus:ring-gray-300"
+    >
+      Amendment History
+    </Link>
+  </div>
+</div>
+
       
       {/* Stats Section */}
       {statsDisplay()}
