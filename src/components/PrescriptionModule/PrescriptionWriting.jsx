@@ -2419,7 +2419,7 @@ const PrescriptionWriting = () => {
                 </label>
                 <input
                   type="number"
-                  value={prescriptionData.additionalChargesCharges}
+                  value={prescriptionData.additionalCharges}
                   onChange={(e) =>
                     setPrescriptionData((prev) => ({
                       ...prev,

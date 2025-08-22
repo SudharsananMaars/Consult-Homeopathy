@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from 'react';
-import { Eye, AlertTriangle, CheckCircle, Clock } from 'lucide-react';
+import React, { useState, useEffect, useRef } from 'react';
+import { Eye, AlertTriangle, CheckCircle, Clock, Plus } from 'lucide-react';
 import Layout from "/src/components/patient components/Layout.jsx";
 import config from "../../config";
 
@@ -8,6 +8,9 @@ const PatientInventory = () => {
   const [medicineData, setMedicineData] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [showPopup, setShowPopup] = useState(false);
+  const [selectedMedicines, setSelectedMedicines] = useState([]);
+  const popupRef = useRef(null);
 
   // Calculate dashboard stats from medicine data
   const calculateDashboardStats = (medicines) => {
@@ -82,6 +85,50 @@ const PatientInventory = () => {
     fetchMedicineData();
   }, []);
 
+  // Close popup when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (popupRef.current && !popupRef.current.contains(event.target)) {
+        setShowPopup(false);
+      }
+    };
+
+    if (showPopup) {
+      document.addEventListener('mousedown', handleClickOutside);
+    }
+
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [showPopup]);
+
+  const handleEllipsisClick = () => {
+    // Filter medicines that need refill (low stock or out of stock)
+    const medicinesNeedingRefill = medicineData.filter(med => 
+      med.medicineStatus === 'Low Stock' || 
+      med.medicineStatus === 'Out of Stock' || 
+      med.quantityRemaining <= 0
+    );
+    setSelectedMedicines(medicinesNeedingRefill);
+    setShowPopup(true);
+  };
+
+  const handleMedicineSelect = (medicineIndex, isSelected) => {
+    setSelectedMedicines(prev => {
+      if (isSelected) {
+        const medicineToAdd = medicineData.find((_, index) => index === medicineIndex);
+        return [...prev, medicineToAdd];
+      } else {
+        return prev.filter(med => med !== medicineData[medicineIndex]);
+      }
+    });
+  };
+
+  const handleOrder = (medicine) => {
+    // Handle individual order logic here
+    console.log('Ordering:', medicine);
+  };
+
   const getStatCardStyles = (color) => {
     const styles = {
       blue: "border-l-4 border-blue-500 bg-blue-50",
@@ -109,8 +156,6 @@ const PatientInventory = () => {
     };
     return styles[color];
   };
-
-
 
   if (loading) {
     return (
@@ -141,7 +186,7 @@ const PatientInventory = () => {
 
   return (
     <Layout>
-      <div className="p-6 max-w-7xl mx-auto">
+      <div className="p-6 max-w-7xl mx-auto relative">
         {/* Header */}
         <h1 className="text-2xl font-bold text-gray-900 mb-6">Inventory</h1>
 
@@ -169,7 +214,10 @@ const PatientInventory = () => {
           <div className="p-6 border-b border-gray-200">
             <div className="flex items-center justify-between">
               <h2 className="text-xl font-semibold text-gray-900">Patient-level medicine tracking</h2>
-              <button className="text-gray-400 hover:text-gray-600">
+              <button 
+                className="text-gray-400 hover:text-gray-600"
+                onClick={handleEllipsisClick}
+              >
                 <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
                   <path d="M10 6a2 2 0 110-4 2 2 0 010 4zM10 12a2 2 0 110-4 2 2 0 010 4zM10 18a2 2 0 110-4 2 2 0 010 4z" />
                 </svg>
@@ -241,6 +289,89 @@ const PatientInventory = () => {
             </table>
           </div>
         </div>
+
+        {/* Refill Popup */}
+        {showPopup && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+            <div 
+              ref={popupRef}
+              className="bg-white rounded-lg shadow-xl max-w-4xl w-full mx-4 max-h-[80vh] overflow-hidden"
+            >
+              <div className="p-6 border-b border-gray-200">
+                <div className="flex items-center justify-between">
+                  <h3 className="text-lg font-semibold text-gray-900">Medicine Refill Orders</h3>
+                  <button
+                    onClick={() => setShowPopup(false)}
+                    className="text-gray-400 hover:text-gray-600"
+                  >
+                    <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                  </button>
+                </div>
+              </div>
+
+              <div className="overflow-y-auto max-h-[60vh]">
+                <table className="w-full">
+                  <thead className="bg-gray-50 sticky top-0">
+                    <tr>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Medicine Name
+                      </th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Type
+                      </th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Quantity Pending
+                      </th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Refill Quantity
+                      </th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Place Order
+                      </th>
+                    </tr>
+                  </thead>
+                  <tbody className="bg-white divide-y divide-gray-200">
+                    {selectedMedicines.length === 0 ? (
+                      <tr>
+                        <td colSpan="5" className="px-6 py-8 text-center text-gray-500">
+                          No medicines need refilling at this time
+                        </td>
+                      </tr>
+                    ) : (
+                      selectedMedicines.map((medicine, index) => (
+                        <tr key={index} className="hover:bg-gray-50">
+                          <td className="px-6 py-4 whitespace-nowrap">
+                            <span className="text-sm font-medium text-gray-900">{medicine.medicineName}</span>
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                            {medicine.form}
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                            {medicine.quantityRemaining > 0 ? `${medicine.quantityRemaining} left` : 'Out of stock'}
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                            Qty: {medicine.dispenseQuantity}
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap">
+                            <button
+                              onClick={() => handleOrder(medicine)}
+                              className="inline-flex items-center px-3 py-1 bg-blue-500 text-white text-sm font-medium rounded-md hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+                            >
+                              Order
+                              <Plus className="w-4 h-4 ml-1" />
+                            </button>
+                          </td>
+                        </tr>
+                      ))
+                    )}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
     </Layout>
   );
