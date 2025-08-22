@@ -14,8 +14,8 @@ const InventoryDashboard = () => {
   const [error, setError] = useState(null);
   const [showBarcodeModal, setShowBarcodeModal] = useState(false);
   const [barcodeInput, setBarcodeInput] = useState('');
+  const [showAddRawMaterialModal, setShowAddRawMaterialModal] = useState(false);
   
-
 
   const navigate = useNavigate();
 
@@ -75,6 +75,10 @@ const InventoryDashboard = () => {
     setBarcodeInput('');
   };
 
+  const closeAddRawMaterialModal = () => {
+    setShowAddRawMaterialModal(false);
+  };
+
   const getStatusColor = (status) => {
     switch (status) {
       case 'critical': return 'text-red-600';
@@ -131,7 +135,12 @@ const InventoryDashboard = () => {
       <div className="bg-white rounded-2xl shadow p-6 mb-6">
         <h3 className="text-xl font-semibold text-gray-800 mb-4">Quick Actions</h3>
         <div className="flex flex-col md:flex-row gap-4 justify-center">
-          <Link to="/raw-materials/new" className="bg-blue-600 hover:bg-blue-700 text-white text-sm px-5 py-2 rounded-lg shadow">Add Raw Material</Link>
+          <button 
+            onClick={() => setShowAddRawMaterialModal(true)}
+            className="bg-blue-600 hover:bg-blue-700 text-white text-sm px-5 py-2 rounded-lg shadow"
+          >
+            Add Raw Material
+          </button>
           <Link to="/raw-materials/quality-check" className="bg-red-600 hover:bg-red-700 text-white text-sm px-5 py-2 rounded-lg shadow">Stock Audit</Link>
           
           <button 
@@ -140,10 +149,46 @@ const InventoryDashboard = () => {
           >
             Scan Barcode
           </button>
+          <Link to="/orderhistory" className="bg-yellow-600 hover:bg-yellow-700 text-white text-sm px-5 py-2 rounded-lg shadow">Order History</Link>
         </div>
       </div>
 
       {/* Leakage Alert Section */}
+
+      {/* Add Raw Material Modal */}
+      {showAddRawMaterialModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-2xl shadow-2xl p-6 w-full max-w-md mx-4">
+            <div className="flex justify-between items-center mb-4">
+              <h3 className="text-xl font-semibold text-gray-800">Add Raw Material</h3>
+              <button 
+                onClick={closeAddRawMaterialModal}
+                className="text-gray-400 hover:text-gray-600 text-2xl font-bold"
+              >
+                ×
+              </button>
+            </div>
+            
+            <div className="flex flex-col gap-3">
+              <Link 
+                to="/raw-materials/new"
+                onClick={closeAddRawMaterialModal}
+                className="w-full bg-blue-600 hover:bg-blue-700 text-white text-center py-3 rounded-lg font-medium transition"
+              >
+                Add New Raw Material
+              </Link>
+              
+              <Link 
+                to="/raw-materials/new"
+                onClick={closeAddRawMaterialModal}
+                className="w-full bg-green-600 hover:bg-green-700 text-white text-center py-3 rounded-lg font-medium transition"
+              >
+                Add Existing Raw Material
+              </Link>
+            </div>
+          </div>
+        </div>
+      )}
       
       {/* Barcode Modal */}
       {showBarcodeModal && (

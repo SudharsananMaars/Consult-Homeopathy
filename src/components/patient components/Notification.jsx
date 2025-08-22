@@ -3,79 +3,107 @@ import { FaBell, FaPills } from "react-icons/fa";
 import config from "../../config";
 import axios from "axios";
 
-
 const API_URL = config.API_URL;
 const patientId = localStorage.getItem("userId");
-
+const token = localStorage.getItem("token");
 
 const Notification = ({ togglePopup }) => {
   const [notifications, setNotifications] = useState([]);
   const [medicineSchedule, setMedicineSchedule] = useState([]);
+  const [apiNotifications, setApiNotifications] = useState([]);
 
-useEffect(() => {
-  console.log("👀 useEffect triggered");
+  useEffect(() => {
+    console.log("👀 useEffect triggered");
 
-  const getTodaySchedule = async () => {
-    try {
-      const res = await axios.get(`${API_URL}/api/medication/schedule/today/${patientId}`);
-      console.log("✅ Today's meds:", res.data.medications);
-      setMedicineSchedule(res.data.medications);
-    } catch (err) {
-      console.error("❌ Failed to fetch meds:", err);
-    }
-  };
+    const getTodaySchedule = async () => {
+      try {
+        const res = await axios.get(`${API_URL}/api/medication/schedule/today/${patientId}`);
+        console.log("✅ Today's meds:", res.data.medications);
+        setMedicineSchedule(res.data.medications);
+      } catch (err) {
+        console.error("❌ Failed to fetch meds:", err);
+      }
+    };
 
-  getTodaySchedule();
-}, []);
+    const getApiNotifications = async () => {
+      try {
+        const res = await axios.get(`${API_URL}/api/notifications`, {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        });
+        console.log("✅ API Notifications:", res.data.notifications);
+        setApiNotifications(res.data.notifications);
+      } catch (err) {
+        console.error("❌ Failed to fetch notifications:", err);
+      }
+    };
+
+    const markAllNotificationsRead = async () => {
+      try {
+        await axios.patch(`${API_URL}/api/notifications/mark-all-read`, {}, {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        });
+        console.log("✅ All notifications marked as read");
+      } catch (err) {
+        console.error("❌ Failed to mark notifications as read:", err);
+      }
+    };
+
+    getTodaySchedule();
+    getApiNotifications();
+    markAllNotificationsRead();
+  }, []);
 
   // ⏱️ Check for notification triggers every minute
-useEffect(() => {
-  if (!medicineSchedule.length) return;
+  useEffect(() => {
+    if (!medicineSchedule.length) return;
 
-  const interval = setInterval(() => {
-    const now = new Date();
-    const currentTime = `${now.getHours().toString().padStart(2, "0")}:${now
-      .getMinutes()
-      .toString()
-      .padStart(2, "0")}`;
-
-    medicineSchedule.forEach((med) => {
-      const [hour, minute] = med.doseTime.split(":").map(Number);
-      const preTimerMinutes = med.reminderSetting || 5;
-
-      const preAlertTime = new Date();
-      preAlertTime.setHours(hour);
-      preAlertTime.setMinutes(minute - preTimerMinutes);
-
-      const preAlertString = `${preAlertTime
-        .getHours()
-        .toString()
-        .padStart(2, "0")}:${preAlertTime
+    const interval = setInterval(() => {
+      const now = new Date();
+      const currentTime = `${now.getHours().toString().padStart(2, "0")}:${now
         .getMinutes()
         .toString()
         .padStart(2, "0")}`;
 
-      if (currentTime === preAlertString) {
-        addNotification(
-          `Time to prepare: You have to take ${med.medicineName} in ${preTimerMinutes} minutes.`,
-          "pre",
-          med
-        );
-      }
+      medicineSchedule.forEach((med) => {
+        const [hour, minute] = med.doseTime.split(":").map(Number);
+        const preTimerMinutes = med.reminderSetting || 5;
 
-      if (currentTime === med.doseTime) {
-        addNotification(
-          `Have you taken your medicine (${med.medicineName}) today?`,
-          "exact",
-          med
-        );
-      }
-    });
-  }, 60000); // every minute
+        const preAlertTime = new Date();
+        preAlertTime.setHours(hour);
+        preAlertTime.setMinutes(minute - preTimerMinutes);
 
-  return () => clearInterval(interval);
-}, [medicineSchedule]);
+        const preAlertString = `${preAlertTime
+          .getHours()
+          .toString()
+          .padStart(2, "0")}:${preAlertTime
+          .getMinutes()
+          .toString()
+          .padStart(2, "0")}`;
 
+        if (currentTime === preAlertString) {
+          addNotification(
+            `Time to prepare: You have to take ${med.medicineName} in ${preTimerMinutes} minutes.`,
+            "pre",
+            med
+          );
+        }
+
+        if (currentTime === med.doseTime) {
+          addNotification(
+            `Have you taken your medicine (${med.medicineName}) today?`,
+            "exact",
+            med
+          );
+        }
+      });
+    }, 60000); // every minute
+
+    return () => clearInterval(interval);
+  }, [medicineSchedule]);
 
   const addNotification = (message, type, med = null) => {
     const id = Date.now();
@@ -91,6 +119,7 @@ useEffect(() => {
       icon: type === "pre" ? FaBell : FaPills,
       type,
       status: type === "exact" ? "pending" : null,
+      isApiNotification: false,
     };
 
     setNotifications((prev) => [newNotification, ...prev.slice(0, 20)]);
@@ -143,23 +172,42 @@ const sendStatusToBackend = async (medicineName, doseTime, status) => {
   }
 };
 
+  // Transform API notifications to display format
+  const transformedApiNotifications = apiNotifications.map((apiNotif) => ({
+    id: apiNotif._id,
+    message: apiNotif.message,
+    time: new Date(apiNotif.createdAt).toLocaleTimeString([], {
+      hour: "2-digit",
+      minute: "2-digit",
+    }),
+    icon: FaBell,
+    type: "api",
+    isApiNotification: true,
+    read: apiNotif.read,
+  }));
+
+  // Combine all notifications (API notifications first, then medication reminders)
+  const allNotifications = [...transformedApiNotifications, ...notifications];
+
   return (
     <div className="fixed top-12 right-5 w-80 bg-white shadow-lg rounded-lg overflow-hidden z-50">
       <div className="p-4 bg-blue-500 text-white">
         <h3 className="text-lg font-bold">Notifications</h3>
       </div>
       <div className="max-h-96 overflow-y-auto p-4 space-y-2">
-        {notifications.length === 0 ? (
+        {allNotifications.length === 0 ? (
           <p className="text-sm text-gray-500">No notifications yet.</p>
         ) : (
-          notifications.map((n) => (
+          allNotifications.map((n) => (
             <div key={n.id} className="flex flex-col border-b pb-2 gap-1">
               <div className="flex gap-3">
                 <span className="text-blue-500 text-xl mt-1">
                   {React.createElement(n.icon)}
                 </span>
                 <div>
-                  <p className="text-sm font-medium">{n.message}</p>
+                  <p className={`text-sm font-medium ${n.isApiNotification && !n.read ? 'font-bold' : ''}`}>
+                    {n.message}
+                  </p>
                   <p className="text-xs text-gray-500">{n.time}</p>
 
                   {n.type === "exact" && n.status === "pending" && (

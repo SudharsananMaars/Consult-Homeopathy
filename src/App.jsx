@@ -112,6 +112,7 @@ import AmendmentLog from "./components/Inventory/AmendmentLog.jsx";
 import OrderRawMaterials from "./components/Inventory/Order/OrderRawMaterials.jsx";
 import EditVendor from "./components/Vendor/EditVendor.jsx";
 import LeakageDetection from "./components/Inventory/Lekagedetection.jsx";
+import OrderHistory from "./components/Inventory/OrderHistory.jsx";
 // Error Pages
 import NotFound from "./pages/AuthPages/NotFound.jsx";
 import Forbidden from "./pages/AuthPages/Forbidden.jsx";
@@ -139,6 +140,7 @@ import UnusedDetails from "./components/Inventory/UnusedDetails.jsx";
 //Medicine Preparation
 import MedicinePreparationLogin from "./pages/MedicinePreparationPages/MedicinePreparationlogin";
 import Preparation from "./pages/MedicinePreparationPages/preparation";
+import AmendmentHistory from "./components/Vendor/AmendmentHistory.jsx";
 
 // Error Fallback Component
 const ErrorFallback = () => <ServerError />;
@@ -729,6 +731,22 @@ function App() {
           element={
             <ProtectedRoute allowedRoles={["Doctor", "admin"]}>
               <AmendmentLog />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/orderhistory"
+          element={
+            <ProtectedRoute allowedRoles={["Doctor", "admin"]}>
+              <OrderHistory />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/amendmenthistory"
+          element={
+            <ProtectedRoute allowedRoles={["Doctor", "admin"]}>
+              <AmendmentHistory />
             </ProtectedRoute>
           }
         />
