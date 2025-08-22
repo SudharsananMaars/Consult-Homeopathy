@@ -59,6 +59,10 @@ const MedicinePreparationView = () => {
   const [individualRawMaterialChecks, setIndividualRawMaterialChecks] = useState({}); 
   const [step3Check1, setStep3Check1] = useState(false);
   const [step3Check2, setStep3Check2] = useState(false);
+  // New state for stock to be shelfed data
+  const [stockToBeShelfedData, setStockToBeShelfedData] = useState({});
+  const [hoveredMaterial, setHoveredMaterial] = useState(null);
+  const [hoverPosition, setHoverPosition] = useState({ x: 0, y: 0 });
   const navigate = useNavigate();
   const API_URL = config.API_URL;
   const { appointmentId } = useParams();
@@ -392,7 +396,54 @@ const stopRecording = () => {
   });
 };
 
+  // New function to fetch stock data after post-weight update
+  const fetchStockToBeShelfedData = async (material) => {
+    try {
+      const payload = {
+        rawMaterialId: material.rawMaterialId,
+        medicineName: init?.medicineName,
+        prescriptionId: init?.prescriptionId,
+        postWeight
+      };
 
+      const response = await fetch(
+        `${API_URL}/api/medicine-summary/update-postweight`,
+        {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload),
+        }
+      );
+
+      if (!response.ok) throw new Error("Failed to update post-weight");
+
+      const data = await response.json();
+      
+      // Store the stock data for this material
+      setStockToBeShelfedData(prev => ({
+        ...prev,
+        [material.rawMaterialId]: {
+          updatedRawMaterialQuantity: data.updatedRawMaterialQuantity,
+          bottleCapWeight: data.bottleCapWeight,
+          totalWeight: data.updatedRawMaterialQuantity + data.bottleCapWeight
+        }
+      }));
+
+      return data;
+    } catch (err) {
+      console.error("Error fetching stock data:", err);
+      throw err;
+    }
+  };
+
+  const handleMouseEnter = (material, event) => {
+    setHoveredMaterial(material.rawMaterialId);
+    setHoverPosition({ x: event.clientX, y: event.clientY });
+  };
+
+  const handleMouseLeave = () => {
+    setHoveredMaterial(null);
+  };
 
   const isExpiryWarning = (expiryDate) => {
     const expiry = moment(expiryDate);
@@ -939,17 +990,46 @@ const stopRecording = () => {
               </td>
 
                {/* Stock */}
-              <td className="bg-white p-4 text-center">
-                <span
-                  className={
-                    isLowStock(material.currentQuantity, material.quantity)
-                      ? "text-yellow-700 font-semibold"
-                      : "text-gray-800"
-                  }
-                >
-                  {material.currentQuantity} / {material.packageSize || "units"}
-                </span>
-              </td>
+              <td
+  className="bg-white p-4 text-center relative"
+  onMouseEnter={(e) => {
+    setHoverPosition({ x: e.clientX, y: e.clientY });
+    setHoveredMaterial(material.rawMaterialId);
+  }}
+  onMouseMove={(e) => {
+    setHoverPosition({ x: e.clientX, y: e.clientY });
+  }}
+  onMouseLeave={() => setHoveredMaterial(null)}
+>
+  {/* Table display */}
+  <span
+    className={
+      isLowStock(material.currentQuantity, material.quantity)
+        ? "text-yellow-700 font-semibold"
+        : "text-gray-800"
+    }
+  >
+    {material.currentQuantity} / {material.packageSize || "units"}
+  </span>
+
+  {/* Tooltip */}
+  {hoveredMaterial === material.rawMaterialId && (
+    <div
+      className="fixed bg-white border border-gray-300 shadow-lg rounded-lg p-3 z-50 min-w-[200px]"
+      style={{
+        left: hoverPosition.x + 10,
+        top: hoverPosition.y - 10,
+      }}
+    >
+      <div className="text-sm text-gray-700">
+        <div>Bottle Weight: {material.bottleWeight}</div>
+        <div>Substance Weight: {material.currentQuantity}</div>
+        <div>Total Weight: {material.bottleWeight + material.currentQuantity}</div>
+      </div>
+    </div>
+  )}
+</td>
+
 
               {/* Pre‑Weight */}
               <td className="bg-gray-100 p-4 text-center">
@@ -1061,6 +1141,45 @@ const stopRecording = () => {
                     </button>
                   ))}
               </td>
+
+               {/* Stock to be Shelfed with hover popup */}
+               <td className="bg-white p-4 text-center relative">
+                <span
+                  className={`cursor-pointer ${
+                    isLowStock(material.currentQuantity, material.quantity)
+                      ? "text-yellow-700 font-semibold"
+                      : "text-gray-800"
+                  }`}
+                  onMouseEnter={(e) => handleMouseEnter(material, e)}
+                  onMouseLeave={handleMouseLeave}
+                >
+                  {stockToBeShelfedData[material.rawMaterialId]?.updatedRawMaterialQuantity 
+                  }
+                </span>
+
+                {/* Hover popup */}
+                {hoveredMaterial === material.rawMaterialId && stockToBeShelfedData[material.rawMaterialId] && (
+                  <div 
+                    className="fixed bg-white border border-gray-300 shadow-lg rounded-lg p-3 z-50 min-w-[200px]"
+                    style={{
+                      left: hoverPosition.x + 10,
+                      top: hoverPosition.y - 10,
+                    }}
+                  >
+                    <div className="text-sm text-gray-700">
+                     
+                     
+                        <div>Bottle Weight: {stockToBeShelfedData[material.rawMaterialId].bottleCapWeight}</div>
+                        <div>Substance Weight: {stockToBeShelfedData[material.rawMaterialId].updatedRawMaterialQuantity}</div>
+                        <div>
+                         Total Weight: {stockToBeShelfedData[material.rawMaterialId].totalWeight}
+                        </div>
+                    
+                    </div>
+                  </div>
+                )}
+              </td>
+              
             </tr>
           ))}
       </tbody>
@@ -1357,30 +1476,14 @@ const stopRecording = () => {
         return;
       }
 
-      const payload = {
-        rawMaterialId: updatingMaterial.rawMaterialId,
-        medicineName: init?.medicineName,
-        prescriptionId: init?.prescriptionId,
-        postWeight
-      };
-
-      const response = await fetch(
-        `${API_URL}/api/medicine-summary/update-postweight`,
-        {
-          method: 'PATCH',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(payload),
-        }
-      );
-
-      if (!response.ok) throw new Error("Failed to update post-weight");
+      // Call the API and get the response data
+      const data = await fetchStockToBeShelfedData(updatingMaterial);
 
       setPostWeightUpdated(prev => [...prev, updatingMaterial.rawMaterialId]);
 
-      const data = await response.json(); 
       setPostWeightData(prev => ({
   ...prev,
-  [updatingMaterial.rawMaterialId]: data.updatedMaterial.quantityLeaked
+  [updatingMaterial.rawMaterialId]: data.quantityLeaked
 }));
 
       console.log("Post weight updated", data);

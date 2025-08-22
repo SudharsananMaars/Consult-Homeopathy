@@ -18,6 +18,8 @@ const NewAppointment = () => {
   const [availableSlots, setAvailableSlots] = useState([]);
   const [user, setUser] = useState(null);
   const [reservedAppointment, setReservedAppointment] = useState(null);
+  const [timeSlots, setTimeSlots] = useState([]);
+  const [isLoadingSlots, setIsLoadingSlots] = useState(false);
   const [paymentStatus, setPaymentStatus] = useState(null);
 
   const [consultingForOptions, setConsultingForOptions] = useState([]);
@@ -34,17 +36,6 @@ const NewAppointment = () => {
   const today = dayjs();
   const minDate = today;
   const maxDate = today.add(1, "month");
-
-  const timeSlots = [
-    "10:00",
-    "11:00",
-    "12:00",
-    "13:00",
-    "14:00",
-    "15:00",
-    "16:00",
-    "17:00",
-  ];
 
   const consultingReasons = [
     "Accidents",
@@ -209,6 +200,47 @@ const NewAppointment = () => {
     };
     fetchSlots();
   }, [startDate]);
+
+  useEffect(() => {
+  const fetchTimeSlots = async () => {
+    if (startDate) {
+      setIsLoadingSlots(true);
+      const token = localStorage.getItem("token");
+      const formattedDate = dayjs(startDate).format("YYYY-MM-DD");
+      
+      try {
+        const res = await axios.post(
+  `${API_URL}/api/patient/appointmentBookingTimeSlot`,
+  { date: formattedDate }, 
+  {
+    headers: {
+      Authorization: `Bearer ${token}`,
+      "Content-Type": "application/json",
+    },
+  }
+);
+
+        
+        setTimeSlots(res.data.result || []);
+        setSelectedTime(null); // Reset selected time when date changes
+        setErrorMessage(""); // Clear any previous errors
+        
+      } catch (err) {
+        console.error("Error fetching time slots:", err);
+        setErrorMessage("Failed to load available time slots");
+        setTimeSlots([]); // Clear slots on error
+      } finally {
+        setIsLoadingSlots(false);
+      }
+    } else {
+      // Clear slots if no date selected
+      setTimeSlots([]);
+    }
+  };
+
+  fetchTimeSlots();
+}, [startDate]);
+
 
   // Check appointment status periodically if reserved
   useEffect(() => {
@@ -537,23 +569,21 @@ const NewAppointment = () => {
           <div>
             <label className="font-semibold block mb-2">Pick Your Time</label>
             <div className="grid grid-cols-3 gap-2">
-              {timeSlots.map((time) => (
-                <button
-                  key={time}
-                  onClick={() => setSelectedTime(time)}
-                  disabled={!availableSlots.includes(time)}
-                  className={`p-2 rounded border transition ${
-                    selectedTime === time
-                      ? "bg-blue-500 text-white"
-                      : availableSlots.includes(time)
-                      ? "bg-white hover:bg-blue-100"
-                      : "bg-gray-200 cursor-not-allowed text-gray-500"
-                  }`}
-                >
-                  {time}
-                </button>
-              ))}
-            </div>
+  {timeSlots.map((time) => (
+    <button
+      key={time}
+      onClick={() => setSelectedTime(time)}
+      className={`p-2 rounded border transition ${
+        selectedTime === time
+          ? "bg-blue-500 text-white"
+          : "bg-white hover:bg-blue-100"
+      }`}
+    >
+      {time}
+    </button>
+  ))}
+</div>
+
             {formErrors.time && (
               <p className="text-red-500 text-sm mt-1">{formErrors.time}</p>
             )}

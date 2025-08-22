@@ -149,20 +149,28 @@ const Notification = ({ togglePopup }) => {
     sendStatusToBackend(target.medicineName, target.doseTime, response === "yes");
   };
 
-  const sendStatusToBackend = async (medicineName, doseTime, status) => {
-    try {
-      await fetch(`${API_URL}/api/medication/schedule/status/${patientId}`, {
-        method: "PATCH",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${localStorage.getItem("token")}`,
-        },
-        body: JSON.stringify({ medicineName, doseTime, status }),
-      });
-    } catch (err) {
-      console.error("Failed to update medication status:", err);
-    }
-  };
+const sendStatusToBackend = async (medicineName, doseTime, status) => {
+  try {
+    // Get current date in YYYY-MM-DD format
+    const currentDate = new Date().toISOString().split('T')[0];
+    
+    await fetch(`${API_URL}/api/medication/schedule/status/${patientId}`, {
+      method: "PATCH",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${localStorage.getItem("token")}`,
+      },
+      body: JSON.stringify({ 
+        medicineName, 
+        doseTime, 
+        status,
+        date: currentDate  // Added current date
+      }),
+    });
+  } catch (err) {
+    console.error("Failed to update medication status:", err);
+  }
+};
 
   // Transform API notifications to display format
   const transformedApiNotifications = apiNotifications.map((apiNotif) => ({
@@ -183,7 +191,7 @@ const Notification = ({ togglePopup }) => {
 
   return (
     <div className="fixed top-12 right-5 w-80 bg-white shadow-lg rounded-lg overflow-hidden z-50">
-      <div className="p-4 bg-blue-500 text-white">
+      <div className="p-4 bg-blue-500 text-grey">
         <h3 className="text-lg font-bold">Notifications</h3>
       </div>
       <div className="max-h-96 overflow-y-auto p-4 space-y-2">

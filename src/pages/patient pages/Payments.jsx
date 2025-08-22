@@ -276,7 +276,7 @@ const Payments = () => {
       <div className="space-y-8 max-w-7xl mx-auto">
         {/* Header */}
         <div className="bg-white rounded-lg shadow-sm border p-6">
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">Payment History</h1>
+          <h1 className="text-3xl font-bold text-gray-900 mb-2">Medicine Payment</h1>
           <p className="text-gray-600">Manage your prescription payments and billing information</p>
         </div>
 

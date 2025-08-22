@@ -27,7 +27,7 @@ import Profile from "./pages/patient pages/Profile.jsx";
 import ReferFriend from "./pages/patient pages/ReferFriend.jsx";
 import NeedHelp from "./pages/patient pages/NeedHelp.jsx";
 import Track from "./pages/patient pages/Track.jsx";
-import PaymentPage from "./pages/patient pages/PaymentPage.jsx";
+import PaymentsHistory from "./pages/patient pages/PaymentsHistory.jsx";
 import Messenger from "./components/patient components/Messenger.jsx";
 import HomePage from "./pages/patient pages/HomePage.jsx";
 import RazorScreen from "./pages/patient pages/RazorScreen.jsx";
@@ -301,10 +301,10 @@ function App() {
           }
         />
         <Route
-          path="/paymentpage"
+          path="/paymentshistory"
           element={
             <ProtectedRoute allowedRoles={["Patient"]}>
-              <PaymentPage />
+              <PaymentsHistory />
             </ProtectedRoute>
           }
         />

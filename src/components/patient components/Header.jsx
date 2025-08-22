@@ -1,20 +1,57 @@
 import React, { useState } from "react";
-import { CgProfile } from "react-icons/cg";
-import { BiMessageRoundedDetail } from "react-icons/bi";
-import { MdOutlineNotificationsNone } from "react-icons/md";
-import { useNavigate } from "react-router-dom";
+import { 
+  AppBar, 
+  Toolbar, 
+  Box, 
+  IconButton, 
+  Typography, 
+  Breadcrumbs,
+  Link,
+  Stack
+} from "@mui/material";
+import { 
+  AccountCircle, 
+  Message, 
+  Notifications,
+  Menu as MenuIcon,
+  NavigateNext
+} from "@mui/icons-material";
+import { useNavigate, useLocation } from "react-router-dom";
 import Notification from "./Notification";
 import Messenger from "./Messenger";
-import homeologo from "/src/assets/images/patient images/homeologo.png";
 
-const Header = () => {
+const Header = ({ toggleSidebar }) => {
   const navigate = useNavigate();
+  const location = useLocation();
   const [isMessageActive, setIsMessageActive] = useState(false);
   const [isNotifyActive, setIsNotifyActive] = useState(false);
   const [isProfileActive, setIsProfileActive] = useState(false);
 
   const [showNotification, setShowNotification] = useState(false);
   const [showMessenger, setShowMessenger] = useState(false);
+
+  // Function to get page title from pathname
+  const getPageTitle = (pathname) => {
+    const routes = {
+      '/home': 'Home',
+      '/consulthistory': 'Consultation History',
+      '/appointments/newappointment': 'Book Appointment',
+      '/appointments/upcoming': 'Booked Appointments',
+      '/prescription': 'Prescription',
+      '/patient-inventory': 'Inventory',
+      '/payments': 'Payments',
+      '/medicine': 'Medicine Shipments',
+      '/workshops': 'Workshops',
+      '/patientcontent': 'Content',
+      '/settings': 'Settings',
+      '/refer': 'Refer Friend',
+      '/profile': 'Profile',
+      '/needhelp': 'Need Help'
+    };
+    
+    return routes[pathname] || 'Dashboard';
+  };
+
   const handleNotify = () => {
     setIsNotifyActive(!isNotifyActive);
     setShowNotification(!showNotification);
@@ -32,35 +69,157 @@ const Header = () => {
     setShowNotification(false);
   };
 
-  const name = "Rita";
+  const currentPageTitle = getPageTitle(location.pathname);
 
   return (
-    <div className="flex justify-between items-center px-5 py-3 fixed w-full top-0 bg-indigo-200 shadow-lg z-50">
-      <div className="flex pt-1 ">
-      <img src={homeologo} alt="Logo" className="w-20" />
-      <span className="ml-4 text-2xl font-bold text-gray-800 custom-font">Consult Homeopathy</span>
-      </div>
-      <div className="flex items-center space-x-5">
-        <button onClick={handleMessage}>
-          <div className={`shadow-lg rounded-full p-2 ${isMessageActive ? "bg-purple-400 text-white" : "bg-white text-purple-700 hover:text-white hover:bg-purple-400"}`}>
-            <BiMessageRoundedDetail size={25} />
-          </div>
-        </button>
-        <button onClick={handleNotify}>
-          <div className={`shadow-lg rounded-full p-2 ${isNotifyActive ? "bg-blue-400 text-white" : "bg-white text-blue-600 hover:text-white hover:bg-blue-400"}`}>
-            <MdOutlineNotificationsNone size={23} />
-          </div>
-        </button>
-        <button onClick={handleProfile}>
-          <div className={`shadow-lg rounded-full p-2 ${isProfileActive ? "bg-indigo-400 text-white" : "bg-white text-indigo-600 hover:text-white hover:bg-indigo-400"}`}>
-            <CgProfile size={23} />
-          </div>
-        </button>
-      </div>
+    <AppBar 
+      position="static" 
+      elevation={1}
+      sx={{ 
+        backgroundColor: '#EFF6FF',
+        borderBottom: '1px solid #e5e7eb',
+        width: '100%'
+      }}
+    >
+      <Toolbar sx={{ justifyContent: 'space-between', minHeight: '64px !important', px: 3 }}>
+        {/* Left section - Sidebar toggle, Logo and Breadcrumbs */}
+        <Box sx={{ flex: 1, display: 'flex', alignItems: 'center', gap: 2 }}>
+          {/* Sidebar Toggle Button */}
+          <IconButton
+            onClick={toggleSidebar}
+            sx={{
+              backgroundColor: 'white',
+              boxShadow: '0 1px 3px 0 rgb(0 0 0 / 0.1)',
+              color: '#6b7280',
+              '&:hover': {
+                backgroundColor: '#f9fafb',
+                color: '#374151'
+              },
+              width: 40,
+              height: 40,
+              display: { xs: 'flex', md: 'none' }
+            }}
+          >
+            <MenuIcon />
+          </IconButton>
 
+          {/* Logo and Title Section */}
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+            
+            
+            {/* Breadcrumbs */}
+            <Box sx={{ display: { xs: 'none', sm: 'block' } }}>
+              <Breadcrumbs
+                separator={<NavigateNext fontSize="small" sx={{ color: '#9ca3af' }} />}
+                sx={{
+                  '& .MuiBreadcrumbs-separator': {
+                    mx: 1
+                  }
+                }}
+              >
+                <Typography
+                  variant="h6"
+                  sx={{
+                    color: '#5b5b5bff',
+                    fontWeight: 700,
+                    fontSize: '1rem'
+                  }}
+                >
+                  Consult Homeopathy
+                </Typography>
+                <Typography
+                  variant="h6"
+                  sx={{
+                    color: '#5b5b5bff',
+                    fontWeight: 600,
+                    fontSize: '1rem'
+                  }}
+                >
+                  {currentPageTitle}
+                </Typography>
+              </Breadcrumbs>
+            </Box>
+
+            {/* Mobile Title */}
+            <Box sx={{ display: { xs: 'block', sm: 'none' } }}>
+              <Typography
+                variant="h6"
+                sx={{
+                  color: '#1e293b',
+                  fontWeight: 600,
+                  fontSize: '1rem'
+                }}
+              >
+                {currentPageTitle}
+              </Typography>
+            </Box>
+          </Box>
+        </Box>
+
+        {/* Right section - Action buttons */}
+        <Stack direction="row" spacing={1.5} alignItems="center">
+          {/* Message Button */}
+          <IconButton
+            onClick={handleMessage}
+            sx={{
+              backgroundColor: isMessageActive ? '#c7d2fe' : 'white',
+              boxShadow: '0 1px 3px 0 rgb(0 0 0 / 0.1)',
+              color: isMessageActive ? '#4c1d95' : '#6b7280',
+              '&:hover': {
+                backgroundColor: '#c7d2fe',
+                color: '#4c1d95'
+              },
+              width: 44,
+              height: 44
+            }}
+          >
+            <Message />
+          </IconButton>
+
+          {/* Notification Button */}
+          <IconButton
+            onClick={handleNotify}
+            sx={{
+              backgroundColor: isNotifyActive ? '#c7d2fe' : 'white',
+              boxShadow: '0 1px 3px 0 rgb(0 0 0 / 0.1)',
+              color: isNotifyActive ? '#4c1d95' : '#6b7280',
+              '&:hover': {
+                backgroundColor: '#c7d2fe',
+                color: '#4c1d95'
+              },
+              width: 44,
+              height: 44
+            }}
+          >
+            <Notifications />
+          </IconButton>
+
+          {/* Profile Button */}
+          <IconButton
+            onClick={handleProfile}
+            sx={{
+              backgroundColor: isProfileActive ? '#c7d2fe' : 'white',
+              boxShadow: '0 1px 3px 0 rgb(0 0 0 / 0.1)',
+              color: isProfileActive ? '#4c1d95' : '#6b7280',
+              '&:hover': {
+                backgroundColor: '#c7d2fe',
+                color: '#4c1d95'
+              },
+              width: 44,
+              height: 44
+            }}
+          >
+            <AccountCircle />
+          </IconButton>
+        </Stack>
+      </Toolbar>
+
+      {/* Conditionally Render Messenger Popup */}
       {showMessenger && <Messenger toggleMessenger={handleMessage} isVisible={showMessenger} />}
+
+      {/* Conditionally Render Notification Popup */}
       {showNotification && <Notification togglePopup={handleNotify} />}
-    </div>
+    </AppBar>
   );
 };
 
