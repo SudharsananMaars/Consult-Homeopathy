@@ -12,8 +12,8 @@ const PatientInventory = () => {
   // Calculate dashboard stats from medicine data
   const calculateDashboardStats = (medicines) => {
     const totalMedicines = medicines.length;
-    const solidMedicines = medicines.filter(med => med.form === 'Tablets' || med.form === 'Capsules').length;
-    const liquidMedicines = medicines.filter(med => med.form === 'Liquid' || med.form === 'Syrup').length;
+    const solidMedicines = medicines.filter(med => med.form === 'Tablets' || med.form === 'Drams').length;
+    const liquidMedicines = medicines.filter(med => med.form === 'Liquid form' || med.form === 'Syrup').length;
     const pendingMedicines = medicines.filter(med => med.medicineStatus === 'Pending' || med.quantityRemaining === 0).length;
     const consumedMedicines = medicines.reduce((total, med) => total + med.totalQuantityConsumed, 0);
 

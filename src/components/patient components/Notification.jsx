@@ -120,20 +120,28 @@ useEffect(() => {
     sendStatusToBackend(target.medicineName, target.doseTime, response === "yes");
   };
 
-  const sendStatusToBackend = async (medicineName, doseTime, status) => {
-    try {
-      await fetch(`${API_URL}/api/medication/schedule/status/${patientId}`, {
-        method: "PATCH",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${localStorage.getItem("token")}`,
-        },
-        body: JSON.stringify({ medicineName, doseTime, status }),
-      });
-    } catch (err) {
-      console.error("Failed to update medication status:", err);
-    }
-  };
+const sendStatusToBackend = async (medicineName, doseTime, status) => {
+  try {
+    // Get current date in YYYY-MM-DD format
+    const currentDate = new Date().toISOString().split('T')[0];
+    
+    await fetch(`${API_URL}/api/medication/schedule/status/${patientId}`, {
+      method: "PATCH",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${localStorage.getItem("token")}`,
+      },
+      body: JSON.stringify({ 
+        medicineName, 
+        doseTime, 
+        status,
+        date: currentDate  // Added current date
+      }),
+    });
+  } catch (err) {
+    console.error("Failed to update medication status:", err);
+  }
+};
 
   return (
     <div className="fixed top-12 right-5 w-80 bg-white shadow-lg rounded-lg overflow-hidden z-50">
