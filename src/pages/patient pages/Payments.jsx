@@ -1,23 +1,46 @@
 import { useEffect, useState } from "react";
 import axios from "axios";
 import Layout from "../../components/patient components/Layout";
+import config from "../../config";
+
+const API_URL = config.API_URL;
+const userId = localStorage.getItem("userId");
 
 const PaymentsPage = () => {
   const [payments, setPayments] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+
+  const [filters, setFilters] = useState({
+    paymentId: "",
+    status: "",
+    dateRange: "",
+  });
+
+  const [currentPage, setCurrentPage] = useState(1);
+  const [entriesPerPage, setEntriesPerPage] = useState(10);
 
   const fetchPayments = async () => {
     try {
+      setLoading(true);
+      const token = localStorage.getItem("token");
+
       const res = await axios.get(
-        "http://localhost:5000/api/patient/patientPayments  ",
+        `${API_URL}/api/patient/show-all-payments/${userId}`,
         {
-          headers: {
-            Authorization: `Bearer ${localStorage.getItem("token")}`,
-          },
-        }
+                    headers: {
+                        Authorization: `Bearer ${token}`,
+                    },
+                }
       );
-      setPayments(res.data.data);
+      
+      if (res.data.success && res.data.data) {
+        setPayments(res.data.data);
+      } else {
+        setError('No payment data available');
+      }
     } catch (err) {
+      setError(err.message || 'Failed to fetch payments');
       console.error("Failed to fetch payments:", err);
     } finally {
       setLoading(false);
@@ -28,68 +51,276 @@ const PaymentsPage = () => {
     fetchPayments();
   }, []);
 
+  // Format date and time
+  const formatDateTime = (dateString) => {
+    const date = new Date(dateString);
+    return date.toLocaleDateString('en-IN', {
+      year: 'numeric',
+      month: '2-digit',
+      day: '2-digit',
+      hour: '2-digit',
+      minute: '2-digit',
+      hour12: true
+    });
+  };
+
+  // Function to assign background color based on status
+  const getStatusBgColor = (status) => {
+    switch (status?.toLowerCase()) {
+      case "paid":
+        return "bg-green-100 text-green-700";
+      case "failed":
+        return "bg-red-100 text-red-700";
+      case "pending":
+        return "bg-yellow-100 text-yellow-700";
+      case "refunded":
+        return "bg-blue-100 text-blue-700";
+      default:
+        return "bg-gray-100 text-gray-700";
+    }
+  };
+
+  const handleFilterChange = (e) => {
+    const { name, value } = e.target;
+    setFilters({ ...filters, [name]: value });
+    setCurrentPage(1);
+  };
+
+  const handleEntriesPerPageChange = (e) => {
+    setEntriesPerPage(Number(e.target.value));
+    setCurrentPage(1);
+  };
+
+  // Filter payments based on search criteria
+  const filteredPayments = payments.filter((payment) => {
+    const matchesPaymentId = payment.razorpayPaymentId?.toLowerCase().includes(filters.paymentId.toLowerCase()) || false;
+    const matchesStatus = filters.status === "" || payment.status?.toLowerCase() === filters.status.toLowerCase();
+    
+    // Date range filtering
+    let matchesDateRange = true;
+    if (filters.dateRange) {
+      const paymentDate = new Date(payment.createdAt);
+      const now = new Date();
+      
+      switch (filters.dateRange) {
+        case "today":
+          matchesDateRange = paymentDate.toDateString() === now.toDateString();
+          break;
+        case "lastWeek":
+          const lastWeek = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+          matchesDateRange = paymentDate >= lastWeek;
+          break;
+        case "lastMonth":
+          const lastMonth = new Date(now.getFullYear(), now.getMonth() - 1, now.getDate());
+          matchesDateRange = paymentDate >= lastMonth;
+          break;
+        case "last3Months":
+          const last3Months = new Date(now.getFullYear(), now.getMonth() - 3, now.getDate());
+          matchesDateRange = paymentDate >= last3Months;
+          break;
+        case "last6Months":
+          const last6Months = new Date(now.getFullYear(), now.getMonth() - 6, now.getDate());
+          matchesDateRange = paymentDate >= last6Months;
+          break;
+        case "lastYear":
+          const lastYear = new Date(now.getFullYear() - 1, now.getMonth(), now.getDate());
+          matchesDateRange = paymentDate >= lastYear;
+          break;
+        default:
+          matchesDateRange = true;
+      }
+    }
+    
+    return matchesPaymentId && matchesStatus && matchesDateRange;
+  });
+
+  // Pagination logic
+  const indexOfLastEntry = currentPage * entriesPerPage;
+  const indexOfFirstEntry = indexOfLastEntry - entriesPerPage;
+  const currentPayments = filteredPayments.slice(indexOfFirstEntry, indexOfLastEntry);
+  const totalPages = Math.ceil(filteredPayments.length / entriesPerPage);
+
+  const paginate = (pageNumber) => setCurrentPage(pageNumber);
+
+  if (loading) {
+    return (
+      <Layout>
+        <div className="max-w-7xl mx-auto mt-10 px-4">
+          <div className="flex justify-center items-center h-64">
+            <div className="text-lg">Loading payments...</div>
+          </div>
+        </div>
+      </Layout>
+    );
+  }
+
+  if (error) {
+    return (
+      <Layout>
+        <div className="max-w-7xl mx-auto mt-10 px-4">
+          <div className="flex justify-center items-center h-64">
+            <div className="text-red-600">Error: {error}</div>
+          </div>
+        </div>
+      </Layout>
+    );
+  }
+
   return (
     <Layout>
-      <div className="max-w-5xl mx-auto mt-10 px-4">
-        <h1 className="text-3xl font-semibold text-gray-800 mb-8 text-center">
-          Payment History
-        </h1>
+      <div className="max-w-7xl mx-auto mt-10 px-4">
+        <h1 className="text-3xl font-bold text-gray-800 mb-8">Payment History</h1>
 
-        {loading ? (
-          <div className="text-center text-gray-500">Loading...</div>
-        ) : payments.length === 0 ? (
-          <p className="text-center text-gray-500">No payments found.</p>
-        ) : (
-          <div className="space-y-4">
-            {payments.map((payment) => {
-              const appt = payment.appointmentId;
-              return (
-                <div
-                  key={payment._id}
-                  className="bg-white rounded-2xl shadow-md border border-gray-200 p-6"
-                >
-                  <div className="flex justify-between mb-2">
-                    <div className="text-lg font-medium text-gray-800">
-                      ₹ {payment.amount} {payment.currency}
-                    </div>
-                    <div
-                      className={`text-sm font-semibold px-3 py-1 rounded-full ${
-                        payment.status === "paid"
-                          ? "bg-green-100 text-green-700"
-                          : payment.status === "failed"
-                          ? "bg-red-100 text-red-700"
-                          : "bg-yellow-100 text-yellow-700"
-                      }`}
-                    >
-                      {payment.status}
-                    </div>
-                  </div>
+        {/* Filters */}
+        <div className="flex space-x-4 mb-6">
+          <input
+            type="text"
+            name="paymentId"
+            placeholder="Search by Payment ID"
+            value={filters.paymentId}
+            onChange={handleFilterChange}
+            className="p-3 border border-gray-300 rounded-md hover:bg-gray-100 flex-1"
+          />
+          <select
+            name="dateRange"
+            value={filters.dateRange}
+            onChange={handleFilterChange}
+            className="p-3 border border-gray-300 rounded-md bg-white hover:bg-gray-100"
+          >
+            <option value="">Select Date Range</option>
+            <option value="today">Today</option>
+            <option value="lastWeek">Last Week</option>
+            <option value="lastMonth">Last Month</option>
+            <option value="last3Months">Last 3 Months</option>
+            <option value="last6Months">Last 6 Months</option>
+            <option value="lastYear">Last Year</option>
+          </select>
+          <select
+            name="status"
+            value={filters.status}
+            onChange={handleFilterChange}
+            className="p-3 border border-gray-300 rounded-md bg-white hover:bg-gray-100"
+          >
+            <option value="">All Status</option>
+            <option value="paid">Paid</option>
+            <option value="failed">Failed</option>
+            <option value="pending">Pending</option>
+            <option value="refunded">Refunded</option>
+          </select>
+        </div>
 
-                  <div className="text-gray-600 text-sm">
-                    Appointment with:{" "}
-                    <span className="font-medium">
-                      {appt?.doctor?.name || "Doctor"}
-                    </span>
-                  </div>
-                  <div className="text-gray-600 text-sm">
-                    Date:{" "}
-                    <span className="font-medium">
-                      {appt?.appointmentDate
-                        ? new Date(appt.appointmentDate).toLocaleDateString()
-                        : "N/A"}
-                    </span>
-                  </div>
-                  <div className="text-gray-600 text-sm mt-2">
-                    Payment ID:{" "}
-                    <span className="font-mono text-xs text-gray-500">
-                      {payment.razorpayPaymentId}
-                    </span>
-                  </div>
-                </div>
-              );
-            })}
+        {/* Payment Table */}
+        <div className="bg-white rounded-lg shadow-md overflow-hidden">
+          <table className="w-full table-auto border-collapse">
+            <thead>
+              <tr className="bg-gray-100 text-left">
+                <th className="px-6 py-4 font-semibold text-gray-700">Payment ID</th>
+                <th className="px-6 py-4 font-semibold text-gray-700">Amount</th>
+                <th className="px-6 py-4 font-semibold text-gray-700">Paid For</th>
+                <th className="px-6 py-4 font-semibold text-gray-700">Status</th>
+                <th className="px-6 py-4 font-semibold text-gray-700">Date & Time</th>
+              </tr>
+            </thead>
+            <tbody>
+              {currentPayments.length > 0 ? (
+                currentPayments.map((payment) => (
+                  <tr key={payment._id} className="border-b hover:bg-gray-50">
+                    <td className="px-6 py-4">
+                      <span className="font-mono text-sm text-gray-600">
+                        {payment.razorpayPaymentId || 'N/A'}
+                      </span>
+                    </td>
+                    <td className="px-6 py-4">
+                      <span className="font-semibold text-gray-800">
+                        ₹{payment.amount} {payment.currency}
+                      </span>
+                    </td>
+                    <td className="px-6 py-4">
+                      <span className="text-gray-700">
+                        {payment.paidFor || 'N/A'}
+                      </span>
+                    </td>
+                    <td className="px-6 py-4">
+                      <span
+                        className={`px-3 py-1 rounded-full text-sm font-semibold ${getStatusBgColor(
+                          payment.status
+                        )}`}
+                      >
+                        {payment.status?.charAt(0).toUpperCase() + payment.status?.slice(1)}
+                      </span>
+                    </td>
+                    <td className="px-6 py-4 text-gray-600">
+                      {formatDateTime(payment.createdAt)}
+                    </td>
+                  </tr>
+                ))
+              ) : (
+                <tr>
+                  <td colSpan="5" className="text-center p-8 text-gray-500">
+                    No payments found.
+                  </td>
+                </tr>
+              )}
+            </tbody>
+          </table>
+        </div>
+
+        {/* Pagination controls */}
+        <div className="flex justify-between items-center mt-6">
+          <div>
+            <label className="text-gray-600">
+              Show{" "}
+              <select 
+                value={entriesPerPage} 
+                onChange={handleEntriesPerPageChange} 
+                className="border p-2 rounded-md mx-2"
+              >
+                <option value={5}>5</option>
+                <option value={10}>10</option>
+                <option value={15}>15</option>
+                <option value={20}>20</option>
+              </select>{" "}
+              entries per page
+            </label>
           </div>
-        )}
+          <div className="flex space-x-1">
+            <button
+              onClick={() => paginate(currentPage - 1)}
+              disabled={currentPage === 1}
+              className="px-4 py-2 border rounded-md hover:bg-blue-50 disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              Previous
+            </button>
+            {[...Array(totalPages)].map((_, index) => (
+              <button
+                key={index}
+                onClick={() => paginate(index + 1)}
+                className={`px-3 py-2 border rounded-md ${
+                  currentPage === index + 1 
+                    ? "bg-blue-500 text-white" 
+                    : "hover:bg-blue-50"
+                }`}
+              >
+                {index + 1}
+              </button>
+            ))}
+            <button
+              onClick={() => paginate(currentPage + 1)}
+              disabled={currentPage === totalPages}
+              className="px-4 py-2 border rounded-md hover:bg-blue-50 disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              Next
+            </button>
+          </div>
+        </div>
+
+        {/* Summary */}
+        <div className="mt-6 p-4 bg-gray-50 rounded-lg">
+          <p className="text-sm text-gray-600">
+            Showing {currentPayments.length} of {filteredPayments.length} payments
+            {filteredPayments.length !== payments.length && ` (filtered from ${payments.length} total)`}
+          </p>
+        </div>
       </div>
     </Layout>
   );

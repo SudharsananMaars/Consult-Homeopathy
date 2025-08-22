@@ -97,7 +97,7 @@ const DoctorInventory = () => {
   return (
     <DoctorLayout>
       <div className="p-6">
-        <h1 className="text-2xl font-bold text-gray-900 mb-6">Doctor Inventory</h1>
+        <h1 className="text-2xl font-bold text-gray-900 mb-6">Patient Inventory</h1>
         <div className="bg-white rounded-xl shadow p-6">
           <h2 className="text-xl font-semibold text-gray-800 mb-4">Patient Summary</h2>
          

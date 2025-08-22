@@ -1,65 +1,82 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import DoctorLayout from "/src/components/doctor components/DoctorLayout.jsx";
-import { FaEllipsisV } from "react-icons/fa";
 import { useNavigate } from "react-router-dom";
+import axios from "axios";
+import config from "../../config";
 
-const Payments =() => {
+const API_URL = config.API_URL;
+const userId = localStorage.getItem("userId");
+
+const Payments = () => {
     const navigate = useNavigate();
-    const [dropdownVisible, setDropdownVisible]=useState(null);
-
-    const [patients, setPatients] = useState([
-        { id: "P001", name: "John Doe",date: "2024-09-12 10:30 AM", service: "Consultation", amount: "Rs.500", method: "G Pay" },
-        { id: "P002", name: "Jane Smith",date: "2024-09-11 2:00 PM", service: "Workshop", amount: "Rs.300", method: "PhonePe" },
-        { id: "P003", name: "Emily Johnson",date: "2024-09-10 3:45 PM", service: "Medicine", amount: "Rs.600", method: "Amazon Pay" },
-        { id: "P004", name: "John Doe",date: "2024-09-12 10:30 AM", service: "Consultation", amount: "Rs.500", method: "G Pay" },
-        { id: "P005", name: "Jane Smith",date: "2024-09-11 2:00 PM", service: "Workshop", amount: "Rs.300", method: "PhonePe" },
-        { id: "P006", name: "Emily Johnson",date: "2024-09-10 3:45 PM", service: "Consultation", amount: "Rs.500", method: "Amazon Pay" },
-        { id: "P007", name: "John Doe",date: "2024-09-12 10:30 AM", service: "Medicine", amount: "Rs.400", method: "G Pay" },
-        { id: "P008", name: "Jane Smith",date: "2024-09-11 2:00 PM", service: "Workshop", amount: "Rs.300", method: "PhonePe" },
-        { id: "P009", name: "Emily Johnson",date: "2024-09-10 3:45 PM", service: "Consultation", amount: "Rs.500", method: "Amazon Pay" },
-        { id: "P010", name: "John Doe",date: "2024-09-12 10:30 AM", service: "Medicine", amount: "Rs.300", method: "G Pay" },
-        { id: "P011", name: "Jane Smith",date: "2024-09-11 2:00 PM", service: "Workshop", amount: "Rs.300", method: "PhonePe" },
-        { id: "P012", name: "Jane Smith",date: "2024-09-11 2:00 PM", service: "Workshop", amount: "Rs.300", method: "PhonePe" },
-        // Add more patients as needed
-           ]);
-
+    const [payments, setPayments] = useState([]);
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState(null);
 
     const [filters, setFilters] = useState({
         patientId: "",
         service: "",
-        method: "",
+        dateRange: "",
     });
 
-    const [currentPage, setCurrentPage] = useState(1); // Tracks the current page
-    const [entriesPerPage, setEntriesPerPage] = useState(10); // Tracks number of entries per page
+    const [currentPage, setCurrentPage] = useState(1);
+    const [entriesPerPage, setEntriesPerPage] = useState(10);
 
-    const handleFilterChange = (e) => {
-        const { name, value } = e.target;
-        setFilters({ ...filters, [name]: value });
-        setCurrentPage(1); // Reset to first page on filter change
+    // Get userId from localStorage or context (adjust based on your app structure)
+    const userId = localStorage.getItem("userId") || "67bc3391654d85340a8ce713"; // Replace with actual user ID logic
+
+    // Fetch payments data from API
+    useEffect(() => {
+        fetchPayments();
+    }, []);
+
+    const fetchPayments = async () => {
+        try {
+            setLoading(true);
+            const token = localStorage.getItem("token");
+
+            const response = await axios.get(
+                `${API_URL}/api/doctor/show-all-payments-doctor/${userId}`,
+                {
+                    headers: {
+                        Authorization: `Bearer ${token}`,
+                    },
+                }
+            );
+            
+            if (response.data.success && response.data.data) {
+                setPayments(response.data.data);
+            } else {
+                setError('No payment data available');
+            }
+        } catch (err) {
+            setError(err.message || 'Failed to fetch payments');
+            console.error('Error fetching payments:', err);
+        } finally {
+            setLoading(false);
+        }
     };
 
-    const handleEntriesPerPageChange = (e) => {
-        setEntriesPerPage(Number(e.target.value));
-        setCurrentPage(1); // Reset to first page on entries change
+    // Format date and time
+    const formatDateTime = (dateString) => {
+        const date = new Date(dateString);
+        return date.toLocaleDateString('en-IN', {
+            year: 'numeric',
+            month: '2-digit',
+            day: '2-digit',
+            hour: '2-digit',
+            minute: '2-digit',
+            hour12: true
+        });
     };
 
-    // Search by Patient ID and apply other filters
-    const filteredPatients = patients.filter((patient) =>
-        patient.id.toLowerCase().includes(filters.patientId.toLowerCase()) &&
-        (filters.service === "" || patient.service.toLowerCase().includes(filters.service.toLowerCase())) &&
-        (filters.method === "" || patient.method.toLowerCase().includes(filters.method.toLowerCase()))
-    );
+    // Get service type (placeholder for now)
+    const getServiceType = () => {
+        const services = ["Consultation", "Workshop", "Medicine"];
+        return services[Math.floor(Math.random() * services.length)];
+    };
 
-    // Pagination logic
-    const indexOfLastEntry = currentPage * entriesPerPage;
-    const indexOfFirstEntry = indexOfLastEntry - entriesPerPage;
-    const currentPatients = filteredPatients.slice(indexOfFirstEntry, indexOfLastEntry);
-    const totalPages = Math.ceil(filteredPatients.length / entriesPerPage);
-
-    const paginate = (pageNumber) => setCurrentPage(pageNumber);
-
-    // Function to assign background color based on status
+    // Function to assign background color based on service
     const getStatusBgColor = (service) => {
         switch (service) {
             case "Consultation":
@@ -69,17 +86,95 @@ const Payments =() => {
             case "Medicine":
                 return "bg-yellow-100 text-yellow-700";
             default:
-                return "";
+                return "bg-gray-100 text-gray-700";
         }
     };
 
-    const handleViewDetails = (id) => {
-        navigate(`/payments/viewdetails/${id}`);
-    };
-    const toggleDropdown = (id) => {
-        setDropdownVisible(dropdownVisible === id ? null : id);
+    const handleFilterChange = (e) => {
+        const { name, value } = e.target;
+        setFilters({ ...filters, [name]: value });
+        setCurrentPage(1);
     };
 
+    const handleEntriesPerPageChange = (e) => {
+        setEntriesPerPage(Number(e.target.value));
+        setCurrentPage(1);
+    };
+
+    // Filter payments based on search criteria
+    const filteredPayments = payments.filter((payment) => {
+        const matchesPatientId = payment._id?.toLowerCase().includes(filters.patientId.toLowerCase()) || '';
+        const matchesService = filters.service === "" || getServiceType().toLowerCase().includes(filters.service.toLowerCase());
+        
+        // Date range filtering (you can implement this based on your requirements)
+        let matchesDateRange = true;
+        if (filters.dateRange) {
+            const paymentDate = new Date(payment.createdAt);
+            const now = new Date();
+            
+            switch (filters.dateRange) {
+                case "today":
+                    matchesDateRange = paymentDate.toDateString() === now.toDateString();
+                    break;
+                case "lastWeek":
+                    const lastWeek = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+                    matchesDateRange = paymentDate >= lastWeek;
+                    break;
+                case "lastMonth":
+                    const lastMonth = new Date(now.getFullYear(), now.getMonth() - 1, now.getDate());
+                    matchesDateRange = paymentDate >= lastMonth;
+                    break;
+                case "last3Months":
+                    const last3Months = new Date(now.getFullYear(), now.getMonth() - 3, now.getDate());
+                    matchesDateRange = paymentDate >= last3Months;
+                    break;
+                case "last6Months":
+                    const last6Months = new Date(now.getFullYear(), now.getMonth() - 6, now.getDate());
+                    matchesDateRange = paymentDate >= last6Months;
+                    break;
+                case "lastYear":
+                    const lastYear = new Date(now.getFullYear() - 1, now.getMonth(), now.getDate());
+                    matchesDateRange = paymentDate >= lastYear;
+                    break;
+                default:
+                    matchesDateRange = true;
+            }
+        }
+        
+        return matchesPatientId && matchesService && matchesDateRange;
+    });
+
+    // Pagination logic
+    const indexOfLastEntry = currentPage * entriesPerPage;
+    const indexOfFirstEntry = indexOfLastEntry - entriesPerPage;
+    const currentPayments = filteredPayments.slice(indexOfFirstEntry, indexOfLastEntry);
+    const totalPages = Math.ceil(filteredPayments.length / entriesPerPage);
+
+    const paginate = (pageNumber) => setCurrentPage(pageNumber);
+
+    if (loading) {
+        return (
+            <DoctorLayout>
+                <div className="p-7">
+                    <div className="flex justify-center items-center h-64">
+                        <div className="text-lg">Loading payments...</div>
+                    </div>
+                </div>
+            </DoctorLayout>
+        );
+    }
+
+    if (error) {
+        return (
+            <DoctorLayout>
+                <div className="p-7">
+                    <div className="flex justify-center items-center h-64">
+                        <div className="text-red-600">Error: {error}</div>
+                    </div>
+                </div>
+            </DoctorLayout>
+        );
+    }
 
     return (
         <DoctorLayout>
@@ -91,7 +186,7 @@ const Payments =() => {
                     <input
                         type="text"
                         name="patientId"
-                        placeholder="Search by Patient ID"
+                        placeholder="Search by Payment ID"
                         value={filters.patientId}
                         onChange={handleFilterChange}
                         className="p-2 border border-gray-300 rounded-md hover:bg-gray-100"
@@ -121,74 +216,51 @@ const Payments =() => {
                         <option value="Workshop">Workshop</option>
                         <option value="Medicine">Medicine</option>
                     </select>
-                    <select
-                        name="method"
-                        value={filters.method}
-                        onChange={handleFilterChange}
-                        className="p-2 w-1/6 border border-gray-300 rounded-md bg-white hover:bg-gray-100"
-                    >
-                        <option value="">All Methods</option>
-                        <option value="G Pay">G Pay</option>
-                        <option value="PhonePe">PhonePe</option>
-                        <option value="Amazon Pay">Amazon Pay</option>
-                    </select>
                 </div>
 
-                {/* Patient Table */}
+                {/* Payment Table */}
                 <table className="w-full table-auto border-collapse">
                     <thead>
                         <tr className="bg-gray-100 text-left">
-                            <th className="px-4 py-2">Patient ID</th>
-                            <th className="px-4 py-2">Name</th>
+                            <th className="px-4 py-2">Payment ID</th>
+                            <th className="px-4 py-2">Patient Name</th>
                             <th className="px-4 py-2">Date & Time</th>
                             <th className="px-4 py-2">Service</th>
                             <th className="px-4 py-2">Amount</th>
-                            <th className="px-4 py-2">Methods</th>
-                            <th className="px-4 py-2">Actions</th>
                         </tr>
                     </thead>
                     <tbody>
-                        {currentPatients.length > 0 ? (
-                            currentPatients.map((patient) => (
-                                <tr key={patient.id} className="border-b">
-                                    <td className="px-4 py-4">{patient.id}</td>
-                                    <td className="px-4 py-4">{patient.name}</td>
-                                    <td className="px-4 py-4">{patient.date}</td>
-                                    <td className="px-4 py-4">
-                                        <span
-                                            className={`px-2 py-1 rounded-full text-sm font-semibold ${getStatusBgColor(
-                                                patient.service
-                                            )}`}
-                                        >
-                                            {patient.service}
-                                        </span>
-                                    </td>
-                                    <td className="px-4 py-4">{patient.amount}</td>
-                                    <td className="px-4 py-4">{patient.method}</td>
-                                    <td className="px-4 py-4 relative">
-                                        <button className="text-gray-600 hover:text-gray-900"
-                                          onClick={() => toggleDropdown(patient.id)}
-                                        >
-                                            <FaEllipsisV />
-                                        </button>
-                                        {/* Dropdown menu */}
-                                        {dropdownVisible === patient.id && (
-                                            <div className="absolute bg-white shadow-md rounded-lg p-2 mt-2 right-0 z-10">
-                                            <button 
-                                            onClick={()=>handleViewDetails(patient.id)}
-                                            className="block w-full text-left p-2 hover:bg-gray-100">
-                                            View Details
-                                            </button>
-                                        </div>
-                                        )}
-                
-                                    </td>
-                                </tr>
-                            ))
+                        {currentPayments.length > 0 ? (
+                            currentPayments.map((payment) => {
+                                const serviceType = getServiceType(); // Temporary placeholder
+                                return (
+                                    <tr key={payment._id} className="border-b">
+                                        <td className="px-4 py-4">{payment._id}</td>
+                                        <td className="px-4 py-4">
+                                            {payment.appointmentId?.patient?.name || 'N/A'}
+                                        </td>
+                                        <td className="px-4 py-4">
+                                            {formatDateTime(payment.createdAt)}
+                                        </td>
+                                        <td className="px-4 py-4">
+                                            <span
+                                                className={`px-2 py-1 rounded-full text-sm font-semibold ${getStatusBgColor(
+                                                    serviceType
+                                                )}`}
+                                            >
+                                                {serviceType}
+                                            </span>
+                                        </td>
+                                        <td className="px-4 py-4">
+                                            ₹{payment.amount}
+                                        </td>
+                                    </tr>
+                                );
+                            })
                         ) : (
                             <tr>
-                                <td colSpan="7" className="text-center p-4">
-                                    No matching patients found.
+                                <td colSpan="5" className="text-center p-4">
+                                    No payments found.
                                 </td>
                             </tr>
                         )}
@@ -213,7 +285,7 @@ const Payments =() => {
                         <button
                             onClick={() => paginate(currentPage - 1)}
                             disabled={currentPage === 1}
-                            className="px-3 py-1 border rounded-md mx-1 hover:bg-blue-200"
+                            className="px-3 py-1 border rounded-md mx-1 hover:bg-blue-200 disabled:opacity-50"
                         >
                             Previous
                         </button>
@@ -231,11 +303,19 @@ const Payments =() => {
                         <button
                             onClick={() => paginate(currentPage + 1)}
                             disabled={currentPage === totalPages}
-                            className="px-3 py-1 border rounded-md mx-1 hover:bg-blue-200"
+                            className="px-3 py-1 border rounded-md mx-1 hover:bg-blue-200 disabled:opacity-50"
                         >
                             Next
                         </button>
                     </div>
+                </div>
+
+                {/* Summary */}
+                <div className="mt-6 p-4 bg-gray-50 rounded-lg">
+                    <p className="text-sm text-gray-600">
+                        Showing {currentPayments.length} of {filteredPayments.length} payments
+                        {filteredPayments.length !== payments.length && ` (filtered from ${payments.length} total)`}
+                    </p>
                 </div>
             </div>
         </DoctorLayout>
