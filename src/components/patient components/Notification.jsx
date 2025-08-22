@@ -191,7 +191,7 @@ const sendStatusToBackend = async (medicineName, doseTime, status) => {
 
   return (
     <div className="fixed top-12 right-5 w-80 bg-white shadow-lg rounded-lg overflow-hidden z-50">
-      <div className="p-4 bg-blue-500 text-white">
+      <div className="p-4 bg-blue-500 text-grey">
         <h3 className="text-lg font-bold">Notifications</h3>
       </div>
       <div className="max-h-96 overflow-y-auto p-4 space-y-2">
