@@ -37,6 +37,7 @@ import PrescriptionView from "./pages/patient pages/PrescriptionView.jsx";
 import MedicinePaymentPage from "./pages/patient pages/MedicinePaymentPage.jsx";
 import PatientContent from "./pages/patient pages/PatientContent.jsx";
 import Prescription from "./pages/patient pages/Prescription.jsx";
+import PatientInventory from "./pages/patient pages/PatientInventory.jsx"
 
 // import doctor website
 import DoctorLayout from "./components/doctor components/DoctorLayout.jsx";
@@ -65,6 +66,7 @@ import Content from "./pages/doctor pages/Content.jsx";
 import Doctors from "./pages/doctor pages/Doctors.jsx";
 import Patientcard from "./pages/doctor pages/Patientcard.jsx";
 import Allocation from "./pages/doctor pages/Allocation.jsx";
+import DoctorInventory from "./pages/doctor pages/DoctorInventory.jsx";
 import Shipping from "./pages/doctor pages/Shipping.jsx";
 import VideoCall from "./pages/doctor pages/VideoCall.jsx";
 import AdminLoginPage from "./pages/doctor pages/AdminLogin.jsx";
@@ -110,6 +112,7 @@ import AmendmentLog from "./components/Inventory/AmendmentLog.jsx";
 import OrderRawMaterials from "./components/Inventory/Order/OrderRawMaterials.jsx";
 import EditVendor from "./components/Vendor/EditVendor.jsx";
 import LeakageDetection from "./components/Inventory/Lekagedetection.jsx";
+import OrderHistory from "./components/Inventory/OrderHistory.jsx";
 // Error Pages
 import NotFound from "./pages/AuthPages/NotFound.jsx";
 import Forbidden from "./pages/AuthPages/Forbidden.jsx";
@@ -137,6 +140,7 @@ import UnusedDetails from "./components/Inventory/UnusedDetails.jsx";
 //Medicine Preparation
 import MedicinePreparationLogin from "./pages/MedicinePreparationPages/MedicinePreparationlogin";
 import Preparation from "./pages/MedicinePreparationPages/preparation";
+import AmendmentHistory from "./components/Vendor/AmendmentHistory.jsx";
 
 // Error Fallback Component
 const ErrorFallback = () => <ServerError />;
@@ -349,6 +353,14 @@ function App() {
           element={
             <ProtectedRoute allowedRoles={["Patient"]}>
               <Prescription />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/patient-inventory"
+          element={
+            <ProtectedRoute allowedRoles={["Patient"]}>
+              <PatientInventory />
             </ProtectedRoute>
           }
         />
@@ -723,6 +735,22 @@ function App() {
           }
         />
         <Route
+          path="/orderhistory"
+          element={
+            <ProtectedRoute allowedRoles={["Doctor", "admin"]}>
+              <OrderHistory />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/amendmenthistory"
+          element={
+            <ProtectedRoute allowedRoles={["Doctor", "admin"]}>
+              <AmendmentHistory />
+            </ProtectedRoute>
+          }
+        />
+        <Route
           path="/raw-materials/:id/verify"
           element={
             <ProtectedRoute allowedRoles={["Doctor", "admin"]}>
@@ -904,6 +932,14 @@ function App() {
           element={
             <ProtectedRoute allowedRoles={["Doctor"]}>
               <Payslip />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/doctor-inventory"
+          element={
+            <ProtectedRoute allowedRoles={["Doctor"]}>
+              <DoctorInventory />
             </ProtectedRoute>
           }
         />

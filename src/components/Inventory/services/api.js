@@ -1,6 +1,7 @@
 
 import config from "../../../config";
 const API_URL = `${config.API_URL}/api/inventory`; // Adjust to your backend URL
+const API = config.API_URL;
 
 export const api = {
   // Raw Materials API calls
@@ -15,6 +16,23 @@ export const api = {
     if (!response.ok) throw new Error('Failed to fetch raw material');
     return response.json();
   },
+
+  getVendors: async (token) => {
+  const response = await fetch(`${API}/api/vendor/vendors`, {
+    method: "GET",
+    headers: {
+      "Authorization": `Bearer ${token}`,
+      "Content-Type": "application/json",
+    },
+  });
+
+  if (!response.ok) {
+    throw new Error("Failed to fetch vendors");
+  }
+
+  return response.json();
+},
+
 
 
   getThresholdStock: async () => {
