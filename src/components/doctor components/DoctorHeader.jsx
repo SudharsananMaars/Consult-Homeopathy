@@ -1,276 +1,388 @@
 import React, { useState, useEffect } from "react";
-import { CgProfile } from "react-icons/cg";
-import { BiMessageRoundedDetail } from "react-icons/bi";
-import { MdOutlineNotificationsNone } from "react-icons/md";
+import { 
+  AppBar, 
+  Toolbar, 
+  Box, 
+  IconButton, 
+  Button, 
+  Typography, 
+  Menu, 
+  MenuItem, 
+  Chip,
+  Stack
+} from "@mui/material";
+import { 
+  AccountCircle, 
+  Message, 
+  Notifications, 
+  CalendarToday, 
+  KeyboardArrowDown 
+} from "@mui/icons-material";
 import { useNavigate } from "react-router-dom";
 import DoctorNotification from "./DoctorNotification";
 import DoctorMessenger from "./DoctorMessenger";
-import homeologo from "/src/assets/images/doctor images/homeologo.png";
-import { FaSearch } from "react-icons/fa";
 import axios from "axios";
 import config from "../../config";
+
 const API_URL = config.API_URL;
+
 const Header = () => {
   const navigate = useNavigate();
-  const [isMessageActive, setIsMessageActive] = useState(false); // State to track active message button
+  const [isMessageActive, setIsMessageActive] = useState(false);
   const [isNotifyActive, setIsNotifyActive] = useState(false);
   const [isProfileActive, setIsProfileActive] = useState(false);
 
-  const [showNotification, setShowNotification] = useState(false); // For notification popup
-  const [showMessenger, setShowMessenger] = useState(false); // For messenger popup
+  const [showNotification, setShowNotification] = useState(false);
+  const [showMessenger, setShowMessenger] = useState(false);
+  
+  // Month dropdown state
+  const [selectedMonth, setSelectedMonth] = useState("Month");
+  const [monthAnchorEl, setMonthAnchorEl] = useState(null);
+  const isMonthDropdownOpen = Boolean(monthAnchorEl);
 
   const [isCheckedIn, setIsCheckedIn] = useState(false);
-  const [timer, setTimer] = useState(0); // Timer in seconds for the current session
+  const [timer, setTimer] = useState(0);
   const [intervalId, setIntervalId] = useState(null);
-  const [elapsedTime, setElapsedTime] = useState("00:00:00"); // Elapsed time from backend
+  const [elapsedTime, setElapsedTime] = useState("00:00:00");
   const [startTime, setStartTime] = useState(null);
 
-const doctorId = localStorage.getItem("token"); // Fetch the logged-in doctor ID
+  const doctorId = localStorage.getItem("token");
 
-useEffect(() => {
-  if (!doctorId) return;
+  // Months array
+  const months = [
+    "January", "February", "March", "April", "May", "June",
+    "July", "August", "September", "October", "November", "December"
+  ];
 
-  // Retrieve stored state
-  const storedIsCheckedIn = localStorage.getItem(`${doctorId}_isCheckedIn`) === "true";
-  const storedStartTime = localStorage.getItem(`${doctorId}_startTime`);
-  const storedPausedTime = parseInt(localStorage.getItem(`${doctorId}_pausedTimer`), 10) || 0;
+  useEffect(() => {
+    if (!doctorId) return;
 
-  console.log("Loaded from localStorage:", {
-    storedIsCheckedIn,
-    storedStartTime,
-    storedPausedTime,
-  });
+    const storedIsCheckedIn = localStorage.getItem(`${doctorId}_isCheckedIn`) === "true";
+    const storedStartTime = localStorage.getItem(`${doctorId}_startTime`);
+    const storedPausedTime = parseInt(localStorage.getItem(`${doctorId}_pausedTimer`), 10) || 0;
 
-  if (storedIsCheckedIn) {
-    const startTimestamp = Number(storedStartTime);
+    if (storedIsCheckedIn) {
+      const startTimestamp = Number(storedStartTime);
+      setIsCheckedIn(true);
+      setStartTime(startTimestamp);
 
-    setIsCheckedIn(true);
-    setStartTime(startTimestamp);
+      const newIntervalId = setInterval(() => {
+        const now = Date.now();
+        const secondsElapsed =
+          Math.floor((now - startTimestamp) / 1000) + storedPausedTime;
+        setTimer(secondsElapsed);
+      }, 1000);
 
-    const newIntervalId = setInterval(() => {
-      const now = Date.now();
-      const secondsElapsed =
-        Math.floor((now - startTimestamp) / 1000) + storedPausedTime; // Include paused time
-      setTimer(secondsElapsed);
-    }, 1000);
+      setIntervalId(newIntervalId);
+    } else if (storedPausedTime > 0) {
+      setTimer(storedPausedTime);
+    }
 
-    setIntervalId(newIntervalId);
-  } else if (storedPausedTime > 0) {
-    setTimer(storedPausedTime); // Resume from paused time
-  }
+    return () => {
+      if (intervalId) {
+        clearInterval(intervalId);
+      }
+    };
+  }, [doctorId]);
 
-  return () => {
-    if (intervalId) {
-      clearInterval(intervalId);
+  const formatTime = (seconds) => {
+    const hours = Math.floor(seconds / 3600);
+    const minutes = Math.floor((seconds % 3600) / 60);
+    const secs = seconds % 60;
+    return `${String(hours).padStart(2, "0")}:${String(minutes).padStart(2, "0")}:${String(secs).padStart(2, "0")}`;
+  };
+
+  const handleCheckIn = async () => {
+    if (!doctorId) {
+      console.error("Doctor ID not found");
+      return;
+    }
+
+    try {
+      const token = localStorage.getItem("token");
+      if (!token) {
+        console.error("Authentication token not found");
+        return;
+      }
+
+      const pausedTime = parseInt(localStorage.getItem(`${doctorId}_pausedTimer`), 10) || 0;
+
+      const response = await axios.post(
+        `${API_URL}/api/attendance/checkin`,
+        {},
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+    
+      setIsCheckedIn(true);
+      const startTimestamp = Date.now();
+      setStartTime(startTimestamp);
+
+      localStorage.setItem(`${doctorId}_isCheckedIn`, "true");
+      localStorage.setItem(`${doctorId}_startTime`, startTimestamp.toString());
+      localStorage.setItem(`${doctorId}_timer`, pausedTime.toString());
+
+      const newIntervalId = setInterval(() => {
+        const now = Date.now();
+        const secondsElapsed =
+          Math.floor((now - startTimestamp) / 1000) + pausedTime;
+        setTimer(secondsElapsed);
+        localStorage.setItem(`${doctorId}_timer`, secondsElapsed.toString());
+      }, 1000);
+
+      setIntervalId(newIntervalId);
+    } catch (error) {
+      console.error("Error during check-in:", error);
     }
   };
-}, [doctorId]);
 
-
-const formatTime = (seconds) => {
-  const hours = Math.floor(seconds / 3600);
-  const minutes = Math.floor((seconds % 3600) / 60);
-  const secs = seconds % 60;
-  return `${String(hours).padStart(2, "0")}:${String(minutes).padStart(2, "0")}:${String(secs).padStart(2, "0")}`;
-};
-
-const handleCheckIn = async () => {
-  if (!doctorId) {
-    console.error("Doctor ID not found");
-    return;
-  }
-
-  try {
-    const token = localStorage.getItem("token");
-    if (!token) {
-      console.error("Authentication token not found");
+  const handleCheckOut = async () => {
+    if (!doctorId) {
+      console.error("Doctor ID not found");
       return;
     }
 
-    const pausedTime = parseInt(localStorage.getItem(`${doctorId}_pausedTimer`), 10) || 0;
-
-    const response = await axios.post(
-      `${API_URL}/api/attendance/checkin`,
-      {},
-      {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
+    try {
+      const token = localStorage.getItem("token");
+      if (!token) {
+        console.error("Authentication token not found");
+        return;
       }
-    );
-    console.log("Backend response:", response.data);
-  
-    setIsCheckedIn(true);
-    const startTimestamp = Date.now();
-    setStartTime(startTimestamp);
 
-    // Store state in localStorage
-    localStorage.setItem(`${doctorId}_isCheckedIn`, "true");
-    localStorage.setItem(`${doctorId}_startTime`, startTimestamp.toString());
-    localStorage.setItem(`${doctorId}_timer`, pausedTime.toString());
+      const response = await axios.post(
+        `${API_URL}/api/attendance/checkout`,
+        {},
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
 
-    const newIntervalId = setInterval(() => {
-      const now = Date.now();
-      const secondsElapsed =
-        Math.floor((now - startTimestamp) / 1000) + pausedTime; // Add paused time
-      setTimer(secondsElapsed);
-      localStorage.setItem(`${doctorId}_timer`, secondsElapsed.toString());
-    }, 1000);
+      const { totalElapsedTime, breakTime } = response.data;
 
-    setIntervalId(newIntervalId);
-  } catch (error) {
-    console.error("Error during check-in:", error);
-  }
-};
+      const currentTimerValue = timer;
+      localStorage.setItem(`${doctorId}_pausedTimer`, currentTimerValue.toString());
 
-const handleCheckOut = async () => {
-  if (!doctorId) {
-    console.error("Doctor ID not found");
-    return;
-  }
+      setElapsedTime(totalElapsedTime);
+      setIsCheckedIn(false);
+      clearInterval(intervalId);
+      setIntervalId(null);
 
-  try {
-    const token = localStorage.getItem("token");
-    if (!token) {
-      console.error("Authentication token not found");
-      return;
+      localStorage.removeItem(`${doctorId}_isCheckedIn`);
+      localStorage.removeItem(`${doctorId}_startTime`);
+
+      console.log("Break Time:", breakTime);
+    } catch (error) {
+      console.error("Error during check-out:", error);
     }
-
-    const response = await axios.post(
-      `${API_URL}/api/attendance/checkout`,
-      {},
-      {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      }
-    );
-
-    const { totalElapsedTime, breakTime } = response.data;
-
-    const currentTimerValue = timer;
-    localStorage.setItem(`${doctorId}_pausedTimer`, currentTimerValue.toString());
-
-    setElapsedTime(totalElapsedTime); // Backend provides total time
-    setIsCheckedIn(false);
-    clearInterval(intervalId);
-    setIntervalId(null);
-
-    // Clear only the check-in state for this doctorId
-    localStorage.removeItem(`${doctorId}_isCheckedIn`);
-    localStorage.removeItem(`${doctorId}_startTime`);
-
-    console.log("Break Time:", breakTime); // Display break time if needed
-  } catch (error) {
-    console.error("Error during check-out:", error);
-  }
-};
-
+  };
   
   const handleNotify = () => {
     setIsNotifyActive(!isNotifyActive);
-    setShowNotification(!showNotification); // Toggle notification
-    setShowMessenger(false); // Close messenger when notification is open
+    setShowNotification(!showNotification);
+    setShowMessenger(false);
+    setMonthAnchorEl(null);
   };
 
   const handleProfile = () => {
     setIsProfileActive(!isProfileActive);
     navigate("/newprofile");
+    setMonthAnchorEl(null);
   };
 
   const handleMessage = () => {
-    setIsMessageActive(!isMessageActive); // Set message button as active
-    setShowMessenger(!showMessenger); // Toggle messenger
-    setShowNotification(false); // Close notification when messenger is open
+    setIsMessageActive(!isMessageActive);
+    setShowMessenger(!showMessenger);
+    setShowNotification(false);
+    setMonthAnchorEl(null);
+  };
+
+  const handleMonthSelect = (month) => {
+    setSelectedMonth(month);
+    setMonthAnchorEl(null);
+    console.log("Selected month:", month);
+  };
+
+  const toggleMonthDropdown = (event) => {
+    setMonthAnchorEl(monthAnchorEl ? null : event.currentTarget);
+    setShowNotification(false);
+    setShowMessenger(false);
   };
 
   return (
-    <div className="flex justify-between items-center px-5 py-3 fixed w-full top-0 bg-indigo-200 shadow-lg z-50">
-      <div className="flex pt-1 ">
-      <img src={homeologo} alt="Logo" className="w-20"/>
-      <span className="ml-4 text-2xl font-bold text-gray-800">Consult Homeopathy</span>
-      </div>
-      <div className="flex items-center space-x-5">
-      {/* <div className="bg-white border rounded-lg shadow-md w-full max-w-lg">  */}
-      {/* <div className="flex items-center">
-        <input
-          type="text"
-          placeholder="Search" 
-          className="w-full p-3 rounded-l-full focus:outline-none focus:border-gray-500"
-        />
-        <button className="p-3 bg-white text-gray-500 rounded-r-lg hover:text-gray-700">
-          <FaSearch />
-        </button>
-      </div> */}
-    {/* </div> */}
-    {!isCheckedIn ? (
-  <button
-    onClick={handleCheckIn}
-    className="px-4 py-2 bg-green-500 text-white font-semibold rounded-2xl hover:bg-green-600"
-  >
-    Check In
-  </button>
-) : (
-  <div className="flex items-center gap-4">
-    <p className="text-sm font-bold text-indigo-900">
-      Total Working Hours:{" "}
-      <span className="font-bold">{formatTime(timer)}</span>
-    </p>
-    <button
-      onClick={handleCheckOut}
-      className="px-4 py-2 bg-red-500 text-white font-semibold rounded-2xl hover:bg-red-600"
+    <AppBar 
+      position="static" 
+      elevation={1}
+      sx={{ 
+        backgroundColor: '#EFF6FF',
+        borderBottom: '1px solid #EFF6FF'
+      }}
     >
-      Check Out
-    </button>
-  </div>
-)}
+      <Toolbar sx={{ justifyContent: 'space-between', minHeight: '64px !important', px: 3 }}>
+        {/* Left section - Working Hours Display (only when checked in) */}
+        <Box sx={{ flex: 1, display: 'flex', alignItems: 'center' }}>
+          {isCheckedIn && (
+            <Stack direction="row" spacing={2} alignItems="center">
+              <Typography 
+                variant="body2" 
+                sx={{ 
+                  color: '#1e293b',
+                  fontWeight: 600,
+                  display: { xs: 'none', sm: 'block' }
+                }}
+              >
+                Total Working Hours: <Box component="span" sx={{ fontWeight: 700 }}>{formatTime(timer)}</Box>
+              </Typography>
+              <Typography 
+                variant="body2" 
+                sx={{ 
+                  color: '#1e293b',
+                  fontWeight: 600,
+                  display: { xs: 'block', sm: 'none' }
+                }}
+              >
+                Time: <Box component="span" sx={{ fontWeight: 700 }}>{formatTime(timer)}</Box>
+              </Typography>
+              <Button
+                onClick={handleCheckOut}
+                variant="contained"
+                size="small"
+                sx={{
+                  backgroundColor: '#ef4444',
+                  '&:hover': {
+                    backgroundColor: '#dc2626'
+                  },
+                  textTransform: 'none',
+                  fontWeight: 600,
+                  px: 2
+                }}
+              >
+                <Box sx={{ display: { xs: 'none', sm: 'block' } }}>Check Out</Box>
+                <Box sx={{ display: { xs: 'block', sm: 'none' } }}>Out</Box>
+              </Button>
+            </Stack>
+          )}
+        </Box>
 
-        {/* Messenger Button */}
-        <button onClick={handleMessage}>
-          <div
-            className={`shadow-lg rounded-full p-2 ${
-              isMessageActive
-                ? "bg-purple-400 text-white"
-                : "bg-white text-purple-700 hover:text-white hover:bg-purple-400"
-            }`}
+        {/* Right section - Month dropdown and Action buttons */}
+        <Stack direction="row" spacing={1.5} alignItems="center">
+          {/* Month Dropdown */}
+          <Button
+            onClick={toggleMonthDropdown}
+            variant="outlined"
+            startIcon={<CalendarToday />}
+            endIcon={<KeyboardArrowDown />}
+            sx={{
+              backgroundColor: 'white',
+              borderColor: '#d1d5db',
+              color: '#374151',
+              textTransform: 'none',
+              fontWeight: 500,
+              '&:hover': {
+                backgroundColor: '#EFF6FF',
+                borderColor: '#d1d5db'
+              },
+              px: 2,
+              py: 1
+            }}
           >
-            <BiMessageRoundedDetail size={25} />
-          </div>
-        </button>
+            {selectedMonth}
+          </Button>
 
-        {/* Notification Button */}
-        <button onClick={handleNotify}>
-          <div
-            className={`shadow-lg rounded-full p-2 ${
-              isNotifyActive
-                ? "bg-blue-400 text-white"
-                : "bg-white text-blue-600 hover:text-white hover:bg-blue-400"
-            }`}
+          <Menu
+            anchorEl={monthAnchorEl}
+            open={isMonthDropdownOpen}
+            onClose={() => setMonthAnchorEl(null)}
+            PaperProps={{
+              sx: {
+                mt: 1,
+                maxHeight: 240,
+                width: 160,
+                boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)'
+              }
+            }}
           >
-            <MdOutlineNotificationsNone size={23} />
-          </div>
-        </button>
+            {months.map((month, index) => (
+              <MenuItem
+                key={index}
+                onClick={() => handleMonthSelect(month)}
+                sx={{
+                  fontSize: '0.875rem',
+                  py: 1,
+                  '&:hover': {
+                    backgroundColor: '#EFF6FF'
+                  }
+                }}
+              >
+                {month}
+              </MenuItem>
+            ))}
+          </Menu>
 
-        {/* Profile Button */}
-        <button onClick={handleProfile}>
-          <div
-            className={`shadow-lg rounded-full p-2 ${
-              isProfileActive
-                ? "bg-indigo-400 text-white"
-                : "bg-white text-indigo-600 hover:text-white hover:bg-indigo-400"
-            }`}
+          {/* Action Buttons */}
+          <IconButton
+            onClick={handleMessage}
+            sx={{
+              backgroundColor: 'white',
+              boxShadow: '0 1px 3px 0 rgb(0 0 0 / 0.1)',
+              color: '#6b7280',
+              '&:hover': {
+                backgroundColor: '#EFF6FF',
+                color: '#374151'
+              },
+              width: 44,
+              height: 44
+            }}
           >
-            <CgProfile size={23} />
-          </div>
-        </button>
-      </div>
+            <Message />
+          </IconButton>
+
+          <IconButton
+            onClick={handleNotify}
+            sx={{
+              backgroundColor: 'white',
+              boxShadow: '0 1px 3px 0 rgb(0 0 0 / 0.1)',
+              color: '#6b7280',
+              '&:hover': {
+                backgroundColor: '#EFF6FF',
+                color: '#374151'
+              },
+              width: 44,
+              height: 44
+            }}
+          >
+            <Notifications />
+          </IconButton>
+
+          <IconButton
+            onClick={handleProfile}
+            sx={{
+              backgroundColor: 'white',
+              boxShadow: '0 1px 3px 0 rgb(0 0 0 / 0.1)',
+              color: '#6b7280',
+              '&:hover': {
+                backgroundColor: '#EFF6FF',
+                color: '#000000ff'
+              },
+              width: 44,
+              height: 44
+            }}
+          >
+            <AccountCircle />
+          </IconButton>
+        </Stack>
+      </Toolbar>
 
       {/* Conditionally Render Messenger Popup */}
       {showMessenger && <DoctorMessenger toggleMessenger={handleMessage} isVisible={showMessenger}/>}
 
       {/* Conditionally Render Notification Popup */}
       {showNotification && <DoctorNotification togglePopup={handleNotify} />}
-    </div>
+    </AppBar>
   );
 };
 

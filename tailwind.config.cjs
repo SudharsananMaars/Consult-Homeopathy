@@ -9,7 +9,7 @@ module.exports = {
     "custom-blue": "rgba(11, 143, 172, 1)",
   },
   font: {
-    'custom-font': 'roboto',
+    'custom-font': 'poppins',
   },
   plugins: [],
 };

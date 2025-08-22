@@ -1,42 +1,41 @@
-import React, {useState,useEffect} from "react";
+import React, { useState, useEffect } from "react";
 import Sidebar from "./DoctorSidebar";
 import Header from "./DoctorHeader";
 
 const Layout = ({ children }) => {
-  const [role, setRole] = useState('');
-console.log(role);
+  const [role, setRole] = useState("");
+
   useEffect(() => {
-    const storedRole = localStorage.getItem('role'); // Retrieve role from localStorage
+    const storedRole = localStorage.getItem("role"); // Retrieve role from localStorage
     setRole(storedRole);
   }, []);
 
   return (
-    <div className="bg-gray-50 min-h-screen">
-      {/* Fixed header at the top */}
-      <Header />
-      
-      <div className="flex">
-  {/* Sidebar */}
-  <div className="fixed top-0 left-0 w-1/5 bg-indigo-50 h-screen rounded-3xl shadow-2xl border-2">
-    <Sidebar role={role} />
-  </div>
+    <div className="min-h-screen flex relative">
+      {/* Sidebar - fixed from top to bottom */}
+      <div className="fixed top-0 left-0 w-64 h-screen z-30 shadow-lg bg-white">
+        <Sidebar role={role} />
+      </div>
 
-  {/* Main Content */}
-  <div className="flex-1 ml-[20%] mt-16 h-[calc(100vh-4rem)] overflow-y-auto p-4">
-    {children}
-  </div>
-</div>
+      {/* Main Section (Header + Content) */}
+      <div className="flex-1 ml-64 flex flex-col relative">
+        {/* Header/Navbar - only spans the main content area */}
+        <div className="w-full shadow-sm relative top-0 z-20">
+          <Header />
+        </div>
 
+        {/* Background gradient - blue (top 25%) then fade quickly to white */}
+        <div className="absolute top-0 left-0 w-full h-full -z-10 
+          bg-gradient-to-b from-blue-100 via-blue-50/60 via-25% to-white">
+        </div>
+
+        {/* Main content below header */}
+        <div className="flex-1 p-6 relative">
+          <div className="relative max-w-full">{children}</div>
+        </div>
+      </div>
     </div>
   );
 };
 
 export default Layout;
-
-
-
-
-
-
-
-
