@@ -16,9 +16,9 @@ const Layout = ({ children }) => {
   };
 
   return (
-    <div className="min-h-screen flex relative bg-gray-50">
+    <div className="min-h-screen flex relative">
       {/* Sidebar - fixed full height with proper z-index */}
-      <div className="fixed top-0 left-0 w-64 h-screen z-40 shadow-lg">
+      <div className="fixed top-0 left-0 w-64 h-screen z-40 shadow-lg bg-white">
         <Sidebar 
           role={role} 
           isMobileSidebarOpen={mobileSidebarOpen}
@@ -29,13 +29,13 @@ const Layout = ({ children }) => {
       {/* Main Section (Header + Content) - with proper margin for sidebar */}
       <div className="flex-1 ml-0 md:ml-64 flex flex-col relative">
         {/* Header - fixed with higher z-index than sidebar */}
-        <div className="fixed top-0 left-0 md:left-64 right-0 z-50 shadow-sm">
+        <div className="fixed top-0 left-0 md:left-64 right-0 z-50 shadow-sm bg-white">
           <Header toggleSidebar={toggleSidebar} />
         </div>
 
-        {/* Background gradient */}
+        {/* Background gradient - blue (top 25%) then fade to white */}
         <div
-          className="absolute top-16 left-0 w-full h-full -z-10 
+          className="absolute top-0 left-0 w-full h-full -z-10 
           bg-gradient-to-b from-blue-100 via-blue-50/60 via-25% to-white"
         ></div>
 
