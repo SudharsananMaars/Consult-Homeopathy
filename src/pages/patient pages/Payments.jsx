@@ -47,8 +47,36 @@ const Payments = () => {
         }
 
         const data = await response.json();
-        setPaymentsData(data);
+        
+        // Ensure data structure is correct, provide defaults if missing
+        const processedData = {
+          summary: data.summary || {
+            totalAmount: 0,
+            amountPaid: 0,
+            amountDue: 0
+          },
+          allBills: data.allBills || []
+        };
+        
+        // If no summary provided, calculate from bills
+        if (!data.summary && data.allBills) {
+          const totalAmount = data.allBills.reduce((sum, bill) => sum + (bill.totalCharges || 0), 0);
+          const amountPaid = data.allBills
+            .filter(bill => bill.isPaid)
+            .reduce((sum, bill) => sum + (bill.totalCharges || 0), 0);
+          const amountDue = totalAmount - amountPaid;
+          
+          processedData.summary = {
+            totalAmount,
+            amountPaid,
+            amountDue
+          };
+        }
+        
+        console.log('Processed payments data:', processedData);
+        setPaymentsData(processedData);
       } catch (err) {
+        console.error('Error fetching payments:', err);
         setError(err.message);
       } finally {
         setLoading(false);
@@ -56,7 +84,7 @@ const Payments = () => {
     };
 
     fetchPayments();
-  }, []);
+  }, [API_URL]);
 
   // Create Razorpay order for prescription
   const createPrescriptionOrder = async (prescriptionId, amount) => {
@@ -119,6 +147,12 @@ const Payments = () => {
   const handlePayment = async (prescriptionId) => {
     if (!isRazorpayLoaded) {
       setErrorMessage("Payment system is loading. Please wait...");
+      return;
+    }
+
+    // Safety check for paymentsData
+    if (!paymentsData || !paymentsData.allBills) {
+      setErrorMessage("Payment data not available. Please refresh the page.");
       return;
     }
 
@@ -235,7 +269,7 @@ const Payments = () => {
   };
 
   const formatCurrency = (amount) => {
-    return `₹${amount.toFixed(2)}`;
+    return `₹${(amount || 0).toFixed(2)}`;
   };
 
   if (loading) {
@@ -264,6 +298,25 @@ const Payments = () => {
             <div>
               <h3 className="text-lg font-semibold text-red-900">Error loading payments</h3>
               <p className="mt-1 text-red-700">{error}</p>
+            </div>
+          </div>
+        </div>
+      </Layout>
+    );
+  }
+
+  // Safety check before rendering
+  if (!paymentsData || !paymentsData.summary) {
+    return (
+      <Layout>
+        <div className="bg-gradient-to-r from-yellow-50 to-orange-50 border border-yellow-200 rounded-xl p-8 shadow-sm">
+          <div className="flex items-center space-x-3">
+            <div className="flex-shrink-0">
+              <AlertCircle className="h-8 w-8 text-yellow-600" />
+            </div>
+            <div>
+              <h3 className="text-lg font-semibold text-yellow-900">No payment data available</h3>
+              <p className="mt-1 text-yellow-700">Unable to load payment information. Please try refreshing the page.</p>
             </div>
           </div>
         </div>
@@ -388,7 +441,7 @@ const Payments = () => {
           </div>
           
           <div className="divide-y divide-gray-100">
-            {paymentsData.allBills.length === 0 ? (
+            {(!paymentsData.allBills || paymentsData.allBills.length === 0) ? (
               <div className="px-8 py-16 text-center">
                 <div className="bg-gray-100 rounded-full h-20 w-20 mx-auto mb-4 flex items-center justify-center">
                   <Receipt className="h-10 w-10 text-gray-400" />

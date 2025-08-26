@@ -4,6 +4,7 @@ import Layout from "../../components/patient components/Layout";
 import { BsBell, BsSearch } from "react-icons/bs";
 import { format } from "date-fns";
 import { useNavigate } from "react-router-dom";
+import { FaVideo } from 'react-icons/fa';
 import {
   BsClipboard,
   BsWallet,
@@ -140,25 +141,29 @@ const Home = () => {
   }, [activeTab]);
 
   const [upcomingAppointments, setUpcomingAppointments] = useState(null);
-  useEffect(() => {
-    const fetchUpcomingAppointment = async () => {
-      try {
-        const token = localStorage.getItem("token");
-        const response = await axios.get(
-          `${API_URL}/api/patient/upComingAppointment`,
-          {
-            headers: {
-              Authorization: `Bearer ${token}`,
-            },
-          }
-        );
-        setUpcomingAppointments(response.data.appointment);
-      } catch (error) {
-        console.log("Error fetching upcoming appointments");
+ useEffect(() => {
+  const fetchUpcomingAppointment = async () => {
+    try {
+      const userId = localStorage.getItem("userId"); 
+      const response = await axios.get(
+        `${API_URL}/api/patient/${userId}/appointments-for-dashboard`
+      );
+      
+      if (response.data.success && response.data.appointments.length > 0) {
+        setUpcomingAppointments(response.data.appointments[0]);
+      } else {
+        setUpcomingAppointments(null);
       }
-    };
-    fetchUpcomingAppointment();
-  }, [activeTab]);
+    } catch (error) {
+      console.log("Error fetching upcoming appointments");
+      setUpcomingAppointments(null);
+    }
+  };
+  fetchUpcomingAppointment();
+}, [activeTab]);
+const handleVideoCall = (meetLink) => {
+  window.open(meetLink, '_blank');
+};
 
   const [transactionHistory, setTransactionHistory] = useState([]);
   useEffect(() => {
@@ -339,43 +344,45 @@ const Home = () => {
             {/* Appointment Details */}
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 mb-6">
               <div className="bg-white shadow-md rounded-lg p-4 flex flex-col">
-                <div className="flex items-center mb-4">
-                  <img
-                    className="w-12 h-12 sm:w-16 sm:h-16 rounded-full object-cover mr-4"
-                    src={doctor}
-                    alt="Doctor's Name"
-                  />
-                  <div className="flex-1">
-                    <h3 className="text-lg font-semibold text-gray-800">
-                      Upcoming Appointment
-                    </h3>
-                  </div>
-                </div>
-                {upcomingAppointments ? (
-                  <div className="flex flex-col">
-                    <p className="text-xl font-semibold text-gray-800">
-                      {upcomingAppointments.doctorName}
-                    </p>
-                    <div className="flex items-center justify-between mt-2">
-                      <div className="flex flex-col">
-                        <p className="text-md text-gray-700">
-                          {format(
-                            new Date(upcomingAppointments.date),
-                            "dd MMMM yyyy"
-                          )}
-                        </p>
-                        <p className="text-md text-gray-500">
-                          {upcomingAppointments.timeSlot}
-                        </p>
-                      </div>
-                    </div>
-                  </div>
-                ) : (
-                  <p className="text-gray-500 text-center">
-                    No upcoming appointment
-                  </p>
-                )}
-              </div>
+  <div className="flex items-center mb-4">
+    <div className="flex-1">
+      <h3 className="text-lg font-semibold text-gray-800">
+        Upcoming Appointment
+      </h3>
+    </div>
+  </div>
+  {upcomingAppointments ? (
+    <div className="flex flex-col">
+      <p className="text-xl font-semibold text-gray-800">
+        {upcomingAppointments.doctorName}
+      </p>
+      <div className="flex items-center justify-between mt-2">
+        <div className="flex flex-col">
+          <p className="text-md text-gray-700">
+            {format(
+              new Date(upcomingAppointments.appointmentDate),
+              "dd MMMM yyyy"
+            )}
+          </p>
+          <p className="text-md text-gray-500">
+            {upcomingAppointments.timeSlot}
+          </p>
+        </div>
+        <button 
+          className="bg-green-500 text-white p-3 rounded-full hover:bg-green-600 transition-colors"
+          onClick={() => handleVideoCall(upcomingAppointments.meetLink)}
+          title="Join Video Call"
+        >
+          <FaVideo className="text-lg" />
+        </button>
+      </div>
+    </div>
+  ) : (
+    <p className="text-gray-500 text-center">
+      No upcoming appointment
+    </p>
+  )}
+</div>
               <div className="bg-white shadow-lg rounded-lg p-4 flex flex-col min-h-[150px]">
                 <div className="flex items-center justify-between mb-4">
                   <h3 className="text-lg font-semibold text-gray-800">

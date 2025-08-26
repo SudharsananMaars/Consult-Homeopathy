@@ -1,10 +1,11 @@
-import React, { useState } from 'react';
+import React, { useState , useEffect} from 'react';
 import profile from '/src/assets/images/doctor images/profile.jpg';
 import doc from '/src/assets/images/doctor images/doc.jpg';
 import Online_Doctor from '/src/assets/images/doctor images/Online_Doctor.jpg';
 import AssisstentDoctors from '/src/assets/images/doctor images/AssisstentDoctors.jpg';
 import Consultation from '/src/assets/images/doctor images/Consultation.jpg';
 import cal1 from '/src/assets/images/doctor images/cal1.jpg';
+import config from "../../config";
 import { FaPhone,FaStar, FaEllipsisV, FaClock, FaArrowLeft, FaArrowRight,FaVideo,FaTimes,FaCheck } from 'react-icons/fa'; // Import new icons
 import DoctorLayout from "/src/components/doctor components/DoctorLayout.jsx";
 import { Pie ,Bar} from 'react-chartjs-2';
@@ -13,7 +14,7 @@ import Select from "react-select";
 ChartJS.register(ArcElement, Tooltip, Legend);
 
 function Dashboard() {
-  
+  const API_URL = config.API_URL;
   const overviewCards = [
     { title: 'Today Appointment', count: '5', color: 'bg-blue-100', image: cal1 },
     { title: 'Total Patients', count: '57', color: 'bg-indigo-100', image: Online_Doctor },
@@ -31,15 +32,48 @@ function Dashboard() {
     { name: 'Harmani Doe', description: 'Follow Up', time: '2:30', img: profile },
   ];
 
- 
-  const patientsToday = [
-    { name: 'Sarah Hostemn', diagnosis: 'Bronchi', time: '10:30am', img: profile },
-    { name: 'Dakota Smith', diagnosis: 'Stroke', time: '11:00am', img: doc },
-    { name: 'John Lane', diagnosis: 'Liver', time: '11:30am', img: profile },
-    { name: 'Sarah Hostemn', diagnosis: 'Bronchi', time: '10:30am', img: profile },
-    { name: 'Dakota Smith', diagnosis: 'Stroke', time: '11:00am', img: doc },
-    { name: 'John Lane', diagnosis: 'Liver', time: '11:30am', img: profile },
-  ];
+  const [patientsToday, setPatientsToday] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+  const fetchAppointments = async () => {
+    try {
+      const token = localStorage.getItem('token');
+      const response = await fetch(`${API_URL}/api/doctor/todays-appointments`, {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        }
+      });
+      
+      const data = await response.json();
+      
+      if (data.success) {
+        // Transform API data to match your component structure
+        const transformedData = data.appointments.map(appointment => ({
+          appointmentId: appointment.appointmentId,
+          name: appointment.patientName,
+          patientId: appointment.patientId,
+          diagnosis: 'Consultation', // API doesn't provide diagnosis, using default
+          time: appointment.timeSlot,
+          meetLink: appointment.meetLink,
+          img: profile // keeping your existing image logic
+        }));
+        setPatientsToday(transformedData);
+      }
+    } catch (error) {
+      console.error('Error fetching appointments:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  fetchAppointments();
+}, []);
+
+const handleVideoCall = (meetLink) => {
+  window.open(meetLink, '_blank');
+};
   
   const doctors = [
     { name: 'Dr. Alex Brown', assignedWork: 'Medicine', completed: true, profilePic: doc },
@@ -65,6 +99,7 @@ function Dashboard() {
   ];
   const [notes, setNotes] = useState([]);
   const [newNote, setNewNote] = useState('');
+  
 
   // Handler for adding a new note
   const addNote = () => {
@@ -278,16 +313,20 @@ function Dashboard() {
 
         <div className="flex space-x-4 p-4">
   {/* Your Patients Today Container */}
-  <div className="w-full p-4  bg-white rounded-lg shadow-lg">
-    <div className="flex justify-between items-center mb-4">
-      <h2 className="text-lg text-gray-700 font-semibold">Your Patients Today</h2>
-      <button className="text-sm text-blue-600 hover:underline">See All</button>
-    </div>
-    <hr className="border-gray-200 mb-4" />
+  <div className="w-full p-4 bg-white rounded-lg shadow-lg">
+  <div className="flex justify-between items-center mb-4">
+    <h2 className="text-lg text-gray-700 font-semibold">Your Patients Today</h2>
+    <button className="text-sm text-blue-600 hover:underline">See All</button>
+  </div>
+  <hr className="border-gray-200 mb-4" />
+  
+  {loading ? (
+    <div className="text-center py-4">Loading appointments...</div>
+  ) : (
     <ul className="max-h-64 overflow-y-auto scrollbar-thin scrollbar-thumb-gray-200 scrollbar-track-white">
       {patientsToday.map((patient, index) => (
         <li
-          key={index}
+          key={patient.appointmentId || index}
           className="py-2 border-b border-gray-200 flex justify-between items-center"
         >
           <div className="flex items-center space-x-4">
@@ -306,20 +345,24 @@ function Dashboard() {
             </div>
           </div>
           <div className="flex items-center space-x-4">
-            <button className="bg-green-500 text-white p-2 rounded-full">
+            <button 
+              className="bg-green-500 text-white p-2 rounded-full hover:bg-green-600"
+              onClick={() => handleVideoCall(patient.meetLink)}
+            >
               <FaVideo className="text-sm" />
             </button>
-            <button className="bg-red-500 text-white p-2 rounded-full">
-            <FaTimes className="text-sm" />
-          </button>
-            <button className="text-gray-500">
+            <button className="bg-red-500 text-white p-2 rounded-full hover:bg-red-600">
+              <FaTimes className="text-sm" />
+            </button>
+            <button className="text-gray-500 hover:text-gray-700">
               <FaEllipsisV />
             </button>
           </div>
         </li>
       ))}
     </ul>
-  </div>
+  )}
+</div>
 </div>
 </div>
 

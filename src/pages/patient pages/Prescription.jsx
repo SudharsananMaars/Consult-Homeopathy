@@ -178,7 +178,6 @@ useEffect(() => {
               ))
             ) : (
               <div className="flex-grow flex flex-col items-center justify-center mb-8">
-                <img src={Nocontent} alt="No content" className="w-24 h-24 mb-4" />
                 <p className="text-gray-500">No prescriptions available yet.</p>
               </div>
             )}

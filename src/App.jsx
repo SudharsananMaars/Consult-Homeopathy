@@ -543,7 +543,7 @@ function App() {
           }
         />
         <Route
-          path="/messenger"
+          path="/docmessenger"
           element={
             <ProtectedRoute allowedRoles={["Doctor"]}>
               <DoctorMessenger />

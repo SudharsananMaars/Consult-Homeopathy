@@ -357,7 +357,7 @@ const NewAppointment = () => {
       const token = localStorage.getItem("token");
       const orderRes = await axios.post(
         `${API_URL}/api/payments/create-order`,
-        { amount, appointmentId },
+        { amount : amount * 100, appointmentId },
         { headers: { Authorization: `Bearer ${token}` } }
       );
       return orderRes.data.order;
@@ -432,7 +432,7 @@ const NewAppointment = () => {
       // Step 3: Open Razorpay payment modal
       const options = {
         key: "rzp_test_4yi0hOj6P7akiv",
-        amount: order.amount,
+        amount: order.amount * 100,
         currency: "INR",
         name: "Doctor Consultation",
         description: "Appointment Booking",
