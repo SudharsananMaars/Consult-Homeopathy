@@ -4,7 +4,7 @@ import Layout from "../../components/patient components/Layout";
 import config from "../../config";
 
 const API_URL = config.API_URL;
-const userId = localStorage.getItem("userId");
+
 
 const PaymentsHistory = () => {
   const [payments, setPayments] = useState([]);
@@ -24,7 +24,7 @@ const PaymentsHistory = () => {
     try {
       setLoading(true);
       const token = localStorage.getItem("token");
-
+      const userId = localStorage.getItem("userId");
       const res = await axios.get(
         `${API_URL}/api/patient/show-all-payments/${userId}`,
         {

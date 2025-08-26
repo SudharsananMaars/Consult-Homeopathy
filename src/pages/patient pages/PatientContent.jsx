@@ -14,7 +14,7 @@ const PatientContent = () => {
 
   const fetchPosts = async () => {
     try {
-      const res = await fetch("${API_URL}/api/post/homePosts", {
+      const res = await fetch(`${API_URL}/api/post/homePosts`, {
         headers: { Authorization: `Bearer ${token}` },
       });
       const data = await res.json();

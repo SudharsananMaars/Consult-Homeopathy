@@ -95,53 +95,34 @@ const Home = () => {
   };
   const [pendingAppointments, setPendingAppointments] = useState(0);
 
-  useEffect(() => {
-    const fetchPendingAppointments = async () => {
-      try {
-        const token = localStorage.getItem("token"); // or your token key
-        const response = await axios.get(
-          `${API_URL}/api/patient/pendingAppointments`,
-          {
-            headers: {
-              Authorization: `Bearer ${token}`,
-            },
-          }
-        );
-        setPendingAppointments(response.data.pendingAppointments);
-      } catch (error) {
-        console.error("Error fetching pending appointments:", error);
-      }
-    };
-
-    if (activeTab === "Live") {
-      fetchPendingAppointments();
-    }
-  }, [activeTab]); // refetch when tab switches to 'Live'
 
   const [couponCount, setCouponCount] = useState(0);
 
   useEffect(() => {
-    const fetchCoupons = async () => {
-      try {
-        const token = localStorage.getItem("token");
-        const response = await axios.get(
-          `${API_URL}/api/patient/pendingCoupons`,
-          {
-            headers: {
-              Authorization: `Bearer ${token}`,
-            },
-          }
-        );
-        setCouponCount(response.data.availableCoupons || 0);
-      } catch (error) {
-        console.log("Error fetching coupon count available");
-      }
-    };
-    fetchCoupons();
-  }, [activeTab]);
+  const fetchReferrals = async () => {
+    try {
+      const token = localStorage.getItem("token");
+      const response = await axios.get(
+        `${API_URL}/api/patient/referrals-dashboard`,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+
+      // use summary.total or calculate differently if needed
+      setCouponCount(response.data.summary?.total || 0);
+    } catch (error) {
+      console.log("Error fetching referral coupon count");
+    }
+  };
+  fetchReferrals();
+}, [activeTab]);
+
 
   const [upcomingAppointments, setUpcomingAppointments] = useState(null);
- useEffect(() => {
+   useEffect(() => {
   const fetchUpcomingAppointment = async () => {
     try {
       const userId = localStorage.getItem("userId"); 
@@ -150,62 +131,133 @@ const Home = () => {
       );
       
       if (response.data.success && response.data.appointments.length > 0) {
+        // keep first appointment for your existing logic
         setUpcomingAppointments(response.data.appointments[0]);
+
+        // also set the count for the purple card
+        setPendingAppointments(response.data.appointments.length);
       } else {
         setUpcomingAppointments(null);
+        setPendingAppointments(0);
       }
     } catch (error) {
       console.log("Error fetching upcoming appointments");
       setUpcomingAppointments(null);
+      setPendingAppointments(0);
     }
   };
   fetchUpcomingAppointment();
 }, [activeTab]);
+
+
 const handleVideoCall = (meetLink) => {
   window.open(meetLink, '_blank');
 };
 
   const [transactionHistory, setTransactionHistory] = useState([]);
-  useEffect(() => {
-    const fetchTransactionHistory = async () => {
-      try {
-        const token = localStorage.getItem("token");
-        const response = await axios.get(
-          `${API_URL}/api/patient/transactionHistory`,
-          {
-            headers: {
-              Authorization: `Bearer ${token}`,
-            },
-          }
-        );
-        setTransactionHistory(response.data.transactions || []);
-      } catch (error) {
-        console.log("Error fetching transaction history");
-      }
-    };
-    fetchTransactionHistory();
-  }, [activeTab]);
 
-  const [transaction, setTransaction] = useState(null);
-  useEffect(() => {
-    const fetchPendingTransaction = async () => {
-      try {
-        const token = localStorage.getItem("token");
-        const response = await axios.get(
-          `${API_URL}/api/patient/pendingTransactions`,
-          {
-            headers: {
-              Authorization: `Bearer ${token}`,
-            },
-          }
-        );
-        setTransaction(response.data);
-      } catch (error) {
-        console.log("Unable to fetch pending transactions");
+useEffect(() => {
+  const fetchTransactionHistory = async () => {
+    try {
+      const token = localStorage.getItem("token");
+      const response = await axios.get(
+        `${API_URL}/api/patient/show-all-payments/6875dbbaa46a57c54e005944`,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+      // Only show last 2 transactions
+      setTransactionHistory(response.data.data?.slice(-2) || []);
+    } catch (error) {
+      console.log("Error fetching transaction history");
+    }
+  };
+  fetchTransactionHistory();
+}, [activeTab]);
+
+
+const [paymentCount, setPaymentCount] = useState(0);
+useEffect(() => {
+  const fetchPaymentCount = async () => {
+    try {
+      const token = localStorage.getItem("token");
+
+      const response = await axios.get(
+        `${API_URL}/api/patient/payments/count`,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+
+      if (response.data.success) {
+        setPaymentCount(response.data.totalPaymentsDone || 0);
+      } else {
+        setPaymentCount(0);
       }
-    };
-    fetchPendingTransaction();
-  }, [activeTab]);
+    } catch (error) {
+      console.log("Error fetching payment count", error);
+      setPaymentCount(0);
+    }
+  };
+
+  fetchPaymentCount();
+}, [activeTab]);
+
+
+const [AppointmentsCount, setUpAppointmentsCount] = useState(0);
+useEffect(() => {
+  const fetchAppointmentsCount = async () => {
+    try {
+      const token = localStorage.getItem("token");
+
+      const response = await axios.get(
+        `${API_URL}/api/patient/appointments/total/count`,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+
+      if (response.data.success) {
+        setUpAppointmentsCount(response.data.totalAppointments || 0);
+      } else {
+        setUpAppointmentsCount(0);
+      }
+    } catch (error) {
+      console.log("Error fetching upcoming appointments count", error);
+      setUpAppointmentsCount(0);
+    }
+  };
+
+  fetchAppointmentsCount();
+}, [activeTab]);
+
+
+const [pendingData, setPendingData] = useState(null);
+useEffect(() => {
+  const fetchPendingTransactions = async () => {
+    try {
+      const token = localStorage.getItem("token");
+      const response = await axios.get(
+        `${API_URL}/api/patient/payments-pending-dashboard`,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+      setPendingData(response.data);
+    } catch (error) {
+      console.log("Unable to fetch pending transactions");
+    }
+  };
+  fetchPendingTransactions();
+}, [activeTab]);
 
   const handlePay = () => {
     navigate("/payments");
@@ -313,7 +365,7 @@ const handleVideoCall = (meetLink) => {
                         Transactions
                       </h3>
                     </div>
-                    <p className="text-4xl font-bold text-gray-800">5</p>
+                    <p className="text-4xl font-bold text-gray-800">{paymentCount}</p>
                   </div>
 
                   <div className="bg-purple-300 shadow-md rounded-lg p-4 flex flex-col items-center justify-center">
@@ -325,7 +377,7 @@ const handleVideoCall = (meetLink) => {
                         Consultations
                       </h3>
                     </div>
-                    <p className="text-4xl font-bold text-gray-800">2</p>
+                    <p className="text-4xl font-bold text-gray-800">{AppointmentsCount}</p>
                   </div>
 
                   <div className="bg-green-200 shadow-lg rounded-lg p-4 flex flex-col items-center justify-center">
@@ -335,7 +387,7 @@ const handleVideoCall = (meetLink) => {
                     <h3 className="text-lg font-medium text-gray-600">
                       Used Coupons
                     </h3>
-                    <p className="text-4xl font-bold text-gray-800">3</p>
+                    <p className="text-4xl font-bold text-gray-800">0</p>
                   </div>
                 </div>
               )}
@@ -384,72 +436,80 @@ const handleVideoCall = (meetLink) => {
   )}
 </div>
               <div className="bg-white shadow-lg rounded-lg p-4 flex flex-col min-h-[150px]">
-                <div className="flex items-center justify-between mb-4">
-                  <h3 className="text-lg font-semibold text-gray-800">
-                    Transaction History
-                  </h3>
-                  <button className="text-blue-500 hover:underline">
-                    See All
-                  </button>
-                </div>
-                <div className="flex flex-col flex-grow">
-                  {transactionHistory.length === 0 ? (
-                    <p className="text-gray-500">No recent transactions</p>
-                  ) : (
-                    transactionHistory.map((txn, idx) => (
-                      <div key={idx}>
-                        <p className="text-md font-semibold text-gray-700">
-                          {txn.service}
-                        </p>
-                        <div className="flex items-center justify-between mb-2">
-                          <p className="text-md text-gray-700">{txn.date}</p>
-                          <p className="text-md text-gray-500">{txn.amount}</p>
-                        </div>
-                      </div>
-                    ))
-                  )}
-                </div>
-              </div>
-              <div className="bg-white shadow-lg rounded-lg p-4 flex flex-col">
-                <div className="flex items-center justify-between mb-4">
-                  <h4 className="text-lg font-semibold text-gray-800">
-                    Pending Transactions
-                  </h4>
-                </div>
+  <div className="flex items-center justify-between mb-4">
+    <h3 className="text-lg font-semibold text-gray-800">
+      Transaction History
+    </h3>
+    <button
+      className="text-blue-500 hover:underline"
+      onClick={() => navigate("/paymentshistory")}
+    >
+      See All
+    </button>
 
-                {transaction ? (
-                  <div className="flex flex-col">
-                    <p className="text-md font-semibold text-gray-800">
-                      {transaction.service}
-                    </p>
-                    <div className="flex items-center justify-between mb-2">
-                      <p className="text-md text-gray-700">
-                        {new Date(transaction.date).toLocaleDateString(
-                          "en-GB",
-                          {
-                            day: "2-digit",
-                            month: "short",
-                            year: "numeric",
-                          }
-                        )}
-                      </p>
-                      <p className="text-md text-gray-500">
-                        ₹{transaction.amount}
-                      </p>
-                    </div>
-                    <button
-                      onClick={handlePay}
-                      className="bg-green-500 text-white py-1 px-3 rounded hover:bg-green-600"
-                    >
-                      Pay
-                    </button>
-                  </div>
-                ) : (
-                  <p className="text-gray-500 text-md text-center">
-                    No pending transactions
-                  </p>
-                )}
-              </div>
+  </div>
+  <div className="flex flex-col flex-grow">
+    {transactionHistory.length === 0 ? (
+      <p className="text-gray-500">No recent transactions</p>
+    ) : (
+      transactionHistory.map((txn, idx) => (
+        <div key={idx}>
+          <p className="text-md font-semibold text-gray-700">
+            {txn.paidFor} - Dr. {txn.appointmentId.doctor.name}
+          </p>
+          <div className="flex items-center justify-between mb-2">
+            <p className="text-md text-gray-700">
+              {new Date(txn.createdAt).toLocaleDateString()}
+            </p>
+            <p className="text-md text-gray-500">₹{txn.amount}</p>
+          </div>
+        </div>
+      ))
+    )}
+  </div>
+</div>
+              <div className="bg-white shadow-lg rounded-lg p-4 flex flex-col">
+  <div className="flex items-center justify-between mb-4">
+    <h4 className="text-lg font-semibold text-gray-800">
+      Pending Transactions
+    </h4>
+  </div>
+  
+  {pendingData && pendingData.summary.totalPendingCount > 0 ? (
+    <div className="flex flex-col space-y-3">
+      {/* Show pending appointments */}
+      {pendingData.pendingAppointments.map((appointment, idx) => (
+        <div key={`apt-${idx}`} className="flex flex-col">
+          <p className="text-md font-semibold text-gray-800">
+            Appointment Payment
+          </p>
+          <p className="text-sm text-gray-600">Amount: ₹{appointment.amount}</p>
+        </div>
+      ))}
+      
+      {/* Show pending prescriptions */}
+      {pendingData.pendingPrescriptions.map((prescription, idx) => (
+        <div key={`presc-${idx}`} className="flex flex-col">
+          <p className="text-md font-semibold text-gray-800">
+            Medicine Payment
+          </p>
+          <p className="text-sm text-gray-600">Amount: ₹{prescription.amount}</p>
+        </div>
+      ))}
+      
+      {/* Summary */}
+      <div className="border-t pt-2">
+        <p className="text-sm font-medium text-gray-700">
+          Total Pending: {pendingData.summary.totalPendingCount}
+        </p>
+      </div>
+    </div>
+  ) : (
+    <p className="text-gray-500 text-md text-center">
+      No pending transactions
+    </p>
+  )}
+</div>
             </div>
 
             {/* Blood Group Information */}
