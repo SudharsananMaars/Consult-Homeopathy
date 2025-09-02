@@ -1,8 +1,10 @@
 import React, { useEffect, useState } from 'react';
 import DoctorLayout from "/src/components/doctor components/DoctorLayout.jsx";
 import axios from 'axios';
+import config from '/src/config.js';
 
 const AppointmentList = () => {
+  const API_URL = config.API_URL;
   const [appointments, setAppointments] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -12,7 +14,7 @@ const AppointmentList = () => {
   useEffect(() => {
     const fetchAppointments = async () => {
       try {
-        const response = await axios.get('http://localhost:5000/api/doctor/appointments');
+        const response = await axios.get(`${API_URL}/api/doctor/appointments`);
         setAppointments(response.data);
         setLoading(false);
       } catch (err) {

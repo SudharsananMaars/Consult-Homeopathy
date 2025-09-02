@@ -247,23 +247,15 @@ const Patients = () => {
                                             </span>
                                         </td>
                                         <td className="px-4 py-4">{patient.followUp}</td>
-                                        <td className="px-4 py-4 relative">
-                                            <button className="text-gray-600 hover:text-gray-900"
-                                              onClick={() => toggleDropdown(patient.id)}
-                                            >
-                                                <FaEllipsisV />
-                                            </button>
-                                            {/* Dropdown menu */}
-                                            {dropdownVisible === patient.id && (
-                                                <div className="absolute bg-white shadow-md rounded-lg p-2 mt-2 right-0 z-10">
-                                                <button 
-                                                onClick={() => handleViewDetails(patient.id)}
-                                                className="block w-full text-left p-2 hover:bg-gray-100">
-                                                View Details
-                                                </button>
-                                            </div>
-                                            )}
-                                        </td>
+                                        <td className="px-4 py-4">
+  <button
+    onClick={() => handleViewDetails(patient.id)}
+    className="inline-flex items-center px-2.5 py-1.5 border text-xs font-medium rounded-[5px] text-white bg-[#1a237e] hover:bg-[#534bae] focus:ring-2 focus:ring-offset-2 focus:ring-[#534bae]"
+  >
+    View
+  </button>
+</td>
+
                                     </tr>
                                 ))
                             ) : (
