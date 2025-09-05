@@ -454,6 +454,58 @@ Would you like to continue the conversation or schedule a fresh appointment?`,
     }
   };
 
+  const fetchShipments = async () => {
+    try {
+      const token = localStorage.getItem("token");
+      const res = await axios.get(
+        `${API_URL}/api/doctor/prescriptions/delivery-status/${userId}`,
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+
+      const shipments = res.data || [];
+
+      shipments
+        .filter((s) => !s.isProductReceived) // only pending
+        .forEach((s) => {
+          const botMessage = {
+            _id: `shipment-${s.id}`,
+            sender: "ai-bot",
+            receiver: userId,
+            message: " Medicine Dispatched",
+            timestamp: s.shippedDate || new Date(),
+            senderName: "AI Assistant",
+            messageType: "bot",
+            isShipment: true,
+            shipmentId: s.id,
+          };
+
+          setMessages((prev) => {
+            // prevent duplicates
+            if (prev.find((m) => m._id === botMessage._id)) return prev;
+            return [...prev, botMessage];
+          });
+        });
+    } catch (err) {
+      console.error("Failed to fetch shipments:", err);
+    }
+  };
+
+  const markShipmentReceived = async (shipmentId) => {
+    try {
+      const token = localStorage.getItem("token");
+      await axios.patch(
+        `${API_URL}/api/patient/prescriptions/${shipmentId}/receive`,
+        {},
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+
+      // remove the pinned shipment message
+      setMessages((prev) => prev.filter((m) => m.shipmentId !== shipmentId));
+    } catch (err) {
+      console.error("Failed to mark shipment received:", err);
+    }
+  };
+
   const fetchNotifications = async () => {
     try {
       const token = localStorage.getItem("token");
@@ -502,6 +554,10 @@ Would you like to continue the conversation or schedule a fresh appointment?`,
     fetchNotifications();
     const interval = setInterval(fetchNotifications, 30000); // every 30s
     return () => clearInterval(interval);
+  }, []);
+
+  useEffect(() => {
+    fetchShipments();
   }, []);
 
   useEffect(() => {
@@ -567,12 +623,13 @@ Would you like to continue the conversation or schedule a fresh appointment?`,
         // Add type for UI rendering
         const messagesWithType = (response.data || []).map((msg) => ({
           ...msg,
-          messageType:
-            msg.sender === userId
-              ? "user" // patient sent it
-              : msg.sender === "ai-bot"
-              ? "bot"
-              : "doctor", // doctor sent it
+          messageType: msg.fileAttachment
+            ? "file"
+            : msg.sender === userId
+            ? "user"
+            : msg.sender === "ai-bot"
+            ? "bot"
+            : "doctor",
         }));
 
         console.log("Loaded chat history:", messages);
@@ -622,12 +679,13 @@ Would you like to continue the conversation or schedule a fresh appointment?`,
       console.log("📩 Incoming message:", msg);
 
       // classify message type
-      const messageType =
-        msg.sender === userId
-          ? "user" // from patient (echoed back by server)
-          : msg.sender === "ai-bot"
-          ? "bot"
-          : "doctor"; // from doctor
+      const messageType = msg.fileAttachment
+        ? "file"
+        : msg.sender === userId
+        ? "user"
+        : msg.sender === "ai-bot"
+        ? "bot"
+        : "doctor";
 
       // only push if it belongs to this chat
       if (
@@ -706,6 +764,75 @@ Would you like to continue the conversation or schedule a fresh appointment?`,
 
   //   setMessage("");
   // };
+  // ✅ Add inside Messenger.jsx (near top with helpers)
+  const formatFileSize = (bytes) => {
+    if (bytes === 0) return "0 Bytes";
+    const k = 1024;
+    const sizes = ["Bytes", "KB", "MB", "GB"];
+    const i = Math.floor(Math.log(bytes) / Math.log(k));
+    return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + " " + sizes[i];
+  };
+
+  const renderFileAttachment = (fileAttachment) => {
+    if (!fileAttachment || !fileAttachment.fileName || !fileAttachment.fileSize)
+      return null;
+
+    const isImage = fileAttachment.fileType?.startsWith("image/");
+    const isPDF = fileAttachment.fileType === "application/pdf";
+
+    return (
+      <div className="mt-2">
+        {isImage ? (
+          <img
+            src={fileAttachment.url}
+            alt={fileAttachment.fileName}
+            className="max-w-xs rounded-lg cursor-pointer hover:opacity-90"
+            onClick={() => window.open(fileAttachment.url, "_blank")}
+          />
+        ) : (
+          <div className="flex items-center gap-2 p-2 bg-white bg-opacity-50 rounded-lg border">
+            {isPDF ? (
+              <svg
+                className="w-4 h-4 text-red-600"
+                viewBox="0 0 20 20"
+                fill="currentColor"
+              >
+                <path d="M4 18h12V6l-4-4H4v16zm8-12V2l4 4h-4z" />
+              </svg>
+            ) : (
+              <span>📄</span>
+            )}
+            <div className="flex-1 min-w-0">
+              <p className="text-xs font-medium text-gray-800 truncate">
+                {fileAttachment.fileName}
+              </p>
+              <p className="text-xs text-gray-600">
+                {formatFileSize(fileAttachment.fileSize)}
+              </p>
+            </div>
+            <button
+              onClick={() => {
+                if (isPDF) {
+                  const link = document.createElement("a");
+                  link.href = fileAttachment.url;
+                  link.download = fileAttachment.fileName;
+                  link.target = "_blank";
+                  document.body.appendChild(link);
+                  link.click();
+                  document.body.removeChild(link);
+                } else {
+                  window.open(fileAttachment.url, "_blank");
+                }
+              }}
+              className="p-1 hover:bg-gray-200 rounded-full"
+            >
+              ⬇️
+            </button>
+          </div>
+        )}
+      </div>
+    );
+  };
 
   const handleSendMessage = async () => {
     if (!message.trim() && !selectedFile) return;
@@ -741,7 +868,7 @@ Would you like to continue the conversation or schedule a fresh appointment?`,
           fileAttachment, // 👈 add only if not empty
         };
 
-        setMessages((prev) => [...prev, fileMessage]);
+        // setMessages((prev) => [...prev, fileMessage]);
         socketRef.current?.emit("sendMessage", fileMessage);
 
         clearFileSelection();
@@ -799,6 +926,35 @@ Would you like to continue the conversation or schedule a fresh appointment?`,
             <span className="text-sm text-gray-700">Consult Homeopathy</span>
           </div>
         </div>
+        {/* 📦 Pinned Shipments */}
+        {messages
+          .filter((m) => m.isShipment)
+          .map((msg) => (
+            <div
+              key={msg._id}
+              className="p-3 rounded-xl border border-green-200 bg-green-50 shadow-sm"
+            >
+              <p className="text-xs font-medium text-green-600 mb-1">
+                📦 Shipment Update
+              </p>
+              <p className="text-sm text-gray-800 whitespace-pre-wrap">
+                {msg.message}
+
+                <button
+                  onClick={() => navigate("/medicine")}
+                  className="ml-3 text-xs text-green-600 underline"
+                >
+                  …more
+                </button>
+              </p>
+              <button
+                onClick={() => markShipmentReceived(msg.shipmentId)}
+                className="mt-2 text-xs px-3 py-1 rounded bg-green-500 text-white hover:bg-green-600"
+              >
+                Mark as Received
+              </button>
+            </div>
+          ))}
 
         {/* Messages - takes remaining height */}
         <div className="flex-1 overflow-y-auto p-4 space-y-4 bg-gray-50 min-h-0">
@@ -917,48 +1073,19 @@ Would you like to continue the conversation or schedule a fresh appointment?`,
                                 Make Payment
                               </button>
                             )}
+
+                            {msg.notificationType ===
+                              "PATIENT_CARE_STARTED" && (
+                              <button
+                                onClick={() => navigate("/prescription")}
+                                className="text-xs text-indigo-600 underline mt-1 inline-block"
+                              >
+                                Go to Intake calender
+                              </button>
+                            )}
                           </>
                         ) : msg.messageType === "file" ? (
-                          <div className="flex flex-col gap-2">
-                            {/* File preview/download */}
-                            <div className="flex items-center gap-2 bg-white border border-gray-200 rounded-lg p-2">
-                              {msg.fileAttachment?.fileType?.startsWith(
-                                "image/"
-                              ) ? (
-                                <img
-                                  src={msg.fileAttachment?.url}
-                                  alt={msg.fileAttachment?.fileName}
-                                  className="w-32 h-32 object-cover rounded-md"
-                                />
-                              ) : (
-                                <div className="flex items-center gap-2">
-                                  <div className="w-10 h-10 bg-blue-100 flex items-center justify-center rounded">
-                                    📄
-                                  </div>
-                                  <div>
-                                    <p className="text-sm font-medium text-blue-600">
-                                      {msg.fileAttachment?.fileName}
-                                    </p>
-                                    <a
-                                      href={msg.fileAttachment?.url}
-                                      target="_blank"
-                                      rel="noopener noreferrer"
-                                      className="text-xs text-indigo-500 underline"
-                                    >
-                                      Download
-                                    </a>
-                                  </div>
-                                </div>
-                              )}
-                            </div>
-
-                            {/* Show caption only if exists */}
-                            {msg.message && (
-                              <p className="text-sm text-gray-800">
-                                {msg.message}
-                              </p>
-                            )}
-                          </div>
+                          renderFileAttachment(msg.fileAttachment)
                         ) : (
                           msg.message && (
                             <p
