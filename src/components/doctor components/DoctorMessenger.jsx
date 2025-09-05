@@ -19,10 +19,10 @@ import axios from "axios";
 import { io } from "socket.io-client";
 import PatientInfoModal from "./PatientInfoModal";
 import config from "../../config";
-
+import { format, isToday, isYesterday } from "date-fns";
+import { useSocket } from "../../contexts/SocketProvider";
 
 const API_URL = config.API_URL;
-const SOCKET_URL = "http://localhost:5000";
 
 function DoctorMessenger() {
   const [message, setMessage] = useState("");
@@ -47,6 +47,8 @@ function DoctorMessenger() {
   const [isSavingNote, setIsSavingNote] = useState(false);
   const [noteSaveStatus, setNoteSaveStatus] = useState(""); // 'success', 'error', or ''
   const [existingNotes, setExistingNotes] = useState({}); // Store notes for each patient
+  const [unreadCounts, setUnreadCounts] = useState({});
+  // const [selectedPatientId, setSelectedPatientId] = useState(null);
 
   const socketRef = useRef(null);
   const typingTimeoutRef = useRef(null);
@@ -54,6 +56,7 @@ function DoctorMessenger() {
   const messagesEndRef = useRef(null);
   const userId = localStorage.getItem("userId");
   const token = localStorage.getItem("token");
+  const socket = useSocket();
 
   // ✅ Handle file selection
   const handleFileSelect = (event) => {
@@ -116,7 +119,7 @@ function DoctorMessenger() {
       formData.append("file", file);
 
       const response = await axios.post(
-          `${API_URL}/api/upload/cloudinary`,
+        `${API_URL}/api/upload/cloudinary`,
         formData,
         {
           headers: {
@@ -142,6 +145,16 @@ function DoctorMessenger() {
     if (fileInputRef.current) {
       fileInputRef.current.value = "";
     }
+  };
+
+  const handleSelectPatient = (patientId) => {
+    setActiveChat(patientId);
+
+    // reset unread count for that patient
+    setUnreadCounts((prev) => ({
+      ...prev,
+      [patientId]: 0,
+    }));
   };
 
   // ✅ Get file size in readable format
@@ -334,15 +347,40 @@ function DoctorMessenger() {
     });
 
     // ✅ Receive messages
+    // socketRef.current.on("receiveMessage", (msg) => {
+    //   if (
+    //     (msg.sender === activeChat && msg.receiver === userId) || // patient → doctor
+    //     (msg.sender === userId && msg.receiver === activeChat) // doctor → patient
+    //   ) {
+    //     setMessages((prevMessages) => {
+    //       const messageExists = prevMessages.some((m) => m._id === msg._id);
+    //       return messageExists ? prevMessages : [...prevMessages, msg];
+    //     });
+    //   }
+    // });
+
     socketRef.current.on("receiveMessage", (msg) => {
+      const exists = patients.some((p) => p._id === msg.sender);
+
+      if (!exists) {
+        fetchPatients();
+      }
+
+      // Store messages by patient
       if (
         (msg.sender === activeChat && msg.receiver === userId) || // patient → doctor
         (msg.sender === userId && msg.receiver === activeChat) // doctor → patient
       ) {
-        setMessages((prevMessages) => {
-          const messageExists = prevMessages.some((m) => m._id === msg._id);
-          return messageExists ? prevMessages : [...prevMessages, msg];
+        setMessages((prev) => {
+          const messageExists = prev.some((m) => m._id === msg._id);
+          return messageExists ? prev : [...prev, msg];
         });
+      } else {
+        // Unread counter if message is from another patient
+        setUnreadCounts((prev) => ({
+          ...prev,
+          [msg.sender]: (prev[msg.sender] || 0) + 1,
+        }));
       }
     });
 
@@ -350,6 +388,7 @@ function DoctorMessenger() {
     socketRef.current.on(
       "sessionToggle",
       ({ patientId, doctorId, sessionActive }) => {
+        console.log("Doctor received sessionToggle:");
         if (doctorId === userId) {
           setPatients((prev) =>
             prev.map((p) => (p._id === patientId ? { ...p, sessionActive } : p))
@@ -380,6 +419,12 @@ function DoctorMessenger() {
     };
   }, [userId, activeChat]);
 
+  useEffect(() => {
+    if (patients.length > 0 && messages.length > 0) {
+      setPatients((prev) => sortPatientsByLatestMessage(prev, messages));
+    }
+  }, [messages]);
+
   // Handle typing indicator
   const handleTyping = (isTyping) => {
     if (socketRef.current && activeChat) {
@@ -405,25 +450,48 @@ function DoctorMessenger() {
     }, 1000);
   };
 
+  const sortPatientsByLatestMessage = (patientsList, allMessages) => {
+    return [...patientsList].sort((a, b) => {
+      const lastMsgA = allMessages
+        .filter((m) => m.sender === a._id || m.receiver === a._id)
+        .sort((x, y) => new Date(y.timestamp) - new Date(x.timestamp))[0];
+
+      const lastMsgB = allMessages
+        .filter((m) => m.sender === b._id || m.receiver === b._id)
+        .sort((x, y) => new Date(y.timestamp) - new Date(x.timestamp))[0];
+
+      const timeA = lastMsgA ? new Date(lastMsgA.timestamp).getTime() : 0;
+      const timeB = lastMsgB ? new Date(lastMsgB.timestamp).getTime() : 0;
+
+      return timeB - timeA; // latest first
+    });
+  };
+
+  const fetchPatients = async () => {
+    const token = localStorage.getItem("token");
+    try {
+      const response = await axios.get(
+        // `${API_URL}/api/doctor/getAppointedPatients?id=${userId}`,
+
+        `https://maars-2.onrender.com
+/api/doctor/chatPatientWithDoctor`,
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        }
+      );
+      const sorted = sortPatientsByLatestMessage(
+        response.data.uniqueData,
+        messages
+      );
+      setPatients(sorted);
+      if (sorted.length > 0) setActiveChat(sorted[0]._id);
+    } catch (error) {
+      console.error("Failed to fetch patients:", error);
+    }
+  };
+
   // Fetch patients list on mount
   useEffect(() => {
-    const fetchPatients = async () => {
-      const token = localStorage.getItem("token");
-      try {
-        const response = await axios.get(
-          `${API_URL}/api/doctor/getAppointedPatients?id=${userId}`,
-          {
-            headers: { Authorization: `Bearer ${token}` },
-          }
-        );
-        setPatients(response.data);
-        if (response.data.length > 0) {
-          setActiveChat(response.data[0]._id);
-        }
-      } catch (error) {
-        console.error("Failed to fetch patients:", error);
-      }
-    };
     fetchPatients();
   }, [userId]);
 
@@ -441,6 +509,16 @@ function DoctorMessenger() {
           }
         );
         setMessages(response.data);
+        const counts = {};
+
+        response.data.forEach((msg) => {
+          if (msg.receiver === userId && msg.isRead === false) {
+            counts[msg.sender] = (counts[msg.sender] || 0) + 1;
+          }
+        });
+
+        setUnreadCounts(counts);
+        
       } catch (error) {
         console.error("Failed to fetch chat history:", error);
         setMessages([]);
@@ -470,8 +548,65 @@ function DoctorMessenger() {
     location: patient.currentLocation,
     isOnline: onlineUsers.has(patient._id),
     lastSeen: lastSeen[patient._id],
-    sessionActive: patient.sessionActive ?? false,
+    isBotActive: patient.isBotActive,
   }));
+
+  const updateIsBotActive = async (isBotActive) => {
+    try {
+      const token = localStorage.getItem("token");
+      const res = await axios.patch(
+        `https://maars-2.onrender.com/api/doctorAppointmentSettings/updateIsBotOptionForThePatient`,
+        { isBotActive, patientId: activeChat },
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+
+      socket.current?.emit("botStatusChanged", {
+        doctorId: userId,
+        patientId: activeChat,
+        status: isBotActive,
+      });
+      console.log(
+        "➡️ Trying to emit botStatusChanged:by doctor",
+        {
+          doctorId: userId,
+          patientId: activeChat,
+          status: isBotActive,
+        },
+        socket.current?.connected
+      );
+
+      console.log("Updated isBotActive:", res.data);
+      // fetchPatients();
+    } catch (err) {
+      console.error("Failed to update isBotActive:", err);
+      return null;
+    }
+  };
+
+  useEffect(() => {
+    if (!socket.current) return;
+
+    const handleBotStatus = ({ doctorId, patientId, status }) => {
+      console.log("🔔 DoctorMessenger got botStatusChanged:", {
+        doctorId,
+        patientId,
+        status,
+      });
+
+      // update patients list locally
+      setPatients((prev) =>
+        prev.map((p) =>
+          p._id === patientId ? { ...p, isBotActive: status } : p
+        )
+      );
+    };
+
+    socket.current.on("botStatusChanged", handleBotStatus);
+
+    return () => {
+      socket.current.off("botStatusChanged", handleBotStatus);
+    };
+  }, [socket]);
 
   // Filter patients based on search query
   const filteredPatients = transformedPatients.filter((patient) => {
@@ -586,39 +721,6 @@ function DoctorMessenger() {
 
   return (
     <div className="min-h-screen max-h-screen bg-gray-100 overflow-hidden">
-      {/* Alert Banner */}
-      {/* <div className="bg-red-50 border-l-4 border-red-400 p-4 flex-shrink-0">
-        <div className="flex items-center">
-          <div className="flex-shrink-0">
-            <svg
-              className="h-5 w-5 text-red-400"
-              viewBox="0 0 20 20"
-              fill="currentColor"
-            >
-              <path
-                fillRule="evenodd"
-                d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z"
-                clipRule="evenodd"
-              />
-            </svg>
-          </div>
-          <div className="ml-3 flex-1 min-w-0">
-            <p className="text-sm text-red-700">
-              <span className="font-medium">Urgent Attention Required</span>
-              <span className="ml-2">
-                3 patients waiting over 15 minutes • 2 high-priority
-                consultations
-              </span>
-            </p>
-          </div>
-          <div className="ml-auto">
-            <button className="bg-red-600 hover:bg-red-700 text-white text-xs px-3 py-1 rounded">
-              View All Alerts
-            </button>
-          </div>
-        </div>
-      </div> */}
-
       {/* Main Layout */}
       <div className="flex h-[calc(100vh-4rem)] overflow-hidden">
         {/* Left Sidebar */}
@@ -696,7 +798,7 @@ function DoctorMessenger() {
                       ? "bg-blue-50 border-l-4 border-l-blue-500"
                       : ""
                   }`}
-                  onClick={() => setActiveChat(patient.id)}
+                  onClick={() => handleSelectPatient(patient.id)}
                 >
                   <div className="flex items-start gap-3">
                     <div className="relative">
@@ -709,16 +811,25 @@ function DoctorMessenger() {
                         }`}
                       />
                     </div>
+
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center justify-between mb-1">
                         <h3 className="font-semibold text-sm text-gray-900 truncate">
                           {patient.name}
                         </h3>
-                        <span className="text-xs text-gray-500">2m ago</span>
+
+                        {/* ✅ Unread badge */}
+                        {unreadCounts[patient.id] > 0 && (
+                          <span className="bg-green-500 text-white text-xs px-2 py-0.5 rounded-full ml-2">
+                            {unreadCounts[patient.id]}
+                          </span>
+                        )}
                       </div>
+
                       <p className="text-xs text-gray-600 mb-2 line-clamp-2">
                         Need consultation for severe headache
                       </p>
+
                       <div className="flex items-center justify-between">
                         <span className="text-xs px-2 py-1 rounded-full bg-red-100 text-red-700">
                           Acute
@@ -764,16 +875,7 @@ function DoctorMessenger() {
                       </h2>
                       <div className="flex items-center gap-2">
                         <p className="text-sm text-gray-500 truncate">
-                          Patient ID: #{activePatient.id.slice(-5)} •
-                          <span
-                            className={`ml-1 ${
-                              activePatient.isOnline
-                                ? "text-green-600"
-                                : "text-gray-500"
-                            }`}
-                          >
-                            {getPatientStatus(activePatient)}
-                          </span>
+                          Patient ID: #{activePatient.id.slice(-5)}
                         </p>
                         {typingUsers.has(activeChat) && (
                           <span className="text-sm text-blue-500">
@@ -797,37 +899,87 @@ function DoctorMessenger() {
                     </span>
 
                     {/* New Session Toggle */}
-                    <label className="flex items-center gap-2 cursor-pointer">
-                      <span className="text-xs text-gray-500">Bot</span>
-                      <input
-                        type="checkbox"
-                        checked={!activePatient?.sessionActive}
-                        disabled={!activePatient?.sessionActive} // ⬅️ lock if bot already active
-                        onChange={(e) => {
-                          if (!activePatient?.sessionActive) return; // already bot → ignore
+                    <label className="flex items-center gap-2">
+                      <span
+                        className={`text-xs ${
+                          activePatient?.sessionActive
+                            ? "text-gray-500"
+                            : "text-gray-400" // label dims if disabled
+                        }`}
+                      >
+                        Bot
+                      </span>
 
-                          const sessionActive = !e.target.checked;
+                      <div
+                        className={`
+      relative inline-flex items-center
+      ${
+        !activePatient?.sessionActive
+          ? "cursor-not-allowed group"
+          : "cursor-pointer"
+      }
+    `}
+                      >
+                        <input
+                          type="checkbox"
+                          className="sr-only peer"
+                          checked={activePatient?.isBotActive}
+                          onChange={async (e) => {
+                            const newValue = e.target.checked;
 
-                          setPatients((prev) =>
-                            prev.map((p) =>
-                              p._id === activePatient.id
-                                ? { ...p, sessionActive }
-                                : p
-                            )
-                          );
+                            // Update in backend
+                            try {
+                              await updateIsBotActive(newValue);
 
-                          socketRef.current.emit("sessionToggle", {
-                            patientId: activePatient.id,
-                            doctorId: userId,
-                            sessionActive,
-                          });
-                        }}
-                      />
+                              // Update in local state
+                              setPatients((prev) =>
+                                prev.map((p) =>
+                                  p._id === activePatient.id
+                                    ? { ...p, isBotActive: newValue }
+                                    : p
+                                )
+                              );
+                            } catch (err) {
+                              console.error(
+                                "Failed to update bot status:",
+                                err
+                              );
+                            }
+                          }}
+                        />
+
+                        {/* Track */}
+                        <div
+                          className="
+        w-9 h-5 rounded-full transition-colors
+        bg-gray-300
+        peer-checked:bg-blue-500
+      "
+                        ></div>
+
+                        {/* Knob */}
+                        <div
+                          className="
+        absolute left-0.5 top-0.5 w-4 h-4 bg-white rounded-full transition-transform
+        peer-checked:translate-x-4
+        peer-disabled:bg-gray-100
+      "
+                        ></div>
+
+                        {/* Tooltip (only when disabled) */}
+                        {!activePatient?.sessionActive && (
+                          <span
+                            className="
+          absolute -top-6 left-1/2 -translate-x-1/2 w-36
+          px-2 py-1 text-xs text-white bg-gray-700 rounded-md shadow 
+          opacity-0 group-hover:opacity-100 transition-opacity
+        "
+                          >
+                            You can’t disable bot
+                          </span>
+                        )}
+                      </div>
                     </label>
-
-                    <button className="p-2 hover:bg-gray-100 rounded-md">
-                      <MoreHorizontal className="w-4 h-4" />
-                    </button>
                   </div>
                 </div>
               </div>
@@ -862,7 +1014,7 @@ function DoctorMessenger() {
                     {/* ✅ Add a spacer to push content to bottom if needed */}
                     <div className="flex-grow" />
 
-                    {messages.map((msg, index) => (
+                    {/* {messages.map((msg, index) => (
                       <div
                         key={
                           msg._id ||
@@ -918,7 +1070,106 @@ function DoctorMessenger() {
                           </div>
                         )}
                       </div>
-                    ))}
+                    ))} */}
+
+                    {(() => {
+                      const sorted = [...messages].sort(
+                        (a, b) => new Date(a.timestamp) - new Date(b.timestamp)
+                      );
+
+                      let lastDate = null;
+
+                      return sorted.map((msg, index) => {
+                        const msgDate = new Date(msg.timestamp);
+                        let dateLabel = "";
+
+                        if (
+                          !lastDate ||
+                          msgDate.toDateString() !== lastDate.toDateString()
+                        ) {
+                          if (isToday(msgDate)) dateLabel = "Today";
+                          else if (isYesterday(msgDate))
+                            dateLabel = "Yesterday";
+                          else dateLabel = format(msgDate, "MMMM d, yyyy");
+                          lastDate = msgDate;
+                        }
+
+                        return (
+                          <div
+                            key={
+                              msg._id ||
+                              msg.messageId ||
+                              `${msg.sender}-${msg.timestamp}-${index}`
+                            }
+                          >
+                            {/* ✅ Date Divider */}
+                            {dateLabel && (
+                              <div className="flex justify-center my-2">
+                                <span className="bg-gray-200 text-gray-600 text-xs px-3 py-1 rounded-full">
+                                  {dateLabel}
+                                </span>
+                              </div>
+                            )}
+
+                            {/* ✅ Existing message bubble code */}
+                            <div
+                              className={`flex gap-3 ${
+                                msg.sender === userId
+                                  ? "justify-end"
+                                  : "justify-start"
+                              }`}
+                            >
+                              {msg.sender !== userId && (
+                                <div className="w-8 h-8 bg-gray-300 rounded-full flex items-center justify-center text-gray-600 text-sm font-medium flex-shrink-0">
+                                  {transformedPatients.find(
+                                    (p) => p.id === msg.sender
+                                  )?.avatar || "P"}
+                                </div>
+                              )}
+                              <div
+                                className={`max-w-xs lg:max-w-md ${
+                                  msg.sender === userId ? "order-first" : ""
+                                }`}
+                              >
+                                <div
+                                  className={`p-3 rounded-lg ${
+                                    msg.sender === userId
+                                      ? "bg-pink-50 border border-pink-200"
+                                      : "bg-white border border-gray-200 shadow-sm"
+                                  }`}
+                                >
+                                  <p className="text-sm text-gray-900">
+                                    {msg.message}
+                                  </p>
+                                  {renderFileAttachment(msg.fileAttachment)}
+                                </div>
+                                <p
+                                  className={`text-xs text-gray-500 mt-1 ${
+                                    msg.sender === userId
+                                      ? "text-right"
+                                      : "text-left"
+                                  }`}
+                                >
+                                  {msg.timestamp
+                                    ? new Date(
+                                        msg.timestamp
+                                      ).toLocaleTimeString([], {
+                                        hour: "2-digit",
+                                        minute: "2-digit",
+                                      })
+                                    : ""}
+                                </p>
+                              </div>
+                              {msg.sender === userId && (
+                                <div className="w-8 h-8 bg-teal-500 rounded-full flex items-center justify-center text-white text-sm font-medium flex-shrink-0">
+                                  D
+                                </div>
+                              )}
+                            </div>
+                          </div>
+                        );
+                      });
+                    })()}
 
                     {/* Typing Indicator */}
                     {typingUsers.has(activeChat) && (
@@ -957,7 +1208,7 @@ function DoctorMessenger() {
               </div>
 
               {/* Auto Reply Suggestions */}
-              <div className="px-4 py-2 border-t border-gray-200 bg-gray-50 flex-shrink-0">
+              {/* <div className="px-4 py-2 border-t border-gray-200 bg-gray-50 flex-shrink-0">
                 <div className="flex gap-2">
                   <button className="px-3 py-1 bg-blue-500 text-white text-sm rounded-md hover:bg-blue-600 flex items-center gap-1">
                     👍 Auto
@@ -966,7 +1217,7 @@ function DoctorMessenger() {
                     Opinion
                   </button>
                 </div>
-              </div>
+              </div> */}
 
               {/* ✅ WhatsApp-style file preview above input */}
               {uploadPreview && (
@@ -1040,7 +1291,7 @@ function DoctorMessenger() {
                       }
                     }}
                     onBlur={() => handleTyping(false)}
-                    className="flex-1 px-3 py-2 border border-gray-200 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    className="flex-1 px-3 py-2 border text-black border-gray-200 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                     disabled={isUploading}
                   />
                   <button

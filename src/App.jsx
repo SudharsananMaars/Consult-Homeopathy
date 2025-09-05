@@ -7,6 +7,8 @@ import {
   Route,
   Navigate,
 } from "react-router-dom";
+
+import { SocketProvider } from "./contexts/SocketProvider.jsx";
 import Layout from "./components/patient components/Layout.jsx";
 import RecentAppointments from "./components/patient components/RecentAppointments.jsx";
 import UpcomingAppointments from "./components/patient components/UpcomingAppointments.jsx";
@@ -37,7 +39,7 @@ import PrescriptionView from "./pages/patient pages/PrescriptionView.jsx";
 import MedicinePaymentPage from "./pages/patient pages/MedicinePaymentPage.jsx";
 import PatientContent from "./pages/patient pages/PatientContent.jsx";
 import Prescription from "./pages/patient pages/Prescription.jsx";
-import PatientInventory from "./pages/patient pages/PatientInventory.jsx"
+import PatientInventory from "./pages/patient pages/PatientInventory.jsx";
 
 // import doctor website
 import DoctorLayout from "./components/doctor components/DoctorLayout.jsx";
@@ -665,7 +667,7 @@ function App() {
         <Route
           path="/prepare-medicine/:appointmentId"
           element={
-            <ProtectedRoute allowedRoles={["Doctor","Med-Prep"]}>
+            <ProtectedRoute allowedRoles={["Doctor", "Med-Prep"]}>
               <MedicinePreparationView />
             </ProtectedRoute>
           }
@@ -673,7 +675,7 @@ function App() {
         <Route
           path="/medicinepackaging/:id"
           element={
-            <ProtectedRoute allowedRoles={["Doctor","Med-Prep"]}>
+            <ProtectedRoute allowedRoles={["Doctor", "Med-Prep"]}>
               <MedicinePackaging />
             </ProtectedRoute>
           }
@@ -681,7 +683,7 @@ function App() {
         <Route
           path="/shipping/:id"
           element={
-            <ProtectedRoute allowedRoles={["Doctor","Med-Prep"]}>
+            <ProtectedRoute allowedRoles={["Doctor", "Med-Prep"]}>
               <Shipping />
             </ProtectedRoute>
           }
@@ -972,19 +974,19 @@ function App() {
         />
 
         {/* Medicine Preparation */}
-       <Route
-  path="/medicine-preparation/login"
-  element={<MedicinePreparationLogin />}  // Remove ProtectedRoute wrapper
-/>
+        <Route
+          path="/medicine-preparation/login"
+          element={<MedicinePreparationLogin />} // Remove ProtectedRoute wrapper
+        />
 
-<Route
-  path="/medicine-preparation/preparation" 
-  element={
-    <ProtectedRoute allowedRoles={["Doctor", "Med-Prep"]}>
-      <Preparation />
-    </ProtectedRoute>
-  }
-/>
+        <Route
+          path="/medicine-preparation/preparation"
+          element={
+            <ProtectedRoute allowedRoles={["Doctor", "Med-Prep"]}>
+              <Preparation />
+            </ProtectedRoute>
+          }
+        />
 
         {/* Root redirect */}
         <Route path="/" element={<Navigate to="/login" replace />} />
@@ -996,11 +998,13 @@ function App() {
   };
   return (
     <div>
-      <ErrorBoundary FallbackComponent={ErrorFallback}>
-        <AuthProvider>
-          <MaintenanceCheck />
-        </AuthProvider>
-      </ErrorBoundary>
+        <SocketProvider>
+          <ErrorBoundary FallbackComponent={ErrorFallback}>
+            <AuthProvider>
+              <MaintenanceCheck />
+            </AuthProvider>
+          </ErrorBoundary>
+        </SocketProvider>
     </div>
   );
 }
