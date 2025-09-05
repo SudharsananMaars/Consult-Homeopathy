@@ -56,6 +56,15 @@ function DoctorMessenger() {
   const messagesEndRef = useRef(null);
   const userId = localStorage.getItem("userId");
   const token = localStorage.getItem("token");
+  const [isTrackingModalOpen, setIsTrackingModalOpen] = useState(false);
+  const [trackingData, setTrackingData] = useState({
+    trackingId: "",
+    deliveryPartner: "",
+    shippedDate: "",
+    arrivalDate: "",
+    shipmentImage: null,
+  });
+  const [prescriptionId, setPrescriptionId] = useState(null);
   const socket = useSocket();
 
   // ✅ Handle file selection
@@ -528,6 +537,25 @@ function DoctorMessenger() {
     fetchChatHistory();
   }, [activeChat, userId]);
 
+  // ✅ Fetch prescriptionId for active patient
+  useEffect(() => {
+    const fetchPrescriptionId = async () => {
+      if (!activeChat) return;
+      try {
+        const res = await axios.get(
+          `${API_URL}/api/medicine-summary/${activeChat}/pending-shipments`,
+          { headers: { Authorization: `Bearer ${token}` } }
+        );
+        const id = res.data?.pendingShipments?.[0]?.prescriptionId || null;
+        setPrescriptionId(id);
+      } catch (err) {
+        console.error("Failed to fetch prescriptionId:", err);
+        setPrescriptionId(null);
+      }
+    };
+    fetchPrescriptionId();
+  }, [activeChat, token]);
+
   // Transform patient data with online status
   const transformedPatients = patients.map((patient) => ({
     id: patient._id,
@@ -670,8 +698,7 @@ function DoctorMessenger() {
       const messageData = {
         sender: userId,
         receiver: activeChat,
-        message:
-          message.trim() || (fileData ? `Sent ${fileData.fileName}` : ""),
+        message: message.trim() || "",
         senderName: localStorage.getItem("doctorName") || "Doctor",
         receiverName: activePatient?.name || "",
         timestamp: new Date(),
@@ -718,6 +745,133 @@ function DoctorMessenger() {
       });
     }
   }, [activeChat]);
+
+  // ✅ Shipment Tracking Modal
+  const trackingModal = isTrackingModalOpen && (
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+      <div className="bg-white p-6 rounded-lg shadow-lg w-full max-w-md">
+        <h2 className="text-lg font-semibold mb-4">Update Shipment Tracking</h2>
+
+        <input
+          placeholder="Tracking ID"
+          value={trackingData.trackingId}
+          onChange={(e) =>
+            setTrackingData({ ...trackingData, trackingId: e.target.value })
+          }
+          className="w-full mb-2 p-2 border border-gray-300 rounded bg-gray-50 text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
+        />
+        <input
+          placeholder="Delivery Partner"
+          value={trackingData.deliveryPartner}
+          onChange={(e) =>
+            setTrackingData({
+              ...trackingData,
+              deliveryPartner: e.target.value,
+            })
+          }
+          className="w-full mb-2 p-2 border border-gray-300 rounded bg-gray-50 text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
+        />
+        <input
+          type="date"
+          value={trackingData.shippedDate}
+          onChange={(e) =>
+            setTrackingData({ ...trackingData, shippedDate: e.target.value })
+          }
+          className="w-full mb-2 p-2 border border-gray-300 rounded bg-gray-50 text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
+        />
+        <input
+          type="date"
+          value={trackingData.arrivalDate}
+          onChange={(e) =>
+            setTrackingData({ ...trackingData, arrivalDate: e.target.value })
+          }
+          className="w-full mb-2 p-2 border border-gray-300 rounded bg-gray-50 text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
+        />
+        <input
+          type="file"
+          accept="image/*"
+          onChange={(e) =>
+            setTrackingData({
+              ...trackingData,
+              shipmentImage: e.target.files[0],
+            })
+          }
+          className="w-full mb-2 p-2 border border-gray-300 rounded bg-gray-50 text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
+        />
+
+        <div className="flex justify-end gap-2">
+          <button
+            onClick={() => setIsTrackingModalOpen(false)}
+            className="px-4 py-2 bg-gray-500 rounded"
+          >
+            Cancel
+          </button>
+          <button
+            onClick={async () => {
+              if (!prescriptionId) {
+                alert("No prescription found for this patient.");
+                return;
+              }
+              try {
+                const formData = new FormData();
+                formData.append("trackingId", trackingData.trackingId);
+                formData.append(
+                  "deliveryPartner",
+                  trackingData.deliveryPartner
+                );
+                formData.append("shippedDate", trackingData.shippedDate);
+                formData.append("arrivalDate", trackingData.arrivalDate);
+                if (trackingData.shipmentImage) {
+                  formData.append("file", trackingData.shipmentImage);
+                }
+
+                await axios.patch(
+                  `${API_URL}/api/doctor/precriptions/${prescriptionId}/tracking`,
+                  formData,
+                  { headers: { Authorization: `Bearer ${token}` } }
+                );
+
+                // send as chat message
+                const trackingMessage = {
+                  sender: userId,
+                  receiver: activeChat,
+                  message: `📦 Shipment Update\nTracking ID: ${trackingData.trackingId}\nDelivery Partner: ${trackingData.deliveryPartner}\nShipped: ${trackingData.shippedDate}\nArrival: ${trackingData.arrivalDate}`,
+                  timestamp: new Date(),
+                };
+                socketRef.current.emit("sendMessage", trackingMessage);
+
+                setIsTrackingModalOpen(false);
+                setTrackingData({
+                  trackingId: "",
+                  deliveryPartner: "",
+                  shippedDate: "",
+                  arrivalDate: "",
+                  shipmentImage: null,
+                });
+              } catch (err) {
+                console.error("Error updating tracking:", err);
+                alert("Failed to update tracking");
+              }
+            }}
+            className="px-4 py-2 bg-blue-500 text-white rounded"
+          >
+            Save
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+
+  // ✅ Shipment Tracking Button
+  const trackingButton = (
+    <button
+      onClick={() => setIsTrackingModalOpen(true)}
+      className="p-2 hover:bg-gray-100 rounded-md flex-shrink-0"
+      title="Update Shipment Tracking"
+    >
+      <Info className="w-4 h-4 text-blue-500" />
+    </button>
+  );
 
   return (
     <div className="min-h-screen max-h-screen bg-gray-100 overflow-hidden">
@@ -1278,6 +1432,8 @@ function DoctorMessenger() {
                       }`}
                     />
                   </button>
+                  {/* Shipment Tracking */}
+                  {trackingButton}
                   <input
                     placeholder={
                       isUploading ? "Uploading..." : "Type your message..."
@@ -1430,6 +1586,8 @@ function DoctorMessenger() {
         onClose={() => setIsInfoModalOpen(false)}
         patient={activePatient}
       />
+      {/* ✅ Shipment Tracking Modal */}
+      {trackingModal}
     </div>
   );
 }
