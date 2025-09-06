@@ -44,19 +44,13 @@ const Sidebar = ({ role }) => {
             id: 2,
             name: "Appointments",
             icon: Calendar,
-            sublinks: [
-              { id: 21, path: "/appointments/calender", name: "Calendar" },
-              { id: 22, path: "/appointments/list", name: "Appointment List" },
-            ],
+            path: "/appointments/list"
           },
           {
             id: 3,
             name: "Patients",
             icon: Users,
-            sublinks: [
-              { id: 31, path: "/patients", name: "Patient List" },
-              { id: 32, path: "/patients/card", name: "Patient Cards" },
-            ],
+            path: "/patients"
           },
           {
             id: 4,

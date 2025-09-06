@@ -1,4 +1,4 @@
-import React, {useState} from "react";
+import React, { useEffect, useState } from "react";
 import { Pie } from 'react-chartjs-2';
 import {
   Chart as ChartJS,
@@ -8,423 +8,342 @@ import {
 } from 'chart.js';
 import DoctorLayout from "/src/components/doctor components/DoctorLayout.jsx";
 import patientprofile from "/src/assets/images/doctor images/patientprofile.jpg";
+import { useParams } from "react-router-dom";
+import config from '/src/config.js';
+import axios from 'axios';
+
+// Register Chart.js components
 ChartJS.register(ArcElement, Tooltip, Legend);
+const API_URL = config.API_URL;
 
 const ViewDetails = () => {
-    const [activeTab, setActiveTab] = useState("Medicine");
-    const appointments = [
-      {
-        disease: "Flu",
-        date: "Monday, 12 Sep 2024",
-        time: "10:00 AM",
-      },
-      {
-        disease: "Diabetes Checkup",
-        date: "Wednesday, 14 Sep 2024",
-        time: "02:00 PM",
-      },
-    ];
-    const pieData = {
-      labels: ['Successful Intake', 'Missed'],
-      datasets: [
-        {
-          label: 'Medicine Intake',
-          data: [80, 20], // Replace with dynamic data if available
-          backgroundColor: ['#7ccf7f', '#ff7369'],
-          borderColor: ['#FFFFFF', '#FFFFFF'],
-          borderWidth: 1,
-        },
-      ],
+  const { id } = useParams();
+  const [patientDetails, setPatientDetails] = useState({});
+  const [pastHistory, setPastHistory] = useState([]);
+  const [futureHistory, setFutureHistory] = useState([]);
+  const [activeTab, setActiveTab] = useState("Medicine");
+
+  // Fetch patient details
+  useEffect(() => {
+    const fetchDetails = async () => {
+      if (!id) return;
+      
+      const token = localStorage.getItem('token');
+      try {
+        const response = await axios.get(`${API_URL}/api/patient/patientById/${id}`, {
+          headers: {
+            Authorization: `Bearer ${token}`
+          }
+        });
+        setPatientDetails(response.data);
+      } catch (error) {
+        console.error('Error fetching patient details:', error);
+      }
     };
-    return (
-        <DoctorLayout>
-        <div className="p-10 rounded-md">
-            {/* First Row - Two Containers */}
-            <div className="flex flex-wrap -mx-4">
-                {/* First Container */}
-                <div className="w-full md:w-1/2 px-4 mb-4">
-                    <div className="p-5 bg-purple-100 shadow-md rounded-lg flex items-center border-1 border-blue-100">
-                        <img
-                            src={patientprofile} // Replace with actual patient photo
-                            alt="Patient"
-                            className="w-24 h-24 rounded-full mr-4 border-2 border-gray-300"
-                        />
-                        <div>
-                            <h2 className="text-xl font-bold mt-5">John Doe</h2>
-                            <p className="text-gray-600 mt-3">Patient ID: P001</p>
-                            <p className="text-gray-600">Created On: 2024-09-12 10:30 AM</p>
-                            <p className="mt-4 font-semibold">Disease: Flu</p>
+    fetchDetails();
+  }, [id]);
+
+  // Fetch past appointments
+  useEffect(() => {
+    const fetchPastHistory = async () => {
+      if (!id) return;
+      
+      const token = localStorage.getItem('token');
+      try {
+        const response = await axios.get(`${API_URL}/api/doctor/getAppointmentWithTimedata`, {
+          headers: {
+            Authorization: `Bearer ${token}`
+          },
+          params: {
+            id,
+            type: 'past'
+          }
+        });
+        setPastHistory(response.data);
+      } catch (error) {
+        console.error('Error fetching past history:', error);
+      }
+    };
+    fetchPastHistory();
+  }, [id]);
+
+  // Fetch future appointments
+  useEffect(() => {
+    const fetchFutureHistory = async () => {
+      if (!id) return;
+      
+      const token = localStorage.getItem('token');
+      try {
+        const response = await axios.get(`${API_URL}/api/doctor/getAppointmentWithTimedata`, {
+          headers: {
+            Authorization: `Bearer ${token}`
+          },
+          params: {
+            id,
+            type: 'future'
+          }
+        });
+        setFutureHistory(response.data);
+      } catch (error) {
+        console.error('Error fetching future history:', error);
+      }
+    };
+    fetchFutureHistory();
+  }, [id]);
+
+  const pieData = {
+    labels: ['Successful Intake', 'Missed'],
+    datasets: [
+      {
+        label: 'Medicine Intake',
+        data: [80, 20],
+        backgroundColor: ['#7ccf7f', '#ff7369'],
+        borderColor: ['#FFFFFF', '#FFFFFF'],
+        borderWidth: 1,
+      },
+    ],
+  };
+
+ const formatDate = (dateString) => {
+  if (!dateString) return 'N/A';
+  return new Date(dateString).toLocaleDateString(); // Only date, no time
+};
+
+
+  const formatCurrency = (amount) => {
+    return `Rs. ${amount || 0}`;
+  };
+
+  return (
+    <DoctorLayout>
+      <div className="p-10 rounded-md">
+        <div className="flex flex-wrap -mx-4">
+          <div className="w-full md:w-1/2 px-4 mb-4">
+            <div className="p-5 bg-purple-100 shadow-md rounded-lg flex items-center border-1 border-blue-100">
+              <img
+                src={patientDetails.profilePhoto || patientprofile}
+                alt="Patient"
+                className="w-24 h-24 rounded-full mr-4 border-2 border-gray-300"
+              />
+              <div>
+                <h2 className="text-xl font-bold mt-5">{patientDetails.name || 'Loading...'}</h2>
+                <p className="text-gray-600 mt-3">Patient ID: {patientDetails._id || 'N/A'}</p>
+                <p className="text-gray-600">Created On: {formatDate(patientDetails.createdAt)}</p>
+              </div>
+            </div>
+          </div>
+
+          <div className="w-full md:w-1/2 p-1 mb-4 pr-4">
+            <div className="p-4 bg-purple-100 shadow-md rounded-lg border-1 border-blue-100">
+              <p className="text-gray-700">
+                <span className="font-semibold">Age:</span> {patientDetails.age || 'N/A'}
+              </p>
+              <p className="text-gray-700 mt-2">
+                <span className="font-semibold">Gender:</span> {patientDetails.gender || 'N/A'}
+              </p>
+              <p className="text-gray-700 mt-2">
+                <span className="font-semibold">Email:</span> {patientDetails.email || 'N/A'}
+              </p>
+              <p className="text-gray-700 mt-2">
+                <span className="font-semibold">Phone:</span> {patientDetails.phone || 'N/A'}
+              </p>
+              <p className="text-gray-700 mt-2">
+                <span className="font-semibold">Address:</span> {patientDetails.currentLocation || 'N/A'}
+              </p>
+            </div>
+          </div>
+        </div>
+
+        {/* Disease History and Medicine/Workshop Tabs */}
+        <div className="flex flex-wrap mb-4">
+          {/* Disease History Container */}
+          <div className="w-full lg:w-1/2 mb-4 pr-4">
+            <div className="bg-white shadow-md rounded-md border-1 border-blue-100 h-96 flex flex-col">
+              <h2 className="text-xl font-semibold p-5 pb-3 flex-shrink-0">Disease History</h2>
+              <div className="flex-1 overflow-y-auto px-5 pb-5">
+                <div className="space-y-4">
+                  {pastHistory.length > 0 ? (
+                    pastHistory.map((item) => (
+                      <div key={item._id} className="p-2 border-b border-gray-200">
+                        <div className="flex items-start">
+                          <div className="flex-shrink-0">
+                            <div className="w-10 h-10 bg-teal-400 rounded-full flex items-center justify-center">
+                              <svg className="w-5 h-5 text-white" fill="currentColor" viewBox="0 0 24 24">
+                                <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z" />
+                              </svg>
+                            </div>
+                          </div>
+                          <div className="ml-4 flex-1">
+                            <div className="flex justify-between items-start">
+                              <div>
+                                <h3 className="font-semibold text-gray-800">
+                                  {item.diseaseName || 'Unknown Disease'}
+                                </h3>
+                                <p className="text-gray-600 text-sm">
+                                  {formatDate(item.appointmentDate)}
+                                </p>
+                                <p className="text-gray-600 text-sm">
+                                  {item.timeSlot}
+                                </p>
+                              </div>
+                              <div className="text-right">
+                                <button className="text-blue-400 hover:text-blue-500 text-sm font-bold">
+                                  Prescription
+                                </button>
+                              </div>
+                            </div>
+                          </div>
                         </div>
-                    </div>
+                      </div>
+                    ))
+                  ) : (
+                    <p className="text-gray-500 text-center py-4">No past appointments found</p>
+                  )}
                 </div>
-
-                {/* Second Container */}
-                <div className="w-full md:w-1/2 p-1 mb-4 pr-4">
-                    <div className="p-4 bg-purple-100 shadow-md rounded-lg border-1 border-blue-100">
-                        
-                        <p className="text-gray-700">
-                            <span className="font-semibold">Age:</span> 32
-                        </p>
-                        <p className="text-gray-700 mt-2">
-                            <span className="font-semibold">Gender:</span> Male
-                        </p>
-
-                        <p className="text-gray-700 mt-2">
-                            <span className="font-semibold">Email:</span> john.doe@example.com
-                        </p>
-                        <p className="text-gray-700 mt-2">
-                            <span className="font-semibold">Phone:</span> (123) 456-7890
-                        </p>
-                        <p className="text-gray-700 mt-2">
-                            <span className="font-semibold">Address:</span> 123 Main St, City, Country
-                        </p>
-                    </div>
-                </div>
-            </div>
-
-            {/* Next containers will go below this */}
-           <div className="flex flex-wrap mb-4">
-  {/* First Container - Disease History */}
-  <div className="w-full lg:w-1/2 mb-4 pr-4">
-  <div className="p-5 bg-white shadow-md rounded-md max-h-96 overflow-y-auto border-1 border-blue-100">
-    <h2 className="text-xl font-semibold mb-4">Disease History</h2>
-
-    <div className="p-2">
-      {/* Row 1 - First Disease Details */}
-      <div className="flex flex-wrap justify-between items-start">
-        {/* Disease History */}
-        <div className="flex items-start w-full md:w-1/3">
-          <div className="flex-shrink-0">
-            <div className="w-10 h-10 bg-teal-400 rounded-full flex items-center justify-center">
-              <svg className="w-5 h-5 text-white" fill="currentColor" viewBox="0 0 24 24">
-                <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/>
-              </svg>
+              </div>
             </div>
           </div>
-          <div className="ml-4">
-            <h3 className="font-semibold text-gray-800">Diabetes</h3>
-            <p className="text-gray-600 text-sm">Mon, 18 Mar 2021, 11:15 AM</p>
-          </div>
-        </div>
 
-        {/* Prescription */}
+          {/* Medicine and Workshop Tabs Container */}
+         <div className="w-full lg:w-1/2 mb-4">
+  <div className="ml-1 bg-white shadow-md rounded-lg border-1 border-blue-100 h-96 flex flex-col">
     
-        {/* Payment Details */}
-        <div className="w-full md:w-1/3 ml-4">
-          <p className="font-semibold text-gray-700">Rs.150</p>
-          <p className="text-gray-600 text-sm">Sun, 21 May 2023</p>
-          <p className="text-gray-600 text-sm">02:30 PM</p>
-        </div>
-        <div className="w-full md:w-1/4 mt-3">
-          <p className=" text-md font-bold text-blue-400 hover:text-blue-500">
-            Prescription
-          </p>
-        </div>
-      </div>
+    {/* Header */}
+    <div className="p-3 border-b flex-shrink-0">
+      <h2 className="text-lg font-semibold text-gray-700">Payment History</h2>
     </div>
 
-    {/* Row 2 */}
-    <div className="p-2">
-      <div className="flex flex-wrap justify-between items-start">
-      <div className="flex items-start w-full md:w-1/3">
-          <div className="flex-shrink-0">
-            <div className="w-10 h-10 bg-teal-400 rounded-full flex items-center justify-center">
-              <svg className="w-5 h-5 text-white" fill="currentColor" viewBox="0 0 24 24">
-                <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/>
-              </svg>
+    {/* Medicine Content - Scrollable */}
+    <div className="flex-1 overflow-y-auto p-3 pt-4">
+  <div className="space-y-4">
+    {patientDetails?.payments?.length > 0 ? (
+      patientDetails.payments.map((payment) => (
+        <div key={payment._id} className="p-4 border border-gray-200 rounded-lg">
+          <div className="flex justify-between items-center">
+            <div>
+              <p className="font-semibold text-gray-700">{payment.razorpayOrderId}</p>
+              <p className="text-gray-600 text-sm">
+                {new Date(payment.createdAt).toLocaleDateString('en-US', {
+                  weekday: 'long',
+                  year: 'numeric',
+                  month: 'short',
+                  day: 'numeric'
+                })}
+              </p>
+              <p className="text-gray-600 text-sm">
+                Time: {new Date(payment.createdAt).toLocaleTimeString('en-US', {
+                  hour: '2-digit',
+                  minute: '2-digit'
+                })}
+              </p>
+            </div>
+            <div className="text-right">
+              <p className="font-semibold text-gray-700">Rs. {payment.amount}</p>
+              <p className="text-xs text-green-600 capitalize">{payment.status}</p>
             </div>
           </div>
-          <div className="ml-4">
-            <h3 className="font-semibold text-gray-800">Diabetes</h3>
-            <p className="text-gray-600 text-sm">Mon, 18 Mar 2021, 11:15 AM</p>
-          </div>
         </div>
-
-        {/* Payment Details */}
-        <div className="w-full md:w-1/3 ml-4">
-          <p className="font-semibold text-gray-700">Rs.150</p>
-          <p className="text-gray-600 text-sm">Sun, 21 May 2023</p>
-          <p className="text-gray-600 text-sm">02:30 PM</p>
-        </div>
-        <div className="w-full md:w-1/4 mt-3">
-        <p className=" text-md font-bold text-blue-400 hover:text-blue-500">
-            Prescription
-          </p>
-        </div>
-      </div>
-    </div>
-
-    {/* Row 3 */}
-    <div className="p-2">
-      <div className="flex flex-wrap justify-between items-start">
-      <div className="flex items-start w-full md:w-1/3">
-          <div className="flex-shrink-0">
-            <div className="w-10 h-10 bg-teal-400 rounded-full flex items-center justify-center">
-              <svg className="w-5 h-5 text-white" fill="currentColor" viewBox="0 0 24 24">
-                <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/>
-              </svg>
-            </div>
-          </div>
-          <div className="ml-4">
-            <h3 className="font-bold text-gray-800">Diabetes</h3>
-            <p className="text-gray-600 text-sm">Mon, 18 Mar 2021, 11:15 AM</p>
-          </div>
-        </div>
-        
-
-        {/* Payment Details */}
-        <div className="w-full md:w-1/3 ml-4">
-          <p className="font-semibold text-gray-700">Rs.150</p>
-          <p className="text-gray-600 text-sm">Sun, 21 May 2023</p>
-          <p className="text-gray-600 text-sm">02:30 PM</p>
-        </div>
-        <div className="w-full md:w-1/4 mt-3">
-        <p className=" text-md font-bold text-blue-400 hover:text-blue-500">
-            Prescription
-          </p>
-        </div>
-      </div>
-    </div>
-
-    {/* Rows beyond 3 */}
+      ))
+    ) : (
+      <p className="text-gray-500 text-center">No payment history available</p>
+    )}
+  </div>
+</div>
+    
   </div>
 </div>
 
 
-  {/* Second Container - Medicine and Workshop Tabs */}
-  <div className="w-full lg:w-1/2 mb-4">
-    <div className="p-3 ml-1 bg-white shadow-md rounded-lg max-h-96 overflow-y-auto border-1 border-blue-100">
-      {/* Tab Switch */}
-      <div className="flex justify-center mb-4 border-b">
-        <button
-          className={`px-4 py-2 ${
-            activeTab === "Medicine"
-              ? "text-blue-500 font-bold border-blue-500 border-b-2"
-              : "text-gray-500"
-          }`}
-          onClick={() => setActiveTab("Medicine")}
-        >
-          Medicine
-        </button>
-        <button
-          className={`px-4 py-2 ml-2 ${
-            activeTab === "Workshop"
-              ? "text-blue-500 font-bold border-blue-500 border-b-2"
-              : "text-gray-500"
-          }`}
-          onClick={() => setActiveTab("Workshop")}
-        >
-          Workshop
-        </button>
-      </div>
-
-      {/* Content Based on Active Tab */}
-      
-      <div className="space-y-6 p-2 pl-10">
-        {activeTab === "Medicine" ? (
-          <div className="flex flex-wrap justify-center items-center">
-            {/* Medicine Payment Details */}
-            <div className="w-full md:w-1/3">
-          <p className="font-semibold text-gray-700">INV123456</p>
-          </div>
-
-            <div className="w-full md:w-1/3">
-              <p className="font-semibold text-gray-700">Rs. 200</p>
-              <p className="text-gray-600 text-sm">Monday, 12 Sep 2024</p>
-              <p className="text-gray-600 text-sm">Time: 10:00 AM</p>
-            </div>
-          
-            {/* Invoice */}
-            <div className="w-full md:w-1/3">
-              <span className="text-md font-bold text-blue-400 hover:text-blue-500">
-                Invoice
-              </span>
-            </div>
-          </div>
-        ) : (
-          <div className="flex flex-wrap justify-center items-center">
-            {/* Workshop Payment Details */}
-            <div className="w-full md:w-1/3">
-          <p className="font-semibold text-gray-700">INV654321</p>
-          </div>
-  
-            <div className="w-full md:w-1/3">
-              <p className="font-semibold text-gray-700">Rs. 200</p>
-              <p className="text-gray-600 text-sm">Friday, 15 Sep 2024</p>
-              <p className="text-gray-600 text-sm">02:00 PM</p>
-            </div>
-            
-            {/* Invoice */}
-            <div className="w-full md:w-1/3">
-              <span className="text-md font-bold text-blue-400 hover:text-blue-500">
-                Invoice
-              </span>
-            </div>
-          </div>
-        )}
-      </div>
-      <div className="space-y-6 p-2 pl-10">
-        {activeTab === "Medicine" ? (
-          <div className="flex flex-wrap justify-center items-center">
-            {/* Medicine Payment Details */}
-            <div className="w-full md:w-1/3">
-            <p className="font-semibold text-gray-700">INV123456</p>
-            </div>
-  
-            <div className="w-full md:w-1/3">
-              <p className="font-semibold text-gray-700">Rs. 200</p>
-              <p className="text-gray-600 text-sm">Monday, 12 Sep 2024</p>
-              <p className="text-gray-600 text-sm">Time: 10:00 AM</p>
-            </div>
-            
-            {/* Invoice */}
-            <div className="w-full md:w-1/3">
-              <span className="text-md font-bold text-blue-400 hover:text-blue-500">
-                Invoice
-              </span>
-            </div>
-          </div>
-        ) : (
-          <div className="flex flex-wrap justify-center items-center">
-            {/* Workshop Payment Details */}
-            <div className="w-full md:w-1/3">
-          <p className="font-semibold text-gray-700">INV654321</p>
-          </div>
-            <div className="w-full md:w-1/3">
-            <p className="font-semibold text-gray-700">Rs. 200</p>
-              <p className="text-gray-600 text-sm">Friday, 15 Sep 2024</p>
-              <p className="text-gray-600 text-sm">02:00 PM</p>
-            </div>
-           
-            {/* Invoice */}
-            <div className="w-full md:w-1/3">
-              <span className="text-md font-bold text-blue-400 hover:text-blue-500">
-                Invoice
-              </span>
-            </div>
-          </div>
-        )}
-      </div>
-      <div className="space-y-6 p-2 pl-10">
-        {activeTab === "Medicine" ? (
-          <div className="flex flex-wrap justify-center items-center">
-            {/* Medicine Payment Details */}
-            <div className="w-full md:w-1/3">
-            <p className="font-semibold text-gray-700">INV123456</p>
-            </div>
-
-            <div className="w-full md:w-1/3">
-            <p className="font-semibold text-gray-700">Rs. 200</p>
-              <p className="text-gray-600 text-sm">Monday, 12 Sep 2024</p>
-              <p className="text-gray-600 text-sm">Time: 10:00 AM</p>
-            </div>
-            
-            {/* Invoice */}
-            <div className="w-full md:w-1/3">
-              <span className="text-md font-bold text-blue-400 hover:text-blue-500">
-                Invoice
-              </span>
-            </div>
-          </div>
-        ) : (
-          <div className="flex flex-wrap justify-center items-center">
-            {/* Workshop Payment Details */}
-            <div className="w-full md:w-1/3">
-          <p className="font-semibold text-gray-700">INV654321</p>
-          </div>
-  
-            <div className="w-full md:w-1/3">
-            <p className="font-semibold text-gray-700">Rs. 200</p>
-              <p className="text-gray-600 text-sm">Friday, 15 Sep 2024</p>
-              <p className="text-gray-600 text-sm">02:00 PM</p>
-            </div>
-            
-            {/* Invoice */}
-            <div className="w-full md:w-1/3">
-              <span className="text-md font-bold text-blue-400 hover:text-blue-500">
-                Invoice
-              </span>
-            </div>
-          </div>
-        )}
-      </div>
-    </div>
-  </div>
-</div>
-
-<div className="flex flex-wrap space-x-9">
-  {/* Upcoming Appointments Container */}
-  <div className="w-full md:w-1/2 lg:w-1/3 p-4 bg-white shadow-md rounded-lg max-h-96 overflow-y-auto border-1 border-blue-100">
-    <h2 className="text-xl font-semibold text-gray-800 mb-4">Upcoming Appointments</h2>
-    <div className="space-y-4">
-      {appointments.map((appointment, index) => (
-        <div
-          key={index}
-          className="p-4 border border-blue-100 rounded-lg shadow-sm bg-white"
-        >
-          <p className="text-lg font-medium text-gray-700">{appointment.disease}</p>
-          <p className="text-sm text-gray-600">{appointment.date}</p>
-          <p className="text-sm text-gray-600">{appointment.time}</p>
         </div>
-      ))}
-    </div>
-  </div>
 
-  {/* Medicine Intake Statistics Container */}
-  {/* Patient Review Container */}
-  <div className="w-full md:w-1/2 lg:w-1/3 p-4 bg-white shadow-md rounded-lg border-1 border-blue-100">
-    <h2 className="text-xl font-semibold text-gray-800 mb-4">Patient Review</h2>
-    <div className="flex items-start">
-      {/* Patient Profile Picture */}
-      <div className="flex-shrink-0">
-        <img
-          className="w-12 h-12 rounded-full"
-          src="https://via.placeholder.com/150"
-          alt="Patient Profile"
-        />
-      </div>
-      
-      <div className="ml-4">
-        {/* Patient Name */}
-        <h3 className="font-semibold text-gray-800">John Doe</h3>
-        
-        {/* Review Date */}
-        <p className="text-gray-600 text-sm">Reviewed on: 10th September 2024</p>
-        
-        {/* Star Rating */}
-        <div className="flex items-center mt-2">
-          {[...Array(5)].map((star, index) => (
-            <svg
-              key={index}
-              className={`w-4 h-4 ${
-                index < 4 ? "text-yellow-500" : "text-gray-300"
-              }`}
-              fill="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path d="M12 .587l3.668 7.429 8.2 1.193-5.922 5.771 1.396 8.146L12 18.896l-7.342 3.863 1.396-8.146L.132 9.209l8.2-1.193L12 .587z" />
-            </svg>
-          ))}
+        {/* Bottom Section */}
+        <div className="flex flex-wrap space-x-9">
+          {/* Upcoming Appointments Container */}
+          <div className="w-full md:w-1/2 lg:w-1/3 bg-white shadow-md rounded-lg border-1 border-blue-100 h-96 flex flex-col">
+            <h2 className="text-xl font-semibold text-gray-800 p-4 pb-3 flex-shrink-0">Upcoming Appointments</h2>
+            <div className="flex-1 overflow-y-auto px-4 pb-4">
+              <div className="space-y-4">
+                {futureHistory.length > 0 ? (
+                  futureHistory.map((appointment) => (
+                    <div
+                      key={appointment._id}
+                      className="p-4 border border-blue-100 rounded-lg shadow-sm bg-white"
+                    >
+                      <p className="text-lg font-medium text-gray-700">
+                        {appointment.diseaseName || 'Unknown'}
+                      </p>
+                      <p className="text-sm text-gray-600">
+                        {formatDate(appointment.appointmentDate)}
+                      </p>
+                      <p className="text-sm text-gray-600">
+                        Fee: {formatCurrency(appointment.fee)}
+                      </p>
+                    </div>
+                  ))
+                ) : (
+                  <p className="text-gray-500 text-center py-4">No upcoming appointments</p>
+                )}
+              </div>
+            </div>
+          </div>
+
+          {/* Patient Review Container */}
+          <div className="w-full md:w-1/2 lg:w-1/3 bg-white shadow-md rounded-lg border-1 border-blue-100 h-96 flex flex-col">
+            <h2 className="text-xl font-semibold text-gray-800 p-4 pb-3 flex-shrink-0">Patient Review</h2>
+            <div className="flex-1 overflow-y-auto px-4 pb-4">
+              <div className="flex items-start">
+                <div className="flex-shrink-0">
+                  <img
+                    className="w-12 h-12 rounded-full"
+                    src={patientDetails.profilePhoto || "https://via.placeholder.com/150"}
+                    alt="Patient Profile"
+                  />
+                </div>
+                <div className="ml-4">
+                  <h3 className="font-semibold text-gray-800">{patientDetails.name || 'Patient'}</h3>
+                  <p className="text-gray-600 text-sm">Reviewed on: 10th September 2024</p>
+                  <div className="flex items-center mt-2">
+                    {[...Array(5)].map((star, index) => (
+                      <svg
+                        key={index}
+                        className={`w-4 h-4 ${
+                          index < 4 ? "text-yellow-500" : "text-gray-300"
+                        }`}
+                        fill="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path d="M12 .587l3.668 7.429 8.2 1.193-5.922 5.771 1.396 8.146L12 18.896l-7.342 3.863 1.396-8.146L.132 9.209l8.2-1.193L12 .587z" />
+                      </svg>
+                    ))}
+                  </div>
+                  <p className="mt-3 text-gray-700">
+                    "Great experience! The doctor was very professional and helpful. The treatment has been effective."
+                  </p>
+                  {/* Additional review content to demonstrate scrolling */}
+                  <p className="mt-3 text-gray-700">
+                    "I would definitely recommend this doctor to others. The follow-up care was excellent and the staff was very accommodating."
+                  </p>
+                  <p className="mt-3 text-gray-700">
+                    "The clinic environment was clean and welcoming. Wait times were minimal and the appointment was handled efficiently."
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Medicine Intake Statistics Container */}
+          <div className="w-full md:w-1/2 lg:w-1/4 bg-white shadow-md rounded-lg border-1 border-blue-100 h-96 flex flex-col">
+            <h2 className="text-xl font-semibold text-gray-800 p-4 pb-3 text-center flex-shrink-0">
+              Medicine Intake Statistics
+            </h2>
+            <div className="flex-1 flex items-center justify-center px-4 pb-4">
+              <Pie data={pieData} />
+            </div>
+          </div>
         </div>
-        
-        {/* Patient's Review */}
-        <p className="mt-3 text-gray-700">
-          "Dr. Smith is amazing! He really listened to my concerns and took the time to explain everything to me. The treatment has been going well so far."
-        </p>
       </div>
-    </div>
-  </div>
+    </DoctorLayout>
+  );
+};
 
-  <div className="w-full md:w-1/2 lg:w-1/4 p-4 bg-white shadow-md rounded-lg border-1 border-blue-100">
-    <h2 className="text-xl font-semibold text-gray-800 mb-4 text-center">Medicine Intake Statistics</h2>
-    <Pie data={pieData} />
-  </div>
-
-</div>
-
-     
-        </div> 
-        </DoctorLayout>
-    );
-}
-export default ViewDetails ;
+export default ViewDetails;

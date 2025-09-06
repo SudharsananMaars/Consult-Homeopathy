@@ -31,9 +31,22 @@ const RawMaterialsList = () => {
         api.getThresholdStock(), 
       ]);
 
-      // Flatten and normalize low stock items
+      console.log('lowStockResponse:', lowStockResponse); // Debug log
+
+      // Handle the case where there are no low stock items
+      let lowStockItems = [];
+      
+      if (lowStockResponse && lowStockResponse.rawmaterial && Array.isArray(lowStockResponse.rawmaterial)) {
+        // There are low stock items
+        lowStockItems = lowStockResponse.rawmaterial;
+      } else if (lowStockResponse && lowStockResponse.message) {
+        // No low stock items (message response)
+        lowStockItems = [];
+      }
+
+      // Create low stock set from the items (will be empty if no low stock items)
       const lowStockSet = new Set(
-        lowStockResponse.rawmaterial.map((item) => item._id.name.toLowerCase())
+        lowStockItems.map((item) => item._id.name.toLowerCase())
       );
 
       // Add isLowStock flag to materials based on name match
@@ -45,6 +58,7 @@ const RawMaterialsList = () => {
       setRawMaterials(enrichedMaterials);
       setLoading(false);
     } catch (err) {
+      console.error('Error fetching raw materials:', err);
       setError(err.message);
       setLoading(false);
     }
