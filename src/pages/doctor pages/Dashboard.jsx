@@ -11,6 +11,12 @@ import DoctorLayout from "/src/components/doctor components/DoctorLayout.jsx";
 import { Pie ,Bar} from 'react-chartjs-2';
 import { Chart as ChartJS, ArcElement, CategoryScale, LinearScale, PointElement, LineElement, Title, Tooltip, Legend, BarElement } from 'chart.js';
 import Select from "react-select";
+import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
+import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
+import { StaticDatePicker } from '@mui/x-date-pickers/StaticDatePicker';
+import dayjs from 'dayjs';
+import { Box } from '@mui/material';
+
 ChartJS.register(ArcElement, Tooltip, Legend);
 
 function Dashboard() {
@@ -23,23 +29,16 @@ function Dashboard() {
     { title: 'Inventory', count: '75%', color: 'bg-red-100', image: AssisstentDoctors },
   ];
 
-  const appointments = [
-    { name: 'Polly Paul', description: 'Follow Up', time: '10:30', img: cal1 },
-    { name: 'Johen Doe', description: 'New Appointment', time: '11:45', img: doc },
-    { name: 'Harmani Doe', description: 'Follow Up', time: '2:30', img: profile },
-    { name: 'Polly Paul', description: 'Follow Up', time: '10:30', img: cal1 },
-    { name: 'Johen Doe', description: 'New Appointment', time: '11:45', img: doc },
-    { name: 'Harmani Doe', description: 'Follow Up', time: '2:30', img: profile },
-  ];
-
   const [patientsToday, setPatientsToday] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [selectedDate, setSelectedDate] = useState(dayjs());
 
-  useEffect(() => {
+useEffect(() => {
   const fetchAppointments = async () => {
     try {
       const token = localStorage.getItem('token');
-      const response = await fetch(`${API_URL}/api/doctor/todays-appointments`, {
+      const response = await fetch(`${API_URL}/api/doctor/todays-appointments?date=${selectedDate.format('YYYY-MM-DD')}`, {
+        method: 'POST',
         headers: {
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json'
@@ -69,34 +68,13 @@ function Dashboard() {
   };
 
   fetchAppointments();
-}, []);
+}, [selectedDate, API_URL]);
 
 const handleVideoCall = (meetLink) => {
   window.open(meetLink, '_blank');
 };
-  
-  const doctors = [
-    { name: 'Dr. Alex Brown', assignedWork: 'Medicine', completed: true, profilePic: doc },
-    { name: 'Dr. Emma Green', assignedWork: 'Consultation', completed: false, profilePic: profile },
-    { name: 'Dr. John Smith', assignedWork: 'Call log', completed: true, profilePic: cal1 },
-    { name: 'Dr. Alex Brown', assignedWork: 'Medicine', completed: true, profilePic: doc },
-    { name: 'Dr. Emma Green', assignedWork: 'Call log', completed: false, profilePic: profile },
-    { name: 'Dr. John Smith', assignedWork: 'Consultation', completed: true, profilePic: cal1 },
-    // Add more doctor data as needed
-  ];
 
-  const patientReviews = [
-    { name: 'Theron Trump', date: '2 days ago', rating: 4, review: 'Great service and care. Highly recommended!' },
-    { name: 'John Doe', date: '5 days ago', rating: 5, review: 'Excellent attention to detail and patient care.' },
-    // Add more review data if needed
-  ];
-  const payments = [
-    { name: 'Theron Trump', description: 'Kidney function test', date: 'Sunday, 16 May', amount: '$25.15', img: profile },
-    { name: 'John Doe', description: 'Emergency appointment', date: 'Sunday, 16 May', amount: '$99.15', img: doc },
-    { name: 'Sarah Johnson', description: 'Complementation test', date: 'Sunday, 16 May', amount: '$40.45', img: profile },
-    { name: 'Theron Trump', description: 'Kidney function test', date: 'Sunday, 16 May', amount: '$25.15', img: profile },
-    { name: 'John Doe', description: 'Emergency appointment', date: 'Sunday, 16 May', amount: '$99.15', img: doc },
-  ];
+
   const [notes, setNotes] = useState([]);
   const [newNote, setNewNote] = useState('');
   
@@ -109,97 +87,6 @@ const handleVideoCall = (meetLink) => {
     }
   };
 
-  // Handler for deleting a note
-  const deleteNote = (index) => {
-    const updatedNotes = notes.filter((_, i) => i !== index);
-    setNotes(updatedNotes);
-  };
-  const markAsDone = (index) => {
-    setNotes(
-      notes.map((note, i) => (i === index ? `✅ ${note}` : note)) // Adds a checkmark to the note
-    );
-  };
-  ChartJS.register(
-    CategoryScale,
-    LinearScale,
-    BarElement,
-    Title,
-    Tooltip,
-    Legend,
-    ArcElement // Register ArcElement for Pie chart
-  );
-
-  const barData = {
-    labels: [ 'May', 'Jun', 'Jul', 'Aug', 'Sep'],
-    datasets: [
-      {
-        label: 'Percentage (%)',
-        data:  [79, 75, 84,82 , 93,], // Example data
-        backgroundColor: 'rgba(75, 192, 192, 0.6)',
-        borderColor: 'rgba(75, 192, 192, 1)',
-        borderWidth: 1,
-      },
-    ],
-  };
-
-  const barOptions = {
-    responsive: true,
-    plugins: {
-      legend: {
-        position: 'top',
-      },
-      title: {
-        display: true,
-        text: 'Month vs Percentage',
-      },
-    },
-  };
-  
-  
-
-  const pieData = {
-    labels: ['Acute', 'Chronic'],
-    datasets: [
-      {
-        data: [27, 15],
-        backgroundColor: ['#FFB6C1', '#B0E0E6'], // Light pastel colors for Acute and Chronic
-        hoverBackgroundColor: ['#FF9AA2', '#A2D2FF'], // Hover colors
-      },
-    ],
-  };
-
-  const pieOptions = {
-    responsive: true,
-    plugins: {
-      legend: {
-        position: 'top',
-      },
-      tooltip: {
-        enabled: true,
-      },
-    },
-  };
-
-  
- 
-  
-  
-  const [currentDateIndex, setCurrentDateIndex] = useState(2);
-  const [dates, setDates] = useState(['Sat 7th', 'Sun 8th', 'Mon 9th', 'Tue 10th', 'Wed 11th', 'Thu 12th', 'Fri 13th']); // Initialize with dates
-
-  // Function to handle previous date navigation
-  const handlePrevDate = () => {
-    if (currentDateIndex > 0) {
-      setCurrentDateIndex(currentDateIndex - 1);
-    }
-  };
-
-  // Function to handle next date navigation
-  const handleNextDate = () => {
-    if (currentDateIndex < dates.length - 1) {
-      setCurrentDateIndex(currentDateIndex + 1);
-    }
-  };
   const doctorOptions = [
     { value: "dr_admin", label: "Self" },
     { value: "dr_smith", label: "Dr. Smith" },
@@ -207,30 +94,7 @@ const handleVideoCall = (meetLink) => {
     { value: "dr_brown", label: "Dr. Brown" },
   ];
   
-  // Sample patient data for Consultation, Medicine, and Prescription tables
-  const consultationPatients = [
-    { id: "C045", name: "John Doe", date: "2024-09-26", time: "10:00 AM", disease: "Fever", diseaseType: "Acute" },
-    { id: "C048", name: "Jane Doe", date: "2024-09-26", time: "11:00 AM", disease: "Heartattack", diseaseType: "Chronic" },
-    { id: "C049", name: "Jack Black", date: "2024-09-27", time: "01:00 PM", disease: "Diabetes", diseaseType: "Chronic" },
-    { id: "C050", name: "Jake White", date: "2024-09-27", time: "02:00 PM", disease: "flu", diseaseType: "acute" },
-  ];
-  
-  const medicinePatients = [
-    { id: "C049", name: "Jack Black", date: "2024-09-27", time: "01:00 PM", disease: "Diabetes", diseaseType: "Chronic" },
-    { id: "C050", name: "Jake White", date: "2024-09-27", time: "02:00 PM", disease: "flu", diseaseType: "acute" },
-    { id: "C051", name: "Emily Davis", date: "2024-09-28", time: "03:00 PM", disease: "Asthma", diseaseType: "Chronic" },
-    { id: "C0052", name: "Michael Brown", date: "2024-09-28", time: "04:00 PM", disease: "Arthritis", diseaseType: "Chronic" },
-  ];
-  
-  const prescriptionPatients = [
-    { id: "C051", name: "Emily Davis", date: "2024-09-28", time: "03:00 PM", disease: "Asthma", diseaseType: "Chronic" },
-    { id: "C052", name: "Michael Brown", date: "2024-09-28", time: "04:00 PM", disease: "Arthritis", diseaseType: "Chronic" },
-    { id: "C042", name: "Jack Black", date: "2024-09-27", time: "01:00 PM", disease: "Diabetes", diseaseType: "Chronic" },
-    { id: "C043", name: "Jake White", date: "2024-09-27", time: "02:00 PM", disease: "flu", diseaseType: "acute" },
-  ];
-  
-  
-    const [activeTab, setActiveTab] = useState("Consultation");
+
   
     // State to store selected doctor for each patient
     const [selectedDoctors, setSelectedDoctors] = useState({});
@@ -280,8 +144,8 @@ const handleVideoCall = (meetLink) => {
             </tr>
           ))}
         </tbody>
-      </table>
-    );
+      </table>
+    );
 
   return (
     <div>
@@ -315,7 +179,7 @@ const handleVideoCall = (meetLink) => {
   {/* Your Patients Today Container */}
   <div className="w-full p-4 bg-white rounded-lg shadow-lg">
   <div className="flex justify-between items-center mb-4">
-    <h2 className="text-lg text-gray-700 font-semibold">Your Patients Today</h2>
+    <h2 className="text-lg text-gray-700 font-semibold">Your Patients</h2>
     <button className="text-sm text-blue-600 hover:underline">See All</button>
   </div>
   <hr className="border-gray-200 mb-4" />
@@ -366,59 +230,25 @@ const handleVideoCall = (meetLink) => {
 </div>
 </div>
 
-    
-
-      {/* Upcoming Appointments */}
-      <div className="w-1/4 p-4 bg-white rounded-lg shadow-lg space-y-4">
-  <h2 className="text-lg mb-4 text-gray-700">Upcoming Appointments</h2>
-  <hr className="border-gray-200 mb-4" /> 
-
-  {/* Calendar Navigation */}
-  <div className="flex items-center justify-between mb-4 overflow-x-auto scrollbar-thin scrollbar-thumb-gray-100 scrollbar-track-white ">
-    <button onClick={handlePrevDate} disabled={currentDateIndex === 0} className="text-gray-500 p-2">
-      <FaArrowLeft />
-    </button>
-    <div className="flex items-center space-x-2">
-      {dates.slice(currentDateIndex, currentDateIndex + 5).map((date, index) => (
-        <button
-          key={index}
-          className={`px-4 py-2 rounded-lg ${index === 2 ? 'bg-blue-400 text-white' : 'bg-gray-100 text-gray-700'}`}
-          onClick={() => setCurrentDateIndex(index)}
-        >
-          {date}
-        </button>
-      ))}
-    </div>
-    <button onClick={handleNextDate} disabled={currentDateIndex === dates.length - 1} className="text-gray-500 p-2">
-      <FaArrowRight />
-    </button>
-  </div>
-
-
-
-        {/* Scrollable Appointment List */}
-        <ul className="space-y-3 overflow-y-auto max-h-96 scrollbar-thin scrollbar-thumb-gray-100 scrollbar-track-white">
-          {appointments.map((appt, index) => (
-            <li key={index} className="py-2 border-b border-gray-200 flex justify-between items-center">
-              <div className="flex items-center space-x-4">
-                <img src={appt.img} alt="Doctor" className="w-10 h-10 rounded-full" />
-                <div>
-                  <div className="font-medium text-black">{appt.name}</div>
-                  <div className="text-sm text-gray-800">{appt.description}</div>
-                  <div className="flex items-center mt-2 space-x-1">
-                    <FaClock className="text-gray-400" />
-                    <span className="text-sm text-gray-500">{appt.time}</span>
-                  </div>
-                </div>
-              </div>
-              <div className="flex flex-col items-center">
-                <button className="text-gray-500 mt-2">
-                  <FaEllipsisV />
-                </button>
-              </div>
-            </li>
-          ))}
-        </ul>
+      {/* Date Picker Section */}
+      <div className="w-80 bg-white rounded-lg shadow-lg overflow-hidden">
+        <div className="p-4 border-b border-gray-200">
+          <h2 className="text-lg text-gray-700 font-semibold">Select Date</h2>
+        </div>
+        
+        <LocalizationProvider dateAdapter={AdapterDayjs}>
+          <Box sx={{ width: '100%', paddingLeft: '4px', paddingRight: '16px', paddingTop: '8px', paddingBottom: '8px' }}>
+            <StaticDatePicker
+              displayStaticWrapperAs="desktop"
+              value={selectedDate}
+              onChange={(newValue) => setSelectedDate(newValue)}
+              slotProps={{
+                toolbar: { hidden: true },
+                actionBar: { hidden: true }
+              }}
+            />
+          </Box>
+        </LocalizationProvider>
       </div>
     </div>
 
@@ -428,18 +258,7 @@ const handleVideoCall = (meetLink) => {
  
 
   {/* Acute vs Chronic Patients */}
-  <div className="p-4 bg-white rounded-lg shadow-lg">
-  <h3 className="text-lg text-gray-700 mb-4">Acute vs Chronic Patients</h3>
-  <div className="w-48 h-48 mx-auto"> {/* Set width and height of the chart */}
-    <Pie data={pieData} options={pieOptions} />
-  </div>
-</div>
 
-  {/* Month vs Percentage */}
-  <div className="p-4 bg-white rounded-lg shadow-lg">
-    <h3 className="text-lg text-gray-700 mb-4">Inventry</h3>
-    <Bar data={barData} options={barOptions} />
-  </div>
 </div>
 </div>
 
@@ -450,4 +269,4 @@ const handleVideoCall = (meetLink) => {
   );
 };
 
-export default Dashboard;
+export default Dashboard;

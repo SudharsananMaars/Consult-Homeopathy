@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import axios from "axios";
 import config from "../../config";
 
@@ -6,6 +7,7 @@ const OrderHistory = () => {
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const navigate = useNavigate();
   const API_URL = config.API_URL;
 
   useEffect(() => {
@@ -25,6 +27,26 @@ const OrderHistory = () => {
     };
     fetchOrders();
   }, []);
+
+  const handleAddToRawMaterials = (item) => {
+    // Calculate total cost (unitPrice * quantity)
+    const totalCost = (parseFloat(item.unitPrice) || 0) * (parseFloat(item.quantity) || 0);
+    
+    // Create URL search params with the item data
+    const params = new URLSearchParams({
+      name: item.rawMaterialName || '',
+      vendorName: item.vendorName || '',
+      vendorPhone: item.vendorId?.phoneNumber || '',
+      vendorEmail: item.vendorId?.email || '',
+      costPerUnit: totalCost.toString(),
+      quantity: item.quantity || '',
+      currentQuantity: item.quantity || '', // Set current quantity same as ordered quantity initially
+      prefilled: 'true' // Flag to indicate this data is pre-filled
+    });
+
+    // Navigate to the raw materials form with pre-filled data
+    navigate(`/raw-materials/new?${params.toString()}`);
+  };
 
   if (loading)
     return (
@@ -86,9 +108,10 @@ const OrderHistory = () => {
                     <th className="px-4 py-2 text-left text-xs font-bold text-gray-700">Vendor Name</th>
                     <th className="px-4 py-2 text-left text-xs font-bold text-gray-700">Raw Material</th>
                     <th className="px-4 py-2 text-center text-xs font-bold text-gray-700">Quantity</th>
-                    <th className="px-4 py-2 text-center text-xs font-bold text-gray-700">Unit Price</th>
+                    <th className="px-4 py-2 text-center text-xs font-bold text-gray-700">Total Cost</th>
                     <th className="px-4 py-2 text-left text-xs font-bold text-gray-700">Vendor Email</th>
                     <th className="px-4 py-2 text-left text-xs font-bold text-gray-700">Vendor Phone</th>
+                    <th className="px-4 py-2 text-center text-xs font-bold text-gray-700">Actions</th>
                   </tr>
                 </thead>
                 <tbody className="bg-white divide-y divide-gray-100">
@@ -97,9 +120,31 @@ const OrderHistory = () => {
                       <td className="px-4 py-2 text-gray-800">{item.vendorName}</td>
                       <td className="px-4 py-2 text-gray-800">{item.rawMaterialName}</td>
                       <td className="px-4 py-2 text-gray-800 text-center">{item.quantity}</td>
-                      <td className="px-4 py-2 text-gray-800 text-center">₹{item.unitPrice}</td>
+                      <td className="px-4 py-2 text-gray-800 text-center">₹{(parseFloat(item.unitPrice) * parseFloat(item.quantity) || 0).toFixed(2)}</td>
                       <td className="px-4 py-2 text-gray-800">{item.vendorId.email}</td>
                       <td className="px-4 py-2 text-gray-800">{item.vendorId.phoneNumber}</td>
+                      <td className="px-4 py-2 text-center">
+                        <button
+                          onClick={() => handleAddToRawMaterials(item)}
+                          className="inline-flex items-center justify-center w-8 h-8 bg-green-100 hover:bg-green-200 text-green-600 hover:text-green-700 rounded-full transition-colors duration-200"
+                          title="Add to Raw Materials"
+                        >
+                          <svg
+                            xmlns="http://www.w3.org/2000/svg"
+                            fill="none"
+                            viewBox="0 0 24 24"
+                            strokeWidth={2}
+                            stroke="currentColor"
+                            className="w-5 h-5"
+                          >
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              d="M12 4.5v15m7.5-7.5h-15"
+                            />
+                          </svg>
+                        </button>
+                      </td>
                     </tr>
                   ))}
                 </tbody>

@@ -21,6 +21,9 @@ const NewAppointment = () => {
   const [timeSlots, setTimeSlots] = useState([]);
   const [isLoadingSlots, setIsLoadingSlots] = useState(false);
   const [paymentStatus, setPaymentStatus] = useState(null);
+  const [symptomInput, setSymptomInput] = useState('');
+ const [isAnalyzing, setIsAnalyzing] = useState(false);
+ const [analysisResult, setAnalysisResult] = useState(null);
 
   const [consultingForOptions, setConsultingForOptions] = useState([]);
   const [consultingFor, setConsultingFor] = useState(null);
@@ -367,6 +370,41 @@ const NewAppointment = () => {
     }
   };
 
+  const handleAnalyzeSymptom = async () => {
+  if (!symptomInput.trim()) return;
+  
+  setIsAnalyzing(true);
+  try {
+    const userId = localStorage.getItem('userId');
+    const token = localStorage.getItem('token'); 
+
+    const response = await fetch(`${API_URL}/api/groq/analyze`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`, 
+      },
+      body: JSON.stringify({
+        message: symptomInput,
+        patientId: userId
+      })
+    });
+    
+    const result = await response.json();
+    
+    if (result.success) {
+      setAnalysisResult(result.data);
+    } else {
+      console.error('Analysis failed:', result);
+    }
+  } catch (error) {
+    console.error('Error analyzing symptom:', error);
+  } finally {
+    setIsAnalyzing(false);
+  }
+};
+
+
   const verifyPayment = async (paymentResponse, appointmentId) => {
     try {
       const token = localStorage.getItem("token");
@@ -513,22 +551,38 @@ const NewAppointment = () => {
           </div>
 
           <div>
-            <label className="font-semibold block mb-2">
-              Consulting Reason
-            </label>
-            <Select
-              options={consultingReasonOptions}
-              value={consultingReason}
-              onChange={setConsultingReason}
-              placeholder="Select reason..."
-              isSearchable
-            />
-            {formErrors.consultingReason && (
-              <p className="text-red-500 text-sm mt-1">
-                {formErrors.consultingReason}
-              </p>
-            )}
-          </div>
+  <label className="font-semibold block mb-2">
+    Enter your symptoms
+  </label>
+  <div className="flex gap-2">
+    <input
+      type="text"
+      value={symptomInput}
+      onChange={(e) => setSymptomInput(e.target.value)}
+      className="flex-1 border rounded p-2"
+      placeholder="Describe your symptoms..."
+    />
+    <button
+      onClick={handleAnalyzeSymptom}
+      disabled={!symptomInput.trim() || isAnalyzing}
+      className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
+    >
+      {isAnalyzing ? "Analyzing..." : "Analyze"}
+    </button>
+  </div>
+  {formErrors.symptomInput && (
+    <p className="text-red-500 text-sm mt-1">
+      {formErrors.symptomInput}
+    </p>
+  )}
+  {analysisResult && (
+    <div className="mt-2 p-3 bg-green-50 border border-green-200 rounded">
+      <p className="text-sm text-green-800">
+        <strong>Classification:</strong> {analysisResult.classification}
+      </p>
+    </div>
+  )}
+</div>
 
           {consultingReason?.value === "Other" && (
             <div>

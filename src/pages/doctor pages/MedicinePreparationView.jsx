@@ -4,7 +4,8 @@ import moment from "moment";
 import config from "../../config";
 import { ChevronDown, Filter, ListFilter } from "lucide-react";
 import { InformationCircleIcon } from "@heroicons/react/24/outline";
-import { useParams, useNavigate } from "react-router-dom";
+import { useParams, useNavigate } from "react-router-dom"; 
+import referenceImgSrc from '../../assets/images/ReferenceImage.jpg';
 
 const MedicinePreparationView = () => {
   const [loading, setLoading] = useState(true);
@@ -40,6 +41,10 @@ const MedicinePreparationView = () => {
   const [postWeight, setPostWeight] = useState("");
   const [isRecording, setIsRecording] = useState(false);
   const [recordingTime, setRecordingTime] = useState(0);
+  const [cvReady, setCvReady] = useState(false);
+const [cameraVerified, setCameraVerified] = useState(false);
+const [verificationInProgress, setVerificationInProgress] = useState(false);
+const cameraStreamRef = useRef(null);
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedMedicine, setSelectedMedicine] = useState(null);
   const [showPostWeightModal, setShowPostWeightModal] = useState(false);
@@ -59,6 +64,12 @@ const MedicinePreparationView = () => {
   const [individualRawMaterialChecks, setIndividualRawMaterialChecks] = useState({}); 
   const [step3Check1, setStep3Check1] = useState(false);
   const [step3Check2, setStep3Check2] = useState(false);
+  const [statistics, setStatistics] = useState({
+  totalItems: 0,
+  completed: 0,
+  pending: 0,
+  attempts: 0
+});
   // New state for stock to be shelfed data
   const [stockToBeShelfedData, setStockToBeShelfedData] = useState({});
   const [hoveredMaterial, setHoveredMaterial] = useState(null);
@@ -230,6 +241,22 @@ useEffect(() => {
 }, [step]);
 
 useEffect(() => {
+  if (prescription?.prescriptionItems) {
+    const totalItems = prescription.prescriptionItems.length;
+    const completed = preparedMedicineIds.length;
+    const pending = totalItems - completed;
+    
+    setStatistics({
+      totalItems,
+      completed,
+      pending,
+      attempts: 0 // To be added later
+    });
+  }
+}, [prescription?.prescriptionItems, preparedMedicineIds]);
+
+
+useEffect(() => {
   if (step === 3) {
     setLoadingStep3Instructions(true);
     fetch(`${API_URL}/api/medicine-summary/get-all-instructions`)
@@ -250,18 +277,32 @@ useEffect(() => {
   }
 }, [step]);
 
-  const handleSelectMedicine = async (medicine) => {
-    if (!isRecording) {
-    await startRecording();
-  }
-    setSelectedMedicine(medicine);
-    setStep(1);
-    setCart([]);
-    // Fetch raw materials for the selected medicine
-    if (prescription && medicine.medicineName) {
-      await fetchRawMaterialsForMedicine(medicine.medicineName);
+useEffect(() => {
+  const checkCv = setInterval(() => {
+    if (window.cv && window.cv.Mat) {
+      clearInterval(checkCv);
+      setCvReady(true);
+      console.log("OpenCV.js loaded");
     }
-  };
+  }, 500);
+  return () => clearInterval(checkCv);
+}, []);
+
+
+const handleSelectMedicine = async (medicine) => {
+  setSelectedMedicine(medicine);
+  setStep(1);
+  setCart([]);
+  setCameraVerified(false); // Reset verification for new medicine
+  
+  if (!isRecording) {
+    await startRecording(); // This will now handle camera setup
+  }
+  
+  if (prescription && medicine.medicineName) {
+    await fetchRawMaterialsForMedicine(medicine.medicineName);
+  }
+};
 
   const handleScanClick = (item, source) => {
   setScanningMaterial(item);
@@ -271,6 +312,10 @@ useEffect(() => {
 };
 
 const handlePrepare = async () => {
+   if (!cameraVerified) {
+    alert("Please verify camera position before completing preparation.");
+    return;
+  }
   // Stop recording
   const videoBlob = await stopRecording(); // Ensure this returns the blob
 
@@ -321,14 +366,19 @@ const handlePrepare = async () => {
 };
 
 
-  const startRecording = async () => {
+const startRecording = async () => {
   try {
-    const stream = await navigator.mediaDevices.getUserMedia({ video: true });
+    const stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
+    cameraStreamRef.current = stream;
+
+    // Don't start recording immediately - first verify camera position
+    if (!cameraVerified) {
+      // Show camera feed for verification first
+      return;
+    }
+
     const recorder = new MediaRecorder(stream);
-
-
     recordedChunksRef.current = [];
-
 
     recorder.ondataavailable = (event) => {
       if (event.data.size > 0) {
@@ -342,7 +392,6 @@ const handlePrepare = async () => {
     setRecordingStream(stream);
     setIsRecording(true);
     setRecordingTime(0);
-
 
     // ✅ Clean up existing timer
     if (recordingTimerRef.current) {
@@ -363,11 +412,104 @@ const handlePrepare = async () => {
     };
 
   } catch (err) {
-    console.error("Failed to start recording:", err);
-    alert("Camera + mic access is needed to record.");
+    console.error("Failed to start camera/recording:", err);
+    alert("Camera + mic access is needed for verification and recording.");
   }
 };
 
+const verifyPosition = async () => {
+  if (!cvReady || !cameraStreamRef.current) return;
+  
+  setVerificationInProgress(true);
+  
+  try {
+    // Create video element for capture
+    const video = document.createElement('video');
+    video.srcObject = cameraStreamRef.current;
+    video.play();
+    
+    // Wait for video to be ready
+    await new Promise(resolve => {
+      video.onloadeddata = resolve;
+    });
+    
+    // Load reference image from your assets
+    const referenceImg = await loadImage(referenceImgSrc);
+    const refMat = window.cv.imread(referenceImg);
+    window.cv.cvtColor(refMat, refMat, window.cv.COLOR_RGBA2GRAY);
+    
+    // Capture current frame
+    const canvas = document.createElement('canvas');
+    canvas.width = video.videoWidth;
+    canvas.height = video.videoHeight;
+    const ctx = canvas.getContext('2d');
+    ctx.drawImage(video, 0, 0);
+    
+    const frameMat = window.cv.imread(canvas);
+    window.cv.cvtColor(frameMat, frameMat, window.cv.COLOR_RGBA2GRAY);
+    
+    // ORB feature detection and matching
+    const orb = new window.cv.ORB();
+    const kp1 = new window.cv.KeyPointVector();
+    const des1 = new window.cv.Mat();
+    orb.detectAndCompute(refMat, new window.cv.Mat(), kp1, des1);
+    
+    const kp2 = new window.cv.KeyPointVector();
+    const des2 = new window.cv.Mat();
+    orb.detectAndCompute(frameMat, new window.cv.Mat(), kp2, des2);
+    
+    if (des1.rows > 0 && des2.rows > 0) {
+      const bf = new window.cv.BFMatcher(window.cv.NORM_HAMMING, true);
+      const matches = new window.cv.DMatchVector();
+      bf.match(des1, des2, matches);
+      
+      const totalMatches = matches.size();
+      let goodMatches = 0;
+      for (let i = 0; i < totalMatches; i++) {
+        const m = matches.get(i);
+        if (m.distance < 50) goodMatches++;
+      }
+      
+      const similarity = totalMatches > 0 ? goodMatches / totalMatches : 0;
+      
+      if (similarity > 0.2) {
+        setCameraVerified(true);
+        alert("Camera position verified! You can now start recording.");
+      } else {
+        alert("Please adjust the camera to match the reference position.");
+        setCameraVerified(false);
+      }
+      
+      bf.delete();
+      matches.delete();
+    }
+    
+    // Cleanup
+    refMat.delete();
+    frameMat.delete();
+    des1.delete();
+    des2.delete();
+    kp1.delete();
+    kp2.delete();
+    orb.delete();
+    
+  } catch (err) {
+    console.error("Verification error:", err);
+    alert("Camera verification failed. Please try again.");
+  } finally {
+    setVerificationInProgress(false);
+  }
+};
+
+const loadImage = (src) => {
+  return new Promise((resolve, reject) => {
+    const img = new Image();
+    img.crossOrigin = "anonymous";
+    img.src = src;
+    img.onload = () => resolve(img);
+    img.onerror = reject;
+  });
+};
 
 
 const stopRecording = () => {
@@ -573,6 +715,30 @@ const stopRecording = () => {
       </span>
     </div>
   )}
+
+  {/* After your existing recording indicator */}
+{cameraStreamRef.current && !cameraVerified && (
+  <div className="flex items-center gap-2 text-yellow-600 font-semibold text-sm mb-2">
+    <span> Camera ready - Please verify position before recording</span>
+    {cvReady && (
+      <button
+        onClick={verifyPosition}
+        disabled={verificationInProgress}
+        className="px-3 py-1 bg-yellow-500 text-white rounded text-xs hover:bg-yellow-600"
+      >
+        {verificationInProgress ? "Verifying..." : "Verify Position"}
+      </button>
+    )}
+  </div>
+)}
+
+{cameraVerified && (
+  <div className="flex items-center gap-2 text-green-600 font-semibold text-sm mb-2">
+    <span>✅ Camera position verified</span>
+  </div>
+)}
+
+
   <div className="h-4"></div>
   {step > 0 && (
       <div className="mb-8">
@@ -604,23 +770,23 @@ const stopRecording = () => {
       <div className="bg-white p-6 shadow-sm">
         {/* Statistics Cards */}
         <div className="grid grid-cols-4 gap-6 mb-6">
-          <div className="p-4 rounded-lg border bg-[#3489FD4D] border-gray-200 text-center">
-            <h3 className="text-sm font-bold mb-2 text-[#3489FD]">Total Items</h3>
-            <p className="text-2xl font-semibold text-[#3489FD]">2</p>
-          </div>
-          <div className="p-4 rounded-lg border bg-[#22C55E4D] border-gray-200 text-center">
-            <h3 className="text-sm text-[#22C55E] mb-2 text-[18px] font-bold">Completed</h3>
-            <p className="text-2xl font-semibold text-[#22C55E]">1</p>
-          </div>
-          <div className="p-4 rounded-lg border bg-[#EFBB554D] border-gray-200 text-center">
-            <h3 className="text-sm text-[#EFBB55] mb-2 text-[18px] font-bold">Pending</h3>
-            <p className="text-2xl font-semibold text-[#EFBB55]">1</p>
-          </div>
-          <div className="p-4 rounded-lg border bg-[#F031314D] border-gray-200 text-center">
-            <h3 className="text-sm text-[#F03131] mb-2 text-[18px] font-bold">Attempts</h3>
-            <p className="text-2xl font-semibold text-[#F03131]">0</p>
-          </div>
-        </div>
+  <div className="p-4 rounded-lg border bg-[#3489FD4D] border-gray-200 text-center">
+    <h3 className="text-sm font-bold mb-2 text-[#3489FD]">Total Items</h3>
+    <p className="text-2xl font-semibold text-[#3489FD]">{statistics.totalItems}</p>
+  </div>
+  <div className="p-4 rounded-lg border bg-[#22C55E4D] border-gray-200 text-center">
+    <h3 className="text-sm text-[#22C55E] mb-2 text-[18px] font-bold">Completed</h3>
+    <p className="text-2xl font-semibold text-[#22C55E]">{statistics.completed}</p>
+  </div>
+  <div className="p-4 rounded-lg border bg-[#EFBB554D] border-gray-200 text-center">
+    <h3 className="text-sm text-[#EFBB55] mb-2 text-[18px] font-bold">Pending</h3>
+    <p className="text-2xl font-semibold text-[#EFBB55]">{statistics.pending}</p>
+  </div>
+  <div className="p-4 rounded-lg border bg-[#F031314D] border-gray-200 text-center">
+    <h3 className="text-sm text-[#F03131] mb-2 text-[18px] font-bold">Attempts</h3>
+    <p className="text-2xl font-semibold text-[#F03131]">{statistics.attempts}</p>
+  </div>
+</div>
       </div>
   {/* Main Content */}
   <div className="bg-white rounded-lg shadow-sm p-6">
