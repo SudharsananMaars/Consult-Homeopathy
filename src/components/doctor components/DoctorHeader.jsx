@@ -1,28 +1,30 @@
 import React, { useState, useEffect } from "react";
-import { 
-  AppBar, 
-  Toolbar, 
-  Box, 
-  IconButton, 
-  Button, 
-  Typography, 
-  Menu, 
-  MenuItem, 
+import {
+  AppBar,
+  Toolbar,
+  Box,
+  IconButton,
+  Badge,
+  Button,
+  Typography,
+  Menu,
+  MenuItem,
   Chip,
-  Stack
+  Stack,
 } from "@mui/material";
-import { 
-  AccountCircle, 
-  Message, 
-  Notifications, 
-  CalendarToday, 
-  KeyboardArrowDown 
+import {
+  AccountCircle,
+  Message,
+  Notifications,
+  CalendarToday,
+  KeyboardArrowDown,
 } from "@mui/icons-material";
 import { useNavigate } from "react-router-dom";
 import DoctorNotification from "./DoctorNotification";
 import DoctorMessenger from "./DoctorMessenger";
 import axios from "axios";
 import config from "../../config";
+import { useUnreadCount } from "../../contexts/UnreadCountContext";
 
 const API_URL = config.API_URL;
 
@@ -34,7 +36,7 @@ const Header = () => {
 
   const [showNotification, setShowNotification] = useState(false);
   const [showMessenger, setShowMessenger] = useState(false);
-  
+
   // Month dropdown state
   const [selectedMonth, setSelectedMonth] = useState("Month");
   const [monthAnchorEl, setMonthAnchorEl] = useState(null);
@@ -47,19 +49,57 @@ const Header = () => {
   const [startTime, setStartTime] = useState(null);
 
   const doctorId = localStorage.getItem("token");
+  const { totalUnread, setUnreadCounts } = useUnreadCount();
 
   // Months array
   const months = [
-    "January", "February", "March", "April", "May", "June",
-    "July", "August", "September", "October", "November", "December"
+    "January",
+    "February",
+    "March",
+    "April",
+    "May",
+    "June",
+    "July",
+    "August",
+    "September",
+    "October",
+    "November",
+    "December",
   ];
+
+  const fetchPatients = async () => {
+    const token = localStorage.getItem("token");
+    try {
+      const response = await axios.get(
+        // `${API_URL}/api/doctor/getAppointedPatients?id=${userId}`,
+
+        `https://maars-2.onrender.com/api/doctor/chatPatientWithDoctorAndIsReadCount`,
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        }
+      );
+      const counts = {};
+      response.data.unreadCounts.forEach((item) => {
+        counts[item.patientId] = item.isReadFalseCount;
+      });
+      setUnreadCounts(counts);
+    } catch (error) {
+      console.error("Failed to fetch patients:", error);
+    }
+  };
+
+  useEffect(() => {
+    fetchPatients();
+  }, []);
 
   useEffect(() => {
     if (!doctorId) return;
 
-    const storedIsCheckedIn = localStorage.getItem(`${doctorId}_isCheckedIn`) === "true";
+    const storedIsCheckedIn =
+      localStorage.getItem(`${doctorId}_isCheckedIn`) === "true";
     const storedStartTime = localStorage.getItem(`${doctorId}_startTime`);
-    const storedPausedTime = parseInt(localStorage.getItem(`${doctorId}_pausedTimer`), 10) || 0;
+    const storedPausedTime =
+      parseInt(localStorage.getItem(`${doctorId}_pausedTimer`), 10) || 0;
 
     if (storedIsCheckedIn) {
       const startTimestamp = Number(storedStartTime);
@@ -89,7 +129,10 @@ const Header = () => {
     const hours = Math.floor(seconds / 3600);
     const minutes = Math.floor((seconds % 3600) / 60);
     const secs = seconds % 60;
-    return `${String(hours).padStart(2, "0")}:${String(minutes).padStart(2, "0")}:${String(secs).padStart(2, "0")}`;
+    return `${String(hours).padStart(2, "0")}:${String(minutes).padStart(
+      2,
+      "0"
+    )}:${String(secs).padStart(2, "0")}`;
   };
 
   const handleCheckIn = async () => {
@@ -105,7 +148,8 @@ const Header = () => {
         return;
       }
 
-      const pausedTime = parseInt(localStorage.getItem(`${doctorId}_pausedTimer`), 10) || 0;
+      const pausedTime =
+        parseInt(localStorage.getItem(`${doctorId}_pausedTimer`), 10) || 0;
 
       const response = await axios.post(
         `${API_URL}/api/attendance/checkin`,
@@ -116,7 +160,7 @@ const Header = () => {
           },
         }
       );
-    
+
       setIsCheckedIn(true);
       const startTimestamp = Date.now();
       setStartTime(startTimestamp);
@@ -165,7 +209,10 @@ const Header = () => {
       const { totalElapsedTime, breakTime } = response.data;
 
       const currentTimerValue = timer;
-      localStorage.setItem(`${doctorId}_pausedTimer`, currentTimerValue.toString());
+      localStorage.setItem(
+        `${doctorId}_pausedTimer`,
+        currentTimerValue.toString()
+      );
 
       setElapsedTime(totalElapsedTime);
       setIsCheckedIn(false);
@@ -180,7 +227,7 @@ const Header = () => {
       console.error("Error during check-out:", error);
     }
   };
-  
+
   const handleNotify = () => {
     setIsNotifyActive(!isNotifyActive);
     setShowNotification(!showNotification);
@@ -214,55 +261,69 @@ const Header = () => {
   };
 
   return (
-    <AppBar 
-      position="static" 
+    <AppBar
+      position="static"
       elevation={1}
-      sx={{ 
-        backgroundColor: '#EFF6FF',
-        borderBottom: '1px solid #EFF6FF'
+      sx={{
+        backgroundColor: "#EFF6FF",
+        borderBottom: "1px solid #EFF6FF",
       }}
     >
-      <Toolbar sx={{ justifyContent: 'space-between', minHeight: '64px !important', px: 3 }}>
+      <Toolbar
+        sx={{
+          justifyContent: "space-between",
+          minHeight: "64px !important",
+          px: 3,
+        }}
+      >
         {/* Left section - Working Hours Display (only when checked in) */}
-        <Box sx={{ flex: 1, display: 'flex', alignItems: 'center' }}>
+        <Box sx={{ flex: 1, display: "flex", alignItems: "center" }}>
           {isCheckedIn && (
             <Stack direction="row" spacing={2} alignItems="center">
-              <Typography 
-                variant="body2" 
-                sx={{ 
-                  color: '#1e293b',
+              <Typography
+                variant="body2"
+                sx={{
+                  color: "#1e293b",
                   fontWeight: 600,
-                  display: { xs: 'none', sm: 'block' }
+                  display: { xs: "none", sm: "block" },
                 }}
               >
-                Total Working Hours: <Box component="span" sx={{ fontWeight: 700 }}>{formatTime(timer)}</Box>
+                Total Working Hours:{" "}
+                <Box component="span" sx={{ fontWeight: 700 }}>
+                  {formatTime(timer)}
+                </Box>
               </Typography>
-              <Typography 
-                variant="body2" 
-                sx={{ 
-                  color: '#1e293b',
+              <Typography
+                variant="body2"
+                sx={{
+                  color: "#1e293b",
                   fontWeight: 600,
-                  display: { xs: 'block', sm: 'none' }
+                  display: { xs: "block", sm: "none" },
                 }}
               >
-                Time: <Box component="span" sx={{ fontWeight: 700 }}>{formatTime(timer)}</Box>
+                Time:{" "}
+                <Box component="span" sx={{ fontWeight: 700 }}>
+                  {formatTime(timer)}
+                </Box>
               </Typography>
               <Button
                 onClick={handleCheckOut}
                 variant="contained"
                 size="small"
                 sx={{
-                  backgroundColor: '#ef4444',
-                  '&:hover': {
-                    backgroundColor: '#dc2626'
+                  backgroundColor: "#ef4444",
+                  "&:hover": {
+                    backgroundColor: "#dc2626",
                   },
-                  textTransform: 'none',
+                  textTransform: "none",
                   fontWeight: 600,
-                  px: 2
+                  px: 2,
                 }}
               >
-                <Box sx={{ display: { xs: 'none', sm: 'block' } }}>Check Out</Box>
-                <Box sx={{ display: { xs: 'block', sm: 'none' } }}>Out</Box>
+                <Box sx={{ display: { xs: "none", sm: "block" } }}>
+                  Check Out
+                </Box>
+                <Box sx={{ display: { xs: "block", sm: "none" } }}>Out</Box>
               </Button>
             </Stack>
           )}
@@ -277,17 +338,17 @@ const Header = () => {
             startIcon={<CalendarToday />}
             endIcon={<KeyboardArrowDown />}
             sx={{
-              backgroundColor: 'white',
-              borderColor: '#d1d5db',
-              color: '#374151',
-              textTransform: 'none',
+              backgroundColor: "white",
+              borderColor: "#d1d5db",
+              color: "#374151",
+              textTransform: "none",
               fontWeight: 500,
-              '&:hover': {
-                backgroundColor: '#EFF6FF',
-                borderColor: '#d1d5db'
+              "&:hover": {
+                backgroundColor: "#EFF6FF",
+                borderColor: "#d1d5db",
               },
               px: 2,
-              py: 1
+              py: 1,
             }}
           >
             {selectedMonth}
@@ -302,8 +363,8 @@ const Header = () => {
                 mt: 1,
                 maxHeight: 240,
                 width: 160,
-                boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)'
-              }
+                boxShadow: "0 4px 6px -1px rgb(0 0 0 / 0.1)",
+              },
             }}
           >
             {months.map((month, index) => (
@@ -311,11 +372,11 @@ const Header = () => {
                 key={index}
                 onClick={() => handleMonthSelect(month)}
                 sx={{
-                  fontSize: '0.875rem',
+                  fontSize: "0.875rem",
                   py: 1,
-                  '&:hover': {
-                    backgroundColor: '#EFF6FF'
-                  }
+                  "&:hover": {
+                    backgroundColor: "#EFF6FF",
+                  },
                 }}
               >
                 {month}
@@ -324,35 +385,45 @@ const Header = () => {
           </Menu>
 
           {/* Action Buttons */}
-          <IconButton
-            onClick={handleMessage}
-            sx={{
-              backgroundColor: 'white',
-              boxShadow: '0 1px 3px 0 rgb(0 0 0 / 0.1)',
-              color: '#6b7280',
-              '&:hover': {
-                backgroundColor: '#EFF6FF',
-                color: '#374151'
-              },
-              width: 44,
-              height: 44
+          <Badge
+            badgeContent={totalUnread}
+            color="error"
+            overlap="circular"
+            anchorOrigin={{
+              vertical: "top",
+              horizontal: "right",
             }}
           >
-            <Message />
-          </IconButton>
+            <IconButton
+              onClick={handleMessage}
+              sx={{
+                backgroundColor: "white",
+                boxShadow: "0 1px 3px 0 rgb(0 0 0 / 0.1)",
+                color: "#6b7280",
+                "&:hover": {
+                  backgroundColor: "#EFF6FF",
+                  color: "#374151",
+                },
+                width: 44,
+                height: 44,
+              }}
+            >
+              <Message />
+            </IconButton>
+          </Badge>
 
           <IconButton
             onClick={handleNotify}
             sx={{
-              backgroundColor: 'white',
-              boxShadow: '0 1px 3px 0 rgb(0 0 0 / 0.1)',
-              color: '#6b7280',
-              '&:hover': {
-                backgroundColor: '#EFF6FF',
-                color: '#374151'
+              backgroundColor: "white",
+              boxShadow: "0 1px 3px 0 rgb(0 0 0 / 0.1)",
+              color: "#6b7280",
+              "&:hover": {
+                backgroundColor: "#EFF6FF",
+                color: "#374151",
               },
               width: 44,
-              height: 44
+              height: 44,
             }}
           >
             <Notifications />
@@ -361,15 +432,15 @@ const Header = () => {
           <IconButton
             onClick={handleProfile}
             sx={{
-              backgroundColor: 'white',
-              boxShadow: '0 1px 3px 0 rgb(0 0 0 / 0.1)',
-              color: '#6b7280',
-              '&:hover': {
-                backgroundColor: '#EFF6FF',
-                color: '#000000ff'
+              backgroundColor: "white",
+              boxShadow: "0 1px 3px 0 rgb(0 0 0 / 0.1)",
+              color: "#6b7280",
+              "&:hover": {
+                backgroundColor: "#EFF6FF",
+                color: "#000000ff",
               },
               width: 44,
-              height: 44
+              height: 44,
             }}
           >
             <AccountCircle />
@@ -378,7 +449,12 @@ const Header = () => {
       </Toolbar>
 
       {/* Conditionally Render Messenger Popup */}
-      {showMessenger && <DoctorMessenger toggleMessenger={handleMessage} isVisible={showMessenger}/>}
+      {showMessenger && (
+        <DoctorMessenger
+          toggleMessenger={handleMessage}
+          isVisible={showMessenger}
+        />
+      )}
 
       {/* Conditionally Render Notification Popup */}
       {showNotification && <DoctorNotification togglePopup={handleNotify} />}

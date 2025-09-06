@@ -21,6 +21,7 @@ import PatientInfoModal from "./PatientInfoModal";
 import config from "../../config";
 import { format, isToday, isYesterday } from "date-fns";
 import { useSocket } from "../../contexts/SocketProvider";
+import { useUnreadCount } from "../../contexts/UnreadCountContext";
 
 const API_URL = config.API_URL;
 
@@ -47,7 +48,8 @@ function DoctorMessenger() {
   const [isSavingNote, setIsSavingNote] = useState(false);
   const [noteSaveStatus, setNoteSaveStatus] = useState(""); // 'success', 'error', or ''
   const [existingNotes, setExistingNotes] = useState({}); // Store notes for each patient
-  const [unreadCounts, setUnreadCounts] = useState({});
+  const { unreadCounts, setUnreadCounts } = useUnreadCount();
+
   // const [selectedPatientId, setSelectedPatientId] = useState(null);
 
   const socketRef = useRef(null);
@@ -517,7 +519,7 @@ function DoctorMessenger() {
         `https://maars-2.onrender.com/api/doctorAppointmentSettings/updateReadOptionForTheQuestions/${msgId}`,
         {
           isRead: true,
-        }, 
+        },
         {
           headers: {
             Authorization: `Bearer ${token}`,
@@ -1020,20 +1022,16 @@ function DoctorMessenger() {
                         )}
                       </div>
 
-                      <p className="text-xs text-gray-600 mb-2 line-clamp-2">
-                        Need consultation for severe headache
-                      </p>
-
                       <div className="flex items-center justify-between">
                         <span className="text-xs px-2 py-1 rounded-full bg-red-100 text-red-700">
                           Acute
                         </span>
-                        <div className="flex items-center gap-1">
+                        {/* <div className="flex items-center gap-1">
                           <span className="text-xs text-gray-500">📋</span>
                           <span className="text-xs text-gray-500">
                             Medical Query
                           </span>
-                        </div>
+                        </div> */}
                       </div>
                     </div>
                   </div>

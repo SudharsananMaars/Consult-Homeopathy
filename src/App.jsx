@@ -9,6 +9,7 @@ import {
 } from "react-router-dom";
 
 import { SocketProvider } from "./contexts/SocketProvider.jsx";
+import { UnreadCountProvider } from "./contexts/UnreadCountContext.jsx";
 import Layout from "./components/patient components/Layout.jsx";
 import RecentAppointments from "./components/patient components/RecentAppointments.jsx";
 import UpcomingAppointments from "./components/patient components/UpcomingAppointments.jsx";
@@ -998,6 +999,7 @@ function App() {
   };
   return (
     <div>
+      <UnreadCountProvider>
         <SocketProvider>
           <ErrorBoundary FallbackComponent={ErrorFallback}>
             <AuthProvider>
@@ -1005,6 +1007,7 @@ function App() {
             </AuthProvider>
           </ErrorBoundary>
         </SocketProvider>
+      </UnreadCountProvider>
     </div>
   );
 }
