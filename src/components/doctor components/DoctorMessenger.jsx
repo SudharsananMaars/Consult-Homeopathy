@@ -483,7 +483,7 @@ function DoctorMessenger() {
         // `${API_URL}/api/doctor/getAppointedPatients?id=${userId}`,
 
         `https://maars-2.onrender.com
-/api/doctor/chatPatientWithDoctor`,
+/api/doctor/chatPatientWithDoctorAndIsReadCount`,
         {
           headers: { Authorization: `Bearer ${token}` },
         }
@@ -493,6 +493,11 @@ function DoctorMessenger() {
         messages
       );
       setPatients(sorted);
+      const counts = {};
+      response.data.unreadCounts.forEach((item) => {
+        counts[item.patientId] = item.isReadFalseCount;
+      });
+      setUnreadCounts(counts);
       if (sorted.length > 0) setActiveChat(sorted[0]._id);
     } catch (error) {
       console.error("Failed to fetch patients:", error);
@@ -503,6 +508,42 @@ function DoctorMessenger() {
   useEffect(() => {
     fetchPatients();
   }, [userId]);
+
+  const updateMsgRead = async (patientId, msgId) => {
+    try {
+      const token = localStorage.getItem("token");
+
+      const response = await axios.patch(
+        `https://maars-2.onrender.com/api/doctorAppointmentSettings/updateReadOptionForTheQuestions/${msgId}`,
+        {
+          isRead: true,
+        }, 
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+          },
+        }
+      );
+
+      if (response.data.success) {
+        // ✅ update unread count in state
+        setUnreadCounts((prev) => {
+          const currentCount = prev[patientId] || 0;
+          return {
+            ...prev,
+            [patientId]: Math.max(currentCount - 1, 0), // don't go below 0
+          };
+        });
+      }
+
+      console.log("Message marked as read:", response.data);
+      return response.data;
+    } catch (error) {
+      console.error("Failed to update message read status:", error);
+      return null;
+    }
+  };
 
   // Fetch chat history whenever activeChat changes
   useEffect(() => {
@@ -517,17 +558,16 @@ function DoctorMessenger() {
             headers: { Authorization: `Bearer ${token}` },
           }
         );
-        setMessages(response.data);
-        const counts = {};
 
-        response.data.forEach((msg) => {
+        const fetchedMessages = response.data;
+        setMessages(fetchedMessages);
+
+        // ✅ For each message, mark as read if necessary
+        for (const msg of fetchedMessages) {
           if (msg.receiver === userId && msg.isRead === false) {
-            counts[msg.sender] = (counts[msg.sender] || 0) + 1;
+            await updateMsgRead(activeChat, msg._id); // patientId = activeChat, msgId = msg._id
           }
-        });
-
-        setUnreadCounts(counts);
-        
+        }
       } catch (error) {
         console.error("Failed to fetch chat history:", error);
         setMessages([]);

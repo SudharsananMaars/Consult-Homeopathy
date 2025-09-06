@@ -814,7 +814,7 @@ Would you like to continue the conversation or schedule a fresh appointment?`,
       }
 
       const token = localStorage.getItem("token");
-      const res = await axios.post(
+      const res = await axios.get(
         `https://maars-2.onrender.com
 /api/doctorAppointmentSettings/displayTheCreatedQuestionsForTheQuery/${matchedType._id}`,
         { headers: { Authorization: `Bearer ${token}` } }
