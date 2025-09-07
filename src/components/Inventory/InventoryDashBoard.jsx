@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { api } from './services/api';
 
@@ -15,7 +15,12 @@ const InventoryDashboard = () => {
   const [showBarcodeModal, setShowBarcodeModal] = useState(false);
   const [barcodeInput, setBarcodeInput] = useState('');
   const [showAddRawMaterialModal, setShowAddRawMaterialModal] = useState(false);
+  const [isScanning, setIsScanning] = useState(false);
+  const [scanningError, setScanningError] = useState(null);
   
+  const barcodeInputRef = useRef(null);
+  const scanTimeoutRef = useRef(null);
+  const lastScanRef = useRef('');
 
   const navigate = useNavigate();
 
@@ -61,18 +66,94 @@ const InventoryDashboard = () => {
     fetchData();
   }, []);
 
+  // Barcode scanner listener
+  useEffect(() => {
+    if (!isScanning) return;
+
+    const handleKeyPress = (event) => {
+      // Prevent default behavior for scanner input
+      if (event.target === barcodeInputRef.current) return;
+
+      // Clear any existing timeout
+      if (scanTimeoutRef.current) {
+        clearTimeout(scanTimeoutRef.current);
+      }
+
+      // If it's Enter key, process the scanned barcode
+      if (event.key === 'Enter') {
+        if (lastScanRef.current.trim()) {
+          setBarcodeInput(lastScanRef.current.trim());
+          lastScanRef.current = '';
+          setScanningError(null);
+          // Auto-submit after scanning
+          setTimeout(() => {
+            if (lastScanRef.current.trim() || barcodeInput.trim()) {
+              const finalBarcode = lastScanRef.current.trim() || barcodeInput.trim();
+              navigate(`/barcode-details/${encodeURIComponent(finalBarcode)}`);
+              setShowBarcodeModal(false);
+              setBarcodeInput('');
+              setIsScanning(false);
+            }
+          }, 100);
+        }
+        return;
+      }
+
+      // Add character to scan buffer if it's a printable character
+      if (event.key.length === 1) {
+        lastScanRef.current += event.key;
+        
+        // Set timeout to clear scan buffer if no more input
+        scanTimeoutRef.current = setTimeout(() => {
+          lastScanRef.current = '';
+        }, 100);
+      }
+    };
+
+    document.addEventListener('keydown', handleKeyPress);
+    
+    return () => {
+      document.removeEventListener('keydown', handleKeyPress);
+      if (scanTimeoutRef.current) {
+        clearTimeout(scanTimeoutRef.current);
+      }
+    };
+  }, [isScanning, barcodeInput, navigate]);
+
   const handleBarcodeSubmit = (e) => {
     e.preventDefault();
     if (barcodeInput.trim()) {
       navigate(`/barcode-details/${encodeURIComponent(barcodeInput.trim())}`);
       setShowBarcodeModal(false);
       setBarcodeInput('');
+      setIsScanning(false);
     }
   };
 
   const closeBarcodeModal = () => {
     setShowBarcodeModal(false);
     setBarcodeInput('');
+    setIsScanning(false);
+    setScanningError(null);
+    lastScanRef.current = '';
+    if (scanTimeoutRef.current) {
+      clearTimeout(scanTimeoutRef.current);
+    }
+  };
+
+  const startScanning = () => {
+    setIsScanning(true);
+    setScanningError(null);
+    setBarcodeInput('');
+    lastScanRef.current = '';
+  };
+
+  const stopScanning = () => {
+    setIsScanning(false);
+    lastScanRef.current = '';
+    if (scanTimeoutRef.current) {
+      clearTimeout(scanTimeoutRef.current);
+    }
   };
 
   const closeAddRawMaterialModal = () => {
@@ -153,8 +234,6 @@ const InventoryDashboard = () => {
         </div>
       </div>
 
-      {/* Leakage Alert Section */}
-
       {/* Add Raw Material Modal */}
       {showAddRawMaterialModal && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
@@ -190,12 +269,12 @@ const InventoryDashboard = () => {
         </div>
       )}
       
-      {/* Barcode Modal */}
+      {/* Enhanced Barcode Modal with Scanner Support */}
       {showBarcodeModal && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
           <div className="bg-white rounded-2xl shadow-2xl p-6 w-full max-w-md mx-4">
             <div className="flex justify-between items-center mb-4">
-              <h3 className="text-xl font-semibold text-gray-800">Enter Barcode</h3>
+              <h3 className="text-xl font-semibold text-gray-800">Scan or Enter Barcode</h3>
               <button 
                 onClick={closeBarcodeModal}
                 className="text-gray-400 hover:text-gray-600 text-2xl font-bold"
@@ -203,21 +282,62 @@ const InventoryDashboard = () => {
                 ×
               </button>
             </div>
+
+            {/* Scanner Controls */}
+            <div className="mb-4 p-3 bg-gray-50 rounded-lg">
+              <div className="flex flex-col gap-2">
+                <div className="flex items-center justify-between">
+                  <span className="text-sm font-medium text-gray-700">Barcode Scanner:</span>
+                  <div className="flex gap-2">
+                    {!isScanning ? (
+                      <button
+                        onClick={startScanning}
+                        className="px-3 py-1 bg-green-600 text-white text-xs rounded hover:bg-green-700"
+                      >
+                        Start Scanning
+                      </button>
+                    ) : (
+                      <button
+                        onClick={stopScanning}
+                        className="px-3 py-1 bg-red-600 text-white text-xs rounded hover:bg-red-700"
+                      >
+                        Stop Scanning
+                      </button>
+                    )}
+                  </div>
+                </div>
+                
+                {isScanning && (
+                  <div className="flex items-center gap-2 text-green-600">
+                    <div className="w-2 h-2 bg-green-600 rounded-full animate-pulse"></div>
+                    <span className="text-xs">Scanner ready - scan barcode now</span>
+                  </div>
+                )}
+                
+                {scanningError && (
+                  <div className="text-red-600 text-xs">{scanningError}</div>
+                )}
+              </div>
+            </div>
             
             <form onSubmit={handleBarcodeSubmit}>
               <div className="mb-4">
                 <label htmlFor="barcode" className="block text-sm font-medium text-gray-700 mb-2">
-                  Barcode Number
+                  Barcode Number (Manual Entry)
                 </label>
                 <input
+                  ref={barcodeInputRef}
                   type="text"
                   id="barcode"
                   value={barcodeInput}
                   onChange={(e) => setBarcodeInput(e.target.value)}
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
-                  placeholder="Enter barcode here..."
-                  autoFocus
+                  placeholder="Enter barcode here or use scanner above..."
+                  disabled={isScanning}
                 />
+                {isScanning && (
+                  <p className="text-xs text-gray-500 mt-1">Manual input disabled while scanning</p>
+                )}
               </div>
               
               <div className="flex gap-3 justify-end">
@@ -230,7 +350,8 @@ const InventoryDashboard = () => {
                 </button>
                 <button
                   type="submit"
-                  className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700"
+                  disabled={!barcodeInput.trim()}
+                  className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:bg-gray-400 disabled:cursor-not-allowed"
                 >
                   Search
                 </button>

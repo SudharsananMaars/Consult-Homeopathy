@@ -2,7 +2,6 @@ import React, { useState , useEffect} from 'react';
 import profile from '/src/assets/images/doctor images/profile.jpg';
 import doc from '/src/assets/images/doctor images/doc.jpg';
 import Online_Doctor from '/src/assets/images/doctor images/Online_Doctor.jpg';
-import AssisstentDoctors from '/src/assets/images/doctor images/AssisstentDoctors.jpg';
 import Consultation from '/src/assets/images/doctor images/Consultation.jpg';
 import cal1 from '/src/assets/images/doctor images/cal1.jpg';
 import config from "../../config";
@@ -22,11 +21,10 @@ ChartJS.register(ArcElement, Tooltip, Legend);
 function Dashboard() {
   const API_URL = config.API_URL;
   const overviewCards = [
-    { title: 'Today Appointment', count: '5', color: 'bg-blue-100', image: cal1 },
-    { title: 'Total Patients', count: '57', color: 'bg-indigo-100', image: Online_Doctor },
-    { title: 'Consultations', count: '62', color: 'bg-pink-100', image: Consultation },
-    { title: 'Assistant Doctors', count: '3', color: 'bg-yellow-100', image: AssisstentDoctors },
-    { title: 'Inventory', count: '75%', color: 'bg-red-100', image: AssisstentDoctors },
+    { title: 'Total Appointment', count: '5', color: 'bg-blue-50 border-l-4 border-blue-500', image: cal1 },
+    { title: 'Total Patients', count: '57', color: 'bg-yellow-50 border-l-4 border-yellow-500', image: Online_Doctor },
+    { title: 'Consultations', count: '62', color: 'bg-pink-50 border-l-4 border-pink-500', image: Consultation },
+    { title: 'Inventory', count: '75%', color: 'bg-red-50 border-l-4 border-red-500', image: cal1 },
   ];
 
   const [patientsToday, setPatientsToday] = useState([]);
@@ -74,11 +72,9 @@ const handleVideoCall = (meetLink) => {
   window.open(meetLink, '_blank');
 };
 
-
   const [notes, setNotes] = useState([]);
   const [newNote, setNewNote] = useState('');
   
-
   // Handler for adding a new note
   const addNote = () => {
     if (newNote.trim() !== '') {
@@ -93,8 +89,6 @@ const handleVideoCall = (meetLink) => {
     { value: "dr_johnson", label: "Dr. Johnson" },
     { value: "dr_brown", label: "Dr. Brown" },
   ];
-  
-
   
     // State to store selected doctor for each patient
     const [selectedDoctors, setSelectedDoctors] = useState({});
@@ -150,122 +144,135 @@ const handleVideoCall = (meetLink) => {
   return (
     <div>
         <DoctorLayout>
-    <div className="flex p-6  space-x-6">
-      {/* Main content area */}
-      <div className="flex-1 space-y-6">
-        {/* Overview Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-5 gap-4 md:gap-6 ">
-          {overviewCards.map((card, index) => (
-            <div
-              key={index}
-              className={`p-4 md:p-6 ${card.color} rounded-lg shadow-lg flex flex-col items-center justify-between h-48 w-full`}
-            >
-              {card.image && (
+    <div className="p-6 space-y-6">
+      {/* Overview Cards - First Line Only */}
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-4 md:gap-6">
+        {overviewCards.map((card, index) => (
+          <div
+            key={index}
+            className={`p-6 ${card.color} rounded-lg shadow-sm hover:shadow-md transition-shadow duration-200 bg-white`}
+          >
+            <div className="flex items-center justify-between">
+              <div className="flex-1">
+                <p className="text-sm text-gray-600 font-medium">{card.title}</p>
+                <p className="text-2xl font-bold text-gray-900 mt-1">{card.count}</p>
+              </div>
+              <div className="ml-4">
                 <img
                   src={card.image}
                   alt={card.title}
-                  className="h-20 w-30 rounded-full object-cover mb-2"
+                  className="h-12 w-12 rounded-lg object-cover"
                 />
-              )}
-              <div className="text-center">
-                <div className="text-sm md:text-base text-gray-600">{card.title}</div>
-                <div className="text-lg font-semibold text-gray-700">{card.count}</div>
-              </div>
-            </div>
-          ))}
-        </div>
-
-        <div className="flex space-x-4 p-4">
-  {/* Your Patients Today Container */}
-  <div className="w-full p-4 bg-white rounded-lg shadow-lg">
-  <div className="flex justify-between items-center mb-4">
-    <h2 className="text-lg text-gray-700 font-semibold">Your Patients</h2>
-    <button className="text-sm text-blue-600 hover:underline">See All</button>
-  </div>
-  <hr className="border-gray-200 mb-4" />
-  
-  {loading ? (
-    <div className="text-center py-4">Loading appointments...</div>
-  ) : (
-    <ul className="max-h-64 overflow-y-auto scrollbar-thin scrollbar-thumb-gray-200 scrollbar-track-white">
-      {patientsToday.map((patient, index) => (
-        <li
-          key={patient.appointmentId || index}
-          className="py-2 border-b border-gray-200 flex justify-between items-center"
-        >
-          <div className="flex items-center space-x-4">
-            <img
-              src={doc}
-              alt="Patient"
-              className="w-10 h-10 rounded-full"
-            />
-            <div>
-              <div className="font-medium text-gray-800">{patient.name}</div>
-              <div className="text-sm text-gray-800">{patient.diagnosis}</div>
-              <div className="flex items-center mt-1 space-x-1">
-                <FaClock className="text-gray-400" />
-                <span className="text-sm text-gray-500">{patient.time}</span>
               </div>
             </div>
           </div>
-          <div className="flex items-center space-x-4">
-            <button 
-              className="bg-green-500 text-white p-2 rounded-full hover:bg-green-600"
-              onClick={() => handleVideoCall(patient.meetLink)}
-            >
-              <FaVideo className="text-sm" />
-            </button>
-            <button className="bg-red-500 text-white p-2 rounded-full hover:bg-red-600">
-              <FaTimes className="text-sm" />
-            </button>
-            <button className="text-gray-500 hover:text-gray-700">
-              <FaEllipsisV />
-            </button>
-          </div>
-        </li>
-      ))}
-    </ul>
-  )}
-</div>
-</div>
-</div>
+        ))}
+      </div>
 
-      {/* Date Picker Section */}
-      <div className="w-80 bg-white rounded-lg shadow-lg overflow-hidden">
-        <div className="p-4 border-b border-gray-200">
-          <h2 className="text-lg text-gray-700 font-semibold">Select Date</h2>
+      {/* Patients Table and Calendar - Side by Side */}
+      <div className="flex space-x-6">
+        {/* Your Patients Today Container */}
+        <div className="flex-1 bg-white rounded-lg shadow-lg">
+          <div className="flex justify-between items-center p-6 border-b border-gray-200">
+            <h2 className="text-lg text-gray-700 font-semibold">Your Patients</h2>
+            <button className="text-sm text-blue-600 hover:underline">See All</button>
+          </div>
+          
+          <div className="p-6">
+            {loading ? (
+              <div className="text-center py-8">Loading appointments...</div>
+            ) : patientsToday.length === 0 ? (
+              <div className="text-center py-8 text-gray-500">No appointments today</div>
+            ) : (
+              <div className="max-h-96 overflow-y-auto">
+                <ul className="space-y-4">
+                  {patientsToday.map((patient, index) => (
+                    <li
+                      key={patient.appointmentId || index}
+                      className="flex justify-between items-center p-4 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors"
+                    >
+                      <div className="flex items-center space-x-4">
+                        <img
+                          src={doc}
+                          alt="Patient"
+                          className="w-12 h-12 rounded-full object-cover"
+                        />
+                        <div>
+                          <div className="font-medium text-gray-800">{patient.name}</div>
+                          <div className="text-sm text-gray-600">{patient.diagnosis}</div>
+                          <div className="flex items-center mt-1 space-x-1">
+                            <FaClock className="text-gray-400 text-xs" />
+                            <span className="text-sm text-gray-500">{patient.time}</span>
+                          </div>
+                        </div>
+                      </div>
+                      <div className="flex items-center space-x-2">
+                        <button 
+                          className="bg-green-500 text-white p-2 rounded-full hover:bg-green-600 transition-colors"
+                          onClick={() => handleVideoCall(patient.meetLink)}
+                        >
+                          <FaVideo className="text-sm" />
+                        </button>
+                        <button className="bg-red-500 text-white p-2 rounded-full hover:bg-red-600 transition-colors">
+                          <FaTimes className="text-sm" />
+                        </button>
+                        <button className="text-gray-400 hover:text-gray-600 p-2">
+                          <FaEllipsisV className="text-sm" />
+                        </button>
+                      </div>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
+          </div>
         </div>
-        
-        <LocalizationProvider dateAdapter={AdapterDayjs}>
-          <Box sx={{ width: '100%', paddingLeft: '4px', paddingRight: '16px', paddingTop: '8px', paddingBottom: '8px' }}>
-            <StaticDatePicker
-              displayStaticWrapperAs="desktop"
-              value={selectedDate}
-              onChange={(newValue) => setSelectedDate(newValue)}
-              slotProps={{
-                toolbar: { hidden: true },
-                actionBar: { hidden: true }
-              }}
-            />
-          </Box>
-        </LocalizationProvider>
+
+        {/* Updated Calendar Section */}
+        <div className="w-80 bg-white rounded-lg shadow-lg">
+          <div className="p-4 bg-gray-50 rounded-t-lg">
+            <h2 className="text-lg font-semibold text-gray-800">Upcoming Appointments</h2>
+            <p className="text-sm text-gray-600 mt-1">{dayjs().format('MMMM, YYYY')}</p>
+          </div>
+          
+          <div className="p-4">
+            <LocalizationProvider dateAdapter={AdapterDayjs}>
+              <Box sx={{ width: '100%' }}>
+                <StaticDatePicker
+                  displayStaticWrapperAs="desktop"
+                  value={selectedDate}
+                  onChange={(newValue) => setSelectedDate(newValue)}
+                  slotProps={{
+                    toolbar: { hidden: true },
+                    actionBar: { hidden: true }
+                  }}
+                  sx={{
+                    '& .MuiPickersCalendarHeader-root': {
+                      display: 'none'
+                    },
+                    '& .MuiDayCalendar-weekContainer': {
+                      margin: '4px 0'
+                    },
+                    '& .MuiPickersDay-root': {
+                      fontSize: '0.875rem',
+                      width: '36px',
+                      height: '36px',
+                      margin: '2px'
+                    },
+                    '& .MuiPickersDay-root.Mui-selected': {
+                      backgroundColor: '#3b82f6',
+                      color: 'white'
+                    }
+                  }}
+                />
+              </Box>
+            </LocalizationProvider>
+          </div>
+        </div>
       </div>
     </div>
-
-    
-    <div className="flex space-x-4 p-4">
-    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 gap-4 w-full">
- 
-
-  {/* Acute vs Chronic Patients */}
-
-</div>
-</div>
-
 </DoctorLayout>
 </div>
-
-    
   );
 };
 

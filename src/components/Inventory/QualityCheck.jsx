@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { api } from "./services/api";
 
@@ -8,7 +8,7 @@ const QualityCheck = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [showAmendedOnly, setShowAmendedOnly] = useState(false);
-  const [usageFilter, setUsageFilter] = useState("unused"); // Default to unused
+  const [usageFilter, setUsageFilter] = useState("unused");
   const navigate = useNavigate();
   const [showPopup, setShowPopup] = useState(false);
   const [showBarcodeModal, setShowBarcodeModal] = useState(false);
@@ -16,6 +16,13 @@ const QualityCheck = () => {
   const [enteredBarcode, setEnteredBarcode] = useState("");
   const [scannedBarcode, setScannedBarcode] = useState("");
   const [validationResult, setValidationResult] = useState("");
+  
+  // Barcode scanning related states
+  const [barcodeBuffer, setBarcodeBuffer] = useState("");
+  const [lastKeyTime, setLastKeyTime] = useState(0);
+  const barcodeTimeoutRef = useRef(null);
+  const inputRef = useRef(null);
+  const scanInputRef = useRef(null);
 
   useEffect(() => {
     const fetchMaterials = async () => {
@@ -37,12 +44,10 @@ const QualityCheck = () => {
   useEffect(() => {
     let filtered = materials;
 
-    // Apply amendment filter
     if (showAmendedOnly) {
       filtered = filtered.filter(material => material.IsAmendment === true);
     }
 
-    // Apply usage filter
     if (usageFilter === "unused") {
       filtered = filtered.filter(material => material.usageStatus === "unused");
     }
@@ -51,34 +56,95 @@ const QualityCheck = () => {
   }, [showAmendedOnly, usageFilter, materials]);
 
   useEffect(() => {
-  const triggerUsageStatusUpdate = async () => {
-    try {
-      await fetch("https://clinic-backend-jdob.onrender.com/api/inventory/usage-status", {
-        method: "GET",
-      });
-    } catch (err) {
-      console.error("Failed to trigger usage status update:", err);
-    }
-  };
-  triggerUsageStatusUpdate();
-}, []);
+    const triggerUsageStatusUpdate = async () => {
+      try {
+        await fetch("https://clinic-backend-jdob.onrender.com/api/inventory/usage-status", {
+          method: "GET",
+        });
+      } catch (err) {
+        console.error("Failed to trigger usage status update:", err);
+      }
+    };
+    triggerUsageStatusUpdate();
+  }, []);
 
+  // Barcode scanner event listeners
+  useEffect(() => {
+    const handleKeyPress = (e) => {
+      // Only process barcode scanning when modals are open
+      if (!showPopup && !showBarcodeModal) return;
+
+      const currentTime = Date.now();
+      const timeDiff = currentTime - lastKeyTime;
+
+      // Clear timeout if exists
+      if (barcodeTimeoutRef.current) {
+        clearTimeout(barcodeTimeoutRef.current);
+      }
+
+      // If time between keystrokes is too long, reset buffer
+      if (timeDiff > 100) {
+        setBarcodeBuffer("");
+      }
+
+      // Add character to buffer (excluding Enter key)
+      if (e.key !== "Enter") {
+        setBarcodeBuffer(prev => prev + e.key);
+        setLastKeyTime(currentTime);
+
+        // Set timeout to process barcode
+        barcodeTimeoutRef.current = setTimeout(() => {
+          if (barcodeBuffer.length > 0) {
+            const finalBarcode = barcodeBuffer + e.key;
+            if (finalBarcode.length >= 8) { // Assuming minimum barcode length
+              if (showPopup) {
+                setEnteredBarcode(finalBarcode);
+              } else if (showBarcodeModal) {
+                setScannedBarcode(finalBarcode);
+              }
+              setBarcodeBuffer("");
+            }
+          }
+        }, 50);
+      } else {
+        // Enter key pressed - finalize barcode
+        if (barcodeBuffer.length >= 8) {
+          if (showPopup) {
+            setEnteredBarcode(barcodeBuffer);
+          } else if (showBarcodeModal) {
+            setScannedBarcode(barcodeBuffer);
+          }
+        }
+        setBarcodeBuffer("");
+      }
+    };
+
+    document.addEventListener("keypress", handleKeyPress);
+
+    return () => {
+      document.removeEventListener("keypress", handleKeyPress);
+      if (barcodeTimeoutRef.current) {
+        clearTimeout(barcodeTimeoutRef.current);
+      }
+    };
+  }, [showPopup, showBarcodeModal, lastKeyTime, barcodeBuffer]);
 
   const handleValidate = (id) => {
     setSelectedId(id);
     setEnteredBarcode("");
     setValidationResult("");
+    setBarcodeBuffer("");
     setShowPopup(true);
   };
 
   const handleScanBarcode = () => {
     setScannedBarcode("");
+    setBarcodeBuffer("");
     setShowBarcodeModal(true);
   };
 
   const handleBarcodeNavigation = () => {
     if (scannedBarcode.trim()) {
-      // Navigate to a different page with the scanned barcode
       navigate(`/unused-details/${encodeURIComponent(scannedBarcode.trim())}`);
       setShowBarcodeModal(false);
     }
@@ -124,7 +190,6 @@ const QualityCheck = () => {
           Stock Audit
         </h2>
         <div className="flex flex-col sm:flex-row gap-2">
-
           <select
             value={usageFilter}
             onChange={(e) => setUsageFilter(e.target.value)}
@@ -134,8 +199,6 @@ const QualityCheck = () => {
             <option value="unused">Unused</option>
           </select>
 
-
-          {/* Scan Barcode Button */}
           <button
             onClick={handleScanBarcode}
             className="bg-blue-600 hover:bg-blue-700 text-white text-sm px-4 py-2 rounded-lg shadow transition-colors"
@@ -154,8 +217,8 @@ const QualityCheck = () => {
             {showAmendedOnly ? "Show All Materials" : `Amended Materials (${amendedCount})`}
           </button>
           <button 
-          onClick={() => navigate("/amendmentlog")}
-          className={"bg-green-600 hover:bg-green-700 text-white text-sm px-4 py-2 rounded-lg shadow"}>
+            onClick={() => navigate("/amendmentlog")}
+            className={"bg-green-600 hover:bg-green-700 text-white text-sm px-4 py-2 rounded-lg shadow"}>
             Amendment Log
           </button>
         </div>
@@ -185,7 +248,6 @@ const QualityCheck = () => {
                 <th className="px-4 py-3 text-left">Barcode</th>
                 <th className="px-4 py-3 text-left">Created At</th>
                 <th className="px-4 py-3 text-left">Status</th>
-                {/*<th className="px-4 py-3 text-left">Actions</th>*/}
               </tr>
             </thead>
             <tbody>
@@ -236,14 +298,6 @@ const QualityCheck = () => {
                         </span>
                       )}
                     </td>
-                    {/*<td className="px-4 py-3">
-                      <button
-                        onClick={() => handleValidate(material._id)}
-                        className="bg-blue-500 hover:bg-blue-600 text-white px-3 py-1 rounded"
-                      >
-                        Validate
-                      </button>
-                    </td>*/}
                   </tr>
                 );
               })}
@@ -252,125 +306,187 @@ const QualityCheck = () => {
         </div>
       )}
 
-    {showBarcodeModal && (
-      <div className="fixed inset-0 z-50 flex items-center justify-center backdrop-blur-sm bg-black/40">
-        <div className="bg-white rounded-2xl shadow-2xl p-6 w-full max-w-md animate-scaleFade">
-          <h3 className="text-xl font-bold text-gray-800 mb-4 text-center">
-            Scan Barcode
-          </h3>
+      {/* Barcode Scanning Modal */}
+      {showBarcodeModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center backdrop-blur-sm bg-black/40">
+          <div className="bg-white rounded-2xl shadow-2xl p-6 w-full max-w-md animate-scaleFade">
+            <h3 className="text-xl font-bold text-gray-800 mb-4 text-center">
+              Scan Barcode
+            </h3>
+            
+            <div className="mb-4 p-4 bg-blue-50 rounded-lg border border-blue-200">
+              <p className="text-sm text-blue-800 text-center">
+                Scan the item
+              </p>
+              <p className="text-xs text-blue-600 text-center mt-1">
+                The barcode will be automatically detected
+              </p>
+            </div>
 
-          <input
-            type="text"
-            value={scannedBarcode}
-            onChange={(e) => setScannedBarcode(e.target.value)}
-            placeholder="Enter or scan barcode..."
-            className="w-full px-4 py-2 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-400 focus:outline-none mb-4 text-sm"
-            autoFocus
-          />
+            <input
+              ref={scanInputRef}
+              type="text"
+              value={scannedBarcode}
+              onChange={(e) => setScannedBarcode(e.target.value)}
+              placeholder="Barcode will appear here automatically..."
+              className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-400 focus:outline-none mb-4 text-sm bg-gray-50"
+              readOnly
+            />
 
-          <div className="flex justify-end space-x-3">
-            <button
-              onClick={() => setShowBarcodeModal(false)}
-              className="px-4 py-2 rounded-lg bg-gray-200 hover:bg-gray-300 text-gray-700 text-sm font-medium"
-            >
-              Cancel
-            </button>
-            <button
-              onClick={handleBarcodeNavigation}
-              disabled={!scannedBarcode.trim()}
-              className="px-4 py-2 rounded-lg bg-blue-600 hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed text-white text-sm font-semibold shadow"
-            >
-              Continue
-            </button>
+            {scannedBarcode && (
+              <div className="mb-4 p-3 bg-green-50 rounded-lg border border-green-200">
+                <p className="text-sm text-green-800">
+                  ✅ Barcode detected: <span className="font-mono">{scannedBarcode}</span>
+                </p>
+              </div>
+            )}
+
+            <div className="flex justify-end space-x-3">
+              <button
+                onClick={() => {
+                  setShowBarcodeModal(false);
+                  setBarcodeBuffer("");
+                }}
+                className="px-4 py-2 rounded-lg bg-gray-200 hover:bg-gray-300 text-gray-700 text-sm font-medium"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleBarcodeNavigation}
+                disabled={!scannedBarcode.trim()}
+                className="px-4 py-2 rounded-lg bg-blue-600 hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed text-white text-sm font-semibold shadow"
+              >
+                Continue
+              </button>
+            </div>
           </div>
         </div>
-      </div>
-    )}
-
-    {showPopup && (
-  <div className="fixed inset-0 z-50 flex items-center justify-center backdrop-blur-sm bg-black/40">
-    <div className="bg-white rounded-2xl shadow-2xl p-6 w-full max-w-md animate-scaleFade">
-      <h3 className="text-xl font-bold text-gray-800 mb-4 text-center">
-        Enter Barcode for Validation
-      </h3>
-
-      <input
-        type="text"
-        value={enteredBarcode}
-        onChange={(e) => setEnteredBarcode(e.target.value)}
-        placeholder="Type barcode..."
-        className="w-full px-4 py-2 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-400 focus:outline-none mb-4 text-sm"
-      />
-
-      {validationResult && (
-        <div
-          className={`mb-4 text-center font-semibold ${
-            validationResult.includes("matched")
-              ? "text-green-600"
-              : "text-red-600"
-          }`}
-        >
-          {validationResult}
-        </div>
       )}
 
-      {/* Conditional Action Buttons */}
-      {validationResult && (
-        <div className="flex justify-end space-x-3 mt-2">
-          <button
-            onClick={() => setShowPopup(false)}
-            className="px-4 py-2 rounded-lg bg-gray-200 hover:bg-gray-300 text-gray-700 text-sm font-medium"
-          >
-            Cancel
-          </button>
+      {/* Validation Popup */}
+      {showPopup && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center backdrop-blur-sm bg-black/40">
+          <div className="bg-white rounded-2xl shadow-2xl p-6 w-full max-w-md animate-scaleFade">
+            <h3 className="text-xl font-bold text-gray-800 mb-4 text-center">
+              Scan Barcode for Validation
+            </h3>
 
-          {validationResult.includes("matched") ? (
-            <button
-              onClick={() => {
-                console.log(" Verified:", selectedId);
-                setShowPopup(false);
-                navigate(`/raw-materials/${selectedId}/verify?verify=true`);
-              }}
-              className="px-4 py-2 rounded-lg bg-green-600 hover:bg-green-700 text-white text-sm font-semibold shadow"
-            >
-              Verify
-            </button>
-          ) : (
-            <button
-              onClick={() => {
-                console.log(" Verify and change triggered for:", selectedId);
-                setShowPopup(false);
-                navigate(`/raw-materials/${selectedId}/verify`);
-              }}
-              className="px-4 py-2 rounded-lg bg-yellow-500 hover:bg-yellow-600 text-white text-sm font-semibold shadow"
-            >
-              Verify & Change
-            </button>
-          )}
+            <div className="mb-4 p-4 bg-blue-50 rounded-lg border border-blue-200">
+              <p className="text-sm text-blue-800 text-center">
+                Scan the barcode to validate the item
+              </p>
+             
+            </div>
+
+            <input
+              ref={inputRef}
+              type="text"
+              value={enteredBarcode}
+              onChange={(e) => setEnteredBarcode(e.target.value)}
+              placeholder="Barcode will appear here automatically..."
+              className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-400 focus:outline-none mb-4 text-sm bg-gray-50"
+              readOnly
+            />
+
+            {enteredBarcode && (
+              <div className="mb-4 p-3 bg-green-50 rounded-lg border border-green-200">
+                <p className="text-sm text-green-800">
+                  ✅ Barcode scanned: <span className="font-mono">{enteredBarcode}</span>
+                </p>
+              </div>
+            )}
+
+            {validationResult && (
+              <div
+                className={`mb-4 p-3 rounded-lg border text-center font-semibold ${
+                  validationResult.includes("matched")
+                    ? "bg-green-50 border-green-200 text-green-600"
+                    : "bg-red-50 border-red-200 text-red-600"
+                }`}
+              >
+                {validationResult.includes("matched") ? "✅" : "❌"} {validationResult}
+              </div>
+            )}
+
+            {/* Action Buttons */}
+            {validationResult && (
+              <div className="flex justify-end space-x-3 mt-2">
+                <button
+                  onClick={() => {
+                    setShowPopup(false);
+                    setBarcodeBuffer("");
+                  }}
+                  className="px-4 py-2 rounded-lg bg-gray-200 hover:bg-gray-300 text-gray-700 text-sm font-medium"
+                >
+                  Cancel
+                </button>
+
+                {validationResult.includes("matched") ? (
+                  <button
+                    onClick={() => {
+                      console.log("Verified:", selectedId);
+                      setShowPopup(false);
+                      setBarcodeBuffer("");
+                      navigate(`/raw-materials/${selectedId}/verify?verify=true`);
+                    }}
+                    className="px-4 py-2 rounded-lg bg-green-600 hover:bg-green-700 text-white text-sm font-semibold shadow"
+                  >
+                    Verify
+                  </button>
+                ) : (
+                  <button
+                    onClick={() => {
+                      console.log("Verify and change triggered for:", selectedId);
+                      setShowPopup(false);
+                      setBarcodeBuffer("");
+                      navigate(`/raw-materials/${selectedId}/verify`);
+                    }}
+                    className="px-4 py-2 rounded-lg bg-yellow-500 hover:bg-yellow-600 text-white text-sm font-semibold shadow"
+                  >
+                    Verify & Change
+                  </button>
+                )}
+              </div>
+            )}
+
+            {/* Submit button */}
+            {!validationResult && enteredBarcode && (
+              <div className="flex justify-end space-x-3">
+                <button
+                  onClick={() => {
+                    setShowPopup(false);
+                    setBarcodeBuffer("");
+                  }}
+                  className="px-4 py-2 rounded-lg bg-gray-200 hover:bg-gray-300 text-gray-700 text-sm font-medium"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={handleBarcodeSubmit}
+                  className="px-4 py-2 rounded-lg bg-blue-600 hover:bg-blue-700 text-white text-sm font-semibold shadow"
+                >
+                  Validate
+                </button>
+              </div>
+            )}
+
+            {/* Initial state - waiting for barcode */}
+            {!validationResult && !enteredBarcode && (
+              <div className="flex justify-end">
+                <button
+                  onClick={() => {
+                    setShowPopup(false);
+                    setBarcodeBuffer("");
+                  }}
+                  className="px-4 py-2 rounded-lg bg-gray-200 hover:bg-gray-300 text-gray-700 text-sm font-medium"
+                >
+                  Cancel
+                </button>
+              </div>
+            )}
+          </div>
         </div>
       )}
-
-      {/* Submit button stays separate */}
-      {!validationResult && (
-        <div className="flex justify-end space-x-3">
-          <button
-            onClick={() => setShowPopup(false)}
-            className="px-4 py-2 rounded-lg bg-gray-200 hover:bg-gray-300 text-gray-700 text-sm font-medium"
-          >
-            Cancel
-          </button>
-          <button
-            onClick={handleBarcodeSubmit}
-            className="px-4 py-2 rounded-lg bg-blue-600 hover:bg-blue-700 text-white text-sm font-semibold shadow"
-          >
-            Submit
-          </button>
-        </div>
-      )}
-    </div>
-  </div>
-)}
-
     </div>
   );
 };
