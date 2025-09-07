@@ -24,13 +24,17 @@ const Messenger = () => {
   const [botTyping, setBotTyping] = useState(false);
   const [currentBotFlow, setCurrentBotFlow] = useState("greeting");
   const [botInitialized, setBotInitialized] = useState(false);
+  const [botEnabled, setBotEnabled] = useState(true);
+  const botEnabledRef = useRef(botEnabled);
+  const botInitializedRef = useRef(botInitialized);
+
   const [consultationData, setConsultationData] = useState({});
   const navigate = useNavigate();
   const socketRef = useRef(null);
   const fileInputRef = useRef(null);
   const userId = localStorage.getItem("userId");
   const [activeDoctor, setActiveDoctor] = useState(null);
-  const [botEnabled, setBotEnabled] = useState(true);
+
   const [consultationTypes, setConsultationTypes] = useState([]);
   const [selectedConsultationType, setSelectedConsultationType] =
     useState(null);
@@ -51,8 +55,8 @@ const Messenger = () => {
   };
 
   const initializeBotGreeting = () => {
-    if (botInitialized || !botEnabled) return;
-
+    if (botInitializedRef.current || !botEnabledRef.current) return;
+    console.log("Initializing bot greeting...");
     setBotInitialized(true);
     const botGreetingMessages = [
       {
@@ -749,31 +753,19 @@ Would you like to continue the conversation or schedule a fresh appointment?`,
             );
             return unique;
           });
-        } else if (!botInitialized && messages.length === 0) {
+        } else if (!botInitialized && botEnabled && messages.length === 0) {
           setTimeout(() => {
             initializeBotGreeting();
           }, 1000);
           console.log("Bot1 greeting initialized");
         }
-
-        // Reset bot state if you want AI greeting flow
-        // setBotInitialized(false);
-        // setCurrentBotFlow(BOT_FLOWS.GREETING);
-
-        // // Initialize bot greeting after a short delay
-        // setTimeout(() => {
-        //   initializeBotGreeting();
-        // }, 1000);
       } catch (error) {
         console.error("Failed to fetch chat history:", error);
-        // setMessages([]);
-        // setBotInitialized(false);
-        // if (!botInitialized && messages.length === 0) {
-        //   initializeBotGreeting();
-        // }
-        // setTimeout(() => {
-        //   initializeBotGreeting();
-        // }, 1000);
+        setBotEnabled(true);
+        setBotInitialized(false);
+        setTimeout(() => {
+          initializeBotGreeting();
+        }, 1000);
       }
     };
 
@@ -820,8 +812,9 @@ Would you like to continue the conversation or schedule a fresh appointment?`,
         { headers: { Authorization: `Bearer ${token}` } }
       );
 
+      console.log("Fetched feedback questions:", res.data);
       setFeedbackQuestions(res.data || []);
-      if (res.data?.length > 0) {
+      if (res.data?.success) {
         setCurrentQuestionIndex(0);
         setIsFeedbackFlowActive(true);
         showFeedbackQuestion(res.data[0], 0, res.data.length);
@@ -891,61 +884,33 @@ Would you like to continue the conversation or schedule a fresh appointment?`,
         : "doctor";
 
       // only push if it belongs to this chat
-      if (
+      const isCurrentChat =
         (msg.sender === selectedDoctor && msg.receiver === userId) || // doctor → patient
         (msg.sender === userId && msg.receiver === selectedDoctor) || // patient echo
-        msg.sender === "ai-bot"
-      ) {
-        setMessages((prev) => [...prev, { ...msg, messageType }]);
+        msg.sender === "ai-bot";
+
+      if (isCurrentChat) {
+        setMessages((prev) => {
+          // 🚫 prevent duplicates: check if already exists
+          const exists = prev.some(
+            (m) =>
+              m.message === msg.message &&
+              m.sender === msg.sender &&
+              m.receiver === msg.receiver &&
+              Math.abs(new Date(m.timestamp) - new Date(msg.timestamp)) < 2000 // within 2s
+          );
+
+          if (exists) return prev; // skip duplicate
+
+          return [...prev, { ...msg, messageType }];
+        });
       }
     };
 
-    // const handleSessionToggle = ({ sessionActive, doctorId }) => {
-    //   console.log(
-    //     "📡 Patient received sessionToggle:",
-    //     sessionActive,
-    //     doctorId
-    //   );
-    //   setBotEnabled(!sessionActive);
-
-    //   if (!sessionActive) {
-    //     setActiveDoctor(null);
-    //   const endMessage = {
-    //     _id: `bot-end-${Date.now()}`,
-    //     sender: "ai-bot",
-    //     receiver: userId,
-    //     message:
-    //       "Your chat with the doctor has ended. The bot is now active again.",
-    //     timestamp: new Date(),
-    //     senderName: "AI Assistant",
-    //     messageType: "bot",
-    //   };
-
-    //   setMessages((prev) => [...prev, endMessage]);
-    //   // setBotEnabled(true); // force bot enabled
-    //   // setBotInitialized(false);
-    //   // // show bot greeting again
-    //   // setTimeout(() => initializeBotGreeting(), 100);
-
-    //   console.log("consultation type", selectedConsultationTypeRef.current);
-
-    //   if (selectedConsultationTypeRef.current) {
-    //     fetchFeedbackQuestions(selectedConsultationTypeRef.current);
-    //   } else {
-    //     setBotEnabled(true); // force bot enabled
-    //     setBotInitialized(false);
-    //     // show bot greeting again
-    //     setTimeout(() => initializeBotGreeting(), 100);
-    //   }
-    // }
-    // };
-
     socketRef.current.on("receiveMessage", handleReceiveMessage);
-    // socketRef.current.on("sessionToggle", handleSessionToggle);
 
     return () => {
       socketRef.current.off("receiveMessage", handleReceiveMessage);
-      // socketRef.current.off("sessionToggle", handleSessionToggle);
     };
   }, [selectedDoctor, userId]);
 
@@ -959,10 +924,11 @@ Would you like to continue the conversation or schedule a fresh appointment?`,
         status,
       });
 
-      if (doctorId === activeDoctor?._id && patientId === userId) {
+      console.log("Active doctor:", activeDoctor);
+
+      if (patientId === userId) {
         setBotEnabled(true);
 
-        // 🛑 If bot turned OFF (consultation ended)
         if (status) {
           setActiveDoctor(null); // clear doctor session
 
@@ -1034,57 +1000,31 @@ Would you like to continue the conversation or schedule a fresh appointment?`,
     const getProfile = async () => {
       const botStatus = await fetchPatientProfile();
       if (botStatus !== null) {
-        setBotEnabled(true);
+        setBotEnabled(botStatus);
+        console.log("Bot enabled status:", botStatus);
+
+        if (!botStatus) {
+          // bot disabled => doctor chat active
+          const storedDoctor = localStorage.getItem("latestActiveDoctor");
+          if (storedDoctor) {
+            try {
+              setActiveDoctor(JSON.parse(storedDoctor));
+              console.log("Restored active doctor from storage:", storedDoctor);
+            } catch (e) {
+              console.error("Failed to restore doctor:", e);
+            }
+          }
+        }
       }
     };
-
     getProfile();
   }, []);
 
-  // const handleSendMessage = () => {
-  //   if (!message.trim()) return;
+  useEffect(() => {
+    botEnabledRef.current = botEnabled;
+    botInitializedRef.current = botInitialized;
+  }, [botEnabled, botInitialized]);
 
-  //   if (activeDoctor) {
-  //     // Live Doctor–Patient Chat
-  //     const userMessage = {
-  //       _id: `user-msg-${Date.now()}`,
-  //       sender: userId,
-  //       receiver: activeDoctor._id,
-  //       message: message.trim(),
-  //       timestamp: new Date(),
-  //       senderName: "You",
-  //       messageType: "user",
-  //       receiverName: "Dr. Me",
-  //     };
-
-  //     // setMessages((prev) => [...prev, userMessage]);
-
-  //     // ✅ send via socket to doctor
-  //     socketRef.current?.emit("sendMessage", userMessage);
-  //   } else {
-  //     // Bot chat (unchanged)
-  //     const userMessage = {
-  //       _id: `user-msg-${Date.now()}`,
-  //       sender: userId,
-  //       receiver: "ai-bot",
-  //       message: message.trim(),
-  //       timestamp: new Date(),
-  //       senderName: "You",
-  //       messageType: "user",
-  //     };
-
-  //     setMessages((prev) => [...prev, userMessage]);
-
-  //     if (currentBotFlow === BOT_FLOWS.SYMPTOM_COLLECTION) {
-  //       handleSymptomSubmission(message.trim());
-  //     } else {
-  //       handleBotFlow(message.trim());
-  //     }
-  //   }
-
-  //   setMessage("");
-  // };
-  // ✅ Add inside Messenger.jsx (near top with helpers)
   const formatFileSize = (bytes) => {
     if (bytes === 0) return "0 Bytes";
     const k = 1024;
@@ -1212,6 +1152,7 @@ Would you like to continue the conversation or schedule a fresh appointment?`,
         messageType: "user",
         receiverName: "Dr. Me",
       };
+      setMessages((prev) => [...prev, userMessage]);
       socketRef.current?.emit("sendMessage", userMessage);
     } else {
       // Bot flow (unchanged)
@@ -1234,6 +1175,26 @@ Would you like to continue the conversation or schedule a fresh appointment?`,
 
     setMessage("");
   };
+
+  useEffect(() => {
+    const storedDoctor = localStorage.getItem("latestActiveDoctor");
+    if (storedDoctor) {
+      try {
+        const doctor = JSON.parse(storedDoctor);
+        setActiveDoctor(doctor);
+      } catch (error) {
+        console.error("Failed to parse stored active doctor:", error);
+      }
+    }
+  }, []);
+
+  useEffect(() => {
+    if (activeDoctor) {
+      localStorage.setItem("latestActiveDoctor", JSON.stringify(activeDoctor));
+    } else {
+      localStorage.removeItem("latestActiveDoctor");
+    }
+  }, [activeDoctor]);
 
   return (
     <div>
