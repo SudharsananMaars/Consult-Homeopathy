@@ -357,27 +357,27 @@ function DoctorMessenger() {
       });
     });
 
-    // ✅ Receive messages
-    // socketRef.current.on("receiveMessage", (msg) => {
-    //   if (
-    //     (msg.sender === activeChat && msg.receiver === userId) || // patient → doctor
-    //     (msg.sender === userId && msg.receiver === activeChat) // doctor → patient
-    //   ) {
-    //     setMessages((prevMessages) => {
-    //       const messageExists = prevMessages.some((m) => m._id === msg._id);
-    //       return messageExists ? prevMessages : [...prevMessages, msg];
-    //     });
-    //   }
-    // });
+    socket.current.on("receiveMessage", (msg) => {
 
-    socketRef.current.on("receiveMessage", (msg) => {
-      const exists = patients.some((p) => p._id === msg.sender);
+      if(msg.sender === "ai_bot") return; // ignore bot messages
+      const otherPartyId = msg.sender === userId ? msg.receiver : msg.sender;
+
+      const exists = patients.some((p) => p._id === otherPartyId);
+
+      console.log(
+        "📩 DoctorMessenger receiveMessage:",
+        msg,
+        "OtherPartyId:",
+        otherPartyId,
+        "Exists:",
+        exists
+      );
 
       if (!exists) {
         fetchPatients();
+        console.log("🔔 New patient added, fetching patients list");
       }
 
-      // Store messages by patient
       if (
         (msg.sender === activeChat && msg.receiver === userId) || // patient → doctor
         (msg.sender === userId && msg.receiver === activeChat) // doctor → patient
@@ -386,27 +386,8 @@ function DoctorMessenger() {
           const messageExists = prev.some((m) => m._id === msg._id);
           return messageExists ? prev : [...prev, msg];
         });
-      } else {
-        // Unread counter if message is from another patient
-        setUnreadCounts((prev) => ({
-          ...prev,
-          [msg.sender]: (prev[msg.sender] || 0) + 1,
-        }));
       }
     });
-
-    // 🔥 Listen for sessionToggle from patient side
-    socketRef.current.on(
-      "sessionToggle",
-      ({ patientId, doctorId, sessionActive }) => {
-        console.log("Doctor received sessionToggle:");
-        if (doctorId === userId) {
-          setPatients((prev) =>
-            prev.map((p) => (p._id === patientId ? { ...p, sessionActive } : p))
-          );
-        }
-      }
-    );
 
     socketRef.current.on("connect", () => {
       console.log("Connected to socket server");
@@ -423,8 +404,7 @@ function DoctorMessenger() {
         socketRef.current.off("userOnline");
         socketRef.current.off("userOffline");
         socketRef.current.off("userTyping");
-        socketRef.current.off("receiveMessage");
-        socketRef.current.off("sessionToggle");
+        socket.current.off("receiveMessage");
         socketRef.current.disconnect();
       }
     };
@@ -565,11 +545,11 @@ function DoctorMessenger() {
         setMessages(fetchedMessages);
 
         // ✅ For each message, mark as read if necessary
-        for (const msg of fetchedMessages) {
-          if (msg.receiver === userId && msg.isRead === false) {
-            await updateMsgRead(activeChat, msg._id); // patientId = activeChat, msgId = msg._id
-          }
-        }
+        // for (const msg of fetchedMessages) {
+        //   if (msg.receiver === userId && msg.isRead === false) {
+        //     await updateMsgRead(activeChat, msg._id); // patientId = activeChat, msgId = msg._id
+        //   }
+        // }
       } catch (error) {
         console.error("Failed to fetch chat history:", error);
         setMessages([]);

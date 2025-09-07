@@ -51,6 +51,8 @@ const Header = () => {
   const doctorId = localStorage.getItem("token");
   const { totalUnread, setUnreadCounts } = useUnreadCount();
 
+  console.log("🔔 DoctorHeader unread:", totalUnread);
+
   // Months array
   const months = [
     "January",

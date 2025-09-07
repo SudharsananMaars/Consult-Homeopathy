@@ -907,10 +907,10 @@ Would you like to continue the conversation or schedule a fresh appointment?`,
       }
     };
 
-    socketRef.current.on("receiveMessage", handleReceiveMessage);
+    socket.current.on("receiveMessage", handleReceiveMessage);
 
     return () => {
-      socketRef.current.off("receiveMessage", handleReceiveMessage);
+      socket.current.off("receiveMessage", handleReceiveMessage);
     };
   }, [selectedDoctor, userId]);
 
