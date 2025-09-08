@@ -1,12 +1,11 @@
 import React, { useState, useEffect } from 'react';
-import { useParams, useNavigate, useLocation } from 'react-router-dom';
+import { useParams, useNavigate } from 'react-router-dom';
 import { api } from '../services/api';
 import Barcode from 'react-barcode';
 
 const RawMaterialForm = ({ isEdit = false }) => {
   const { id } = useParams();
   const navigate = useNavigate();
-  const location = useLocation();
 
   const initialState = {
     name: '',
@@ -35,7 +34,6 @@ const RawMaterialForm = ({ isEdit = false }) => {
   // New states for two-step process
   const [currentStep, setCurrentStep] = useState(1); // 1 = form, 2 = barcode display
   const [barcodeImageUrl, setBarcodeImageUrl] = useState(null);
-  const [barcode, setBarcode] = useState(null);
 
   // Category options based on type
   const categoryOptions = {
@@ -77,39 +75,6 @@ const RawMaterialForm = ({ isEdit = false }) => {
     };
     fetchRawMaterial();
   }, [isEdit, id]);
-
-  // New useEffect to handle URL parameters for pre-filling form
-  useEffect(() => {
-    const searchParams = new URLSearchParams(location.search);
-    const isPrefilled = searchParams.get('prefilled');
-    
-    if (isPrefilled === 'true' && !isEdit) {
-      const prefilledData = {
-        ...initialState,
-        name: searchParams.get('name') || '',
-        vendorName: searchParams.get('vendorName') || '',
-        vendorPhone: searchParams.get('vendorPhone') || '',
-        costPerUnit: searchParams.get('costPerUnit') || '',
-        quantity: searchParams.get('quantity') || '',
-        currentQuantity: searchParams.get('currentQuantity') || '',
-        // Note: vendorEmail is available but not used in form, could be used for vendorLocation or other fields
-      };
-      
-      setFormData(prefilledData);
-      
-      // Show a notification that form is pre-filled
-      const notification = document.createElement('div');
-      notification.className = 'fixed top-4 right-4 bg-blue-100 border border-blue-400 text-blue-700 px-4 py-3 rounded z-50';
-      notification.innerHTML = '✓ Form pre-filled with order data';
-      document.body.appendChild(notification);
-      
-      setTimeout(() => {
-        if (document.body.contains(notification)) {
-          document.body.removeChild(notification);
-        }
-      }, 3000);
-    }
-  }, [location.search, isEdit]);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -157,32 +122,10 @@ const RawMaterialForm = ({ isEdit = false }) => {
     e.preventDefault();
     
     if (currentStep === 2) {
-  // Step 2: Upload image if exists, then navigate
-  if (imageFile && barcode) {
-    try {
-      setSubmitting(true);
-      const imageFormData = new FormData();
-      imageFormData.append('image', imageFile);
-      
-      const response = await fetch(`${API_URL}/api/inventory/product-image/${barcode}`, {
-        method: 'PATCH',
-        body: imageFormData,
-      });
-      
-      if (!response.ok) {
-        throw new Error('Failed to upload product image');
-      }
-      
-      setSubmitting(false);
-    } catch (err) {
-      setError(`Failed to upload image: ${err.message}`);
-      setSubmitting(false);
+      // Step 2: Finish button clicked, navigate to raw materials
+      navigate('/raw-materials');
       return;
     }
-  }
-  navigate('/raw-materials');
-  return;
-}
 
     // Step 1: Generate barcode
     try {
@@ -222,7 +165,6 @@ const RawMaterialForm = ({ isEdit = false }) => {
       
       // Set the barcode image URL from API response
       setBarcodeImageUrl(response.barcodeImageUrl);
-      setBarcode(response.barcode);
       
       // Move to step 2
       setCurrentStep(2);
@@ -300,43 +242,6 @@ const RawMaterialForm = ({ isEdit = false }) => {
             Print Barcode
           </button>
         </div>
-
-        {/* Product Image Upload */}
-        <div>
-          <label className="block mb-2 text-sm font-medium text-gray-700">
-            Product Image:
-          </label>
-          <input
-            type="file"
-            accept="image/*"
-            onChange={(e) => {
-              const file = e.target.files[0];
-              if (file) {
-                const reader = new FileReader();
-                reader.onloadend = () => {
-                  setPreview(reader.result);
-                  setImageFile(file);
-                };
-                reader.readAsDataURL(file);
-              }
-            }}
-            className="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4
-            file:rounded-lg file:border-0
-            file:text-sm file:font-semibold
-            file:bg-blue-50 file:text-blue-700
-            hover:file:bg-blue-100"
-          />
-          {preview && (
-            <div className="mt-4">
-              <img
-                src={preview}
-                alt="Product preview"
-                className="w-full max-w-xs rounded-lg shadow-md"
-              />
-            </div>
-          )}
-        </div>
-
 
         {/* Finish button */}
         <form onSubmit={handleSubmit} className="mt-8">
@@ -508,37 +413,33 @@ const RawMaterialForm = ({ isEdit = false }) => {
         </div>
 
         {/* Total Weight */}
-{formData.type === 'Raw Material' && (
-  <div>
-    <label htmlFor="totalWeight" className="block font-medium text-gray-700">Total Weight</label>
-    <input
-    type="number"
-    id="totalWeight"
-    name="totalWeight"
-    value={formData.totalWeight}
-    onChange={handleChange}
-    required
-    placeholder="Enter Total Weight"
-    className="w-full border border-gray-300 rounded-lg px-4 py-2 mt-1 focus:outline-none focus:ring-2 focus:ring-blue-500"
-    />
-  </div>
-)}
+        <div>
+          <label htmlFor="totalWeight" className="block font-medium text-gray-700">Total Weight</label>
+          <input
+          type="number"
+          id="totalWeight"
+          name="totalWeight"
+          value={formData.totalWeight}
+          onChange={handleChange}
+          required
+          placeholder="Enter Total Weight"
+          className="w-full border border-gray-300 rounded-lg px-4 py-2 mt-1 focus:outline-none focus:ring-2 focus:ring-blue-500"
+          />
+          </div>
 
         {/* Expiry Date */}
-{formData.type === 'Raw Material' && (
-  <div>
-    <label htmlFor="expiryDate" className="block font-medium text-gray-700">Expiry Date</label>
-    <input
-      type="date"
-      id="expiryDate"
-      name="expiryDate"
-      value={formData.expiryDate}
-      onChange={handleChange}
-      required
-      className="w-full border border-gray-300 rounded-lg px-4 py-2 mt-1 focus:outline-none focus:ring-2 focus:ring-blue-500"
-    />
-  </div>
-)}
+        <div>
+          <label htmlFor="expiryDate" className="block font-medium text-gray-700">Expiry Date</label>
+          <input
+            type="date"
+            id="expiryDate"
+            name="expiryDate"
+            value={formData.expiryDate}
+            onChange={handleChange}
+            required
+            className="w-full border border-gray-300 rounded-lg px-4 py-2 mt-1 focus:outline-none focus:ring-2 focus:ring-blue-500"
+          />
+        </div>
 
         {/* Cost Per Unit */}
         <div>
@@ -553,6 +454,42 @@ const RawMaterialForm = ({ isEdit = false }) => {
             required
             className="w-full border border-gray-300 rounded-lg px-4 py-2 mt-1 focus:outline-none focus:ring-2 focus:ring-blue-500"
           />
+        </div>
+
+        {/* Product Image Upload */}
+        <div>
+          <label className="block mb-2 text-sm font-medium text-gray-700">
+            Product Image:
+          </label>
+          <input
+            type="file"
+            accept="image/*"
+            onChange={(e) => {
+              const file = e.target.files[0];
+              if (file) {
+                const reader = new FileReader();
+                reader.onloadend = () => {
+                  setPreview(reader.result);
+                  setImageFile(file);
+                };
+                reader.readAsDataURL(file);
+              }
+            }}
+            className="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4
+            file:rounded-lg file:border-0
+            file:text-sm file:font-semibold
+            file:bg-blue-50 file:text-blue-700
+            hover:file:bg-blue-100"
+          />
+          {preview && (
+            <div className="mt-4">
+              <img
+                src={preview}
+                alt="Product preview"
+                className="w-full max-w-xs rounded-lg shadow-md"
+              />
+            </div>
+          )}
         </div>
 
         {/* Vendor Information Section */}
@@ -616,10 +553,10 @@ const RawMaterialForm = ({ isEdit = false }) => {
           <button
             type="submit"
             disabled={submitting}
-            className="px-6 py-2 rounded-lg bg-blue-600 text-white hover:bg-blue-700 transition disabled:opacity-50"
+            className="px-6 py-2 rounded-lg bg-blue-600 text-white hover:bg-blue-700 transition"
           >
-            {submitting ? 'Uploading...' : 'Finish'}
-            </button>
+            {submitting ? 'Generating...' : isEdit ? 'Update' : 'Generate Barcode'}
+          </button>
         </div>
       </form>
     </div>
