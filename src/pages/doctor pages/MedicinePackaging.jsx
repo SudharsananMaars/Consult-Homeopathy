@@ -227,13 +227,13 @@ const handleReturnToCRM = async () => {
     <tbody>
       <tr className="border-b border-blue-200">
         <td className="bg-gray-100 p-4 font-medium text-gray-900 text-center">
-          {patientData.name || "John Doe"}
+          {patientData.name}
         </td>
         <td className="bg-white p-4 text-gray-600 text-center">
-          {patientData.address || "123 Main Street"}
+          {patientData.currentLocation}
         </td>
         <td className="bg-gray-100 p-4 text-gray-600 text-center">
-          {patientData.phone || "+91 9876543210"}
+          {patientData.phone}
         </td>
         <td className="bg-white p-4 text-center">
           {patientData.verified ? (
@@ -310,10 +310,40 @@ const handleReturnToCRM = async () => {
             </button>
           </td>
           <td className="bg-gray-100 p-4 text-center">
-            <button className="bg-blue-500 text-white px-3 py-1 rounded hover:bg-blue-600">
-              Print
-            </button>
-          </td>
+  <button
+    className="bg-blue-500 text-white px-3 py-1 rounded hover:bg-blue-600"
+    onClick={() => {
+      const medicineName = med.medicineName || "Medicine A";
+      const expiry = expiryDates[med.medicineName] || "";
+      // Open a new window for printing
+      const printWindow = window.open("", "_blank");
+      printWindow.document.write(`
+        <html>
+          <head>
+            <title>Print Label</title>
+            <style>
+              body { font-family: Arial, sans-serif; text-align: center; padding: 20px; }
+              h1 { font-size: 24px; margin-bottom: 10px; }
+              p { font-size: 18px; margin: 5px 0; }
+            </style>
+          </head>
+          <body>
+            <h1>${medicineName}</h1>
+            ${expiry ? `<p>Expiry: ${expiry}</p>` : ""}
+          
+          </body>
+        </html>
+      `);
+      printWindow.document.close();
+      printWindow.focus();
+      printWindow.print();
+      printWindow.close();
+    }}
+  >
+    Print
+  </button>
+</td>
+
         </tr>
       ))}
     </tbody>
@@ -399,10 +429,65 @@ const handleReturnToCRM = async () => {
       )}
     </td>
           <td className="bg-gray-100 p-4 text-center">
-            <button className="bg-blue-500 text-white px-3 py-1 rounded hover:bg-blue-600 transition-colors">
-              Print
-            </button>
-          </td>
+  <button
+    className="bg-blue-500 text-white px-3 py-1 rounded hover:bg-blue-600 transition-colors"
+    onClick={() => {
+      if (!patientData) {
+        alert("Patient data not loaded yet!");
+        return;
+      }
+
+      const fromName = "Consult Homeopathy";
+      const fromPhone = "+919876543210"; // Mock clinic phone
+      const toName = patientData.name;
+      const toPhone = patientData.phone;
+      const toAddress = patientData.currentLocation;
+
+      // Open a new window for printing
+      const printWindow = window.open("", "_blank");
+
+      printWindow.document.write(`
+        <html>
+          <head>
+            <title>Shipping Label</title>
+            <style>
+              @page { size: 6in 4in; margin: 0; }
+              body { font-family: Arial, sans-serif; padding: 20px; margin:0; width: 6in; height: 4in; }
+              .container { display: flex; flex-direction: column; justify-content: space-between; height: 100%; }
+              .from, .to { border: 1px solid #000; padding: 10px; }
+              .label-title { font-weight: bold; margin-bottom: 5px; }
+              .address-line { margin: 2px 0; }
+            </style>
+          </head>
+          <body>
+            <div class="container">
+              <div class="from">
+                <div class="label-title">From:</div>
+                <div class="address-line">${fromName}</div>
+                <div class="address-line">Phone: ${fromPhone}</div>
+                <div class="address-line">Consult Homeopathy Clinic</div>
+              </div>
+              <div class="to">
+                <div class="label-title">To:</div>
+                <div class="address-line">${toName}</div>
+                <div class="address-line">Phone: ${toPhone}</div>
+                <div class="address-line">${toAddress}</div>
+              </div>
+            </div>
+          </body>
+        </html>
+      `);
+
+      printWindow.document.close();
+      printWindow.focus();
+      printWindow.print();
+      printWindow.close();
+    }}
+  >
+    Print
+  </button>
+</td>
+
         </tr>
       ))}
     </tbody>
