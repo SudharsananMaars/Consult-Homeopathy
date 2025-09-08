@@ -5,7 +5,7 @@ import config from "../../config";
 import { ChevronDown, Filter, ListFilter } from "lucide-react";
 import { InformationCircleIcon } from "@heroicons/react/24/outline";
 import { useParams, useNavigate } from "react-router-dom"; 
-import referenceImgSrc from '../../assets/images/ReferenceImage.jpg';
+import referenceImgSrc from '../../assets/images/ReferenceImage.png';
 
 const MedicinePreparationView = () => {
   const [loading, setLoading] = useState(true);
@@ -246,11 +246,25 @@ useEffect(() => {
     const completed = preparedMedicineIds.length;
     const pending = totalItems - completed;
     
+    // Fix: Access attempt from individual prescription items
+    // Option 1: Get attempt from first item
+    //const attemptValue = prescription.prescriptionItems[0]?.attempt || "0";
+    
+    // Option 2: Sum all attempts (if you want total across all items)
+    const attemptValue = prescription.prescriptionItems.reduce((sum, item) => 
+       sum + parseInt(item.attempt || "0"), 0
+     );
+    
+    // Option 3: Get maximum attempt value
+    // const attemptValue = Math.max(...prescription.prescriptionItems.map(item => 
+    //   parseInt(item.attempt || "0")
+    // ));
+    
     setStatistics({
       totalItems,
       completed,
       pending,
-      attempts: 0 // To be added later
+      attempts: attemptValue 
     });
   }
 }, [prescription?.prescriptionItems, preparedMedicineIds]);
@@ -336,6 +350,56 @@ const handleSelectMedicine = async (medicine) => {
   setShowBarcodeModal(true);
 };
 
+const startRecording = async () => {
+  try {
+    const stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
+    cameraStreamRef.current = stream;
+
+    // Show preview
+    if (!cameraVerified) {
+      return; // only preview, no recording
+    }
+
+    // If already verified → start recording
+    const recorder = new MediaRecorder(stream);
+    recordedChunksRef.current = [];
+
+    recorder.ondataavailable = (event) => {
+      if (event.data.size > 0) {
+        recordedChunksRef.current.push(event.data);
+      }
+    };
+
+    recorder.start();
+    setMediaRecorder(recorder);
+    setRecordingStream(stream);
+    setIsRecording(true);
+    setRecordingTime(0);
+
+    if (recordingTimerRef.current) {
+      clearInterval(recordingTimerRef.current);
+    }
+
+    recordingTimerRef.current = setInterval(() => {
+      setRecordingTime((prev) => prev + 1);
+    }, 1000);
+
+    recorder.onstop = () => {
+      setIsRecording(false);
+      if (recordingTimerRef.current) {
+        clearInterval(recordingTimerRef.current);
+        recordingTimerRef.current = null;
+      }
+      setRecordingTime(0);
+    };
+  } catch (err) {
+    console.error("Failed to start camera/recording:", err);
+    alert("Camera + mic access is needed for verification and recording.");
+  }
+};
+
+
+
 const handlePrepare = async () => {
    if (!cameraVerified) {
     alert("Please verify camera position before completing preparation.");
@@ -388,58 +452,6 @@ const handlePrepare = async () => {
   }
 
   alert("Medicine prepared! Continue with the next.");
-};
-
-
-const startRecording = async () => {
-  try {
-    const stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
-    cameraStreamRef.current = stream;
-
-    // Don't start recording immediately - first verify camera position
-    if (!cameraVerified) {
-      // Show camera feed for verification first
-      return;
-    }
-
-    const recorder = new MediaRecorder(stream);
-    recordedChunksRef.current = [];
-
-    recorder.ondataavailable = (event) => {
-      if (event.data.size > 0) {
-        recordedChunksRef.current.push(event.data); 
-        console.log("Video data chunk pushed");
-      }
-    };
-
-    recorder.start();
-    setMediaRecorder(recorder);
-    setRecordingStream(stream);
-    setIsRecording(true);
-    setRecordingTime(0);
-
-    // ✅ Clean up existing timer
-    if (recordingTimerRef.current) {
-      clearInterval(recordingTimerRef.current);
-    }
-
-    recordingTimerRef.current = setInterval(() => {
-      setRecordingTime((prev) => prev + 1);
-    }, 1000);
-
-    recorder.onstop = () => {
-      setIsRecording(false);
-      if (recordingTimerRef.current) {
-        clearInterval(recordingTimerRef.current);
-        recordingTimerRef.current = null;
-      }
-      setRecordingTime(0);
-    };
-
-  } catch (err) {
-    console.error("Failed to start camera/recording:", err);
-    alert("Camera + mic access is needed for verification and recording.");
-  }
 };
 
 const verifyPosition = async () => {
@@ -539,18 +551,20 @@ const loadImage = (src) => {
 
 const stopRecording = () => {
   return new Promise((resolve, reject) => {
-    if (mediaRecorder) {
-      mediaRecorder.onstop = () => {
-        const videoBlob = new Blob(recordedChunksRef.current, { type: "video/webm" });
-        recordedChunksRef.current = []; // Clear chunks
-        console.log("🛑 Recording stopped and blob created");
-        resolve(videoBlob);
-      };
-      mediaRecorder.stop();
-      setIsRecording(false);
-    } else {
-      reject("No media recorder found.");
+    if (!mediaRecorder) {
+      console.warn("No active recording to stop");
+      resolve(null); // Return null instead of rejecting
+      return;
     }
+    
+    mediaRecorder.onstop = () => {
+      const videoBlob = new Blob(recordedChunksRef.current, { type: "video/webm" });
+      recordedChunksRef.current = [];
+      console.log("🛑 Recording stopped and blob created");
+      resolve(videoBlob);
+    };
+    mediaRecorder.stop();
+    setIsRecording(false);
 
     if (recordingStream) {
       recordingStream.getTracks().forEach(track => track.stop());

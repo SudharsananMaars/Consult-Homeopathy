@@ -23,7 +23,7 @@ const Payments = () => {
     const [entriesPerPage, setEntriesPerPage] = useState(10);
 
     // Get userId from localStorage or context (adjust based on your app structure)
-    const userId = localStorage.getItem("userId") || "67bc3391654d85340a8ce713"; // Replace with actual user ID logic
+    const userId = localStorage.getItem("userId"); // Replace with actual user ID logic
 
     // Fetch payments data from API
     useEffect(() => {
@@ -243,13 +243,7 @@ const Payments = () => {
                                             {formatDateTime(payment.createdAt)}
                                         </td>
                                         <td className="px-4 py-4">
-                                            <span
-                                                className={`px-2 py-1 rounded-full text-sm font-semibold ${getStatusBgColor(
-                                                    serviceType
-                                                )}`}
-                                            >
-                                                {serviceType}
-                                            </span>
+                                            {payment.paidFor}
                                         </td>
                                         <td className="px-4 py-4">
                                             ₹{payment.amount}

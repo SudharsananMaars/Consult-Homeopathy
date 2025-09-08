@@ -191,7 +191,7 @@ const sendStatusToBackend = async (medicineName, doseTime, status) => {
 
   return (
     <div className="fixed top-12 right-5 w-80 bg-white shadow-lg rounded-lg overflow-hidden z-50">
-      <div className="p-4 bg-blue-500 text-grey">
+      <div className="p-4 bg-blue-500 text-white">
         <h3 className="text-lg font-bold">Notifications</h3>
       </div>
       <div className="max-h-96 overflow-y-auto p-4 space-y-2">
@@ -205,10 +205,10 @@ const sendStatusToBackend = async (medicineName, doseTime, status) => {
                   {React.createElement(n.icon)}
                 </span>
                 <div>
-                  <p className={`text-sm font-medium ${n.isApiNotification && !n.read ? 'font-bold' : ''}`}>
+                  <p className={`text-sm text-gray-700 font-medium ${n.isApiNotification && !n.read ? 'font-bold' : ''}`}>
                     {n.message}
                   </p>
-                  <p className="text-xs text-gray-500">{n.time}</p>
+                  <p className="text-xs text-gray-600">{n.time}</p>
 
                   {n.type === "exact" && n.status === "pending" && (
                     <div className="flex gap-2 mt-1">

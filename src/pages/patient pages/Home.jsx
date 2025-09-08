@@ -21,6 +21,7 @@ const Home = () => {
   const navigate = useNavigate();
 
   const [pendingAppointments, setPendingAppointments] = useState(0);
+  const [pendingPayment, setPendingPayment] = useState(0);
   const [couponCount, setCouponCount] = useState(0);
 
   useEffect(() => {
@@ -78,13 +79,14 @@ const Home = () => {
   };
 
   const [transactionHistory, setTransactionHistory] = useState([]);
+  const userId = localStorage.getItem("userId");
 
   useEffect(() => {
     const fetchTransactionHistory = async () => {
       try {
         const token = localStorage.getItem("token");
         const response = await axios.get(
-          `${API_URL}/api/patient/show-all-payments/6875dbbaa46a57c54e005944`,
+          `${API_URL}/api/patient/show-all-payments/${userId}`,
           {
             headers: {
               Authorization: `Bearer ${token}`,
@@ -113,6 +115,7 @@ const Home = () => {
             },
           }
         );
+        setPendingPayment(response.summary.totalPendingCount);
         setPendingData(response.data);
       } catch (error) {
         console.log("Unable to fetch pending transactions");
@@ -167,7 +170,7 @@ const Home = () => {
                     <h3 className="text-gray-600 text-sm font-medium mb-2">
                       Pending Transaction
                     </h3>
-                    <p className="text-4xl font-bold text-blue-600 mb-2">1</p>
+                    <p className="text-4xl font-bold text-blue-600 mb-2">{pendingPayment}</p>
                   </div>
                   <div className="flex-shrink-0 ml-4">
                     <div className="w-16 h-16 bg-pink-50 rounded-lg flex items-center justify-center">

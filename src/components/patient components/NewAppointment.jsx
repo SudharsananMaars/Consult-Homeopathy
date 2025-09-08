@@ -35,6 +35,7 @@ const NewAppointment = () => {
   const [isProcessing, setIsProcessing] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
   const [isRazorpayLoaded, setIsRazorpayLoaded] = useState(false);
+  const [consulting,setConsulting] = useState("");
 
   const today = dayjs();
   const minDate = today;
@@ -279,8 +280,7 @@ const NewAppointment = () => {
     if (!selectedTime) errors.time = "Please select a time slot";
     if (!consultingFor)
       errors.consultingFor = "Please select consulting person";
-    if (!consultingReason)
-      errors.consultingReason = "Please select consulting reason";
+    // Removed the consultingReason validation
     if (consultingReason?.value === "Other" && symptom.length < 10) {
       errors.symptom = "Please enter at least 10 characters for symptom";
     }
@@ -300,13 +300,13 @@ const NewAppointment = () => {
     const token = localStorage.getItem("token");
     const appointmentDate = dayjs(startDate).format("YYYY-MM-DD");
 
-    // Fixed payload - using consultingFor.value instead of the entire object
+    // Updated payload to handle optional consultingReason
     const payload = {
       appointmentDate,
       timeSlot: selectedTime,
-      consultingFor: consultingFor.value, // Changed this line
-      consultingReason: consultingReason.value,
-      symptom: consultingReason.value === "Other" ? symptom : "",
+      consultingFor: consultingFor.value,
+      consultingReason:  analysisResult.classification,
+      symptom: consultingReason?.value === "Other" ? symptom : "",
     };
 
     // Debug log to see what's being sent
@@ -389,7 +389,7 @@ const NewAppointment = () => {
         patientId: userId
       })
     });
-    
+  
     const result = await response.json();
     
     if (result.success) {
@@ -666,9 +666,11 @@ const NewAppointment = () => {
                 <p>
                   <strong>Consulting For:</strong> {consultingFor?.label}
                 </p>
-                <p>
-                  <strong>Reason:</strong> {consultingReason?.label}
-                </p>
+                {consultingReason && (
+                  <p>
+                    <strong>Reason:</strong> {consultingReason?.label}
+                  </p>
+                )}
                 {consultingReason?.value === "Other" && symptom && (
                   <p>
                     <strong>Symptom:</strong> {symptom}

@@ -20,10 +20,105 @@ ChartJS.register(ArcElement, Tooltip, Legend);
 
 function Dashboard() {
   const API_URL = config.API_URL;
+  
+  // State for total patients
+  const [totalPatients, setTotalPatients] = useState('0');
+  const [loadingPatients, setLoadingPatients] = useState(true);
+  const [totalConsultations, setTotalConsultations] = useState('0');
+  const [loadingConsultations, setLoadingConsultations] = useState(true);
+  const [appointments, setAppointments] = useState('0');
+  const [loadingAppointments,setLoadingAppointments] = useState(true);
+
+  // Fetch total patients
+  useEffect(() => {
+    const fetchTotalPatients = async () => {
+      try {
+        const token = localStorage.getItem('token');
+        const response = await fetch(`${API_URL}/api/patient/total-no-patients`, {
+          method: 'GET',
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          }
+        });
+        
+        const data = await response.json();
+        
+        if (data.success) {
+          setTotalPatients(data.totalPatients.toString());
+        }
+      } catch (error) {
+        console.error('Error fetching total patients:', error);
+        setTotalPatients('0'); // fallback value
+      } finally {
+        setLoadingPatients(false);
+      }
+    };
+
+    fetchTotalPatients();
+  }, [API_URL]);
+
+  // Fetch total consultations
+  useEffect(() => {
+    const fetchTotalConsultations = async () => {
+      try {
+        const token = localStorage.getItem('token');
+        const response = await fetch(`${API_URL}/api/doctor/appointments/total-count`, {
+          method: 'GET',
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          }
+        });
+        
+        const data = await response.json();
+        
+        if (data.success) {
+          setTotalConsultations(data.totalAppointments.toString());
+        }
+      } catch (error) {
+        console.error('Error fetching total consultations:', error);
+        setTotalConsultations('0'); // fallback value
+      } finally {
+        setLoadingConsultations(false);
+      }
+    };
+
+    fetchTotalConsultations();
+  }, [API_URL]);
+
+  useEffect(() => {
+    const fetchTotalConsultations = async () => {
+      try {
+        const token = localStorage.getItem('token');
+        const response = await fetch(`${API_URL}/api/doctor/appointments/today/count`, {
+          method: 'GET',
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          }
+        });
+        
+        const data = await response.json();
+        
+        if (data.success) {
+          setAppointments(data.count.toString());
+        }
+      } catch (error) {
+        console.error('Error fetching total appointments:', error);
+        setAppointments('0'); // fallback value
+      } finally {
+        setLoadingAppointments(false);
+      }
+    };
+
+    fetchTotalConsultations();
+  }, [API_URL]);
+
   const overviewCards = [
-    { title: 'Total Appointment', count: '5', color: 'bg-blue-50 border-l-4 border-blue-500', image: cal1 },
-    { title: 'Total Patients', count: '57', color: 'bg-yellow-50 border-l-4 border-yellow-500', image: Online_Doctor },
-    { title: 'Consultations', count: '62', color: 'bg-pink-50 border-l-4 border-pink-500', image: Consultation },
+    { title: 'Appointments Today', count: appointments , color: 'bg-blue-50 border-l-4 border-blue-500', image: cal1 },
+    { title: 'Total Patients', count: totalPatients, color: 'bg-yellow-50 border-l-4 border-yellow-500', image: Online_Doctor },
+    { title: 'Consultations', count:  totalConsultations, color: 'bg-pink-50 border-l-4 border-pink-500', image: Consultation },
     { title: 'Inventory', count: '75%', color: 'bg-red-50 border-l-4 border-red-500', image: cal1 },
   ];
 
@@ -229,45 +324,24 @@ const handleVideoCall = (meetLink) => {
         </div>
 
         {/* Updated Calendar Section */}
-        <div className="w-80 bg-white rounded-lg shadow-lg">
-          <div className="p-4 bg-gray-50 rounded-t-lg">
-            <h2 className="text-lg font-semibold text-gray-800">Upcoming Appointments</h2>
-            <p className="text-sm text-gray-600 mt-1">{dayjs().format('MMMM, YYYY')}</p>
+        <div className="w-80 bg-white rounded-lg shadow-lg overflow-hidden">
+          <div className="p-4 border-b border-gray-200">
+            <h2 className="text-lg text-gray-700 font-semibold">Upcoming Appointments</h2>
           </div>
           
-          <div className="p-4">
-            <LocalizationProvider dateAdapter={AdapterDayjs}>
-              <Box sx={{ width: '100%' }}>
-                <StaticDatePicker
-                  displayStaticWrapperAs="desktop"
-                  value={selectedDate}
-                  onChange={(newValue) => setSelectedDate(newValue)}
-                  slotProps={{
-                    toolbar: { hidden: true },
-                    actionBar: { hidden: true }
-                  }}
-                  sx={{
-                    '& .MuiPickersCalendarHeader-root': {
-                      display: 'none'
-                    },
-                    '& .MuiDayCalendar-weekContainer': {
-                      margin: '4px 0'
-                    },
-                    '& .MuiPickersDay-root': {
-                      fontSize: '0.875rem',
-                      width: '36px',
-                      height: '36px',
-                      margin: '2px'
-                    },
-                    '& .MuiPickersDay-root.Mui-selected': {
-                      backgroundColor: '#3b82f6',
-                      color: 'white'
-                    }
-                  }}
-                />
-              </Box>
-            </LocalizationProvider>
-          </div>
+          <LocalizationProvider dateAdapter={AdapterDayjs}>
+            <Box sx={{ width: '100%', paddingLeft: '4px', paddingRight: '16px', paddingTop: '8px', paddingBottom: '8px' }}>
+              <StaticDatePicker
+                displayStaticWrapperAs="desktop"
+                value={selectedDate}
+                onChange={(newValue) => setSelectedDate(newValue)}
+                slotProps={{
+                  toolbar: { hidden: true },
+                  actionBar: { hidden: true }
+                }}
+              />
+            </Box>
+          </LocalizationProvider>
         </div>
       </div>
     </div>
