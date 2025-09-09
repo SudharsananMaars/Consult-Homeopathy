@@ -168,7 +168,7 @@ const Header = ({ toggleSidebar }) => {
         {/* Right section - Action buttons */}
         <Stack direction="row" spacing={1.5} alignItems="center">
           {/* Message Button */}
-          <Badge
+          {/* <Badge
             badgeContent={totalUnread}
             color="error"
             overlap="circular"
@@ -176,7 +176,7 @@ const Header = ({ toggleSidebar }) => {
               vertical: "top",
               horizontal: "right",
             }}
-          >
+          > */}
             <IconButton
               onClick={handleMessage}
               sx={{
@@ -193,7 +193,7 @@ const Header = ({ toggleSidebar }) => {
             >
               <Message />
             </IconButton>
-          </Badge>
+          {/* </Badge> */}
 
           {/* Notification Button */}
           <IconButton
