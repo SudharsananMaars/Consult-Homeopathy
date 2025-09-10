@@ -769,7 +769,7 @@ function DoctorMessenger() {
                 formData.append("shippedDate", trackingData.shippedDate);
                 formData.append("arrivalDate", trackingData.arrivalDate);
                 if (trackingData.shipmentImage) {
-                  formData.append("file", trackingData.shipmentImage);
+                  formData.append("shipmentImage", trackingData.shipmentImage);
                 }
 
                 await axios.patch(

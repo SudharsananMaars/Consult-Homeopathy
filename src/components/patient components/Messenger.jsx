@@ -456,7 +456,7 @@ Would you like to continue the conversation or schedule a fresh appointment?`,
       const shipments = res.data || [];
 
       shipments
-        .filter((s) => s.shippedDate !== null && s.trackingId !== null)
+        .filter((s) => s.shippedDate !== null && s.trackingId !== null && !s.isProductReceived)
         .forEach((s) => {
           const botMessage = {
             _id: `shipment-${s.id}`,
@@ -814,7 +814,7 @@ Would you like to continue the conversation or schedule a fresh appointment?`,
         messageType: "user",
         receiverName: "Dr. Me",
       };
-      // setMessages((prev) => [...prev, userMessage]);
+      setMessages((prev) => [...prev, userMessage]);
       sendMessage(userMessage);
     } else {
       // Bot flow (unchanged)
