@@ -355,148 +355,143 @@ const handleReturnToCRM = async () => {
         );
       case 3:
         return (
-          <div className="bg-white rounded-lg p-6">
-      <h2 className="text-xl font-medium text-gray-800 mb-6">Packaging</h2>
-      {loading ? (
-        <p className="text-gray-600">Loading packaging materials...</p>
-      ) : rawMaterials.length === 0 ? (
-        <p className="text-gray-600">No packaging materials found.</p>
-      ) : (
+  <div className="bg-white rounded-lg p-6">
+    <h2 className="text-xl font-medium text-gray-800 mb-6">Packaging</h2>
+    {loading ? (
+      <p className="text-gray-600">Loading packaging materials...</p>
+    ) : rawMaterials.length === 0 ? (
+      <p className="text-gray-600">No packaging materials found.</p>
+    ) : (
+      <>
         <div className="overflow-x-auto rounded-lg shadow pt-5">
-  <table className="w-full overflow-hidden rounded-lg">
-    <thead>
-      <tr className="border-b border-blue-200">
-        <th className="bg-gray-100 text-center p-4 font-bold text-gray-700 text-sm">
-          Item Type
-        </th>
-        <th className="bg-white text-center p-4 font-bold text-gray-700 text-sm">
-          Size Option
-        </th>
-        <th className="bg-gray-100 text-center p-4 font-bold text-gray-700 text-sm">
-          Quantity
-        </th>
-        <th className="bg-white text-center p-4 font-bold text-gray-700 text-sm">
-          Upload Image
-        </th>
-        <th className="bg-gray-100 text-center p-4 font-bold text-gray-700 text-sm">
-          Print Label
-        </th>
-      </tr>
-    </thead>
-    <tbody>
-      {rawMaterials.map((material) => (
-        <tr key={material.id} className="border-b border-blue-200">
-          <td className="bg-gray-100 p-4 text-gray-900 text-center">
-            <select className="border rounded px-2 py-1 w-full text-center">
-              <option value={material.name}>{material.name}</option>
-            </select>
-          </td>
-          <td className="bg-white p-4 text-gray-600 text-center">
-            <select className="border rounded px-2 py-1 w-full text-center">
-              <option value={material.category}>{material.category}</option>
-            </select>
-          </td>
-          <td className="bg-gray-100 p-4 text-gray-600 text-center">
-            <input
-              type="number"
-              value={1}
-              readOnly
-              className="border rounded px-2 py-1 w-16 bg-gray-50 text-center"
-            />
-          </td>
-          <td className="bg-white p-4 text-center">
-      {!uploadedFile && (
-        <button
-          onClick={handleClick}
-          className="bg-gray-200 text-gray-700 px-3 py-1 rounded hover:bg-gray-300 transition-colors flex items-center justify-center"
-        >
-          Upload
-        </button>
-      )}
+          <table className="w-full overflow-hidden rounded-lg">
+            <thead>
+              <tr className="border-b border-blue-200">
+                <th className="bg-gray-100 text-center p-4 font-bold text-gray-700 text-sm">
+                  Item Type
+                </th>
+                <th className="bg-white text-center p-4 font-bold text-gray-700 text-sm">
+                  Size Option
+                </th>
+                <th className="bg-gray-100 text-center p-4 font-bold text-gray-700 text-sm">
+                  Quantity
+                </th>
+                <th className="bg-white text-center p-4 font-bold text-gray-700 text-sm">
+                  Upload Image
+                </th>
+              </tr>
+            </thead>
+            <tbody>
+              {rawMaterials.map((material) => (
+                <tr key={material.id} className="border-b border-blue-200">
+                  <td className="bg-gray-100 p-4 text-gray-900 text-center">
+                    {material.name}
+                  </td>
+                  <td className="bg-white p-4 text-gray-600 text-center">
+                    {material.category}
+                  </td>
+                  <td className="bg-gray-100 p-4 text-gray-600 text-center">
+                    <input
+                      type="number"
+                      value={1}
+                      readOnly
+                      className="border rounded px-2 py-1 w-16 bg-gray-50 text-center"
+                    />
+                  </td>
+                  <td className="bg-white p-4 text-center">
+                    {!uploadedFile && (
+                      <button
+                        onClick={handleClick}
+                        className="bg-gray-200 text-gray-700 px-3 py-1 rounded hover:bg-gray-300 transition-colors flex items-center justify-center"
+                      >
+                        Upload
+                      </button>
+                    )}
 
-      <input
-        type="file"
-        accept="image/*"
-        ref={fileInputRef}
-        onChange={handleFileChange}
-        style={{ display: "none" }}
-      />
+                    <input
+                      type="file"
+                      accept="image/*"
+                      ref={fileInputRef}
+                      onChange={handleFileChange}
+                      style={{ display: "none" }}
+                    />
 
-      {uploadedFile && (
-        <p className="mt-2 text-green-600 text-sm">
-          {uploadedFile.name} uploaded successfully
-        </p>
-      )}
-    </td>
-          <td className="bg-gray-100 p-4 text-center">
-  <button
-    className="bg-blue-500 text-white px-3 py-1 rounded hover:bg-blue-600 transition-colors"
-    onClick={() => {
-      if (!patientData) {
-        alert("Patient data not loaded yet!");
-        return;
-      }
+                    {uploadedFile && (
+                      <p className="mt-2 text-green-600 text-sm">
+                        {uploadedFile.name} uploaded successfully
+                      </p>
+                    )}
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
 
-      const fromName = "Consult Homeopathy";
-      const fromPhone = "+919876543210"; // Mock clinic phone
-      const toName = patientData.name;
-      const toPhone = patientData.phone;
-      const toAddress = patientData.currentLocation;
+        {/* Print Button placed outside the scrollable container */}
+        <div className="mt-4 flex justify-end">
+          <button
+            className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 transition-colors"
+            onClick={() => {
+              if (!patientData) {
+                alert("Patient data not loaded yet!");
+                return;
+              }
 
-      // Open a new window for printing
-      const printWindow = window.open("", "_blank");
+              const fromName = "Consult Homeopathy";
+              const fromPhone = "+919876543210"; // Mock clinic phone
+              const toName = patientData.name;
+              const toPhone = patientData.phone;
+              const toAddress = patientData.currentLocation;
 
-      printWindow.document.write(`
-        <html>
-          <head>
-            <title>Shipping Label</title>
-            <style>
-              @page { size: 6in 4in; margin: 0; }
-              body { font-family: Arial, sans-serif; padding: 20px; margin:0; width: 6in; height: 4in; }
-              .container { display: flex; flex-direction: column; justify-content: space-between; height: 100%; }
-              .from, .to { border: 1px solid #000; padding: 10px; }
-              .label-title { font-weight: bold; margin-bottom: 5px; }
-              .address-line { margin: 2px 0; }
-            </style>
-          </head>
-          <body>
-            <div class="container">
-              <div class="from">
-                <div class="label-title">From:</div>
-                <div class="address-line">${fromName}</div>
-                <div class="address-line">Phone: ${fromPhone}</div>
-                <div class="address-line">Consult Homeopathy Clinic</div>
-              </div>
-              <div class="to">
-                <div class="label-title">To:</div>
-                <div class="address-line">${toName}</div>
-                <div class="address-line">Phone: ${toPhone}</div>
-                <div class="address-line">${toAddress}</div>
-              </div>
-            </div>
-          </body>
-        </html>
-      `);
+              // Open a new window for printing
+              const printWindow = window.open("", "_blank");
 
-      printWindow.document.close();
-      printWindow.focus();
-      printWindow.print();
-      printWindow.close();
-    }}
-  >
-    Print
-  </button>
-</td>
+              printWindow.document.write(`
+                <html>
+                  <head>
+                    <title>Shipping Label</title>
+                    <style>
+                      @page { size: 6in 4in; margin: 0; }
+                      body { font-family: Arial, sans-serif; padding: 20px; margin:0; width: 6in; height: 4in; }
+                      .container { display: flex; flex-direction: column; justify-content: space-between; height: 100%; }
+                      .from, .to { border: 1px solid #000; padding: 10px; }
+                      .label-title { font-weight: bold; margin-bottom: 5px; }
+                      .address-line { margin: 2px 0; }
+                    </style>
+                  </head>
+                  <body>
+                    <div class="container">
+                      <div class="from">
+                        <div class="label-title">From:</div>
+                        <div class="address-line">${fromName}</div>
+                        <div class="address-line">Phone: ${fromPhone}</div>
+                        <div class="address-line">Consult Homeopathy Clinic</div>
+                      </div>
+                      <div class="to">
+                        <div class="label-title">To:</div>
+                        <div class="address-line">${toName}</div>
+                        <div class="address-line">Phone: ${toPhone}</div>
+                        <div class="address-line">${toAddress}</div>
+                      </div>
+                    </div>
+                  </body>
+                </html>
+              `);
 
-        </tr>
-      ))}
-    </tbody>
-  </table>
-</div>
-
-      )}
-    </div>
-        );
+              printWindow.document.close();
+              printWindow.focus();
+              printWindow.print();
+              printWindow.close();
+            }}
+          >
+            Print Shipping Label
+          </button>
+        </div>
+      </>
+    )}
+  </div>
+);
       default:
         return null;
     }

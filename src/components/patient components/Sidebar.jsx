@@ -39,12 +39,6 @@ const Sidebar = ({ isMobileSidebarOpen, setIsMobileSidebarOpen }) => {
       icon: Home,
     },
     {
-      id: 2,
-      path: "/consulthistory",
-      name: "Consultation History",
-      icon: History,
-    },
-    {
       id: 3,
       path: "/appointments/newappointment",
       name: "Book Appointment",

@@ -333,9 +333,20 @@ const handleSelectMedicine = async (medicine) => {
   setStep(1);
   setCart([]);
   setCameraVerified(false); // Reset verification for new medicine
+  setIsRecording(false); // Reset recording state
   
-  if (!isRecording) {
-    await startRecording(); // This will now handle camera setup
+  // Only setup camera stream, don't start recording yet
+  try {
+    const stream = await navigator.mediaDevices.getUserMedia({ 
+      video: { width: 1280, height: 720 }, 
+      audio: true 
+    });
+    cameraStreamRef.current = stream;
+    console.log("Camera stream ready for verification");
+  } catch (err) {
+    console.error("Failed to setup camera:", err);
+    alert("Camera and microphone access is needed for verification and recording.");
+    return;
   }
   
   if (prescription && medicine.medicineName) {
@@ -350,32 +361,42 @@ const handleSelectMedicine = async (medicine) => {
   setShowBarcodeModal(true);
 };
 
-const startRecording = async () => {
+const startActualRecording = async () => {
   try {
-    const stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
-    cameraStreamRef.current = stream;
-
-    // Show preview
-    if (!cameraVerified) {
-      return; // only preview, no recording
+    if (!cameraStreamRef.current) {
+      throw new Error("No camera stream available");
     }
 
-    // If already verified → start recording
-    const recorder = new MediaRecorder(stream);
+    const recorder = new MediaRecorder(cameraStreamRef.current, {
+      mimeType: 'video/webm;codecs=vp9,opus'
+    });
+    
     recordedChunksRef.current = [];
 
     recorder.ondataavailable = (event) => {
-      if (event.data.size > 0) {
+      if (event.data && event.data.size > 0) {
         recordedChunksRef.current.push(event.data);
+        console.log("Recording chunk:", event.data.size, "bytes");
       }
     };
 
-    recorder.start();
-    setMediaRecorder(recorder);
-    setRecordingStream(stream);
-    setIsRecording(true);
-    setRecordingTime(0);
+    recorder.onstart = () => {
+      console.log("Recording ACTUALLY started");
+      setIsRecording(true);
+      setRecordingTime(0);
+    };
 
+    recorder.onerror = (event) => {
+      console.error("MediaRecorder error:", event);
+      setIsRecording(false);
+    };
+
+    // Start recording with smaller chunks for better reliability
+    recorder.start(500); // 500ms chunks
+    setMediaRecorder(recorder);
+    setRecordingStream(cameraStreamRef.current);
+
+    // Start timer
     if (recordingTimerRef.current) {
       clearInterval(recordingTimerRef.current);
     }
@@ -384,56 +405,88 @@ const startRecording = async () => {
       setRecordingTime((prev) => prev + 1);
     }, 1000);
 
-    recorder.onstop = () => {
-      setIsRecording(false);
-      if (recordingTimerRef.current) {
-        clearInterval(recordingTimerRef.current);
-        recordingTimerRef.current = null;
-      }
-      setRecordingTime(0);
-    };
-  } catch (err) {
-    console.error("Failed to start camera/recording:", err);
-    alert("Camera + mic access is needed for verification and recording.");
+  } catch (error) {
+    console.error("Failed to start actual recording:", error);
+    alert("Failed to start recording. Please try again.");
   }
 };
 
 
 
 const handlePrepare = async () => {
-   if (!cameraVerified) {
+  if (!cameraVerified) {
     alert("Please verify camera position before completing preparation.");
     return;
   }
-  // Stop recording
-  const videoBlob = await stopRecording(); // Ensure this returns the blob
 
-  console.log(prescription._id);
+  if (!isRecording) {
+    alert("No active recording found. Please verify camera position first.");
+    return;
+  }
+  
+  console.log("Stopping recording...");
+  let videoBlob = null;
+  
+  try {
+    videoBlob = await stopRecording();
+    
+    if (!videoBlob || videoBlob.size === 0) {
+      console.error("Invalid video blob");
+      alert("Failed to create video recording. Please try again.");
+      return;
+    }
+    
+    console.log("Video ready for upload:", videoBlob.size, "bytes");
+  } catch (error) {
+    console.error("Error stopping recording:", error);
+    alert("Failed to stop recording properly. Please try again.");
+    return;
+  }
 
-  // Upload video to backend
-  if (videoBlob && prescription && selectedMedicine) {
+  // Validate required data
+  if (!prescription?._id || !selectedMedicine?.medicineName) {
+    alert("Missing prescription or medicine data. Please refresh and try again.");
+    return;
+  }
+
+  console.log("Prescription ID:", prescription._id);
+
+  // Upload video with proper headers and error handling
+  try {
     const formData = new FormData();
     formData.append("prescriptionId", prescription._id);
     formData.append("medicineName", selectedMedicine.medicineName);
-    formData.append("video", videoBlob, `${selectedMedicine.medicineName}.webm`);
+    formData.append("video", videoBlob, `${selectedMedicine.medicineName}_${Date.now()}.webm`);
 
-    try {
-      const res = await fetch(`${API_URL}/api/medicine-summary/upload-preparation-video`, {
-        method: "POST",
-        body: formData,
-      });
+    console.log("Uploading video to API...");
+    
+    const token = localStorage.getItem('token');
+    
+    const res = await fetch(`${API_URL}/api/medicine-summary/upload-preparation-video`, {
+      method: "POST",
+      headers: {
+        ...(token && { 'Authorization': `Bearer ${token}` })
+      },
+      body: formData,
+    });
 
-      if (!res.ok) {
-        console.error("Video upload failed.");
-      } else {
-        console.log("Video uploaded successfully.");
-      }
-    } catch (err) {
-      console.error("Error uploading video:", err);
+    if (!res.ok) {
+      const errorText = await res.text();
+      console.error("Upload failed:", res.status, errorText);
+      alert(`Video upload failed: ${res.status} ${res.statusText}`);
+      return;
     }
+
+    const responseData = await res.json();
+    console.log("Video upload successful:", responseData);
+    
+  } catch (err) {
+    console.error("Network error during video upload:", err);
+    alert("Network error during video upload. Please check your connection and try again.");
+    return;
   }
 
-  // Continue with prepare logic
+  // Continue with the rest of the preparation logic
   const newPrepared = [...preparedMedicineIds, selectedMedicine._id];
   setPreparedMedicineIds(newPrepared);
 
@@ -447,11 +500,11 @@ const handlePrepare = async () => {
   );
 
   if (remainingItems.length === 0) {
-    alert("All medicines prepared!");
+    alert("All medicines prepared successfully!");
     return;
   }
 
-  alert("Medicine prepared! Continue with the next.");
+  alert("Medicine prepared successfully! Continue with the next one.");
 };
 
 const verifyPosition = async () => {
@@ -511,7 +564,11 @@ const verifyPosition = async () => {
       
       if (similarity > 0.2) {
         setCameraVerified(true);
-        alert("Camera position verified! You can now start recording.");
+        
+        // NOW start recording after verification
+        await startActualRecording();
+        
+        alert("Camera position verified! Recording has started.");
       } else {
         alert("Please adjust the camera to match the reference position.");
         setCameraVerified(false);
@@ -553,26 +610,63 @@ const stopRecording = () => {
   return new Promise((resolve, reject) => {
     if (!mediaRecorder) {
       console.warn("No active recording to stop");
-      resolve(null); // Return null instead of rejecting
+      resolve(null);
       return;
     }
     
-    mediaRecorder.onstop = () => {
-      const videoBlob = new Blob(recordedChunksRef.current, { type: "video/webm" });
-      recordedChunksRef.current = [];
-      console.log("🛑 Recording stopped and blob created");
-      resolve(videoBlob);
-    };
-    mediaRecorder.stop();
-    setIsRecording(false);
-
-    if (recordingStream) {
-      recordingStream.getTracks().forEach(track => track.stop());
+    if (mediaRecorder.state === 'inactive') {
+      console.warn("Recording already stopped");
+      resolve(null);
+      return;
     }
 
-    if (recordingTimerRef.current) {
-      clearInterval(recordingTimerRef.current);
-      recordingTimerRef.current = null;
+    // Add timeout to prevent hanging
+    const timeout = setTimeout(() => {
+      console.error("Recording stop timeout");
+      reject(new Error("Recording stop timeout"));
+    }, 5000);
+    
+    mediaRecorder.onstop = () => {
+      clearTimeout(timeout);
+      try {
+        const videoBlob = new Blob(recordedChunksRef.current, { type: "video/webm" });
+        recordedChunksRef.current = [];
+        console.log("Recording stopped - Blob size:", videoBlob.size, "bytes");
+        
+        // Clean up streams
+        if (recordingStream) {
+          recordingStream.getTracks().forEach(track => track.stop());
+          setRecordingStream(null);
+        }
+        if (cameraStreamRef.current) {
+          cameraStreamRef.current.getTracks().forEach(track => track.stop());
+          cameraStreamRef.current = null;
+        }
+
+        setIsRecording(false);
+        if (recordingTimerRef.current) {
+          clearInterval(recordingTimerRef.current);
+          recordingTimerRef.current = null;
+          setRecordingTime(0);
+        }
+
+        resolve(videoBlob);
+      } catch (error) {
+        clearTimeout(timeout);
+        reject(error);
+      }
+    };
+
+    mediaRecorder.onerror = (event) => {
+      clearTimeout(timeout);
+      reject(new Error("MediaRecorder error: " + event.error));
+    };
+
+    try {
+      mediaRecorder.stop();
+    } catch (error) {
+      clearTimeout(timeout);
+      reject(error);
     }
   });
 };
