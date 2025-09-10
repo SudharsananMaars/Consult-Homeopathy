@@ -224,13 +224,30 @@ const Home = () => {
                           {upcomingAppointments.timeSlot}
                         </p>
                       </div>
-                      <button 
-                        className="bg-green-500 text-white p-4 rounded-full hover:bg-green-600 transition-colors"
-                        onClick={() => handleVideoCall(upcomingAppointments.meetLink)}
-                        title="Join Video Call"
-                      >
-                        <FaVideo className="text-xl" />
-                      </button>
+                      {(() => {
+  const now = new Date();
+  const appointmentDateTime = new Date(`${upcomingAppointments.appointmentDate} ${upcomingAppointments.timeSlot}`);
+  const timeDifference = appointmentDateTime.getTime() - now.getTime();
+  const minutesDifference = Math.floor(timeDifference / (1000 * 60));
+  
+  // Active if within 15 minutes before or 30 minutes after
+  const isActive = minutesDifference <= 15 && minutesDifference >= -30;
+  
+  return (
+    <button 
+      className={`p-4 rounded-full transition-colors ${
+        isActive 
+          ? 'bg-green-500 text-white hover:bg-green-600 cursor-pointer' 
+          : 'bg-gray-300 text-gray-500 cursor-not-allowed'
+      }`}
+      onClick={() => isActive && handleVideoCall(upcomingAppointments.meetLink)}
+      disabled={!isActive}
+      title={isActive ? "Join Video Call" : "Video call will be available 15 minutes before appointment"}
+    >
+      <FaVideo className="text-xl" />
+    </button>
+  );
+})()}
                     </div>
                   </div>
                 ) : (
