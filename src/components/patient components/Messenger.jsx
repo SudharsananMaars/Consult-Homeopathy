@@ -2,7 +2,6 @@
 import { useState, useEffect, useRef } from "react";
 import axios from "axios";
 import { Send, Search, Circle, Bot, User, Paperclip } from "lucide-react";
-import { io } from "socket.io-client";
 import { useNavigate } from "react-router-dom";
 import Layout from "./Layout";
 import config from "../../config";
@@ -12,12 +11,12 @@ import { useSocket } from "../../contexts/SocketProvider";
 const API_URL = config.API_URL;
 
 const Messenger = () => {
-  const [selectedDoctor, setSelectedDoctor] = useState(null);
+  const [selectedDoctor, setSelectedDoctor] = useState(
+    "67bc3391654d85340a8ce713"
+  );
   const [appointedDoctors, setAppointedDoctors] = useState([]);
   const [message, setMessage] = useState("");
   const [messages, setMessages] = useState([]);
-  const [onlineUsers, setOnlineUsers] = useState(new Set());
-  const [lastSeen, setLastSeen] = useState({});
   const [selectedFile, setSelectedFile] = useState(null);
   const [uploadPreview, setUploadPreview] = useState(null);
   const [isUploading, setIsUploading] = useState(false);
@@ -30,7 +29,6 @@ const Messenger = () => {
 
   const [consultationData, setConsultationData] = useState({});
   const navigate = useNavigate();
-  const socketRef = useRef(null);
   const fileInputRef = useRef(null);
   const userId = localStorage.getItem("userId");
   const [activeDoctor, setActiveDoctor] = useState(null);
@@ -42,7 +40,15 @@ const Messenger = () => {
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
   const [isFeedbackFlowActive, setIsFeedbackFlowActive] = useState(false);
   const selectedConsultationTypeRef = useRef(null);
-  const socket = useSocket();
+  const [ratings, setRatings] = useState({});
+  const {
+    socket,
+    sendMessage,
+    sendTyping,
+    onlineUsers,
+    typingUsers,
+    lastSeen,
+  } = useSocket();
 
   const BOT_FLOWS = {
     GREETING: "greeting",
@@ -298,6 +304,7 @@ Would you like to continue the conversation or schedule a fresh appointment?`,
   };
 
   const analyzeMessageWithGroq = async (userMessage) => {
+    console.log("Analyzing message with Groq:", userMessage);
     try {
       const token = localStorage.getItem("token");
       const response = await axios.post(
@@ -313,7 +320,7 @@ Would you like to continue the conversation or schedule a fresh appointment?`,
 
       const analysis = response.data.data;
       console.log("Groq analysis result:", analysis);
-      console.log("Data:", analysis.data);
+      // console.log("Data:", analysis.data);
       // logInteraction("groq_analysis", analysis);
       return analysis;
     } catch (error) {
@@ -397,54 +404,6 @@ Would you like to continue the conversation or schedule a fresh appointment?`,
     }
   };
 
-  // ✅ Main doctor chat file upload
-  // const handleFileUpload = async (file) => {
-  //   if (!file || !activeDoctor) return;
-
-  //   try {
-  //     setSelectedFile(file);
-  //     setUploadPreview(URL.createObjectURL(file));
-
-  //     const uploadResult = await uploadToCloudinary(file);
-
-  //     if (!uploadResult.success) {
-  //       console.error("Upload failed:", uploadResult.message);
-  //       return;
-  //     }
-
-  //     const fileAttachment = {
-  //       url: uploadResult.secure_url,
-  //       publicId: uploadResult.public_id,
-  //       fileName: file.name,
-  //       fileType: file.type,
-  //       fileSize: file.size,
-  //       uploadedAt: new Date(),
-  //     };
-
-  //     const fileMessage = {
-  //       _id: `file-msg-${Date.now()}`,
-  //       sender: userId,
-  //       receiver: activeDoctor._id,
-  //       senderName: "You",
-  //       receiverName: activeDoctor.name,
-  //       timestamp: new Date(),
-  //       messageType: "file",
-  //       fileAttachment,
-  //     };
-
-  //     // Add to local chat
-  //     setMessages((prev) => [...prev, fileMessage]);
-
-  //     // Send to doctor via socket
-  //     socketRef.current?.emit("sendMessage", fileMessage);
-
-  //     clearFileSelection();
-  //   } catch (error) {
-  //     console.error("File upload failed:", error);
-  //     alert("Failed to upload file. Please try again.");
-  //   }
-  // };
-
   const handleActionClick = async (action) => {
     switch (action.type) {
       case "appointment":
@@ -462,6 +421,7 @@ Would you like to continue the conversation or schedule a fresh appointment?`,
 
           // ✅ Update bot status and trigger context
           const result = await updateIsBotActive(false);
+          console.log("Bot disabled for chat:", result);
           if (result) {
             setBotEnabled(false);
             console.log("Patient started chat with doctor:", action.payload);
@@ -496,13 +456,13 @@ Would you like to continue the conversation or schedule a fresh appointment?`,
       const shipments = res.data || [];
 
       shipments
-        .filter((s) => !s.isProductReceived) // only pending
+        .filter((s) => s.shippedDate !== null && s.trackingId !== null && !s.isProductReceived)
         .forEach((s) => {
           const botMessage = {
             _id: `shipment-${s.id}`,
             sender: "ai-bot",
             receiver: userId,
-            message: " Medicine Dispatched",
+            message: `Medicine with tracking ID ${s.trackingId} was dispatched on ${new Date(s.shippedDate).toLocaleDateString()}! 🚚💨`,
             timestamp: s.shippedDate || new Date(),
             senderName: "AI Assistant",
             messageType: "bot",
@@ -542,7 +502,7 @@ Would you like to continue the conversation or schedule a fresh appointment?`,
       const token = localStorage.getItem("token");
       const userId = localStorage.getItem("userId");
       const res = await axios.patch(
-        `https://maars-2.onrender.com/api/doctorAppointmentSettings/updateIsBotOptionForThePatient`,
+        `${API_URL}/api/doctorAppointmentSettings/updateIsBotOptionForThePatient`,
         { isBotActive, patientId: userId },
         { headers: { Authorization: `Bearer ${token}` } }
       );
@@ -567,7 +527,9 @@ Would you like to continue the conversation or schedule a fresh appointment?`,
         socket.current?.connected
       );
 
-      return res.data;
+      console.log("in updatebotstatus", res.data.success);
+
+      return res.data.success;
     } catch (err) {
       console.error("Failed to update isBotActive:", err);
       return null;
@@ -618,160 +580,6 @@ Would you like to continue the conversation or schedule a fresh appointment?`,
     }
   };
 
-  useEffect(() => {
-    fetchNotifications();
-    const interval = setInterval(fetchNotifications, 30000); // every 30s
-    return () => clearInterval(interval);
-  }, []);
-
-  useEffect(() => {
-    fetchShipments();
-  }, []);
-
-  useEffect(() => {
-    if (!userId) return;
-    socketRef.current = io(API_URL, {
-      transports: ["websocket", "polling"],
-      auth: { token: localStorage.getItem("token") },
-    });
-    socketRef.current.emit("join", {
-      userId,
-      role: "patient",
-      name: localStorage.getItem("patientName") || "Patient",
-    });
-    socketRef.current.on("onlineUsers", (users) =>
-      setOnlineUsers(new Set(users))
-    );
-    return () => {
-      socketRef.current?.disconnect();
-    };
-  }, [userId]);
-
-  const messagesEndRef = useRef(null);
-  useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, [messages]);
-
-  useEffect(() => {
-    if (!userId) return;
-    const fetchDoctors = async () => {
-      try {
-        const token = localStorage.getItem("token");
-        const res = await axios.get(
-          `${API_URL}/api/patient/getAppointedDocs?id=${userId}`,
-          { headers: { Authorization: `Bearer ${token}` } }
-        );
-        setAppointedDoctors(res.data || []);
-        if (res.data?.length > 0) setSelectedDoctor(res.data[0]._id);
-      } catch (e) {
-        console.error(e);
-      }
-    };
-    fetchDoctors();
-  }, [userId]);
-
-  useEffect(() => {
-    if (!socketRef.current) return;
-
-    const handleVisibilityChange = () => {
-      if (document.visibilityState === "visible") {
-        // Re-emit join to mark patient online instantly
-        socketRef.current.emit("join", {
-          userId,
-          role: "patient",
-          name: localStorage.getItem("patientName") || "Patient",
-        });
-      } else {
-        // Optional: let server know patient is away/inactive
-        socketRef.current.emit("manualOffline", { userId });
-      }
-    };
-
-    document.addEventListener("visibilitychange", handleVisibilityChange);
-    return () =>
-      document.removeEventListener("visibilitychange", handleVisibilityChange);
-  }, [userId]);
-
-  useEffect(() => {
-    const fetchConsultationTypes = async () => {
-      console.log("Loaded consultation types:");
-      try {
-        const token = localStorage.getItem("token");
-        const res = await axios.get(
-          `https://maars-2.onrender.com
-/api/doctorAppointmentSettings/ViewAllTheTypesOfQuery`,
-          { headers: { Authorization: `Bearer ${token}` } }
-        );
-        setConsultationTypes(res.data.filteredData || []);
-        console.log("Loaded consultation types:", res.data.filteredData);
-      } catch (err) {
-        console.error("Failed to fetch consultation types:", err);
-      }
-    };
-
-    fetchConsultationTypes();
-  }, []);
-
-  useEffect(() => {
-    const fetchChatHistory = async () => {
-      const token = localStorage.getItem("token");
-      if (!token) {
-        console.error("No token found");
-        return;
-      }
-
-      // if (!selectedDoctor || !userId) return;
-      if (!userId) return;
-
-      try {
-        // ✅ use doctorId + patientId in the right order for your backend
-        const response = await axios.get(
-          `${API_URL}/api/chat/${selectedDoctor}/${userId}`,
-          { headers: { Authorization: `Bearer ${token}` } }
-        );
-
-        // Add type for UI rendering
-        const messagesWithType = (response.data || []).map((msg) => ({
-          ...msg,
-          messageType: msg.fileAttachment
-            ? "file"
-            : msg.sender === userId
-            ? "user"
-            : msg.sender === "ai-bot"
-            ? "bot"
-            : "doctor",
-        }));
-
-        console.log("Loaded chat history:", messages);
-        // setMessages(messagesWithType);
-        if (messagesWithType.length > 0) {
-          setMessages((prev) => {
-            const all = [...prev, ...messagesWithType];
-            const unique = all.filter(
-              (msg, index, self) =>
-                index === self.findIndex((m) => m._id === msg._id)
-            );
-            return unique;
-          });
-        } else if (!botInitialized && botEnabled && messages.length === 0) {
-          setTimeout(() => {
-            initializeBotGreeting();
-          }, 1000);
-          console.log("Bot1 greeting initialized");
-        }
-      } catch (error) {
-        console.error("Failed to fetch chat history:", error);
-        setBotEnabled(true);
-        setBotInitialized(false);
-        setTimeout(() => {
-          initializeBotGreeting();
-        }, 1000);
-      }
-    };
-
-    fetchChatHistory();
-  }, [selectedDoctor, userId]);
-
   const normalizeConsultationType = (value) => {
     switch (value) {
       case "new_consultation":
@@ -791,6 +599,7 @@ Would you like to continue the conversation or schedule a fresh appointment?`,
     console.log("Fetching feedback for type:", consultationTypeValue);
     try {
       const label = normalizeConsultationType(consultationTypeValue);
+
       if (!label || consultationTypes.length === 0) return;
 
       const matchedType = consultationTypes.find(
@@ -806,18 +615,27 @@ Would you like to continue the conversation or schedule a fresh appointment?`,
       }
 
       const token = localStorage.getItem("token");
+
       const res = await axios.get(
-        `https://maars-2.onrender.com
-/api/doctorAppointmentSettings/displayTheCreatedQuestionsForTheQuery/${matchedType._id}`,
+        `${API_URL}/api/doctorAppointmentSettings/displayTheCreatedQuestionsForTheQuery/68a8278346897563a29ab697`,
         { headers: { Authorization: `Bearer ${token}` } }
       );
 
       console.log("Fetched feedback questions:", res.data);
-      setFeedbackQuestions(res.data || []);
-      if (res.data?.success) {
-        setCurrentQuestionIndex(0);
-        setIsFeedbackFlowActive(true);
-        showFeedbackQuestion(res.data[0], 0, res.data.length);
+      if (res.data?.success && res.data.result) {
+        const questions = res.data.result.questions || [];
+        setFeedbackQuestions(questions);
+
+        if (questions.length > 0) {
+          setCurrentQuestionIndex(0);
+          setIsFeedbackFlowActive(true);
+          showFeedbackQuestion(questions[0], 0, questions.length);
+        } else {
+          console.warn("No questions available for this consultation type");
+          setBotInitialized(false);
+          setBotEnabled(true);
+          setTimeout(() => initializeBotGreeting(), 1000);
+        }
       } else {
         setBotInitialized(false);
         setBotEnabled(true);
@@ -837,7 +655,7 @@ Would you like to continue the conversation or schedule a fresh appointment?`,
       _id: `feedback-q-${Date.now()}`,
       sender: "ai-bot",
       receiver: userId,
-      message: `${question.text} (${index + 1}/${total})`,
+      message: `${question.question} (${index + 1}/${total})`,
       timestamp: new Date(),
       senderName: "AI Assistant",
       messageType: "feedback-question",
@@ -850,6 +668,7 @@ Would you like to continue the conversation or schedule a fresh appointment?`,
   const handleFeedbackAnswer = (questionId, rating) => {
     console.log("Answer:", questionId, rating);
     // TODO: Optionally send answer to backend
+    setRatings((prev) => ({ ...prev, [questionId]: rating }));
 
     const nextIndex = currentQuestionIndex + 1;
     if (nextIndex < feedbackQuestions.length) {
@@ -867,163 +686,6 @@ Would you like to continue the conversation or schedule a fresh appointment?`,
       setTimeout(() => initializeBotGreeting(), 1000);
     }
   };
-
-  useEffect(() => {
-    if (!socketRef.current) return;
-
-    const handleReceiveMessage = (msg) => {
-      console.log("📩 Incoming message:", msg);
-
-      // classify message type
-      const messageType = msg.fileAttachment
-        ? "file"
-        : msg.sender === userId
-        ? "user"
-        : msg.sender === "ai-bot"
-        ? "bot"
-        : "doctor";
-
-      // only push if it belongs to this chat
-      const isCurrentChat =
-        (msg.sender === selectedDoctor && msg.receiver === userId) || // doctor → patient
-        (msg.sender === userId && msg.receiver === selectedDoctor) || // patient echo
-        msg.sender === "ai-bot";
-
-      if (isCurrentChat) {
-        setMessages((prev) => {
-          // 🚫 prevent duplicates: check if already exists
-          const exists = prev.some(
-            (m) =>
-              m.message === msg.message &&
-              m.sender === msg.sender &&
-              m.receiver === msg.receiver &&
-              Math.abs(new Date(m.timestamp) - new Date(msg.timestamp)) < 2000 // within 2s
-          );
-
-          if (exists) return prev; // skip duplicate
-
-          return [...prev, { ...msg, messageType }];
-        });
-      }
-    };
-
-    socket.current.on("receiveMessage", handleReceiveMessage);
-
-    return () => {
-      socket.current.off("receiveMessage", handleReceiveMessage);
-    };
-  }, [selectedDoctor, userId]);
-
-  useEffect(() => {
-    if (!socket.current) return;
-
-    const handleBotStatus = ({ doctorId, patientId, status }) => {
-      console.log("🔔 Messenger got botStatusChanged:", {
-        doctorId,
-        patientId,
-        status,
-      });
-
-      console.log("Active doctor:", activeDoctor);
-
-      if (patientId === userId) {
-        setBotEnabled(true);
-
-        if (status) {
-          setActiveDoctor(null); // clear doctor session
-
-          // Add end message to chat
-          const endMessage = {
-            _id: `bot-end-${Date.now()}`,
-            sender: "ai-bot",
-            receiver: userId,
-            message:
-              "Your chat with the doctor has ended. The bot is now active again.",
-            timestamp: new Date(),
-            senderName: "AI Assistant",
-            messageType: "bot",
-          };
-          setMessages((prev) => [...prev, endMessage]);
-
-          console.log("consultation type", selectedConsultationTypeRef.current);
-
-          if (selectedConsultationTypeRef.current) {
-            fetchFeedbackQuestions(selectedConsultationTypeRef.current);
-          } else {
-            // ✅ Restart bot flow
-            setBotEnabled(true);
-            setBotInitialized(false);
-            setTimeout(() => initializeBotGreeting(), 1000);
-          }
-        }
-      }
-    };
-
-    socket.current.on("botStatusChanged", handleBotStatus);
-
-    return () => {
-      socket.current.off("botStatusChanged", handleBotStatus);
-    };
-  }, [
-    socket,
-    activeDoctor,
-    userId,
-    selectedConsultationTypeRef,
-    fetchFeedbackQuestions,
-    initializeBotGreeting,
-  ]);
-
-  const fetchPatientProfile = async () => {
-    try {
-      const token = localStorage.getItem("token");
-
-      const response = await axios.get(`${API_URL}/api/patient/profile`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-
-      if (response.data) {
-        // ✅ store isBotActive in a variable
-        const { isBotActive } = response.data;
-
-        console.log("Patient profile:", response.data);
-        console.log("isBotActive:", isBotActive);
-        // you can return or set it to state
-        return isBotActive;
-      }
-    } catch (error) {
-      console.error("Failed to fetch patient profile:", error);
-      return null;
-    }
-  };
-
-  useEffect(() => {
-    const getProfile = async () => {
-      const botStatus = await fetchPatientProfile();
-      if (botStatus !== null) {
-        setBotEnabled(botStatus);
-        console.log("Bot enabled status:", botStatus);
-
-        if (!botStatus) {
-          // bot disabled => doctor chat active
-          const storedDoctor = localStorage.getItem("latestActiveDoctor");
-          if (storedDoctor) {
-            try {
-              setActiveDoctor(JSON.parse(storedDoctor));
-              console.log("Restored active doctor from storage:", storedDoctor);
-            } catch (e) {
-              console.error("Failed to restore doctor:", e);
-            }
-          }
-        }
-      }
-    };
-    getProfile();
-  }, []);
-
-  useEffect(() => {
-    botEnabledRef.current = botEnabled;
-    botInitializedRef.current = botInitialized;
-  }, [botEnabled, botInitialized]);
 
   const formatFileSize = (bytes) => {
     if (bytes === 0) return "0 Bytes";
@@ -1129,7 +791,7 @@ Would you like to continue the conversation or schedule a fresh appointment?`,
         };
 
         // setMessages((prev) => [...prev, fileMessage]);
-        socketRef.current?.emit("sendMessage", fileMessage);
+        sendMessage(fileMessage);
 
         clearFileSelection();
       } catch (error) {
@@ -1140,8 +802,8 @@ Would you like to continue the conversation or schedule a fresh appointment?`,
       return;
     }
 
-    // Case 2: Normal text message
-    if (activeDoctor) {
+    console.log("Sending message to doc:", activeDoctor, botEnabled);
+    if (activeDoctor && !botEnabledRef.current) {
       const userMessage = {
         _id: `user-msg-${Date.now()}`,
         sender: userId,
@@ -1153,7 +815,7 @@ Would you like to continue the conversation or schedule a fresh appointment?`,
         receiverName: "Dr. Me",
       };
       setMessages((prev) => [...prev, userMessage]);
-      socketRef.current?.emit("sendMessage", userMessage);
+      sendMessage(userMessage);
     } else {
       // Bot flow (unchanged)
       const userMessage = {
@@ -1167,6 +829,7 @@ Would you like to continue the conversation or schedule a fresh appointment?`,
       };
       setMessages((prev) => [...prev, userMessage]);
       if (currentBotFlow === BOT_FLOWS.SYMPTOM_COLLECTION) {
+        console.log("Submitting symptoms to Groq:", message.trim());
         handleSymptomSubmission(message.trim());
       } else {
         handleBotFlow(message.trim());
@@ -1175,6 +838,257 @@ Would you like to continue the conversation or schedule a fresh appointment?`,
 
     setMessage("");
   };
+
+  useEffect(() => {
+    if (!socket.current) return;
+
+    const handleBotStatus = ({ doctorId, patientId, status }) => {
+      console.log("🔔 Messenger got botStatusChanged:", {
+        doctorId,
+        patientId,
+        status,
+      });
+
+      console.log("Active doctor:", activeDoctor);
+
+      if (patientId === userId) {
+        console.log("Updating bot status to:", status);
+        setBotEnabled(status);
+
+        if (status) {
+          setActiveDoctor(null);
+
+          // Add end message to chat
+          const endMessage = {
+            _id: `bot-end-${Date.now()}`,
+            sender: "ai-bot",
+            receiver: userId,
+            message:
+              "Your chat with the doctor has ended. The bot is now active again.",
+            timestamp: new Date(),
+            senderName: "AI Assistant",
+            messageType: "bot",
+          };
+          setMessages((prev) => [...prev, endMessage]);
+
+          console.log("consultation type", selectedConsultationTypeRef.current);
+
+          if (selectedConsultationTypeRef.current) {
+            fetchFeedbackQuestions(selectedConsultationTypeRef.current);
+          } else {
+            // ✅ Restart bot flow
+            setBotEnabled(true);
+            setBotInitialized(false);
+            setTimeout(() => initializeBotGreeting(), 1000);
+          }
+        }
+      }
+    };
+
+    const handleReceiveMessage = (msg) => {
+      console.log("📩 Incoming message:", msg);
+
+      // classify message type
+      // const messageType = msg.fileAttachment
+      //   ? "file"
+      //   : msg.sender === userId
+      //   ? "user"
+      //   : msg.sender === "ai-bot"
+      //   ? "bot"
+      //   : "doctor";
+
+      // console.log("Determined messageType:", messageType);
+
+      // only push if it belongs to this chat
+      const isCurrentChat =
+        (msg.sender === selectedDoctor && msg.receiver === userId) || // doctor → patient
+        (msg.sender === userId && msg.receiver === selectedDoctor) || // patient echo
+        msg.sender === "ai-bot";
+
+      if (isCurrentChat) {
+        setMessages((prev) => {
+          // 🚫 prevent duplicates: check if already exists
+          const exists = prev.some(
+            (m) =>
+              m.message === msg.message &&
+              m.sender === msg.sender &&
+              m.receiver === msg.receiver &&
+              Math.abs(new Date(m.timestamp) - new Date(msg.timestamp)) < 2000 // within 2s
+          );
+
+          if (exists) return prev; // skip duplicate
+
+          return [...prev, { ...msg }];
+        });
+      }
+    };
+
+    socket.current.on("receiveMessage", handleReceiveMessage);
+    socket.current.on("botStatusChanged", handleBotStatus);
+
+    return () => {
+      socket.current.off("receiveMessage", handleReceiveMessage);
+      socket.current.off("botStatusChanged", handleBotStatus);
+    };
+  }, [
+    socket,
+    activeDoctor,
+    userId,
+    selectedDoctor,
+    selectedConsultationTypeRef,
+    fetchFeedbackQuestions,
+    initializeBotGreeting,
+  ]);
+
+  const fetchPatientProfile = async () => {
+    try {
+      const token = localStorage.getItem("token");
+
+      const response = await axios.get(`${API_URL}/api/patient/profile`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+
+      if (response.data) {
+        // ✅ store isBotActive in a variable
+        const { isBotActive } = response.data;
+
+        console.log("Patient profile:", response.data);
+        console.log("isBotActive:", isBotActive);
+        // you can return or set it to state
+        return isBotActive;
+      }
+    } catch (error) {
+      console.error("Failed to fetch patient profile:", error);
+      return null;
+    }
+  };
+
+  useEffect(() => {
+    const getProfile = async () => {
+      const botStatus = await fetchPatientProfile();
+      if (botStatus !== null) {
+        setBotEnabled(botStatus);
+        console.log("Bot enabled status:", botStatus);
+
+        if (!botStatus) {
+          // bot disabled => doctor chat active
+          const storedDoctor = localStorage.getItem("latestActiveDoctor");
+          if (storedDoctor) {
+            try {
+              setActiveDoctor(JSON.parse(storedDoctor));
+              console.log("Restored active doctor from storage:", storedDoctor);
+            } catch (e) {
+              console.error("Failed to restore doctor:", e);
+            }
+          }
+        }
+      }
+    };
+    getProfile();
+  }, []);
+
+  useEffect(() => {
+    botEnabledRef.current = botEnabled;
+    botInitializedRef.current = botInitialized;
+  }, [botEnabled, botInitialized]);
+
+  useEffect(() => {
+    fetchNotifications();
+    const interval = setInterval(fetchNotifications, 30000); // every 30s
+    return () => clearInterval(interval);
+  }, []);
+
+  useEffect(() => {
+    fetchShipments();
+  }, []);
+
+  const messagesEndRef = useRef(null);
+  useEffect(() => {
+    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  }, [messages]);
+
+  useEffect(() => {
+    if (!userId) return;
+    const fetchDoctors = async () => {
+      try {
+        const token = localStorage.getItem("token");
+        const res = await axios.get(
+          `${API_URL}/api/patient/getAppointedDocs?id=${userId}`,
+          { headers: { Authorization: `Bearer ${token}` } }
+        );
+        setAppointedDoctors(res.data || []);
+        if (res.data?.length > 0) setSelectedDoctor(res.data[0]._id);
+      } catch (e) {
+        console.error(e);
+      }
+    };
+    fetchDoctors();
+  }, [userId]);
+
+  useEffect(() => {
+    const fetchConsultationTypes = async () => {
+      console.log("Loaded consultation types:");
+      try {
+        const token = localStorage.getItem("token");
+        const res = await axios.get(
+          `${API_URL}/api/doctorAppointmentSettings/ViewAllTheTypesOfQuery`,
+          { headers: { Authorization: `Bearer ${token}` } }
+        );
+        setConsultationTypes(res.data.filteredData || []);
+        console.log("Loaded consultation types:", res.data.filteredData);
+      } catch (err) {
+        console.error("Failed to fetch consultation types:", err);
+      }
+    };
+
+    fetchConsultationTypes();
+  }, []);
+
+  useEffect(() => {
+    const fetchChatHistory = async () => {
+      const token = localStorage.getItem("token");
+      if (!token) {
+        console.error("No token found");
+        return;
+      }
+
+      // if (!selectedDoctor || !userId) return;
+      if (!userId) return;
+
+      try {
+        // ✅ use doctorId + patientId in the right order for your backend
+        const response = await axios.get(
+          `${API_URL}/api/chat/${selectedDoctor}/${userId}`,
+          { headers: { Authorization: `Bearer ${token}` } }
+        );
+
+        setMessages((prev) => {
+          const all = [...prev, ...response.data];
+          const unique = all.filter(
+            (msg, index, self) =>
+              index === self.findIndex((m) => m._id === msg._id)
+          );
+          return unique;
+        });
+
+        // if (!botInitialized && botEnabled && messages.length === 0) {
+        setTimeout(() => {
+          initializeBotGreeting();
+        }, 1000);
+        //   console.log("Bot1 greeting initialized");
+        // }
+      } catch (error) {
+        console.error("Failed to fetch chat history:", error);
+        // setBotEnabled(true);
+        // setBotInitialized(false);
+        setTimeout(() => {
+          initializeBotGreeting();
+        }, 1000);
+      }
+    };
+
+    fetchChatHistory();
+  }, [selectedDoctor, userId]);
 
   useEffect(() => {
     const storedDoctor = localStorage.getItem("latestActiveDoctor");
@@ -1386,7 +1300,11 @@ Would you like to continue the conversation or schedule a fresh appointment?`,
                                 {[1, 2, 3, 4, 5].map((star) => (
                                   <button
                                     key={star}
-                                    className="text-yellow-400 text-lg hover:scale-110 transition"
+                                    className={`text-lg hover:scale-110 transition ${
+                                      star <= (ratings[msg.questionId] || 0)
+                                        ? "text-yellow-400"
+                                        : "text-gray-400"
+                                    }`}
                                     onClick={() =>
                                       handleFeedbackAnswer(msg.questionId, star)
                                     }

@@ -100,44 +100,59 @@ const DoctorInventory = () => {
         <h1 className="text-2xl font-bold text-gray-900 mb-6">Patient Inventory</h1>
         <div className="bg-white rounded-xl shadow p-6">
           <h2 className="text-xl font-semibold text-gray-800 mb-4">Patient Summary</h2>
-         
-          <div className="overflow-x-auto">
-            <table className="min-w-full border rounded-xl overflow-hidden">
-              <thead className="bg-gray-100 text-sm text-gray-700">
-                <tr>
-                  <th className="px-4 py-3 text-left">Patient Name</th>
-                  <th className="px-4 py-3 text-left">Total Medicine Count</th>
-                  <th className="px-4 py-3 text-left">View Medication</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y text-sm text-gray-800">
-                {patients.length === 0 ? (
-                  <tr>
-                    <td colSpan="3" className="px-4 py-8 text-center text-gray-500">
-                      No patients found
-                    </td>
-                  </tr>
-                ) : (
-                  patients.map((patient, index) => (
-                    <tr key={patient.patientId || index} className="hover:bg-gray-50">
-                      <td className="px-4 py-3">{patient.patientName}</td>
-                      <td className="px-4 py-3">
-                        {calculateTotalMedicineCount(patient.medicationStock)}
-                      </td>
-                      <td className="px-4 py-3">
-                        <button 
-                          onClick={() => handleViewMedication(patient)}
-                          className="inline-flex items-center px-2.5 py-1.5 border text-xs font-medium rounded-[5px] text-white bg-[#1a237e] hover:bg-[#534bae] focus:ring-2 focus:ring-offset-2 focus:ring-[#534bae]"
-                        >
-                          View
-                        </button>
-                      </td>
-                    </tr>
-                  ))
-                )}
-              </tbody>
+            <table className="w-full overflow-hidden rounded-lg">
+    <thead>
+      <tr className="border-b border-blue-200">
+        <th className="bg-gray-100 text-center p-4 font-bold text-gray-700 text-sm">
+          Patient Name
+        </th>
+        <th className="bg-white text-center p-4 font-bold text-gray-700 text-sm">
+          Total Medicine Count
+        </th>
+        <th className="bg-gray-100 text-center p-4 font-bold text-gray-700 text-sm">
+          View Medication
+        </th>
+      </tr>
+    </thead>
+    <tbody>
+      {patients.length === 0 ? (
+        <tr>
+          <td
+            colSpan="3"
+            className="bg-white text-center text-gray-500 py-6"
+          >
+            No patients found.
+          </td>
+        </tr>
+      ) : (
+        patients.map((patient, index) => (
+          <tr
+            key={patient.patientId || index}
+            className="border-b border-blue-200"
+          >
+            {/* Patient Name */}
+            <td className="bg-gray-100 p-4 text-gray-900 text-center">
+              {patient.patientName}
+            </td>
+            {/* Medicine Count */}
+            <td className="bg-white p-4 text-gray-600 text-center">
+              {calculateTotalMedicineCount(patient.medicationStock)}
+            </td>
+            {/* View Medication Button */}
+            <td className="bg-gray-100 p-4 text-center">
+              <button
+                onClick={() => handleViewMedication(patient)}
+                className="inline-flex items-center px-2.5 py-1.5 border text-xs font-medium rounded-[5px] text-white bg-blue-500 hover:bg-blue-700 focus:ring-2 focus:ring-offset-2 focus:ring-blue-700"
+              >
+                View
+              </button>
+            </td>
+          </tr>
+        ))
+      )}
+    </tbody>
             </table>
-          </div>
+
         </div>
       </div>
 
@@ -161,40 +176,53 @@ const DoctorInventory = () => {
             {/* Popup Content */}
             <div className="p-6 overflow-y-auto max-h-[calc(90vh-120px)]">
               {selectedPatient.medicationStock && selectedPatient.medicationStock.length > 0 ? (
-                <div className="overflow-x-auto">
-                  <table className="min-w-full border rounded-xl overflow-hidden">
-                    <thead className="bg-gray-100 text-sm text-gray-700">
-                      <tr>
-                        <th className="px-4 py-3 text-left">Medicine Name</th>
-                        <th className="px-4 py-3 text-left">Form</th>
-                        <th className="px-4 py-3 text-left">Quantity Prescribed</th>
-                        <th className="px-4 py-3 text-left">Quantity Consumed</th>
-                        <th className="px-4 py-3 text-left">Quantity Remaining</th>
-                        <th className="px-4 py-3 text-left">Status</th>
-                      </tr>
-                    </thead>
-                    <tbody className="divide-y text-sm text-gray-800">
-                      {selectedPatient.medicationStock.map((medication, index) => (
-                        <tr key={index} className="hover:bg-gray-50">
-                          <td className="px-4 py-3 font-medium">{medication.medicineName}</td>
-                          <td className="px-4 py-3">{medication.form}</td>
-                          <td className="px-4 py-3">{medication.dispenseQuantity}</td>
-                          <td className="px-4 py-3">{medication.totalQuantityConsumed}</td>
-                          <td className="px-4 py-3">{medication.quantityRemaining}</td>
-                          <td className="px-4 py-3">
-                            <span className={`inline-flex px-2 py-1 text-xs font-medium rounded-full ${
-                              medication.medicineStatus === 'Available' 
-                                ? 'bg-green-100 text-green-800' 
-                                : 'bg-red-100 text-red-800'
-                            }`}>
-                              {medication.medicineStatus}
-                            </span>
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
+  <table className="w-full overflow-hidden rounded-lg">
+    <thead>
+      <tr className="border-b border-blue-200">
+        <th className="bg-gray-100 text-left p-4 font-bold text-gray-700 text-sm">
+          Medicine Name
+        </th>
+        <th className="bg-white text-left p-4 font-bold text-gray-700 text-sm">
+          Form
+        </th>
+        <th className="bg-gray-100 text-left p-4 font-bold text-gray-700 text-sm">
+          Quantity Prescribed
+        </th>
+        <th className="bg-white text-left p-4 font-bold text-gray-700 text-sm">
+          Quantity Consumed
+        </th>
+        <th className="bg-gray-100 text-left p-4 font-bold text-gray-700 text-sm">
+          Quantity Remaining
+        </th>
+        <th className="bg-white text-left p-4 font-bold text-gray-700 text-sm">
+          Status
+        </th>
+      </tr>
+    </thead>
+    <tbody>
+      {selectedPatient.medicationStock.map((medication, index) => (
+        <tr key={index} className="border-b border-blue-200 hover:bg-gray-50">
+          <td className="bg-gray-100 p-4 font-medium text-center text-gray-900">{medication.medicineName}</td>
+          <td className="bg-white p-4 text-center text-gray-700">{medication.form}</td>
+          <td className="bg-gray-100 p-4 text-center text-gray-700">{medication.dispenseQuantity}</td>
+          <td className="bg-white p-4 text-center text-gray-700">{medication.totalQuantityConsumed}</td>
+          <td className="bg-gray-100 p-4 text-center text-gray-700">{medication.quantityRemaining}</td>
+          <td className="bg-white p-4 text-center">
+            <span
+              className={`inline-flex px-2 py-1 text-xs font-medium rounded-full ${
+                medication.medicineStatus === 'Available'
+                  ? 'bg-green-100 text-green-800'
+                  : 'bg-red-100 text-red-800'
+              }`}
+            >
+              {medication.medicineStatus}
+            </span>
+          </td>
+        </tr>
+      ))}
+    </tbody>
+  </table>
+
               ) : (
                 <div className="text-center py-8 text-gray-500">
                   No medication data available for this patient

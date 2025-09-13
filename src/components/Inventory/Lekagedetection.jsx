@@ -350,8 +350,7 @@ const LeakageDetection = () => {
             </div>
 
             {/* Data Table - Updated with alternating colors and blue separators */}
-            <div className="overflow-x-auto rounded-lg shadow pt-5">
-              <table className="w-full overflow-hidden rounded-lg">
+                <table className="w-full overflow-hidden rounded-lg">
                 <thead>
                   <tr className="border-b border-blue-200">
                     <th className="bg-gray-100 text-center p-4 font-bold text-gray-700 text-sm">
@@ -445,7 +444,6 @@ const LeakageDetection = () => {
                   ))}
                 </tbody>
               </table>
-            </div>
 
             {sortedData.length === 0 && (
               <div className="text-center py-12">

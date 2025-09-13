@@ -3,7 +3,6 @@ import config from '../../config';
 const API_URL = config.API_URL;
 
 const AddDoctorModal = ({ isOpen, onClose, employeeID, refreshDoctors, doctor }) => {
-  const [uploadedDocuments, setUploadedDocuments] = useState([]);
   const [error, setError] = useState(null);
   const [documents, setDocuments] = useState([]);
   const [showPassword, setShowPassword] = useState(false);
@@ -59,10 +58,18 @@ const AddDoctorModal = ({ isOpen, onClose, employeeID, refreshDoctors, doctor })
     previousDuration: "",
     previousJobRole: "",
     totalExperience: "",
-    certifications: "",
+    certifications: [],
     medicalRegistrationNumber: "",
     documents: [],
-});
+    follow: "",
+    videoPlatform: "googleMeet",
+    profilePhoto: "",
+    googleAccessToken: "",
+    googleRefreshToken: "",
+    zoomAccessToken: "",
+    zoomRefreshToken: "",
+    zoomTokenExpiration: "",
+  });
 
 // Function to calculate age from date of birth
 const calculateAge = (dateOfBirth) => {
@@ -95,22 +102,33 @@ useEffect(() => {
       } catch (error) {
         console.error("Failed to fetch Employee ID:", error);
       }
+      
+      setFormData(prev => ({ ...prev, age: age.toString() }));
     }
     fetchemployeeID();
   }
 }, [doctor]);
 
-// Update form data when doctor changes
-useEffect(() => {
-    if (doctor) {
-        setFormData((prevState) => ({
-            ...prevState,
-            ...doctor,
-            digitalSignature: doctor.digitalSignature || null,
-            documents: doctor.documents || [],
-        }));
+  // Fetch the generated Employee ID when adding a new doctor (not in edit mode)
+  useEffect(() => {
+    if (!doctor) {
+      async function fetchemployeeID() {
+        try {
+          const response = await fetch(`${API_URL}/api/employees/generate-employee-id`);
+          const data = await response.json();
+          if (data.success) {
+            setFormData((prevFormData) => ({
+              ...prevFormData,
+              employeeID: data.employeeID,
+            }));
+          }
+        } catch (error) {
+          console.error("Failed to fetch Employee ID:", error);
+        }
+      }
+      fetchemployeeID();
     }
-}, [doctor]);
+  }, [doctor]);
 
 // Fetch employee data when editing
 useEffect(() => {
@@ -134,11 +152,12 @@ useEffect(() => {
             }));
           }
         } catch (error) {
-                console.error("Error fetching employee details:", error);
-            }
-        };
+          console.error("Error fetching employee details:", error);
+          setError("Failed to fetch employee details");
+        }
+      };
 
-        fetchEmployeeData();
+      fetchEmployeeData();
     } else {
         // Reset form for adding a new employee
         setFormData({
@@ -193,7 +212,7 @@ usernameSystemAccess: '',
     documents: []  
         });
     }
-}, [doctor, employeeID]);
+  }, [doctor, employeeID]);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -312,6 +331,19 @@ usernameSystemAccess: '',
             console.error("Server error:", errorData);
             alert(`Error: ${errorData.message || "Something went wrong!"}`);
         }
+
+        if (typeof onClose === "function") {
+          onClose();
+        }
+      } else {
+        // Handle structured error responses
+        if (responseData.details) {
+          const errorMessages = Object.values(responseData.details).join(', ');
+          setError(`Validation Error: ${errorMessages}`);
+        } else {
+          setError(responseData.error || "Something went wrong!");
+        }
+      }
     } catch (error) {
         console.error("Error in form submission:", error);
         alert("An unexpected error occurred. Please try again.");
@@ -323,7 +355,16 @@ usernameSystemAccess: '',
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-gray-900 bg-opacity-50 p-4">
       <div className="container max-h-[80vh] overflow-y-auto mx-auto p-6 bg-white rounded-lg shadow-lg relative">
-        <h2 className="text-2xl font-bold mb-6">Add Employee</h2>
+        <h2 className="text-2xl font-bold mb-6">
+          {doctor ? "Edit Employee" : "Add Employee"}
+        </h2>
+        
+        {error && (
+          <div className="mb-4 p-4 bg-red-100 border border-red-400 text-red-700 rounded">
+            {error}
+          </div>
+        )}
+        
         <form onSubmit={handleSubmit}>
           
             {/* Personal Information */}
@@ -383,7 +424,7 @@ usernameSystemAccess: '',
             </div>
 
             <div>
-              <label className="block text-sm font-medium">Marital Status</label>
+              <label className="block text-sm font-medium">Marital Status *</label>
               <select
                 name="maritalStatus"
                 value={formData.maritalStatus}
@@ -398,7 +439,7 @@ usernameSystemAccess: '',
             </div>
 
             <div>
-              <label className="block text-sm font-medium">Nationality</label>
+              <label className="block text-sm font-medium">Nationality *</label>
               <input
                 type="text"
                 name="nationality"
@@ -422,6 +463,7 @@ usernameSystemAccess: '',
                 required
               />
             </div>
+
             <div>
               <label className="block text-sm font-medium">Secondary Contact</label>
               <input
@@ -497,6 +539,7 @@ usernameSystemAccess: '',
                 required
               />
             </div>
+
             <div>
               <label className="block text-sm font-medium">Emergency Contact Number *</label>
               <input
@@ -509,13 +552,13 @@ usernameSystemAccess: '',
                 required
               />
             </div>
-            </div>
+          </div>
 
             {/* Job Details */}
             <h2 className="text-xl font-semibold mt-6 mb-3">Job Details</h2>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div>
-              <label className="block text-sm font-medium">Employee ID</label>
+              <label className="block text-sm font-medium">Employee ID *</label>
               <input
                 type="text"
                 name="employeeID"
@@ -526,7 +569,7 @@ usernameSystemAccess: '',
             </div>
 
             <div>
-              <label className="block text-sm font-medium">Designation Job Title</label>
+              <label className="block text-sm font-medium">Role *</label>
               <select
                 name="role"
                 value={formData.role}
@@ -542,7 +585,7 @@ usernameSystemAccess: '',
             </div>
 
             <div>
-              <label className="block text-sm font-medium">Department</label>
+              <label className="block text-sm font-medium">Department *</label>
               <select
                 name="department"
                 value={formData.department}
@@ -571,7 +614,7 @@ usernameSystemAccess: '',
             </div>
 
             <div>
-              <label className="block text-sm font-medium">Employment Type</label>
+              <label className="block text-sm font-medium">Employment Type *</label>
               <select
                 name="employmentType"
                 value={formData.employmentType}
@@ -587,7 +630,7 @@ usernameSystemAccess: '',
             </div>
             
             <div>
-              <label className="block text-sm font-medium">Work Location</label>
+              <label className="block text-sm font-medium">Work Location *</label>
               <select
                 name="workLocation"
                 value={formData.workLocation}
@@ -616,7 +659,7 @@ usernameSystemAccess: '',
             </div>
             
             <div>
-              <label className="block text-sm font-medium">Work Shift/Hours</label>
+              <label className="block text-sm font-medium">Work Shift *</label>
               <select
                 name="workShift"
                 value={formData.workShift}
@@ -631,6 +674,22 @@ usernameSystemAccess: '',
                 <option value="Flexible Hours">Flexible Hours</option>
               </select>
             </div>
+          </div>
+          
+          {/* Compensation Details */}
+          <h2 className="text-xl font-semibold mt-6 mb-3">Compensation Details</h2>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div>
+              <label className="block text-sm font-medium">Basic Salary *</label>
+              <input
+                type="number"
+                name="basicSalary"
+                value={formData.basicSalary}
+                onChange={handleChange}
+                className="w-full mt-1 p-2 border border-gray-300 rounded-md"
+                placeholder="Enter Basic Salary"
+                required
+              />
             </div>
             
             {/* Compensation Details */}
@@ -687,31 +746,31 @@ usernameSystemAccess: '',
   />
 </div>
 
-<div>
-  <label className="block text-sm font-medium">Bank Name & Branch *</label>
-  <input
-    type="text"
-    name="bankName"
-    value={formData.bankName}
-    onChange={handleChange}
-    className="w-full mt-1 p-2 border border-gray-300 rounded-md"
-    placeholder="Enter Bank Name and Branch"
-    required
-  />
-</div>
+            <div>
+              <label className="block text-sm font-medium">Bank Name & Branch *</label>
+              <input
+                type="text"
+                name="bankName"
+                value={formData.bankName}
+                onChange={handleChange}
+                className="w-full mt-1 p-2 border border-gray-300 rounded-md"
+                placeholder="Enter Bank Name and Branch"
+                required
+              />
+            </div>
 
-<div>
-  <label className="block text-sm font-medium">IFSC Code *</label>
-  <input
-    type="text"
-    name="ifscCode"
-    value={formData.ifscCode}
-    onChange={handleChange}
-    className="w-full mt-1 p-2 border border-gray-300 rounded-md"
-    placeholder="Enter IFSC Code"
-    required
-  />
-</div>
+            <div>
+              <label className="block text-sm font-medium">IFSC Code *</label>
+              <input
+                type="text"
+                name="ifscCode"
+                value={formData.ifscCode}
+                onChange={handleChange}
+                className="w-full mt-1 p-2 border border-gray-300 rounded-md"
+                placeholder="Enter IFSC Code"
+                required
+              />
+            </div>
 
 <div>
 <label className="block text-sm font-medium">Payment Frequency *</label>
@@ -806,11 +865,8 @@ usernameSystemAccess: '',
               />
             </div>
 
-            {/* Previous Employer Details */}
-            <h4 className="col-span-2 text-sm font-semibold mt-6 mb-6">Previous Employer Details</h4>
-
             <div>
-              <label className="block text-sm font-medium">Company Name</label>
+              <label className="block text-sm font-medium">Previous Company Name</label>
               <input
                 type="text"
                 name="previousEmployer"
@@ -822,7 +878,7 @@ usernameSystemAccess: '',
             </div>
 
             <div>
-              <label className="block text-sm font-medium">Duration</label>
+              <label className="block text-sm font-medium">Previous Employment Duration</label>
               <input
                 type="text"
                 name="previousDuration"
@@ -834,7 +890,7 @@ usernameSystemAccess: '',
             </div>
 
             <div>
-              <label className="block text-sm font-medium">Job Role</label>
+              <label className="block text-sm font-medium">Previous Job Role</label>
               <input
                 type="text"
                 name="previousJobRole"
@@ -911,14 +967,13 @@ usernameSystemAccess: '',
               className="text-blue-500 hover:text-blue-700 mr-4"
               onClick={() => markDocumentAsUploaded(index)}
             >
-              Upload
+              Cancel
             </button>
             <button
-              type="button"
-              className="text-red-500 hover:text-red-700"
-              onClick={() => handleRemoveDocument(index)}
+              type="submit"
+              className="px-6 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors"
             >
-              Remove
+              {doctor ? "Update Employee" : "Create Employee"}
             </button>
           </div>
         </li>

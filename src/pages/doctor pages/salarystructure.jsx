@@ -1,13 +1,16 @@
 import React, { useState, useEffect, useRef } from "react";
 import axios from "axios";
 import { FaPlus, FaTrash, FaEllipsisV, FaEye } from "react-icons/fa";
+import config from '../../config';
+const API_URL = config.API_URL;
 
 const SalaryStructure = () => {
   const [salaryData, setSalaryData] = useState([]);
+  const [employeesData, setEmployeesData] = useState([]);
   const [dropdownVisible, setDropdownVisible] = useState(null);
   const dropdownRef = useRef(null);
   const buttonRef = useRef(null);
-  const [selectedDoctor,setSelectedDoctor]=useState();
+  const [selectedDoctor, setSelectedDoctor] = useState();
   const [isEditing, setIsEditing] = useState(false);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [filter, setFilter] = useState({ query: "" });
@@ -23,17 +26,29 @@ const SalaryStructure = () => {
       { name: "Gratuity", value: "" },
       { name: "Professional Tax", value: "" },
     ],
-    kpi: [], // Added KPI as an array (since it has multiple name & amount fields)
+    kpi: [],
     leaveEncashment: "No",
     totalAllowances: "",
-    totalDeductions: "", // Array for deductions
+    totalDeductions: "",
     grossSalary: "",
     netSalary: "",
   });
 
   useEffect(() => {
     fetchSalaryData();
+    fetchEmployeesData();
   }, []);
+
+  // Fetch employees data from the new API
+  const fetchEmployeesData = async () => {
+    try {
+      const response = await axios.get(`${API_URL}/api/employees/all`);
+      setEmployeesData(response.data);
+    } catch (error) {
+      console.error("Error fetching employees data", error);
+    }
+  };
+
   // Handle filter changes
   const handleFilterChange = (e) => {
     const { name, value } = e.target;
@@ -42,31 +57,56 @@ const SalaryStructure = () => {
         [name]: value,
     }));
     setCurrentPage(1);
-};
+  };
 
-// Handle entries per page change
-const handleEntriesPerPageChange = (e) => {
+  // Handle entries per page change
+  const handleEntriesPerPageChange = (e) => {
     setEntriesPerPage(Number(e.target.value));
     setCurrentPage(1);
-};
+  };
 
-// Filtered and paginated doctors
-const filteredDoctors = salaryData.filter((doctor) =>
-    ["employeeID","name"].some((field) =>
-        doctor[field]?.toLowerCase().includes(filter.query.toLowerCase())
+  // Merge salary data with employee data for display
+  const getMergedData = () => {
+    return employeesData.map(employee => {
+      const salaryInfo = salaryData.find(salary => salary.employeeID === employee.employeeID);
+      return {
+        employeeID: employee.employeeID,
+        name: employee.name,
+        department: employee.department,
+        role: employee.role,
+        basicSalary: employee.basicSalary || 0,
+        allowances: employee.allowances || 0,
+        deductions: employee.deductions || 0,
+        // If salary structure exists, use those values, otherwise use employee basic data
+        baseSalary: salaryInfo?.baseSalary || employee.basicSalary || 0,
+        totalAllowances: salaryInfo?.totalAllowances || employee.allowances || 0,
+        totalDeductions: salaryInfo?.totalDeductions || employee.deductions || 0,
+        grossSalary: salaryInfo?.grossSalary || ((employee.basicSalary || 0) + (employee.allowances || 0)),
+        netSalary: salaryInfo?.netSalary || ((employee.basicSalary || 0) + (employee.allowances || 0) - (employee.deductions || 0)),
+        hasSalaryStructure: !!salaryInfo
+      };
+    });
+  };
+
+  // Filtered and paginated data
+  const mergedData = getMergedData();
+  const filteredData = mergedData.filter((item) =>
+    ["employeeID", "name"].some((field) =>
+      item[field]?.toLowerCase().includes(filter.query.toLowerCase())
     )
-);
-const indexOfLastEntry = currentPage * entriesPerPage;
-const indexOfFirstEntry = indexOfLastEntry - entriesPerPage;
-const currentDoctors = filteredDoctors.slice(indexOfFirstEntry, indexOfLastEntry);
-const totalPages = Math.ceil(filteredDoctors.length / entriesPerPage);
+  );
 
-// Handle pagination
-const paginate = (pageNumber) => setCurrentPage(pageNumber);
+  const indexOfLastEntry = currentPage * entriesPerPage;
+  const indexOfFirstEntry = indexOfLastEntry - entriesPerPage;
+  const currentData = filteredData.slice(indexOfFirstEntry, indexOfLastEntry);
+  const totalPages = Math.ceil(filteredData.length / entriesPerPage);
+
+  // Handle pagination
+  const paginate = (pageNumber) => setCurrentPage(pageNumber);
 
   const fetchSalaryData = async () => {
     try {
-      const response = await axios.get("http://localhost:5000/api/salary/fetch"); // Adjust the URL accordingly
+      const response = await axios.get("http://localhost:5000/api/salary/fetch");
       setSalaryData(response.data);
     } catch (error) {
       console.error("Error fetching salary data", error);
@@ -76,28 +116,30 @@ const paginate = (pageNumber) => setCurrentPage(pageNumber);
   const toggleDropdown = (employeeID) => {
     setDropdownVisible(dropdownVisible === employeeID ? null : employeeID);
   };
+
   // Close dropdown if clicked outside
-      useEffect(() => {
-          const handleClickOutside = (event) => {
-          if (
-              dropdownRef.current &&
-              !dropdownRef.current.contains(event.target) &&
-              !buttonRef.current.contains(event.target)
-          ) {
-              setDropdownVisible(null);
-          }
-          };
-  
-          document.addEventListener("mousedown", handleClickOutside);
-          return () => {
-          document.removeEventListener("mousedown", handleClickOutside);
-          };
-      }, []);
-  
-      // Close dropdown when an option is clicked
-      const handleOptionClick = () => {
-          setDropdownVisible(null); // Close the dropdown when any option is clicked
-      };
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (
+        dropdownRef.current &&
+        !dropdownRef.current.contains(event.target) &&
+        !buttonRef.current.contains(event.target)
+      ) {
+        setDropdownVisible(null);
+      }
+    };
+
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, []);
+
+  // Close dropdown when an option is clicked
+  const handleOptionClick = () => {
+    setDropdownVisible(null);
+  };
+
   useEffect(() => {
     const baseSalary = Number(formData.baseSalary) || 0;
     const totalAllowances = (formData.allowances || []).reduce(
@@ -106,7 +148,7 @@ const paginate = (pageNumber) => setCurrentPage(pageNumber);
     );
 
     const totalDeductions = (formData.deductions || [])
-      .filter((item) => item.name.toLowerCase() !== "gratuity") // Exclude "Gratuity"
+      .filter((item) => item.name.toLowerCase() !== "gratuity")
       .reduce(
         (sum, item) => sum + (baseSalary * (parseFloat(item.value) || 0)) / 100,
         0
@@ -151,14 +193,40 @@ const paginate = (pageNumber) => setCurrentPage(pageNumber);
     setFormData((prev) => ({ ...prev, [type]: updatedFields }));
   };
 
+  // Pre-fill form with employee data when creating new salary structure
+  const handleCreateSalaryStructure = (employeeID) => {
+    const employee = employeesData.find(emp => emp.employeeID === employeeID);
+    if (employee) {
+      setFormData({
+        employeeID: employee.employeeID,
+        name: employee.name,
+        baseSalary: employee.basicSalary || "",
+        allowances: employee.allowances ? [{ name: "Basic Allowance", value: employee.allowances }] : [],
+        deductions: [
+          { name: "PF", value: "" },
+          { name: "Gratuity", value: "" },
+          { name: "Professional Tax", value: "" },
+        ],
+        kpi: [],
+        leaveEncashment: "No",
+        totalAllowances: employee.allowances || 0,
+        totalDeductions: employee.deductions || 0,
+        grossSalary: (employee.basicSalary || 0) + (employee.allowances || 0),
+        netSalary: (employee.basicSalary || 0) + (employee.allowances || 0) - (employee.deductions || 0),
+      });
+      setIsEditing(false);
+      setIsModalOpen(true);
+    }
+  };
+
   // Submit Form Data (Save or Update)
   const handleSubmit = async () => {
     try {
       if (isEditing) {
-        await axios.put(`http://localhost:5000/api/salary/update/${formData.employeeID}`, formData); // Update API call
+        await axios.put(`http://localhost:5000/api/salary/update/${formData.employeeID}`, formData);
         alert("Salary structure updated successfully!");
       } else {
-        await axios.post("http://localhost:5000/api/salary/save", formData); // Save new data
+        await axios.post("http://localhost:5000/api/salary/save", formData);
         alert("Salary structure saved successfully!");
       }
       setIsModalOpen(false);
@@ -174,8 +242,8 @@ const paginate = (pageNumber) => setCurrentPage(pageNumber);
           { name: "Gratuity", value: "" },
           { name: "Professional Tax", value: "" },
         ],
-        kpi: [], // Stores KPI bonuses
-        leaveEncashment: "", // Stores Yes/No
+        kpi: [],
+        leaveEncashment: "",
         totalAllowances: 0,
         totalDeductions: 0,
         grossSalary: 0,
@@ -191,41 +259,44 @@ const paginate = (pageNumber) => setCurrentPage(pageNumber);
   const fetchDoctorById = async (employeeID) => {
     try {
       const response = await axios.get(`http://localhost:5000/api/salary/retrive/${employeeID}`);
-      const salaryData = response.data; // Extract data from the response
+      const salaryData = response.data;
   
       if (!salaryData || !salaryData.employeeID) {
-        throw new Error("Invalid doctor data");
+        throw new Error("Invalid salary data");
       }
   
-      setSelectedDoctor(salaryData); // Pre-fill modal with fetched data
+      setSelectedDoctor(salaryData);
       setIsModalOpen(true);
       setFormData({
         employeeID: salaryData.employeeID,
         name: salaryData.name,
         baseSalary: salaryData.baseSalary,
-        allowances:salaryData.allowances || [{ name: "", value: "" }],
+        allowances: salaryData.allowances || [{ name: "", value: "" }],
         deductions: salaryData.deductions || [{ name: "", value: "" }],
-        totalAllowances:salaryData.totalAllowances,
-        totalDeductions:salaryData.totalDeductions,
+        kpi: salaryData.kpi || [],
+        leaveEncashment: salaryData.leaveEncashment || "No",
+        totalAllowances: salaryData.totalAllowances,
+        totalDeductions: salaryData.totalDeductions,
         grossSalary: salaryData.grossSalary,
         netSalary: salaryData.netSalary
-      }); // Open the modal
+      });
+      setIsEditing(true);
     } catch (error) {
-      console.error("Error fetching doctor by ID:", error);
-      alert("Failed to fetch doctor details.");
+      console.error("Error fetching salary data by ID:", error);
+      alert("Failed to fetch salary details.");
     }
   };
   
-  const handleEditDoctor = (employeeID) => {
-    setSelectedDoctor(null);  // Clear the previous selected doctor in case of modal reuse
+  const handleEditSalary = (employeeID) => {
+    setSelectedDoctor(null);
     fetchDoctorById(employeeID);
-};
+  };
 
   const handleDeleteSalary = async (employeeID) => {
     try {
       await axios.delete(`http://localhost:5000/api/salary/delete/${employeeID}`);
       alert("Salary structure deleted successfully!");
-      fetchSalaryData(); // Refresh salary data after delete
+      fetchSalaryData();
     } catch (error) {
       console.error("Error deleting salary structure:", error);
       alert("Failed to delete salary structure.");
@@ -235,152 +306,182 @@ const paginate = (pageNumber) => setCurrentPage(pageNumber);
   return (
     <div>
       <div className="p-2">
-      <div className="flex justify-between mb-6">
-                    <input
-                        type="text"
-                        name="query"
-                        placeholder="Search by ID"
-                        value={filter.query}
-                        onChange={handleFilterChange}
-                        className="p-2 border border-gray-300 rounded-md hover:bg-gray-100"
-                    />
-                    {/* <button
-                        onClick={() => alert("Exporting doctors' data...")}
-                        className="bg-blue-500 text-white p-2 rounded-md shadow-md hover:bg-blue-600 transition-all flex items-center"
-                    >
-                        <FaFileExport className="mr-2" />
-                        Export
-                    </button> */}
-                </div>
+        <div className="flex justify-between mb-6">
+          <input
+            type="text"
+            name="query"
+            placeholder="Search by Employee ID or Name"
+            value={filter.query}
+            onChange={handleFilterChange}
+            className="p-2 border border-gray-300 rounded-md hover:bg-gray-100"
+          />
+        </div>
 
-      {/* Salary Table */}
-            <table className="w-full table-auto border-collapse">
-              <thead>
-                <tr className="bg-gray-100 text-left">
-                  <th className="px-4 py-2">Employee ID</th>
-                  <th className="px-4 py-2">Name</th>
-                  <th className="px-4 py-2">Base Salary</th>
-                  <th className="px-4 py-2">Total Allowance</th>
-                  <th className="px-4 py-2">Total Deduction</th>
-                  <th className="px-4 py-2">Gross Salary</th>
-                  <th className="px-4 py-2">Net Salary</th>
-                  <th className="px-4 py-2">Action</th>
-                </tr>
-              </thead>
-              <tbody>
-              {currentDoctors.length > 0 ? (
-  [...currentDoctors] // Create a shallow copy to avoid mutating the original array
-    .sort((a, b) => a.employeeID.localeCompare(b.employeeID)) // Sort by employeeID
-    .map((salary) => (
-      <tr key={salary.employeeID} className="border-b">
-        <td className="px-4 py-4">{salary.employeeID}</td>
-        <td className="px-4 py-4">{salary.name}</td>
-        <td className="px-4 py-4">{salary.baseSalary}</td>
-        <td className="px-4 py-4">{salary.totalAllowances}</td>
-        <td className="px-4 py-4">{salary.totalDeductions}</td>
-        <td className="px-4 py-4">{salary.grossSalary}</td>
-        <td className="px-4 py-4">{salary.netSalary}</td>
-        <td className="px-4 py-4 relative">
-          <button
-            ref={buttonRef}
-            onClick={() => toggleDropdown(salary.employeeID)}
-            className="text-gray-600 hover:text-gray-900"
-          >
-            <FaEllipsisV />
-          </button>
-          {dropdownVisible === salary.employeeID && (
-            <div 
-              ref={dropdownRef}
-              className="absolute bg-white shadow-md rounded-lg p-2 mt-2 right-0 z-10"
-            >
-              <button
-                onClick={() => {
-                  handleEditDoctor(salary.employeeID);
-                  handleOptionClick();
-                  setIsModalOpen(true);
-                }}
-                className="w-full text-blue-400 text-left p-2 hover:bg-gray-100 flex items-center"
-              >
-                <FaEye className="mr-2" />
-                Edit
-              </button>
-              <button
-                onClick={() => {
-                  handleDeleteSalary(salary.employeeID);
-                  handleOptionClick();
-                }}
-                className="w-full text-red-400 text-left p-2 hover:bg-gray-100 flex items-center"
-              >
-                <FaTrash className="mr-2" />
-                Delete
-              </button>
-            </div>
-          )}
-        </td>
+        {/* Salary Table */}
+  <table className="w-full overflow-hidden rounded-lg">
+    <thead>
+      <tr className="border-b border-blue-200">
+        <th className="bg-gray-100 text-center p-4 font-bold text-gray-700 text-sm">Employee ID</th>
+        <th className="bg-white text-center p-4 font-bold text-gray-700 text-sm">Name</th>
+        <th className="bg-gray-100 text-center p-4 font-bold text-gray-700 text-sm">Department</th>
+        <th className="bg-white text-center p-4 font-bold text-gray-700 text-sm">Role</th>
+        <th className="bg-gray-100 text-center p-4 font-bold text-gray-700 text-sm">Base Salary</th>
+        <th className="bg-white text-center p-4 font-bold text-gray-700 text-sm">Total Allowance</th>
+        <th className="bg-gray-100 text-center p-4 font-bold text-gray-700 text-sm">Total Deduction</th>
+        <th className="bg-white text-center p-4 font-bold text-gray-700 text-sm">Gross Salary</th>
+        <th className="bg-gray-100 text-center p-4 font-bold text-gray-700 text-sm">Net Salary</th>
+        <th className="bg-white text-center p-4 font-bold text-gray-700 text-sm">Action</th>
       </tr>
-    ))
-) : (
-  <tr>
-    <td colSpan="6" className="text-center p-4">
-      No matching doctors found.
-    </td>
-  </tr>
-)}
-
-              </tbody>
-            </table>
-            <div className="flex justify-between items-center mt-4">
-                    <div>
-                        <label>
-                            Show{" "}
-                            <select
-                                value={entriesPerPage}
-                                onChange={handleEntriesPerPageChange}
-                                className="border p-2 rounded-md"
-                            >
-                                <option value={5}>5</option>
-                                <option value={10}>10</option>
-                                <option value={15}>15</option>
-                                <option value={20}>20</option>
-                                <option value={25}>25</option>
-                                <option value={30}>30</option>
-                            </select>{" "}
-                            entries per page
-                        </label>
-                    </div>
-                    <div>
+    </thead>
+    <tbody>
+      {currentData.length > 0 ? (
+        [...currentData]
+          .sort((a, b) => a.employeeID.localeCompare(b.employeeID))
+          .map((item) => (
+            <tr key={item.employeeID} className="border-b border-blue-200 hover:bg-gray-50">
+              <td className="bg-gray-100 p-4 text-gray-900 text-center">{item.employeeID}</td>
+              <td className="bg-white p-4 text-gray-700 text-center">{item.name}</td>
+              <td className="bg-gray-100 p-4 text-gray-700 text-center">{item.department}</td>
+              <td className="bg-white p-4 text-gray-700 text-center">{item.role}</td>
+              <td className="bg-gray-100 p-4 text-gray-700 text-center">{item.baseSalary}</td>
+              <td className="bg-white p-4 text-gray-700 text-center">{item.totalAllowances}</td>
+              <td className="bg-gray-100 p-4 text-gray-700 text-center">{item.totalDeductions}</td>
+              <td className="bg-white p-4 text-gray-700 text-center">{item.grossSalary}</td>
+              <td className="bg-gray-100 p-4 text-gray-700 text-center">{item.netSalary}</td>
+              <td className="bg-white p-4 relative text-center">
+                <button
+                  ref={buttonRef}
+                  onClick={() => toggleDropdown(item.employeeID)}
+                  className="text-gray-600 hover:text-gray-900"
+                >
+                  <FaEllipsisV />
+                </button>
+                {dropdownVisible === item.employeeID && (
+                  <div
+                    ref={dropdownRef}
+                    className="absolute bg-white shadow-md rounded-lg p-2 mt-2 right-0 z-10"
+                  >
+                    {item.hasSalaryStructure ? (
+                      <>
                         <button
-                            onClick={() => paginate(currentPage - 1)}
-                            disabled={currentPage === 1}
-                            className="px-3 py-1 border rounded-md mx-1 hover:bg-blue-200"
+                          onClick={() => {
+                            handleEditSalary(item.employeeID);
+                            handleOptionClick();
+                          }}
+                          className="w-full text-blue-400 text-left p-2 hover:bg-gray-100 flex items-center"
                         >
-                            Previous
+                          <FaEye className="mr-2" />
+                          Edit
                         </button>
-                        {[...Array(totalPages)].map((_, index) => (
-                            <button
-                                key={index}
-                                onClick={() => paginate(index + 1)}
-                                className={`px-3 py-1 border rounded-md mx-1 ${
-                                    currentPage === index + 1 ? "bg-blue-300" : "hover:bg-blue-200"
-                                }`}
-                            >
-                                {index + 1}
-                            </button>
-                        ))}
                         <button
-                            onClick={() => paginate(currentPage + 1)}
-                            disabled={currentPage === totalPages}
-                            className="px-3 py-1 border rounded-md mx-1 hover:bg-blue-200"
+                          onClick={() => {
+                            handleDeleteSalary(item.employeeID);
+                            handleOptionClick();
+                          }}
+                          className="w-full text-red-400 text-left p-2 hover:bg-gray-100 flex items-center"
                         >
-                            Next
+                          <FaTrash className="mr-2" />
+                          Delete
                         </button>
-                    </div>
-                </div>
-                </div>
+                      </>
+                    ) : (
+                      <button
+                        onClick={() => {
+                          handleCreateSalaryStructure(item.employeeID);
+                          handleOptionClick();
+                        }}
+                        className="w-full text-green-400 text-left p-2 hover:bg-gray-100 flex items-center"
+                      >
+                        <FaPlus className="mr-2" />
+                        Create
+                      </button>
+                    )}
+                  </div>
+                )}
+              </td>
+            </tr>
+          ))
+      ) : (
+        <tr>
+          <td colSpan={11} className="bg-white text-center text-gray-500 py-6">
+            No matching employees found.
+          </td>
+        </tr>
+      )}
+    </tbody>
+  </table>     
+        <div className="flex justify-between items-center mt-4">
+          <div>
+            <label>
+              Show{" "}
+              <select
+                value={entriesPerPage}
+                onChange={handleEntriesPerPageChange}
+                className="border p-2 rounded-md"
+              >
+                <option value={5}>5</option>
+                <option value={10}>10</option>
+                <option value={15}>15</option>
+                <option value={20}>20</option>
+                <option value={25}>25</option>
+                <option value={30}>30</option>
+              </select>{" "}
+              entries per page
+            </label>
+          </div>
+          <div>
+            <button
+              onClick={() => paginate(currentPage - 1)}
+              disabled={currentPage === 1}
+              className="px-3 py-1 border rounded-md mx-1 hover:bg-blue-200"
+            >
+              Previous
+            </button>
+            {[...Array(totalPages)].map((_, index) => (
+              <button
+                key={index}
+                onClick={() => paginate(index + 1)}
+                className={`px-3 py-1 border rounded-md mx-1 ${
+                  currentPage === index + 1 ? "bg-blue-300" : "hover:bg-blue-200"
+                }`}
+              >
+                {index + 1}
+              </button>
+            ))}
+            <button
+              onClick={() => paginate(currentPage + 1)}
+              disabled={currentPage === totalPages}
+              className="px-3 py-1 border rounded-md mx-1 hover:bg-blue-200"
+            >
+              Next
+            </button>
+          </div>
+        </div>
+      </div>
 
       <div className="fixed bottom-5 right-5">
         <button
-          onClick={() => setIsModalOpen(true)}
+          onClick={() => {
+            setFormData({
+              employeeID: "",
+              name: "",
+              baseSalary: "",
+              allowances: [],
+              deductions: [
+                { name: "PF", value: "" },
+                { name: "Gratuity", value: "" },
+                { name: "Professional Tax", value: "" },
+              ],
+              kpi: [],
+              leaveEncashment: "No",
+              totalAllowances: 0,
+              totalDeductions: 0,
+              grossSalary: 0,
+              netSalary: 0,
+            });
+            setIsEditing(false);
+            setIsModalOpen(true);
+          }}
           className="rounded-full shadow-md p-4 bg-blue-500 text-white text-xl hover:bg-blue-600"
         >
           <FaPlus />
@@ -392,42 +493,71 @@ const paginate = (pageNumber) => setCurrentPage(pageNumber);
           <div className="bg-white rounded-lg shadow-lg w-3/4 p-6 container max-h-[80vh] overflow-y-auto mx-auto relative">
             <h2 className="text-xl font-bold mb-4">{isEditing ? "Edit Salary Structure" : "Add Salary Structure"}</h2>
 
-            {/* Employee ID */}
+            {/* Employee ID and Name */}
             <div className="mb-4">
-  <div className="grid grid-cols-2 gap-4">
-    {/* Employee ID */}
-    <div>
-      <label className="block mb-2 font-bold">Employee ID</label>
-      <input
-        type="text"
-        value={formData.employeeID}
-        onChange={(e) => handleInputChange("employeeID", e.target.value)}
-        className="w-full p-2 border rounded"
-      />
-    </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block mb-2 font-bold">Employee ID</label>
+                  {!isEditing && (
+                    <select
+                      value={formData.employeeID}
+                      onChange={(e) => {
+                        const selectedEmployee = employeesData.find(emp => emp.employeeID === e.target.value);
+                        if (selectedEmployee) {
+                          setFormData({
+                            ...formData,
+                            employeeID: selectedEmployee.employeeID,
+                            name: selectedEmployee.name,
+                            baseSalary: selectedEmployee.basicSalary || "",
+                          });
+                        }
+                      }}
+                      className="w-full p-2 border rounded"
+                    >
+                      <option value="">Select Employee</option>
+                      {employeesData
+                        .filter(emp => !salaryData.some(sal => sal.employeeID === emp.employeeID))
+                        .map(employee => (
+                          <option key={employee.employeeID} value={employee.employeeID}>
+                            {employee.employeeID} - {employee.name}
+                          </option>
+                        ))
+                      }
+                    </select>
+                  )}
+                  {isEditing && (
+                    <input
+                      type="text"
+                      value={formData.employeeID}
+                      disabled
+                      className="w-full p-2 border rounded bg-gray-100"
+                    />
+                  )}
+                </div>
 
-    <div>
-      <label className="block mb-2 font-bold">Name</label>
-      <input
-        type="text"
-        value={formData.name}
-        onChange={(e) => handleInputChange("name", e.target.value)}
-        className="w-full p-2 border rounded"
-      />
-    </div>
-    
-    {/* Base Salary */}
-    <div>
-      <label className="block mb-2 font-bold">Base Salary</label>
-      <input
-        type="number"
-        value={formData.baseSalary}
-        onChange={(e) => handleInputChange("baseSalary", e.target.value)}
-        className="w-full p-2 border rounded"
-      />
-    </div>
-  </div>
-</div>
+                <div>
+                  <label className="block mb-2 font-bold">Name</label>
+                  <input
+                    type="text"
+                    value={formData.name}
+                    onChange={(e) => handleInputChange("name", e.target.value)}
+                    disabled={isEditing}
+                    className={`w-full p-2 border rounded ${isEditing ? 'bg-gray-100' : ''}`}
+                  />
+                </div>
+                
+                <div>
+                  <label className="block mb-2 font-bold">Base Salary</label>
+                  <input
+                    type="number"
+                    value={formData.baseSalary}
+                    onChange={(e) => handleInputChange("baseSalary", e.target.value)}
+                    className="w-full p-2 border rounded"
+                  />
+                </div>
+              </div>
+            </div>
+
             {/* Allowances */}
             <div className="mb-4">
               <label className="block mb-2 font-bold">Allowances</label>
@@ -472,7 +602,7 @@ const paginate = (pageNumber) => setCurrentPage(pageNumber);
                     type="text"
                     placeholder="Deduction Name"
                     value={deductions.name}
-                    onChange={(e) => updateField("deductions", index, "value", e.target.value)}
+                    onChange={(e) => updateField("deductions", index, "name", e.target.value)}
                     className="w-1/2 p-2 border rounded mr-2"
                   />
                   <input
@@ -498,113 +628,111 @@ const paginate = (pageNumber) => setCurrentPage(pageNumber);
               </button>
             </div>
             
+            {/* KPI */}
             <div className="mb-4">
-  <label className="block mb-2 font-bold">KPI</label>
-  {formData.kpi?.map((kpi, index) => (
-    <div key={index} className="flex mb-2 items-center">
-      <input
-        type="text"
-        placeholder="KPI Name"
-        value={kpi.name}
-        onChange={(e) => updateField("kpi", index, "name", e.target.value)}
-        className="w-1/2 p-2 border rounded mr-2"
-      />
-      <input
-        type="number"
-        placeholder="KPI Bonus Amount"
-        value={kpi.value}
-        onChange={(e) => updateField("kpi", index, "value", e.target.value)}
-        className="w-1/2 p-2 border rounded"
-      />
-      <button
-        onClick={() => removeField("kpi", index)}
-        className="ml-2 text-red-500"
-      >
-        <FaTrash />
-      </button>
-    </div>
-  ))}
-  <button
-  onClick={() => {
-    addField("kpi");
-    console.log("KPI after adding:", formData.kpi); // Debugging log
-  }}
-  className="text-blue-500"
->
-  Add KPI Bonus
-</button>
+              <label className="block mb-2 font-bold">KPI</label>
+              {formData.kpi?.map((kpi, index) => (
+                <div key={index} className="flex mb-2 items-center">
+                  <input
+                    type="text"
+                    placeholder="KPI Name"
+                    value={kpi.name}
+                    onChange={(e) => updateField("kpi", index, "name", e.target.value)}
+                    className="w-1/2 p-2 border rounded mr-2"
+                  />
+                  <input
+                    type="number"
+                    placeholder="KPI Bonus Amount"
+                    value={kpi.value}
+                    onChange={(e) => updateField("kpi", index, "value", e.target.value)}
+                    className="w-1/2 p-2 border rounded"
+                  />
+                  <button
+                    onClick={() => removeField("kpi", index)}
+                    className="ml-2 text-red-500"
+                  >
+                    <FaTrash />
+                  </button>
+                </div>
+              ))}
+              <button
+                onClick={() => addField("kpi")}
+                className="text-blue-500"
+              >
+                Add KPI Bonus
+              </button>
+            </div>
 
-</div>
-<div className="mb-4">
-  <label className="block mb-2 font-bold">Leave Encashment Eligibility</label>
-  {formData.leaveEncashment && (
-    <div className="flex items-center space-x-2">
-    <select
-      value={formData.leaveEncashment}
-      onChange={(e) => setFormData((prev) => ({ ...prev, leaveEncashment: e.target.value }))}
-      className="p-1 border rounded w-40 text-sm"
-    >
-      <option value="Yes">Yes</option>
-      <option value="No">No</option>
-    </select>
-    <button
-      onClick={() => setFormData({ ...formData, leaveEncashment: "" })}
-      className="text-red-500 p-1"
-    >
-      <FaTrash size={14} />
-    </button>
-  </div>
-  
-  )}
-  {!formData.leaveEncashment && (
-    <button
-      onClick={() => setFormData({ ...formData, leaveEncashment: "Yes" })}
-      className="text-blue-500"
-    >
-      Add Leave Encashment Eligibility
-    </button>
-  )}
-</div>
+            {/* Leave Encashment */}
+            <div className="mb-4">
+              <label className="block mb-2 font-bold">Leave Encashment Eligibility</label>
+              {formData.leaveEncashment && (
+                <div className="flex items-center space-x-2">
+                  <select
+                    value={formData.leaveEncashment}
+                    onChange={(e) => setFormData((prev) => ({ ...prev, leaveEncashment: e.target.value }))}
+                    className="p-1 border rounded w-40 text-sm"
+                  >
+                    <option value="Yes">Yes</option>
+                    <option value="No">No</option>
+                  </select>
+                  <button
+                    onClick={() => setFormData({ ...formData, leaveEncashment: "" })}
+                    className="text-red-500 p-1"
+                  >
+                    <FaTrash size={14} />
+                  </button>
+                </div>
+              )}
+              {!formData.leaveEncashment && (
+                <button
+                  onClick={() => setFormData({ ...formData, leaveEncashment: "Yes" })}
+                  className="text-blue-500"
+                >
+                  Add Leave Encashment Eligibility
+                </button>
+              )}
+            </div>
+
+            {/* Calculated Fields */}
             <div className="mb-4 grid grid-cols-2 gap-4">
-            <div className="mb-4">
-              <label className="block mb-2 font-bold">Total Allowance</label>
-              <input
-                type="number"
-                value={formData.totalAllowances}
-                disabled
-                className="w-full p-2 border rounded"
-              />
-            </div>
-            <div className="mb-4">
-              <label className="block mb-2 font-bold">Total Deduction</label>
-              <input
-                type="number"
-                value={formData.totalDeductions}
-                disabled
-                className="w-full p-2 border rounded"
-              />
-            </div>
+              <div className="mb-4">
+                <label className="block mb-2 font-bold">Total Allowance</label>
+                <input
+                  type="number"
+                  value={formData.totalAllowances}
+                  disabled
+                  className="w-full p-2 border rounded"
+                />
+              </div>
+              <div className="mb-4">
+                <label className="block mb-2 font-bold">Total Deduction</label>
+                <input
+                  type="number"
+                  value={formData.totalDeductions}
+                  disabled
+                  className="w-full p-2 border rounded"
+                />
+              </div>
 
-
-            {/* Gross Salary and Net Salary */}
-            <div className="mb-4">
-              <label className="block mb-2 font-bold">Gross Salary</label>
-              <input
-                type="number"
-                value={formData.grossSalary}
-                disabled
-                className="w-full p-2 border rounded"
-              />
-            </div>
-            <div className="mb-4">
-              <label className="block mb-2 font-bold">Net Salary</label>
-              <input
-                type="number"
-                value={formData.netSalary}
-                disabled
-                className="w-full p-2 border rounded"
-              />
-            </div>
+              <div className="mb-4">
+                <label className="block mb-2 font-bold">Gross Salary</label>
+                <input
+                  type="number"
+                  value={formData.grossSalary}
+                  disabled
+                  className="w-full p-2 border rounded"
+                />
+              </div>
+              <div className="mb-4">
+                <label className="block mb-2 font-bold">Net Salary</label>
+                <input
+                  type="number"
+                  value={formData.netSalary}
+                  disabled
+                  className="w-full p-2 border rounded"
+                />
+              </div>
             </div>
 
             <div className="flex justify-end">
@@ -624,7 +752,7 @@ const paginate = (pageNumber) => setCurrentPage(pageNumber);
           </div>
         </div>
       )}
-     </div>
+    </div>
   );
 };
 

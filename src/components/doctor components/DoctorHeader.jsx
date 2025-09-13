@@ -75,7 +75,7 @@ const Header = () => {
       const response = await axios.get(
         // `${API_URL}/api/doctor/getAppointedPatients?id=${userId}`,
 
-        `https://maars-2.onrender.com/api/doctor/chatPatientWithDoctorAndIsReadCount`,
+        `${API_URL}/api/doctor/chatPatientWithDoctorAndIsReadCount`,
         {
           headers: { Authorization: `Bearer ${token}` },
         }

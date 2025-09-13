@@ -116,10 +116,10 @@ function Dashboard() {
   }, [API_URL]);
 
   const overviewCards = [
-    { title: 'Appointments Today', count: appointments , color: 'bg-blue-50 border-l-4 border-blue-500', image: cal1 },
-    { title: 'Total Patients', count: totalPatients, color: 'bg-yellow-50 border-l-4 border-yellow-500', image: Online_Doctor },
-    { title: 'Consultations', count:  totalConsultations, color: 'bg-pink-50 border-l-4 border-pink-500', image: Consultation },
-    { title: 'Inventory', count: '75%', color: 'bg-red-50 border-l-4 border-red-500', image: cal1 },
+    { title: 'Appointments', count: appointments , color: 'bg-white border-l-4 border-blue-500', image: cal1 },
+    { title: 'Total Patients', count: totalPatients, color: 'bg-white border-l-4 border-yellow-500', image: Online_Doctor },
+    { title: 'Consultations', count:  totalConsultations, color: 'bg-white border-l-4 border-pink-500', image: Consultation },
+    { title: 'Inventory', count: '75%', color: 'bg-white border-l-4 border-red-500', image: cal1 },
   ];
 
   const [patientsToday, setPatientsToday] = useState([]);
@@ -141,13 +141,15 @@ useEffect(() => {
       const data = await response.json();
       
       if (data.success) {
-        // Transform API data to match your component structure
+        // Transform API data to match the new structure
         const transformedData = data.appointments.map(appointment => ({
           appointmentId: appointment.appointmentId,
-          name: appointment.patientName,
-          patientId: appointment.patientId,
-          diagnosis: 'Consultation', // API doesn't provide diagnosis, using default
+          name: appointment.patient.name,
+          patientId: appointment.patient.id,
+          phone: appointment.patient.phone,
+          disease: 'Consultation', // Placeholder as requested
           time: appointment.timeSlot,
+          status: appointment.status,
           meetLink: appointment.meetLink,
           img: profile // keeping your existing image logic
         }));
@@ -163,8 +165,19 @@ useEffect(() => {
   fetchAppointments();
 }, [selectedDate, API_URL]);
 
-const handleVideoCall = (meetLink) => {
-  window.open(meetLink, '_blank');
+const handleJoinCall = (meetLink) => {
+  if (meetLink) {
+    window.open(meetLink, '_blank');
+  } else {
+    // Handle case where meetLink is not available
+    console.log('Meeting link not available');
+  }
+};
+
+const handleReschedule = (appointmentId) => {
+  // Placeholder for reschedule functionality
+  console.log('Reschedule appointment:', appointmentId);
+  // TODO: Implement reschedule logic when backend is ready
 };
 
   const [notes, setNotes] = useState([]);
@@ -245,32 +258,37 @@ const handleVideoCall = (meetLink) => {
         {overviewCards.map((card, index) => (
           <div
             key={index}
-            className={`p-6 ${card.color} rounded-lg shadow-sm hover:shadow-md transition-shadow duration-200 bg-white`}
+            className={`p-8 ${card.color} rounded-lg shadow-sm hover:shadow-md transition-shadow duration-200 bg-white`}
           >
-            <div className="flex items-center justify-between">
-              <div className="flex-1">
-                <p className="text-sm text-gray-600 font-medium">{card.title}</p>
-                <p className="text-2xl font-bold text-gray-900 mt-1">{card.count}</p>
-              </div>
-              <div className="ml-4">
-                <img
-                  src={card.image}
-                  alt={card.title}
-                  className="h-12 w-12 rounded-lg object-cover"
-                />
-              </div>
-            </div>
+            <div className="flex items-center justify-between h-full">
+  <div className="flex-1 flex flex-col justify-center -mt-4">
+    <p className="text-sm text-gray-600 font-semibold">{card.title}</p>
+    <p className={`text-2xl font-bold mt-3 ${
+      card.color.includes('border-blue-500') ? 'text-blue-500' :
+      card.color.includes('border-yellow-500') ? 'text-yellow-500' :
+      card.color.includes('border-pink-500') ? 'text-pink-500' :
+      card.color.includes('border-red-500') ? 'text-red-500' : 'text-gray-900'
+    }`}>{card.count}</p>
+  </div>
+  <div className="ml-4 flex items-center">
+    <img
+      src={card.image}
+      alt={card.title}
+      className="h-12 w-12 rounded-lg object-cover"
+    />
+  </div>
+</div>
           </div>
         ))}
       </div>
 
       {/* Patients Table and Calendar - Side by Side */}
       <div className="flex space-x-6">
-        {/* Your Patients Today Container */}
+        {/* Your Patients Today Container - Restructured */}
         <div className="flex-1 bg-white rounded-lg shadow-lg">
-          <div className="flex justify-between items-center p-6 border-b border-gray-200">
-            <h2 className="text-lg text-gray-700 font-semibold">Your Patients</h2>
-            <button className="text-sm text-blue-600 hover:underline">See All</button>
+          <div className="flex justify-between items-center p-6">
+            <h2 className="text-lg text-[#232360] font-semibold">Your Patients</h2>
+            <button className="text-sm text-blue-600 hover:underline">View All</button>
           </div>
           
           <div className="p-6">
@@ -279,70 +297,116 @@ const handleVideoCall = (meetLink) => {
             ) : patientsToday.length === 0 ? (
               <div className="text-center py-8 text-gray-500">No appointments today</div>
             ) : (
-              <div className="max-h-96 overflow-y-auto">
-                <ul className="space-y-4">
-                  {patientsToday.map((patient, index) => (
-                    <li
-                      key={patient.appointmentId || index}
-                      className="flex justify-between items-center p-4 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors"
-                    >
-                      <div className="flex items-center space-x-4">
-                        <img
-                          src={doc}
-                          alt="Patient"
-                          className="w-12 h-12 rounded-full object-cover"
-                        />
-                        <div>
-                          <div className="font-medium text-gray-800">{patient.name}</div>
-                          <div className="text-sm text-gray-600">{patient.diagnosis}</div>
-                          <div className="flex items-center mt-1 space-x-1">
-                            <FaClock className="text-gray-400 text-xs" />
-                            <span className="text-sm text-gray-500">{patient.time}</span>
-                          </div>
-                        </div>
-                      </div>
-                      <div className="flex items-center space-x-2">
-                        <button 
-                          className="bg-green-500 text-white p-2 rounded-full hover:bg-green-600 transition-colors"
-                          onClick={() => handleVideoCall(patient.meetLink)}
-                        >
-                          <FaVideo className="text-sm" />
-                        </button>
-                        <button className="bg-red-500 text-white p-2 rounded-full hover:bg-red-600 transition-colors">
-                          <FaTimes className="text-sm" />
-                        </button>
-                        <button className="text-gray-400 hover:text-gray-600 p-2">
-                          <FaEllipsisV className="text-sm" />
-                        </button>
-                      </div>
-                    </li>
-                  ))}
-                </ul>
+              <div className="overflow-x-auto">
+<table className="w-full">
+  <thead>
+    <tr className="text-left text-sm font-medium text-gray-500 border-b">
+      <th className="pb-3 w-2/6">Name</th>
+      <th className="pb-3 w-2/6">Disease</th>
+      <th className="pb-3 w-1/6">Time</th>
+      <th className="pb-3 w-auto text-left">Action</th>
+    </tr>
+  </thead>
+
+  <tbody className="divide-y divide-gray-100">
+    {patientsToday.map((patient, index) => (
+      <tr
+        key={patient.appointmentId || index}
+        className="hover:bg-gray-50"
+      >
+        {/* Name */}
+        <td className="py-4">
+          <div className="flex items-center space-x-3">
+            <img
+              src={doc}
+              alt="Patient"
+              className="w-10 h-10 rounded-full object-cover"
+            />
+            <div>
+              <div className="font-bold text-[#232360] text-sm">
+                {patient.name}
+              </div>
+            </div>
+          </div>
+        </td>
+
+        {/* Disease */}
+        <td className="py-4">
+          <span className="text-sm text-gray-700">{patient.disease}</span>
+        </td>
+
+        {/* Time */}
+        <td className="py-4">
+          <div className="flex items-center text-sm text-gray-600">
+            <FaClock className="mr-1 text-xs" /> {patient.time}
+          </div>
+        </td>
+
+        {/* Action */}
+        <td className="py-4">
+          <div className="flex items-center space-x-2 justify-end">
+            <button
+              className="px-3 py-1 text-xs font-medium text-white bg-green-500 rounded-full hover:bg-green-600 transition-colors"
+              onClick={() => handleJoinCall(patient.meetLink)}
+            >
+              Join
+            </button>
+
+            <button
+              className="px-3 py-1 text-xs font-medium text-white bg-red-500 rounded-full hover:bg-red-600 transition-colors"
+              onClick={() => handleReschedule(patient.appointmentId)}
+            >
+              Reschedule
+            </button>
+
+            {/* Ellipsis Menu */}
+            <button className="p-2 text-gray-600 hover:text-gray-900">
+              <FaEllipsisV className="text-sm" />
+            </button>
+          </div>
+        </td>
+      </tr>
+    ))}
+  </tbody>
+</table>
               </div>
             )}
           </div>
         </div>
 
         {/* Updated Calendar Section */}
-        <div className="w-80 bg-white rounded-lg shadow-lg overflow-hidden">
-          <div className="p-4 border-b border-gray-200">
-            <h2 className="text-lg text-gray-700 font-semibold">Upcoming Appointments</h2>
-          </div>
-          
-          <LocalizationProvider dateAdapter={AdapterDayjs}>
-            <Box sx={{ width: '100%', paddingLeft: '4px', paddingRight: '16px', paddingTop: '8px', paddingBottom: '8px' }}>
-              <StaticDatePicker
-                displayStaticWrapperAs="desktop"
-                value={selectedDate}
-                onChange={(newValue) => setSelectedDate(newValue)}
-                slotProps={{
-                  toolbar: { hidden: true },
-                  actionBar: { hidden: true }
-                }}
-              />
-            </Box>
-          </LocalizationProvider>
-        </div>
+        <div className="w-80 bg-[#E5E7EB] rounded-lg shadow-lg overflow-hidden">
+  <div className="p-4">
+    <h2 className="text-lg text-gray-700 font-semibold">Upcoming Appointments</h2>
+  </div>
+
+  <LocalizationProvider dateAdapter={AdapterDayjs}>
+    <Box
+      sx={{
+        width: "100%",
+        paddingLeft: "4px",
+        paddingRight: "10px",
+        paddingTop: "8px",
+        paddingBottom: "8px",
+        display: "flex",
+        justifyContent: "center",
+      }}
+    >
+      <div className="rounded-xl overflow-hidden scale-90">
+        <StaticDatePicker
+          displayStaticWrapperAs="desktop"
+          value={selectedDate}
+          onChange={(newValue) => setSelectedDate(newValue)}
+          slotProps={{
+            toolbar: { hidden: true },
+            actionBar: { hidden: true },
+          }}
+        />
+      </div>
+    </Box>
+  </LocalizationProvider>
+</div>
+
       </div>
     </div>
 </DoctorLayout>

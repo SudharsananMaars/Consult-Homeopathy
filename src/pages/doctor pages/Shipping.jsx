@@ -128,7 +128,6 @@ export default function ShippingForm() {
             <h2 className="text-lg font-medium text-gray-900 mb-6">Shipping Details</h2>
             
             {/* Form Table */}
-            <div className="overflow-x-auto rounded-lg shadow pt-5">
               <table className="w-full overflow-hidden rounded-lg">
                 <thead>
                   <tr className="border-b border-blue-200">
@@ -213,7 +212,6 @@ export default function ShippingForm() {
                   </tr>
                 </tbody>
               </table>
-            </div>
           </div>
 
           {/* Action Button */}

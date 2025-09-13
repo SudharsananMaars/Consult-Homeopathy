@@ -16,7 +16,6 @@ import {
   Download,
 } from "lucide-react";
 import axios from "axios";
-import { io } from "socket.io-client";
 import PatientInfoModal from "./PatientInfoModal";
 import config from "../../config";
 import { format, isToday, isYesterday } from "date-fns";
@@ -33,10 +32,6 @@ function DoctorMessenger() {
   const [searchQuery, setSearchQuery] = useState("");
   const [isInfoModalOpen, setIsInfoModalOpen] = useState(false);
 
-  // Online/Offline status states
-  const [onlineUsers, setOnlineUsers] = useState(new Set());
-  const [lastSeen, setLastSeen] = useState({});
-  const [typingUsers, setTypingUsers] = useState(new Set());
 
   // ✅ File upload states
   const [selectedFile, setSelectedFile] = useState(null);
@@ -52,7 +47,6 @@ function DoctorMessenger() {
 
   // const [selectedPatientId, setSelectedPatientId] = useState(null);
 
-  const socketRef = useRef(null);
   const typingTimeoutRef = useRef(null);
   const fileInputRef = useRef(null);
   const messagesEndRef = useRef(null);
@@ -67,7 +61,8 @@ function DoctorMessenger() {
     shipmentImage: null,
   });
   const [prescriptionId, setPrescriptionId] = useState(null);
-  const socket = useSocket();
+  const { socket, sendMessage, sendTyping, onlineUsers, typingUsers, lastSeen } =
+    useSocket();
 
   // ✅ Handle file selection
   const handleFileSelect = (event) => {
@@ -305,111 +300,6 @@ function DoctorMessenger() {
     clearFileSelection(); // Clear any selected files when switching patients
   }, [activeChat]);
 
-  // FIXED: Initialize socket connection with proper message deduplication
-  useEffect(() => {
-    socketRef.current = io(API_URL, {
-      transports: ["websocket", "polling"],
-      auth: {
-        token: localStorage.getItem("token"),
-      },
-    });
-
-    socketRef.current.emit("join", {
-      userId,
-      role: "doctor",
-      name: localStorage.getItem("doctorName") || "Doctor",
-    });
-
-    // ✅ Online users
-    socketRef.current.on("onlineUsers", (users) => {
-      setOnlineUsers(new Set(users));
-    });
-
-    socketRef.current.on("userOnline", (userData) => {
-      setOnlineUsers((prev) => new Set([...prev, userData.userId]));
-    });
-
-    socketRef.current.on("userOffline", (userData) => {
-      setOnlineUsers((prev) => {
-        const newSet = new Set(prev);
-        newSet.delete(userData.userId);
-        return newSet;
-      });
-
-      if (userData.lastSeen) {
-        setLastSeen((prev) => ({
-          ...prev,
-          [userData.userId]: userData.lastSeen,
-        }));
-      }
-    });
-
-    // ✅ Typing indicator
-    socketRef.current.on("userTyping", ({ userId: typingUserId, isTyping }) => {
-      setTypingUsers((prev) => {
-        const newSet = new Set(prev);
-        if (isTyping) {
-          newSet.add(typingUserId);
-        } else {
-          newSet.delete(typingUserId);
-        }
-        return newSet;
-      });
-    });
-
-    socket.current.on("receiveMessage", (msg) => {
-
-      if(msg.sender === "ai_bot") return; // ignore bot messages
-      const otherPartyId = msg.sender === userId ? msg.receiver : msg.sender;
-
-      const exists = patients.some((p) => p._id === otherPartyId);
-
-      console.log(
-        "📩 DoctorMessenger receiveMessage:",
-        msg,
-        "OtherPartyId:",
-        otherPartyId,
-        "Exists:",
-        exists
-      );
-
-      if (!exists) {
-        fetchPatients();
-        console.log("🔔 New patient added, fetching patients list");
-      }
-
-      if (
-        (msg.sender === activeChat && msg.receiver === userId) || // patient → doctor
-        (msg.sender === userId && msg.receiver === activeChat) // doctor → patient
-      ) {
-        setMessages((prev) => {
-          const messageExists = prev.some((m) => m._id === msg._id);
-          return messageExists ? prev : [...prev, msg];
-        });
-      }
-    });
-
-    socketRef.current.on("connect", () => {
-      console.log("Connected to socket server");
-    });
-
-    socketRef.current.on("disconnect", () => {
-      console.log("Disconnected from socket server");
-    });
-
-    return () => {
-      if (socketRef.current) {
-        // ✅ cleanup all listeners
-        socketRef.current.off("onlineUsers");
-        socketRef.current.off("userOnline");
-        socketRef.current.off("userOffline");
-        socketRef.current.off("userTyping");
-        socket.current.off("receiveMessage");
-        socketRef.current.disconnect();
-      }
-    };
-  }, [userId, activeChat]);
-
   useEffect(() => {
     if (patients.length > 0 && messages.length > 0) {
       setPatients((prev) => sortPatientsByLatestMessage(prev, messages));
@@ -418,12 +308,8 @@ function DoctorMessenger() {
 
   // Handle typing indicator
   const handleTyping = (isTyping) => {
-    if (socketRef.current && activeChat) {
-      socketRef.current.emit("typing", {
-        userId,
-        receiverId: activeChat,
-        isTyping,
-      });
+    if (activeChat) {
+      sendTyping(activeChat, isTyping);
     }
   };
 
@@ -464,8 +350,7 @@ function DoctorMessenger() {
       const response = await axios.get(
         // `${API_URL}/api/doctor/getAppointedPatients?id=${userId}`,
 
-        `https://maars-2.onrender.com
-/api/doctor/chatPatientWithDoctorAndIsReadCount`,
+        `${API_URL}/api/doctor/chatPatientWithDoctorAndIsReadCount`,
         {
           headers: { Authorization: `Bearer ${token}` },
         }
@@ -496,7 +381,7 @@ function DoctorMessenger() {
       const token = localStorage.getItem("token");
 
       const response = await axios.patch(
-        `https://maars-2.onrender.com/api/doctorAppointmentSettings/updateReadOptionForTheQuestions/${msgId}`,
+        `${API_URL}/api/doctorAppointmentSettings/updateReadOptionForTheQuestions/${msgId}`,
         {
           isRead: true,
         },
@@ -545,11 +430,11 @@ function DoctorMessenger() {
         setMessages(fetchedMessages);
 
         // ✅ For each message, mark as read if necessary
-        // for (const msg of fetchedMessages) {
-        //   if (msg.receiver === userId && msg.isRead === false) {
-        //     await updateMsgRead(activeChat, msg._id); // patientId = activeChat, msgId = msg._id
-        //   }
-        // }
+        for (const msg of fetchedMessages) {
+          if (msg.receiver === userId && msg.isRead === false) {
+            await updateMsgRead(activeChat, msg._id); // patientId = activeChat, msgId = msg._id
+          }
+        }
       } catch (error) {
         console.error("Failed to fetch chat history:", error);
         setMessages([]);
@@ -605,7 +490,7 @@ function DoctorMessenger() {
     try {
       const token = localStorage.getItem("token");
       const res = await axios.patch(
-        `https://maars-2.onrender.com/api/doctorAppointmentSettings/updateIsBotOptionForThePatient`,
+        `${API_URL}/api/doctorAppointmentSettings/updateIsBotOptionForThePatient`,
         { isBotActive, patientId: activeChat },
         { headers: { Authorization: `Bearer ${token}` } }
       );
@@ -651,10 +536,45 @@ function DoctorMessenger() {
       );
     };
 
+    socket.current.on("receiveMessage", (msg) => {
+      console.log("received msg", msg);
+      if (msg.sender === "ai_bot") return;
+      const otherPartyId = msg.sender === userId ? msg.receiver : msg.sender;
+
+      const exists = patients.some(
+        (p) => String(p._id) === String(otherPartyId)
+      );
+
+      console.log(
+        "📩 DoctorMessenger receiveMessage:",
+        msg,
+        "OtherPartyId:",
+        otherPartyId,
+        "Exists:",
+        exists
+      );
+
+      if (!exists) {
+        fetchPatients();
+        console.log("🔔 New patient added, fetching patients list");
+      }
+
+      console.log("otherpartyID", otherPartyId, "active user", activeChat);
+      if (String(otherPartyId) === String(activeChat)) {
+        setMessages((prev) => {
+          const messageExists = prev.some(
+            (m) => m._id === msg._id || m.messageId === msg.messageId
+          );
+          return messageExists ? prev : [...prev, msg];
+        });
+      }
+    });
+
     socket.current.on("botStatusChanged", handleBotStatus);
 
     return () => {
       socket.current.off("botStatusChanged", handleBotStatus);
+      socket.current.off("receiveMessage");
     };
   }, [socket]);
 
@@ -723,7 +643,7 @@ function DoctorMessenger() {
         message: message.trim() || "",
         senderName: localStorage.getItem("doctorName") || "Doctor",
         receiverName: activePatient?.name || "",
-        timestamp: new Date(),
+        timestamp: new Date().toISOString(),
         messageId: `temp-${Date.now()}-${Math.random()
           .toString(36)
           .substr(2, 9)}`,
@@ -733,13 +653,18 @@ function DoctorMessenger() {
         }),
       };
 
-      // FIXED: ONLY emit to server - server will broadcast back and receiveMessage will handle it
-      // This prevents the double message issue completely
-      if (socketRef.current) {
-        socketRef.current.emit("sendMessage", messageData);
-      }
+      // ✅ Optimistic UI update: add message immediately
+      setMessages((prev) => {
+        const messageExists = prev.some(
+          (m) =>
+            m._id === messageData._id || m.messageId === messageData.messageId
+        );
+        return messageExists ? prev : [...prev, messageData];
+      });
 
-      // Clear inputs immediately after sending
+      sendMessage(messageData);
+
+      // ✅ Clear input and file preview
       setMessage("");
       clearFileSelection();
     } catch (error) {
@@ -844,11 +769,11 @@ function DoctorMessenger() {
                 formData.append("shippedDate", trackingData.shippedDate);
                 formData.append("arrivalDate", trackingData.arrivalDate);
                 if (trackingData.shipmentImage) {
-                  formData.append("file", trackingData.shipmentImage);
+                  formData.append("shipmentImage", trackingData.shipmentImage);
                 }
 
                 await axios.patch(
-                  `${API_URL}/api/doctor/precriptions/${prescriptionId}/tracking`,
+                  `${API_URL}/api/doctor/prescriptions/${prescriptionId}/tracking`,
                   formData,
                   { headers: { Authorization: `Bearer ${token}` } }
                 );
@@ -860,7 +785,7 @@ function DoctorMessenger() {
                   message: `📦 Shipment Update\nTracking ID: ${trackingData.trackingId}\nDelivery Partner: ${trackingData.deliveryPartner}\nShipped: ${trackingData.shippedDate}\nArrival: ${trackingData.arrivalDate}`,
                   timestamp: new Date(),
                 };
-                socketRef.current.emit("sendMessage", trackingMessage);
+                sendMessage(trackingMessage);
 
                 setIsTrackingModalOpen(false);
                 setTrackingData({
