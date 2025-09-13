@@ -259,8 +259,6 @@ const WorkTable = () => {
     }
   };
 
-
-  
   const isOneHourPassed = (followUpTimestamp) => {
     if (!followUpTimestamp) return true; // If no timestamp, enable the button
 
@@ -316,7 +314,7 @@ const WorkTable = () => {
       <select
         value={item.assignedDoctor || ""}
         onChange={(e) => handleDoctorChange(item._id, e.target.value)}
-        className="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+        className="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
       >
         <option value="">Select a doctor</option>
         {doctors.map((doctor) => (
@@ -614,430 +612,538 @@ const WorkTable = () => {
             </div>,
           ]),
         };
-  case 'Follow up-Mship':
-  return {
-    head: [
-      'S.no', 'Who is the Consultation for', 'Name', 'Patient Type', 'Phone Number',
-      'Email', 'Consulting For', 'If diseaseType is not available',
-      'Age', 'Gender', 'Acute/Chronic', 'Follow', 'Follow comment',
-      'Medicine Payment confirmation', 'Call attempted tracking',
-      'Comments', 'View Prescription', 'Voice call',
-      'Recordings', 'Mark Done'
-    ],
-    data: filteredPatients.map((item, index) => {
-      return [
-        index + 1,
-        item.medicalDetails.consultingFor || '',
-        item.name || '',
-        item.newExisting || '',
-        item.phone || '',
-        item.email || '',
-        item.medicalDetails.consultingFor || '',
-        item.medicalDetails.diseaseTypeAvailable ? 'Yes' : 'No',
-        item.age || '',
-        item.gender || '',
-        item.medicalDetails.diseaseType.name || '',
-        item.medicalDetails.follow || '',
-        item.medicalDetails.followComment || '',
-        item.medicinePaymentConfirmation ? 'Confirmed' : 'Pending',
-        item.medicalDetails.callCount || '',
-        <CommentCell 
-          key={`comment-${item._id}`}
-          patient={item} 
-          API_URL={API_URL}
-          onCommentAdded={(updatedPatient) => {
-            setPatients(prevPatients => 
-              prevPatients.map(p => p._id === updatedPatient._id ? updatedPatient : p)
-            );
-          }} 
-        />,
-        <div key={`view-prescription-${item._id}`} className="action-buttons">
-          {renderButton('View Prescription', () => handleAction('ViewPrescription', item))}
-        </div>,
-        <div key={`voice-call-${item._id}`} className="action-buttons">
-          {renderButton('Make Voice Call', () => handleAction('VoiceCall', item))}
-        </div>,
-        <div key={`recordings-${item._id}`} className="action-buttons">
-          {renderButton('Recordings', () => handleAction('Recordings', item))}
-        </div>,
-        <div key={`mark-done-${item._id}`} className="action-buttons">
-          {renderButton('Mark Done', () => handleAction('MarkDone', item))} 
-        </div>
-      ];
-    }),
-  };
+      case "Follow up-Mship":
+        return {
+          head: [
+            "S.no",
+            "Who is the Consultation for",
+            "Name",
+            "Patient Type",
+            "Phone Number",
+            "Email",
+            "Consulting For",
+            "If diseaseType is not available",
+            "Age",
+            "Gender",
+            "Acute/Chronic",
+            "Follow",
+            "Follow comment",
+            "Medicine Payment confirmation",
+            "Call attempted tracking",
+            "Comments",
+            "View Prescription",
+            "Voice call",
+            "Recordings",
+            "Mark Done",
+          ],
+          data: filteredPatients.map((item, index) => {
+            return [
+              index + 1,
+              item.medicalDetails.consultingFor || "",
+              item.name || "",
+              item.newExisting || "",
+              item.phone || "",
+              item.email || "",
+              item.medicalDetails.consultingFor || "",
+              item.medicalDetails.diseaseTypeAvailable ? "Yes" : "No",
+              item.age || "",
+              item.gender || "",
+              item.medicalDetails.diseaseType.name || "",
+              item.medicalDetails.follow || "",
+              item.medicalDetails.followComment || "",
+              item.medicinePaymentConfirmation ? "Confirmed" : "Pending",
+              item.medicalDetails.callCount || "",
+              <CommentCell
+                key={`comment-${item._id}`}
+                patient={item}
+                API_URL={API_URL}
+                onCommentAdded={(updatedPatient) => {
+                  setPatients((prevPatients) =>
+                    prevPatients.map((p) =>
+                      p._id === updatedPatient._id ? updatedPatient : p
+                    )
+                  );
+                }}
+              />,
+              <div
+                key={`view-prescription-${item._id}`}
+                className="action-buttons"
+              >
+                {renderButton("View Prescription", () =>
+                  handleAction("ViewPrescription", item)
+                )}
+              </div>,
+              <div key={`voice-call-${item._id}`} className="action-buttons">
+                {renderButton("Make Voice Call", () =>
+                  handleAction("VoiceCall", item)
+                )}
+              </div>,
+              <div key={`recordings-${item._id}`} className="action-buttons">
+                {renderButton("Recordings", () =>
+                  handleAction("Recordings", item)
+                )}
+              </div>,
+              <div key={`mark-done-${item._id}`} className="action-buttons">
+                {renderButton("Mark Done", () =>
+                  handleAction("MarkDone", item)
+                )}
+              </div>,
+            ];
+          }),
+        };
 
-  case 'Follow up-ship':
-  return {
-    head: [
-      'S.no', 'Who is the Consultation for', 'Name', 'Patient Type', 'Phone Number',
-      'Email', 'Consulting For', 'If diseaseType is not available',
-      'Age', 'Gender', 'Acute/Chronic', 'Follow', 'Follow comment',
-      'Medicine Payment confirmation', 'Call attempted tracking',
-      'Comments', 'Shipment ID', 'View Prescription', 'Voice call',
-      'Recordings', 'Mark Done'
-    ],
-    data: filteredPatients.map((item, index) => {
-      return [
-        index + 1,
-        item.medicalDetails.consultingFor || '',
-        item.name || '',
-        item.newExisting || '',
-        item.phone || '',
-        item.email || '',
-        item.medicalDetails.consultingFor || '',
-        item.medicalDetails.diseaseTypeAvailable ? 'Yes' : 'No',
-        item.age || '',
-        item.gender || '',
-        item.medicalDetails.diseaseType.name || '',
-        item.medicalDetails.follow || '',
-        item.medicalDetails.followComment || '',
-        item.medicinePaymentConfirmation ? 'Confirmed' : 'Pending',
-        item.medicalDetails.callCount || '',
-        <CommentCell 
-          key={`comment-${item._id}`}
-          patient={item} 
-          API_URL={API_URL}
-          onCommentAdded={(updatedPatient) => {
-            setPatients(prevPatients => 
-              prevPatients.map(p => p._id === updatedPatient._id ? updatedPatient : p)
-            );
-          }} 
-        />,
-        // Shipment ID input + save logic
-        <div key={`shipment-${item._id}`} style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
-          <input
-            id={`shipment-input-${item._id}`}
-            type="text"
-            defaultValue={item.shipmentId || ''}
-            required
-            placeholder="Enter Shipment ID"
-            style={{ 
-              padding: '4px 8px', 
-              border: '1px solid #ccc', 
-              borderRadius: '4px',
-              minWidth: '120px'
-            }}
-          />
-          <button
-            onClick={async (event) => {
-              const input = document.getElementById(`shipment-input-${item._id}`);
-              const shipmentId = input?.value.trim();
+      case "Follow up-ship":
+        return {
+          head: [
+            "S.no",
+            "Who is the Consultation for",
+            "Name",
+            "Patient Type",
+            "Phone Number",
+            "Email",
+            "Consulting For",
+            "If diseaseType is not available",
+            "Age",
+            "Gender",
+            "Acute/Chronic",
+            "Follow",
+            "Follow comment",
+            "Medicine Payment confirmation",
+            "Call attempted tracking",
+            "Comments",
+            "Shipment ID",
+            "View Prescription",
+            "Voice call",
+            "Recordings",
+            "Mark Done",
+          ],
+          data: filteredPatients.map((item, index) => {
+            return [
+              index + 1,
+              item.medicalDetails.consultingFor || "",
+              item.name || "",
+              item.newExisting || "",
+              item.phone || "",
+              item.email || "",
+              item.medicalDetails.consultingFor || "",
+              item.medicalDetails.diseaseTypeAvailable ? "Yes" : "No",
+              item.age || "",
+              item.gender || "",
+              item.medicalDetails.diseaseType.name || "",
+              item.medicalDetails.follow || "",
+              item.medicalDetails.followComment || "",
+              item.medicinePaymentConfirmation ? "Confirmed" : "Pending",
+              item.medicalDetails.callCount || "",
+              <CommentCell
+                key={`comment-${item._id}`}
+                patient={item}
+                API_URL={API_URL}
+                onCommentAdded={(updatedPatient) => {
+                  setPatients((prevPatients) =>
+                    prevPatients.map((p) =>
+                      p._id === updatedPatient._id ? updatedPatient : p
+                    )
+                  );
+                }}
+              />,
+              // Shipment ID input + save logic
+              <div
+                key={`shipment-${item._id}`}
+                style={{ display: "flex", gap: "8px", alignItems: "center" }}
+              >
+                <input
+                  id={`shipment-input-${item._id}`}
+                  type="text"
+                  defaultValue={item.shipmentId || ""}
+                  required
+                  placeholder="Enter Shipment ID"
+                  style={{
+                    padding: "4px 8px",
+                    border: "1px solid #ccc",
+                    borderRadius: "4px",
+                    minWidth: "120px",
+                  }}
+                />
+                <button
+                  onClick={async (event) => {
+                    const input = document.getElementById(
+                      `shipment-input-${item._id}`
+                    );
+                    const shipmentId = input?.value.trim();
 
-    
+                    const button = event.target;
+                    const originalText = button.textContent;
+                    button.textContent = "Saving...";
+                    button.disabled = true;
 
-              const button = event.target;
-              const originalText = button.textContent;
-              button.textContent = 'Saving...';
-              button.disabled = true;
+                    try {
+                      const token =
+                        localStorage.getItem("token") ||
+                        localStorage.getItem("authToken") ||
+                        sessionStorage.getItem("token");
+                      if (!token)
+                        throw new Error("No authentication token found.");
 
-              try {
-                const token = localStorage.getItem('token') || localStorage.getItem('authToken') || sessionStorage.getItem('token');
-                if (!token) throw new Error('No authentication token found.');
+                      const prescriptionId =
+                        item.medicalDetails.prescription_id; // <-- dynamic ID
 
-                const prescriptionId = item.medicalDetails.prescription_id; // <-- dynamic ID
+                      if (!prescriptionId)
+                        throw new Error(
+                          "Prescription ID not found for this patient."
+                        );
 
-                if (!prescriptionId) throw new Error('Prescription ID not found for this patient.');
+                      const apiUrl = `https://clinic-backend-jdob.onrender.com/api/doctor/prescriptions/${prescriptionId}/tracking`;
 
-                const apiUrl = `https://clinic-backend-jdob.onrender.com/api/doctor/prescriptions/${prescriptionId}/tracking`;
+                      const response = await fetch(apiUrl, {
+                        method: "PATCH",
+                        headers: {
+                          "Content-Type": "application/json",
+                          Authorization: `Bearer ${token}`,
+                        },
+                        body: JSON.stringify({
+                          trackingId: shipmentId,
+                          isProductReceived: false,
+                        }),
+                      });
 
-                const response = await fetch(apiUrl, {
-                  method: 'PATCH',
-                  headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${token}`
-                  },
-                  body: JSON.stringify({ 
-                    trackingId: shipmentId,
-                    isProductReceived: false
-                  })
-                });
+                      const responseText = await response.text();
 
-                const responseText = await response.text();
+                      if (!response.ok) {
+                        let errorMessage = `HTTP ${response.status}`;
+                        try {
+                          const errData = JSON.parse(responseText);
+                          errorMessage =
+                            errData.message || errData.error || errorMessage;
+                        } catch {}
+                        throw new Error(errorMessage);
+                      }
 
-                if (!response.ok) {
-                  let errorMessage = `HTTP ${response.status}`;
+                      setPatients((prevPatients) =>
+                        prevPatients.map((p) =>
+                          p._id === item._id
+                            ? { ...p, shipmentId: shipmentId }
+                            : p
+                        )
+                      );
+
+                      alert("Shipment ID saved successfully!");
+                    } catch (err) {
+                      alert(`Failed to save Shipment ID: ${err.message}`);
+                    } finally {
+                      button.textContent = originalText;
+                      button.disabled = false;
+                    }
+                  }}
+                  style={{
+                    padding: "4px 12px",
+                    cursor: "pointer",
+                    backgroundColor: "#007bff",
+                    color: "white",
+                    border: "none",
+                    borderRadius: "4px",
+                    fontSize: "12px",
+                  }}
+                >
+                  Save
+                </button>
+              </div>,
+              <div
+                key={`view-prescription-${item._id}`}
+                className="action-buttons"
+              >
+                {renderButton("View Prescription", () =>
+                  handleAction("ViewPrescription", item)
+                )}
+              </div>,
+              <div key={`voice-call-${item._id}`} className="action-buttons">
+                {renderButton("Make Voice Call", () =>
+                  handleAction("VoiceCall", item)
+                )}
+              </div>,
+              <div key={`recordings-${item._id}`} className="action-buttons">
+                {renderButton("Recordings", () =>
+                  handleAction("Recordings", item)
+                )}
+              </div>,
+              <div key={`mark-done-${item._id}`} className="action-buttons">
+                {renderButton("Mark Done", () =>
+                  handleAction("MarkDone", item)
+                )}
+              </div>,
+            ];
+          }),
+        };
+
+      case "Follow up-PCare":
+        return {
+          head: [
+            "S.no",
+            "Who is the Consultation for",
+            "Patient Type",
+            "Name",
+            "Phone Number",
+            "Email",
+            "Consulting For",
+            "If diseaseType is not available",
+            "Age",
+            "Gender",
+            "Acute/Chronic",
+            "Follow",
+            "Follow comment",
+            "Start Date for Prescription",
+            "Comments",
+            "Shipment Status",
+            "View Prescription",
+            "Voice call",
+            "Recordings",
+            "Mark Done",
+          ],
+          data: filteredPatients.map((item, index) => [
+            index + 1,
+            item.medicalDetails.consultingFor || "",
+            item.newExisting || "",
+            item.name || "",
+            item.phone || "",
+            item.email || "",
+            item.medicalDetails.consultingFor || "",
+            item.medicalDetails.diseaseTypeAvailable ? "Yes" : "No",
+            item.age || "",
+            item.gender || "",
+            item.medicalDetails.diseaseType?.name || "",
+            item.medicalDetails.follow || "",
+            item.medicalDetails.followComment || "",
+
+            // Start Date Input with API call
+            <div
+              key={`start-date-${item._id}`}
+              style={{ display: "flex", gap: "8px", alignItems: "center" }}
+            >
+              <input
+                id={`start-date-input-${item._id}`}
+                type="date"
+                defaultValue={item.prescriptionStartDate || ""}
+                required
+                style={{
+                  padding: "4px 8px",
+                  border: "1px solid #ccc",
+                  borderRadius: "4px",
+                }}
+              />
+              <button
+                onClick={async (event) => {
+                  const input = document.getElementById(
+                    `start-date-input-${item._id}`
+                  );
+                  const startDate = input?.value.trim();
+
+                  if (!startDate) {
+                    alert("Start Date is required.");
+                    return;
+                  }
+
+                  // Check if shipment status is "Done" before allowing API call
+                  const shipmentStatus = item.isProductReceived
+                    ? "Done"
+                    : "Pending";
+                  if (shipmentStatus !== "Pending") {
+                    alert(
+                      'Cannot set start date. Shipment status must be "Done" first.'
+                    );
+                    return;
+                  }
+
                   try {
-                    const errData = JSON.parse(responseText);
-                    errorMessage = errData.message || errData.error || errorMessage;
-                  } catch {}
-                  throw new Error(errorMessage);
-                }
+                    // Show loading state
+                    const button = event.target;
+                    const originalText = button.textContent;
+                    button.textContent = "Saving...";
+                    button.disabled = true;
 
-                setPatients(prevPatients =>
-                  prevPatients.map(p => 
-                    p._id === item._id 
-                      ? { ...p, shipmentId: shipmentId } 
-                      : p
+                    // Get the token from localStorage
+                    const token =
+                      localStorage.getItem("token") ||
+                      localStorage.getItem("authToken") ||
+                      sessionStorage.getItem("token");
+
+                    if (!token) {
+                      throw new Error(
+                        "No authentication token found. Please login again."
+                      );
+                    }
+
+                    // Use hardcoded prescription ID as requested
+                    const prescriptionId = item.medicalDetails.prescription_id;
+
+                    console.log("=== START DATE API CALL ===");
+                    console.log("Patient ID:", item._id);
+                    console.log("Prescription ID:", prescriptionId);
+                    console.log("Start Date:", startDate);
+                    console.log("Shipment Status:", shipmentStatus);
+                    console.log("Token exists:", !!token);
+
+                    // Construct the API URL
+                    const apiUrl = `https://clinic-backend-jdob.onrender.com/api/doctor/prescriptions/${prescriptionId}/start`;
+                    console.log("API URL:", apiUrl);
+
+                    const response = await fetch(apiUrl, {
+                      method: "PATCH",
+                      headers: {
+                        "Content-Type": "application/json",
+                        Authorization: `Bearer ${token}`,
+                      },
+                      body: JSON.stringify({
+                        startDate: startDate,
+                      }),
+                    });
+
+                    console.log("Response status:", response.status);
+                    console.log("Response ok:", response.ok);
+
+                    // Get response text first
+                    const responseText = await response.text();
+                    console.log("Raw response text:", responseText);
+
+                    if (!response.ok) {
+                      let errorMessage = `HTTP ${response.status}: ${response.statusText}`;
+
+                      // Try to parse error response
+                      try {
+                        const errorData = JSON.parse(responseText);
+                        errorMessage =
+                          errorData.message || errorData.error || errorMessage;
+                        console.log("Parsed error data:", errorData);
+                      } catch (parseError) {
+                        console.log(
+                          "Could not parse error response as JSON:",
+                          parseError
+                        );
+                        errorMessage = responseText || errorMessage;
+                      }
+
+                      throw new Error(errorMessage);
+                    }
+
+                    // Parse successful response
+                    let data;
+                    try {
+                      data = JSON.parse(responseText);
+                      console.log("Parsed success data:", data);
+                    } catch (parseError) {
+                      console.log(
+                        "Could not parse success response as JSON:",
+                        parseError
+                      );
+                      data = { message: "Success", raw: responseText };
+                    }
+
+                    console.log("Start Date saved successfully:", data);
+
+                    // Update local state
+                    setPatients((prevPatients) =>
+                      prevPatients.map((p) =>
+                        p._id === item._id
+                          ? { ...p, prescriptionStartDate: startDate }
+                          : p
+                      )
+                    );
+
+                    alert("Start Date saved successfully!");
+
+                    // Reset button
+                    button.textContent = originalText;
+                    button.disabled = false;
+                  } catch (error) {
+                    console.error("=== START DATE ERROR ===");
+                    console.error("Error message:", error.message);
+                    console.error("Error stack:", error.stack);
+
+                    // Show detailed error to user
+                    alert(
+                      `Failed to save Start Date: ${error.message}\n\nCheck browser console for more details.`
+                    );
+
+                    // Reset button on error
+                    const button = event.target;
+                    if (button) {
+                      button.textContent = "Save";
+                      button.disabled = false;
+                    }
+                  }
+                }}
+                style={{
+                  padding: "4px 12px",
+                  cursor: "pointer",
+                  backgroundColor: "#28a745",
+                  color: "white",
+                  border: "none",
+                  borderRadius: "4px",
+                  fontSize: "12px",
+                }}
+              >
+                Save
+              </button>
+            </div>,
+
+            // Comment Cell
+            <CommentCell
+              key={`comment-${item._id}`}
+              patient={item}
+              API_URL={API_URL}
+              onCommentAdded={(updatedPatient) => {
+                setPatients((prevPatients) =>
+                  prevPatients.map((p) =>
+                    p._id === updatedPatient._id ? updatedPatient : p
                   )
                 );
+              }}
+            />,
 
-                alert('Shipment ID saved successfully!');
-              } catch (err) {
-                alert(`Failed to save Shipment ID: ${err.message}`);
-              } finally {
-                button.textContent = originalText;
-                button.disabled = false;
-              }
-            }}
-            style={{ 
-              padding: '4px 12px', 
-              cursor: 'pointer',
-              backgroundColor: '#007bff',
-              color: 'white',
-              border: 'none',
-              borderRadius: '4px',
-              fontSize: '12px'
-            }}
-          >
-            Save
-          </button>
-        </div>,
-        <div key={`view-prescription-${item._id}`} className="action-buttons">
-          {renderButton('View Prescription', () => handleAction('ViewPrescription', item))}
-        </div>,
-        <div key={`voice-call-${item._id}`} className="action-buttons">
-          {renderButton('Make Voice Call', () => handleAction('VoiceCall', item))}
-        </div>,
-        <div key={`recordings-${item._id}`} className="action-buttons">
-          {renderButton('Recordings', () => handleAction('Recordings', item))}
-        </div>,
-        <div key={`mark-done-${item._id}`} className="action-buttons">
-          {renderButton('Mark Done', () => handleAction('MarkDone', item))} 
-        </div>
-      ];
-    }),
-  };
+            // Shipment Status - Fetched from backend based on isProductReceived
+            <div
+              key={`shipment-status-${item._id}`}
+              style={{ padding: "8px", textAlign: "center" }}
+            >
+              <span
+                style={{
+                  padding: "4px 8px",
+                  backgroundColor: item.isProductReceived
+                    ? "#28a745"
+                    : "#ffc107",
+                  color: item.isProductReceived ? "white" : "#212529",
+                  borderRadius: "4px",
+                  fontSize: "12px",
+                  fontWeight: "bold",
+                }}
+              >
+                {item.isProductReceived === false ? "Pending" : "Done"}
+              </span>
+            </div>,
 
-
- case 'Follow up-PCare':
-  return {
-    head: [
-      'S.no',
-      'Who is the Consultation for',
-      'Patient Type',
-      'Name',
-      'Phone Number',
-      'Email',
-      'Consulting For',
-      'If diseaseType is not available',
-      'Age',
-      'Gender',
-      'Acute/Chronic',
-      'Follow',
-      'Follow comment',
-      'Start Date for Prescription',
-      'Comments',
-      'Shipment Status',
-      'View Prescription',
-      'Voice call',
-      'Recordings',
-      'Mark Done',
-    ],
-    data: filteredPatients.map((item, index) => [
-      index + 1,
-      item.medicalDetails.consultingFor || '',
-      item.newExisting || '',
-      item.name || '',
-      item.phone || '',
-      item.email || '',
-      item.medicalDetails.consultingFor || '',
-      item.medicalDetails.diseaseTypeAvailable ? 'Yes' : 'No',
-      item.age || '',
-      item.gender || '',
-      item.medicalDetails.diseaseType?.name || '',
-      item.medicalDetails.follow || '',
-      item.medicalDetails.followComment || '',
-
-      // Start Date Input with API call
-      <div key={`start-date-${item._id}`} style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
-        <input
-          id={`start-date-input-${item._id}`}
-          type="date"
-          defaultValue={item.prescriptionStartDate || ''}
-          required
-          style={{ padding: '4px 8px', border: '1px solid #ccc', borderRadius: '4px' }}
-        />
-        <button
-          onClick={async (event) => {
-            const input = document.getElementById(`start-date-input-${item._id}`);
-            const startDate = input?.value.trim();
-            
-            if (!startDate) {
-              alert('Start Date is required.');
-              return;
-            }
-
-            // Check if shipment status is "Done" before allowing API call
-            const shipmentStatus = item.isProductReceived ? 'Done' : 'Pending';
-            if (shipmentStatus !== 'Pending') {
-              alert('Cannot set start date. Shipment status must be "Done" first.');
-              return;
-            }
-
-            try {
-              // Show loading state
-              const button = event.target;
-              const originalText = button.textContent;
-              button.textContent = 'Saving...';
-              button.disabled = true;
-
-              // Get the token from localStorage
-              const token = localStorage.getItem('token') || localStorage.getItem('authToken') || sessionStorage.getItem('token');
-              
-              if (!token) {
-                throw new Error('No authentication token found. Please login again.');
-              }
-
-              // Use hardcoded prescription ID as requested
-              const prescriptionId = item.medicalDetails.prescription_id;
-              
-              console.log('=== START DATE API CALL ===');
-              console.log('Patient ID:', item._id);
-              console.log('Prescription ID:', prescriptionId);
-              console.log('Start Date:', startDate);
-              console.log('Shipment Status:', shipmentStatus);
-              console.log('Token exists:', !!token);
-
-              // Construct the API URL
-              const apiUrl = `https://clinic-backend-jdob.onrender.com/api/doctor/prescriptions/${prescriptionId}/start`;
-              console.log('API URL:', apiUrl);
-
-              const response = await fetch(apiUrl, {
-                method: 'PATCH',
-                headers: {
-                  'Content-Type': 'application/json',
-                  'Authorization': `Bearer ${token}`
-                },
-                body: JSON.stringify({ 
-                  startDate: startDate
-                })
-              });
-
-              console.log('Response status:', response.status);
-              console.log('Response ok:', response.ok);
-
-              // Get response text first
-              const responseText = await response.text();
-              console.log('Raw response text:', responseText);
-
-              if (!response.ok) {
-                let errorMessage = `HTTP ${response.status}: ${response.statusText}`;
-                
-                // Try to parse error response
-                try {
-                  const errorData = JSON.parse(responseText);
-                  errorMessage = errorData.message || errorData.error || errorMessage;
-                  console.log('Parsed error data:', errorData);
-                } catch (parseError) {
-                  console.log('Could not parse error response as JSON:', parseError);
-                  errorMessage = responseText || errorMessage;
-                }
-                
-                throw new Error(errorMessage);
-              }
-
-              // Parse successful response
-              let data;
-              try {
-                data = JSON.parse(responseText);
-                console.log('Parsed success data:', data);
-              } catch (parseError) {
-                console.log('Could not parse success response as JSON:', parseError);
-                data = { message: 'Success', raw: responseText };
-              }
-
-              console.log('Start Date saved successfully:', data);
-
-              // Update local state
-              setPatients(prevPatients =>
-                prevPatients.map(p => 
-                  p._id === item._id 
-                    ? { ...p, prescriptionStartDate: startDate } 
-                    : p
-                )
-              );
-
-              alert('Start Date saved successfully!');
-              
-              // Reset button
-              button.textContent = originalText;
-              button.disabled = false;
-
-            } catch (error) {
-              console.error('=== START DATE ERROR ===');
-              console.error('Error message:', error.message);
-              console.error('Error stack:', error.stack);
-              
-              // Show detailed error to user
-              alert(`Failed to save Start Date: ${error.message}\n\nCheck browser console for more details.`);
-              
-              // Reset button on error
-              const button = event.target;
-              if (button) {
-                button.textContent = 'Save';
-                button.disabled = false;
-              }
-            }
-          }}
-          style={{ 
-            padding: '4px 12px', 
-            cursor: 'pointer',
-            backgroundColor: '#28a745',
-            color: 'white',
-            border: 'none',
-            borderRadius: '4px',
-            fontSize: '12px'
-          }}
-        >
-          Save
-        </button>
-      </div>,
-
-      // Comment Cell
-      <CommentCell 
-        key={`comment-${item._id}`}
-        patient={item} 
-        API_URL={API_URL}
-        onCommentAdded={(updatedPatient) => {
-          setPatients(prevPatients => 
-            prevPatients.map(p => p._id === updatedPatient._id ? updatedPatient : p)
-          );
-        }} 
-      />,
-
-      // Shipment Status - Fetched from backend based on isProductReceived
-      <div key={`shipment-status-${item._id}`} style={{ padding: '8px', textAlign: 'center' }}>
-        <span 
-          style={{ 
-            padding: '4px 8px',
-            backgroundColor: item.isProductReceived ? '#28a745' : '#ffc107',
-            color: item.isProductReceived ? 'white' : '#212529',
-            borderRadius: '4px',
-            fontSize: '12px',
-            fontWeight: 'bold'
-          }}
-        >
-          {item.isProductReceived === false ? 'Pending' : 'Done'}
-        </span>
-      </div>,
-
-      // Action buttons
-      <div key={`view-prescription-${item._id}`} className="action-buttons">
-        {renderButton('View Prescription', () => handleAction('ViewPrescription', item))}
-      </div>,
-      <div key={`voice-call-${item._id}`} className="action-buttons">
-        {renderButton('Make Voice Call', () => handleAction('VoiceCall', item))}
-      </div>,
-      <div key={`recordings-${item._id}`} className="action-buttons">
-        {renderButton('Recordings', () => handleAction('Recordings', item))}
-      </div>,
-      <div key={`mark-done-${item._id}`} className="action-buttons">
-        {renderButton('Mark Done', () => handleAction('MarkDone', item))}
-      </div>,
-    ]),
-  };
-      case 'View All':
+            // Action buttons
+            <div
+              key={`view-prescription-${item._id}`}
+              className="action-buttons"
+            >
+              {renderButton("View Prescription", () =>
+                handleAction("ViewPrescription", item)
+              )}
+            </div>,
+            <div key={`voice-call-${item._id}`} className="action-buttons">
+              {renderButton("Make Voice Call", () =>
+                handleAction("VoiceCall", item)
+              )}
+            </div>,
+            <div key={`recordings-${item._id}`} className="action-buttons">
+              {renderButton("Recordings", () =>
+                handleAction("Recordings", item)
+              )}
+            </div>,
+            <div key={`mark-done-${item._id}`} className="action-buttons">
+              {renderButton("Mark Done", () => handleAction("MarkDone", item))}
+            </div>,
+          ]),
+        };
+      case "View All":
         return {
           head: [
             "S.no",
@@ -1142,7 +1248,7 @@ const WorkTable = () => {
           ]),
         };
       case "Special Allocation":
-        /*return {
+      /*return {
           head: [
             "S.no",
             "Omni channel",
@@ -1350,37 +1456,45 @@ const WorkTable = () => {
 
   return (
     <div className="w-full px-2 py-4">
-      <div className="mb-6 flex flex-col md:flex-row items-center space-y-4 md:space-y-0 md:space-x-4">
-        <div className="relative w-full">
-          <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-            <IoIosSearch className="h-5 w-5 text-gray-500" />
-          </div>
-          <input
-            type="text"
-            placeholder="Search by name or phone number..."
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            className="w-full pl-10 pr-3 py-2 border border-blue-800 rounded-lg"
-          />
-        </div>
+      <div className="mb-6 flex flex-col md:flex-row items-center justify-between">
+  {/* Left: Search Bar */}
+  <div className="relative w-72 mb-4 md:mb-0">
+    <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+      <IoIosSearch className="h-5 w-5 text-gray-500" />
+    </div>
+    <input
+      type="text"
+      placeholder="Search by name or phone number..."
+      value={searchTerm}
+      onChange={(e) => setSearchTerm(e.target.value)}
+      className="w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg bg-white focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
+    />
+  </div>
 
-        <select value={selectedFollowType} onChange={handleFollowChange}>
-          {followTypes.map((type) => (
-            <option key={type} value={type}>
-              {type}
-            </option>
-          ))}
-        </select>
-      </div>
+  {/* Right: Dropdown */}
+  <select
+    value={selectedFollowType}
+    onChange={handleFollowChange}
+    className="border border-gray-300 rounded-lg px-3 py-2 bg-white text-gray-700 focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
+  >
+    {followTypes.map((type) => (
+      <option key={type} value={type}>
+        {type}
+      </option>
+    ))}
+  </select>
+</div>
 
       <div className="w-full overflow-x-auto">
-        <table className="w-full table-auto">
-          <thead className="bg-blue-800 text-white">
-            <tr>
-              {tableConfig.head.map((header) => (
+        <table className="w-full overflow-hidden rounded-lg">
+          <thead>
+            <tr className="border-b border-blue-200">
+              {tableConfig.head.map((header, index) => (
                 <th
                   key={header}
-                  className="px-4 py-3 text-left text-xs font-semibold uppercase"
+                  className={`text-center p-4 font-bold text-gray-700 text-sm ${
+                    index % 2 === 0 ? "bg-gray-100" : "bg-white"
+                  }`}
                 >
                   {header}
                 </th>
@@ -1390,11 +1504,15 @@ const WorkTable = () => {
           <tbody>
             {tableConfig.data.length > 0 ? (
               tableConfig.data.map((row, rowIndex) => (
-                <tr key={rowIndex} className="border-b hover:bg-blue-50">
+                <tr key={rowIndex} className="border-b border-blue-200">
                   {row.map((cell, cellIndex) => (
                     <td
                       key={cellIndex}
-                      className="px-4 py-3 text-sm text-gray-900"
+                      className={`p-4 text-center text-sm ${
+                        cellIndex % 2 === 0
+                          ? "bg-gray-100 text-gray-900 font-medium"
+                          : "bg-white text-gray-600"
+                      }`}
                     >
                       {cell}
                     </td>
@@ -1405,7 +1523,7 @@ const WorkTable = () => {
               <tr>
                 <td
                   colSpan={tableConfig.head.length}
-                  className="px-4 py-3 text-center text-gray-500"
+                  className="bg-white text-center text-gray-500 py-6"
                 >
                   No patients found matching your criteria
                 </td>

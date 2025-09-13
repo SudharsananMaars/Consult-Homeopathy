@@ -6,7 +6,7 @@ const AddDoctorModal = ({ isOpen, onClose, employeeID, refreshDoctors, doctor })
   const [uploadedDocuments, setUploadedDocuments] = useState([]);
   const [error, setError] = useState(null);
   const [documents, setDocuments] = useState([]);
-  const [showPassword, setShowPassword] = useState(false); // State to toggle password visibility
+  const [showPassword, setShowPassword] = useState(false);
 
   const togglePasswordVisibility = () => {
     setShowPassword((prev) => !prev);
@@ -17,6 +17,7 @@ const AddDoctorModal = ({ isOpen, onClose, employeeID, refreshDoctors, doctor })
     name: "",
     dateOfBirth: "",
     gender: "",
+    age: "", // Added age field
     maritalStatus: "",
     nationality: "",
     phone: "",
@@ -48,7 +49,7 @@ const AddDoctorModal = ({ isOpen, onClose, employeeID, refreshDoctors, doctor })
     esiNumber: "",
     taxDeductionPreferences: "",
     usernameSystemAccess: "",
-    temporaryPassword: "",
+    password: "", // Changed from temporaryPassword to password
     accessLevel: "",
     digitalSignature: null,
     highestQualification: "",
@@ -63,9 +64,24 @@ const AddDoctorModal = ({ isOpen, onClose, employeeID, refreshDoctors, doctor })
     documents: [],
 });
 
-// Fetch the generated Employee ID when adding a new doctor (not in edit mode)
+// Function to calculate age from date of birth
+const calculateAge = (dateOfBirth) => {
+  if (!dateOfBirth) return "";
+  const today = new Date();
+  const birthDate = new Date(dateOfBirth);
+  let age = today.getFullYear() - birthDate.getFullYear();
+  const monthDiff = today.getMonth() - birthDate.getMonth();
+  
+  if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birthDate.getDate())) {
+    age--;
+  }
+  
+  return age;
+};
+
+// Fetch the generated Employee ID when adding a new doctor
 useEffect(() => {
-  if (!doctor) {  // Only fetch employee ID if doctor is not provided (i.e., new employee)
+  if (!doctor) {
     async function fetchemployeeID() {
       try {
         const response = await fetch(`${API_URL}/api/employees/generate-employee-id`);
@@ -73,7 +89,7 @@ useEffect(() => {
         if (data.success) {
           setFormData((prevFormData) => ({
             ...prevFormData,
-            employeeID: data.employeeID, // Set the generated ID
+            employeeID: data.employeeID,
           }));
         }
       } catch (error) {
@@ -82,7 +98,7 @@ useEffect(() => {
     }
     fetchemployeeID();
   }
-}, [doctor]); // This will run when doctor is null or undefined (i.e., when adding a new doctor)
+}, [doctor]);
 
 // Update form data when doctor changes
 useEffect(() => {
@@ -96,16 +112,8 @@ useEffect(() => {
     }
 }, [doctor]);
 
-const formatDateToDDMMYYYY = (dateString) => {
-  const date = new Date(dateString);
-  const day = String(date.getDate()).padStart(2, "0");
-  const month = String(date.getMonth() + 1).padStart(2, "0");
-  const year = date.getFullYear();
-  return `${day}-${month}-${year}`;
-};
-
-   // Fetch employee data when editing
-   useEffect(() => {
+// Fetch employee data when editing
+useEffect(() => {
     if (doctor) {
       const fetchEmployeeData = async () => {
         try {
@@ -117,11 +125,12 @@ const formatDateToDDMMYYYY = (dateString) => {
               ...prevFormData,
               ...employee,
               dateOfBirth: employee.dateOfBirth
-                ? new Date(employee.dateOfBirth).toISOString().split("T")[0] // Format to yyyy-mm-dd
+                ? new Date(employee.dateOfBirth).toISOString().split("T")[0]
                 : "",
               dateOfJoining: employee.dateOfJoining
-                ? new Date(employee.dateOfJoining).toISOString().split("T")[0] // Format to yyyy-mm-dd
+                ? new Date(employee.dateOfJoining).toISOString().split("T")[0]
                 : "",
+              age: employee.dateOfBirth ? calculateAge(employee.dateOfBirth) : "",
             }));
           }
         } catch (error) {
@@ -137,6 +146,7 @@ const formatDateToDDMMYYYY = (dateString) => {
     name: '',
     dateOfBirth: '',
     gender: '',
+    age: '',
     maritalStatus: '',
     nationality: '',
     phone: '',
@@ -168,7 +178,7 @@ pfNumber: '',
 esiNumber: '',
 taxDeductionPreferences: '',
 usernameSystemAccess: '',
-    temporaryPassword: '',
+    password: '', // Changed from temporaryPassword
     accessLevel: '',
     digitalSignature: null,
     highestQualification: '',
@@ -186,7 +196,19 @@ usernameSystemAccess: '',
 }, [doctor, employeeID]);
 
   const handleChange = (e) => {
-    setFormData({ ...formData, [e.target.name]: e.target.value });
+    const { name, value } = e.target;
+    
+    // Auto-calculate age when date of birth changes
+    if (name === 'dateOfBirth') {
+      const age = calculateAge(value);
+      setFormData({ 
+        ...formData, 
+        [name]: value,
+        age: age
+      });
+    } else {
+      setFormData({ ...formData, [name]: value });
+    }
   };
 
   const handleFileChange = (e) => {
@@ -194,80 +216,80 @@ usernameSystemAccess: '',
     if (name === "documents") {
       setFormData({ ...formData, documents: files });
     } else if (name === "digitalSignature") {
-      setFormData({ ...formData, digitalSignature: files[0] });
-    }
-  };
+      setFormData({ ...formData, digitalSignature: files[0] });
+    }
+  };
 
   const handleDocumentUpload = (e) => {
     const files = Array.from(e.target.files);
     const newDocuments = files.map((file) => ({
       name: file.name,
-      uploaded: false, // Initially set to false
+      uploaded: false,
     }));
     
-    // Update the state with the new documents
     setUploadedDocuments((prev) => [...prev, ...newDocuments]);
   };
   
-  // Handle document removal
   const handleRemoveDocument = (index) => {
     const updatedDocuments = [...uploadedDocuments];
-    updatedDocuments.splice(index, 1); // Remove the document at the given index
+    updatedDocuments.splice(index, 1);
     setUploadedDocuments(updatedDocuments);
   };
   
-  // Update upload status for a document
   const markDocumentAsUploaded = (index) => {
     const updatedDocuments = [...uploadedDocuments];
-    updatedDocuments[index].uploaded = true; // Set uploaded status to true
+    updatedDocuments[index].uploaded = true;
     setUploadedDocuments(updatedDocuments);
   };
 
   const handleSubmit = async (e) => {
-    e.preventDefault(); // Prevent the default form submission behavior
-
-    // Create a new FormData object
-    const formDataToSend = new FormData();
-
-    // Append text fields (formData) to FormData
-    Object.keys(formData).forEach((key) => {
-        // Skip files here, they'll be appended separately
-        if (key !== "documents" && key !== "digitalSignature") {
-            formDataToSend.append(key, formData[key]);
-        }
-    });
-
-    // Append the digital signature (if provided)
-    if (formData.digitalSignature) {
-        formDataToSend.append("digitalSignature", formData.digitalSignature);
-    }
-
-    // Append the documents (if any)
-    if (formData.documents && formData.documents.length > 0) {
-        Array.from(formData.documents).forEach((doc) => {
-            formDataToSend.append(documents, doc); // Append as 'documents[]'
-        });
-    }
-
-      // Append employee data as a stringified JSON
-    formDataToSend.append("employeeData", JSON.stringify(formData));
-
-    console.log("FormData to send:", formDataToSend);
-
+    e.preventDefault();
+    
     try {
-        // Determine if it's an add or update operation
-        const isUpdate = doctor && doctor.employeeID; // Check if 'doctor' object and ID exist
+        // Create a clean data object
+        const dataToSend = {
+            ...formData,
+            // Ensure certifications is an array
+            certifications: Array.isArray(formData.certifications) 
+                ? formData.certifications 
+                : formData.certifications ? formData.certifications.split(',').map(cert => cert.trim()).filter(cert => cert) : [],
+            // Convert numeric fields
+            basicSalary: Number(formData.basicSalary) || 0,
+            allowances: Number(formData.allowances) || 0,
+            deductions: Number(formData.deductions) || 0,
+            yearOfGraduation: Number(formData.yearOfGraduation) || null,
+            age: Number(formData.age) || 0,
+        };
 
+        // Create FormData for file uploads
+        const formDataToSend = new FormData();
+
+        // IMPORTANT: Append employee data as JSON string (your backend expects this)
+        formDataToSend.append("employeeData", JSON.stringify(dataToSend));
+
+        // Append files separately
+        if (formData.digitalSignature) {
+            formDataToSend.append("digitalSignature", formData.digitalSignature);
+        }
+
+        if (formData.documents && formData.documents.length > 0) {
+            Array.from(formData.documents).forEach((doc) => {
+                formDataToSend.append("documents", doc);
+            });
+        }
+
+        console.log("FormData to send:", formDataToSend);
+        console.log("Employee data JSON:", JSON.stringify(dataToSend));
+
+        const isUpdate = doctor && doctor.employeeID;
         const url = isUpdate
             ? `${API_URL}/api/employees/updateEmployee/${doctor.employeeID}`
             : `${API_URL}/api/employees/add`;
-
         const method = isUpdate ? "PUT" : "POST";
 
-        // Make the API request
         const response = await fetch(url, {
             method,
-            body: formDataToSend, // FormData auto-handles headers for file uploads
+            body: formDataToSend,
         });
 
         if (response.ok) {
@@ -275,39 +297,36 @@ usernameSystemAccess: '',
             alert(isUpdate ? "Profile updated successfully!" : "Profile created successfully!");
             console.log(data);
 
-            // Optionally refresh the form/UI after success
             if (isUpdate) {
-              fetchUpdatedEmployeeData(doctor.employeeID); // Fetch updated data
+              // fetchUpdatedEmployeeData(doctor.employeeID);
             } else if (typeof refreshDoctors === "function") {
-              refreshDoctors(); // Refresh list after new entry
+              refreshDoctors();
             }
     
             if (typeof onClose === "function") {
-              onClose(); // Close modal
+              onClose();
             }
 
         } else {
-            // Handle server errors
             const errorData = await response.json();
-            alert( `Error: ${errorData.message || "Something went wrong!"}`);
+            console.error("Server error:", errorData);
+            alert(`Error: ${errorData.message || "Something went wrong!"}`);
         }
     } catch (error) {
         console.error("Error in form submission:", error);
         alert("An unexpected error occurred. Please try again.");
-    }
+    }
 };
 
   if (!isOpen) return null;
 
   return (
-
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-gray-900 bg-opacity-50 p-4">
       <div className="container max-h-[80vh] overflow-y-auto mx-auto p-6 bg-white rounded-lg shadow-lg relative">
         <h2 className="text-2xl font-bold mb-6">Add Employee</h2>
         <form onSubmit={handleSubmit}>
           
-            {/* Other fields from the previous sections */}
-             {/* Personal Information */}
+            {/* Personal Information */}
              <h2 className="text-xl font-semibold mb-3">Personal Information</h2>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div>
@@ -334,6 +353,20 @@ usernameSystemAccess: '',
                 required
               />
             </div>
+
+            {/* Age field - auto-calculated */}
+            <div>
+              <label className="block text-sm font-medium">Age</label>
+              <input
+                type="number"
+                name="age"
+                value={formData.age}
+                readOnly
+                className="w-full mt-1 p-2 border border-gray-300 rounded-md bg-gray-100"
+                placeholder="Auto-calculated"
+              />
+            </div>
+
             <div>
               <label className="block text-sm font-medium">Gender *</label>
               <select
@@ -380,7 +413,7 @@ usernameSystemAccess: '',
             <div>
               <label className="block text-sm font-medium">Primary Contact *</label>
               <input
-                type="tel"
+                type="text"
                 name="phone"
                 value={formData.phone}
                 onChange={handleChange}
@@ -392,13 +425,12 @@ usernameSystemAccess: '',
             <div>
               <label className="block text-sm font-medium">Secondary Contact</label>
               <input
-                type="tel"
+                type="text"
                 name="secondaryContact"
                 value={formData.secondaryContact}
                 onChange={handleChange}
                 className="w-full mt-1 p-2 border border-gray-300 rounded-md"
                 placeholder="Enter Secondary Contact"
-                
               />
             </div>
 
@@ -437,7 +469,6 @@ usernameSystemAccess: '',
                 onChange={handleChange}
                 className="w-full mt-1 p-2 border border-gray-300 rounded-md"
                 placeholder="Enter Permanent Address"
-                required
               />
             </div>
 
@@ -469,7 +500,7 @@ usernameSystemAccess: '',
             <div>
               <label className="block text-sm font-medium">Emergency Contact Number *</label>
               <input
-                type="tel"
+                type="text"
                 name="emergencyContactNumber"
                 value={formData.emergencyContactNumber}
                 onChange={handleChange}
@@ -481,7 +512,6 @@ usernameSystemAccess: '',
             </div>
 
             {/* Job Details */}
-            
             <h2 className="text-xl font-semibold mt-6 mb-3">Job Details</h2>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div>
@@ -491,7 +521,7 @@ usernameSystemAccess: '',
                 name="employeeID"
                 value={formData.employeeID}
                 readOnly
-                className="w-full mt-1 p-2 border border-gray-300 rounded-md"
+                className="w-full mt-1 p-2 border border-gray-300 rounded-md bg-gray-100"
               />
             </div>
 
@@ -505,13 +535,9 @@ usernameSystemAccess: '',
                 required
               >
                 <option value="">Select Designation</option>
-                <option value="Senior Doctor">Senior Doctor</option>
-                <option value="Doctor">Doctor</option>
-                <option value="assistant-doctor">assistant-doctor</option>
+                <option value="admin-doctor">Admin Doctor</option>
+                <option value="assistant-doctor">Assistant Doctor</option>
                 <option value="Executive">Executive</option>
-                <option value="Admin- Clinic">Admin- Clinic</option>
-                <option value="Admin- Operations">Admin- Operations</option>
-                <option value="External Doctor">External Doctor</option>
               </select>
             </div>
 
@@ -557,9 +583,9 @@ usernameSystemAccess: '',
                 <option value="Full-time">Full-time</option>
                 <option value="Part-time">Part-time</option>
                 <option value="Contractual">Contractual</option>
-                
               </select>
             </div>
+            
             <div>
               <label className="block text-sm font-medium">Work Location</label>
               <select
@@ -573,7 +599,6 @@ usernameSystemAccess: '',
                 <option value="Remote">Remote</option>
                 <option value="On-site">On-site</option>
                 <option value="Hybrid">Hybrid</option>
-                
               </select>
             </div>
 
@@ -589,6 +614,7 @@ usernameSystemAccess: '',
                 required
               />
             </div>
+            
             <div>
               <label className="block text-sm font-medium">Work Shift/Hours</label>
               <select
@@ -602,19 +628,19 @@ usernameSystemAccess: '',
                 <option value="Morning Shift">Morning</option>
                 <option value="Evening Shift">Evening</option>
                 <option value="Night Shift">Night</option>
-                <option value=" Flexible Hours"> Flexible Hours</option>
-                
+                <option value="Flexible Hours">Flexible Hours</option>
               </select>
             </div>
             </div>
             
+            {/* Compensation Details */}
             <h2 className="text-xl font-semibold mt-6 mb-3">Compensation Details</h2>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
 
 <div>
   <label className="block text-sm font-medium">Basic Salary *</label>
   <input
-    type="text"
+    type="number"
     name="basicSalary"
     value={formData.basicSalary}
     onChange={handleChange}
@@ -625,30 +651,29 @@ usernameSystemAccess: '',
 </div>
 
 <div>
-  <label className="block text-sm font-medium">Allowances *</label>
+  <label className="block text-sm font-medium">Allowances</label>
   <input
-    type="text"
+    type="number"
     name="allowances"
     value={formData.allowances}
     onChange={handleChange}
     className="w-full mt-1 p-2 border border-gray-300 rounded-md"
     placeholder="Enter Allowances"
-    required
   />
 </div>
 
 <div>
-  <label className="block text-sm font-medium">Deductions *</label>
+  <label className="block text-sm font-medium">Deductions</label>
   <input
-    type="text"
+    type="number"
     name="deductions"
     value={formData.deductions}
     onChange={handleChange}
     className="w-full mt-1 p-2 border border-gray-300 rounded-md"
     placeholder="Enter Deductions"
-    required
   />
 </div>
+
 <div>
   <label className="block text-sm font-medium">Bank Account Number *</label>
   <input
@@ -688,7 +713,6 @@ usernameSystemAccess: '',
   />
 </div>
 
-
 <div>
 <label className="block text-sm font-medium">Payment Frequency *</label>
   <select
@@ -713,7 +737,6 @@ usernameSystemAccess: '',
     onChange={handleChange}
     className="w-full mt-1 p-2 border border-gray-300 rounded-md"
     placeholder="Enter PF Number"
-    required
   />
 </div>
 
@@ -726,7 +749,6 @@ usernameSystemAccess: '',
     onChange={handleChange}
     className="w-full mt-1 p-2 border border-gray-300 rounded-md"
     placeholder="Enter ESI Number"
-    required
   />
 </div>
 
@@ -739,7 +761,6 @@ usernameSystemAccess: '',
     onChange={handleChange}
     className="w-full mt-1 p-2 border border-gray-300 rounded-md"
     placeholder="Enter Tax Deduction Preferences"
-    required
   />
 </div>
 </div>
@@ -747,7 +768,7 @@ usernameSystemAccess: '',
    {/* Educational and Professional Background */}
             <h3 className="col-span-2 text-xl font-semibold mt-6 mb-6">Educational and Professional Background</h3>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            {/* Educational fields */}
+            
             <div>
               <label className="block text-sm font-medium">Highest Qualification *</label>
               <input
@@ -770,20 +791,18 @@ usernameSystemAccess: '',
                 onChange={handleChange}
                 className="w-full mt-1 p-2 border border-gray-300 rounded-md"
                 placeholder="Enter Specialization"
-                required
               />
             </div>
 
             <div>
-              <label className="block text-sm font-medium">Year of Graduation *</label>
+              <label className="block text-sm font-medium">Year of Graduation</label>
               <input
-                type="text"
+                type="number"
                 name="yearOfGraduation"
                 value={formData.yearOfGraduation}
                 onChange={handleChange}
                 className="w-full mt-1 p-2 border border-gray-300 rounded-md"
                 placeholder="Enter Year of Graduation"
-                required
               />
             </div>
 
@@ -799,7 +818,6 @@ usernameSystemAccess: '',
                 onChange={handleChange}
                 className="w-full mt-1 p-2 border border-gray-300 rounded-md"
                 placeholder="Enter Company Name"
-                required
               />
             </div>
 
@@ -812,7 +830,6 @@ usernameSystemAccess: '',
                 onChange={handleChange}
                 className="w-full mt-1 p-2 border border-gray-300 rounded-md"
                 placeholder="Enter Duration"
-                required
               />
             </div>
 
@@ -825,20 +842,18 @@ usernameSystemAccess: '',
                 onChange={handleChange}
                 className="w-full mt-1 p-2 border border-gray-300 rounded-md"
                 placeholder="Enter Job Role"
-                required
               />
             </div>
 
             <div>
-            <label className="block text-sm font-medium">Total Years of Experience *</label>
+            <label className="block text-sm font-medium">Total Years of Experience</label>
             <input
-              type="number"
+              type="text"
               name="totalExperience"
               value={formData.totalExperience}
               onChange={handleChange}
               className="w-full mt-1 p-2 border border-gray-300 rounded-md"
               placeholder="Enter Total Years of Experience"
-              required
             />
           </div>
   
@@ -850,8 +865,7 @@ usernameSystemAccess: '',
               value={formData.certifications}
               onChange={handleChange}
               className="w-full mt-1 p-2 border border-gray-300 rounded-md"
-              placeholder="Enter Certifications"
-              required
+              placeholder="Enter Certifications (comma-separated)"
             />
           </div>
   
@@ -864,20 +878,17 @@ usernameSystemAccess: '',
               onChange={handleChange}
               className="w-full mt-1 p-2 border border-gray-300 rounded-md"
               placeholder="Enter Registration Number"
-              required
             />
           </div>
           </div>
 
             {/* Documents Upload Section */}
-      
-
 <div className="col-span-2">
   <label className="block text-lg font-medium">Documents Upload</label>
   <input
     type="file"
     name="documents"
-    accept='application/pdf'
+    accept="image/*,application/pdf,.doc,.docx"
     multiple
     onChange={handleFileChange}
     className="w-full mt-1 p-2 border border-gray-300 rounded-md"
@@ -891,14 +902,14 @@ usernameSystemAccess: '',
       {uploadedDocuments.map((doc, index) => (
         <li key={index} className="flex items-center justify-between p-2 border border-gray-300 rounded-lg">
           <span className="flex items-center">
-            {doc.uploaded && <span className="text-green-500 mr-2">✓</span>} {/* Tick mark */}
+            {doc.uploaded && <span className="text-green-500 mr-2">✓</span>}
             {doc.name}
           </span>
           <div className="flex items-center">
             <button
               type="button"
               className="text-blue-500 hover:text-blue-700 mr-4"
-              onClick={() => markDocumentAsUploaded(index)} // Mark as uploaded
+              onClick={() => markDocumentAsUploaded(index)}
             >
               Upload
             </button>
@@ -921,7 +932,7 @@ usernameSystemAccess: '',
 
 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
   <div>
-    <label className="block text-sm font-medium">Username(System Access) *</label>
+    <label className="block text-sm font-medium">Username (System Access) *</label>
     <input
       type="text"
       name="usernameSystemAccess"
@@ -934,15 +945,15 @@ usernameSystemAccess: '',
   </div>
 
   <div>
-      <label className="block text-sm font-medium">Temporary Password *</label>
+      <label className="block text-sm font-medium">Password *</label>
       <div className="relative">
         <input
-          type={showPassword ? "text" : "password"} // Toggle input type
-          name="temporaryPassword"
-          value={formData.temporaryPassword}
+          type={showPassword ? "text" : "password"}
+          name="password"
+          value={formData.password}
           onChange={handleChange}
           className="w-full mt-1 p-2 border border-gray-300 rounded-md"
-          placeholder="Enter Temporary Password"
+          placeholder="Enter Password"
           required
         />
         <button
@@ -964,11 +975,11 @@ usernameSystemAccess: '',
       className="w-full mt-1 p-2 border border-gray-300 rounded-md"
       required
     >
-      <option>Select Access Level</option>
-      <option>Admin</option>
-      <option>Doctor</option>
-      <option>Assistant Doctor</option>
-      <option>Support Staff</option>
+      <option value="">Select Access Level</option>
+      <option value="admin-doctor">Admin Doctor</option>
+      <option value="Doctor">Doctor</option>
+      <option value="Assistant Doctor">Assistant Doctor</option>
+      <option value="Support Staff">Support Staff</option>
     </select>
   </div>
 
@@ -977,13 +988,12 @@ usernameSystemAccess: '',
     <input
       type="file"
       name="digitalSignature"
-        accept='application/pdf'
+      accept="image/*"
       onChange={handleFileChange}
       className="w-full mt-1 p-2 border border-gray-300 rounded-md"
     />
   </div>
 </div>
-
 
 <div className="flex justify-end mt-6">
 <button
@@ -995,7 +1005,6 @@ usernameSystemAccess: '',
 </button>
 <button
   type="submit"
-  onClick={handleSubmit}
   className="px-4 py-2 bg-blue-600 text-white rounded-md"
 >
   {doctor ? "Update Profile" : "Create Profile"}
@@ -1009,4 +1018,4 @@ usernameSystemAccess: '',
 );
 };
 
-export default AddDoctorModal;
+export default AddDoctorModal;

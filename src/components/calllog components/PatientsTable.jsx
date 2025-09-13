@@ -8,6 +8,7 @@ import config from '../../config';
 import CommentCell from './CommentCell';
 import DoctorAllocationCell from './DoctorAllocationComponent';
 import RecordingsButton from './RecordingsButton';
+
 const PatientsTable = () => {
   const [patients, setPatients] = useState([]);
   const [searchTerm, setSearchTerm] = useState('');
@@ -25,8 +26,9 @@ const PatientsTable = () => {
   const [individualAllocations, setIndividualAllocations] = useState({});
 
   const API_URL = config.API_URL;
-const userId = localStorage.getItem('userId');
-console.log("userId", userId);
+  const userId = localStorage.getItem('userId');
+  console.log("userId", userId);
+
   useEffect(() => {
     const fetchPatientsAndFormStatus = async () => {
       try {
@@ -114,28 +116,27 @@ console.log("userId", userId);
     return allocation ? allocation.doctor.name : '---';
   };
   
+  const prioritizePatients = (patientsList) => {
+    return patientsList.sort((a, b) => {
+      const priorityMap = {
+        "Follow up-Mship": 1,
+        "Follow up-ship": 2,        // ✅ NEW STAGE
+        "Follow up-C": 3,
+        "Follow up-PCall": 4,
+        "Follow up-Potential": 5,
+        "Follow up-PCare": 6,
+      };
 
-const prioritizePatients = (patientsList) => {
-  return patientsList.sort((a, b) => {
-    const priorityMap = {
-      "Follow up-Mship": 1,
-      "Follow up-ship": 2,        // ✅ NEW STAGE
-      "Follow up-C": 3,
-      "Follow up-PCall": 4,
-      "Follow up-Potential": 5,
-      "Follow up-PCare": 6,
-    };
+      const getPriority = (patient) => {
+        if (patient.follow === 'Follow up-Mship' && patient.medicalPayment === 'no') return 1;
+        if (patient.follow === 'Follow up-ship') return 2; // ✅ Prioritize if in shipment stage
+        if (patient.follow === 'Follow up-C' && patient.appointmentFixed === 'no') return 3;
+        return priorityMap[patient.follow] || 99;
+      };
 
-    const getPriority = (patient) => {
-      if (patient.follow === 'Follow up-Mship' && patient.medicalPayment === 'no') return 1;
-      if (patient.follow === 'Follow up-ship') return 2; // ✅ Prioritize if in shipment stage
-      if (patient.follow === 'Follow up-C' && patient.appointmentFixed === 'no') return 3;
-      return priorityMap[patient.follow] || 99;
-    };
-
-    return getPriority(a) - getPriority(b);
-  });
-};
+      return getPriority(a) - getPriority(b);
+    });
+  };
 
   const filteredPatients = prioritizePatients(patients.filter(patient => {
     const matchesSearchTerm =
@@ -336,7 +337,7 @@ const prioritizePatients = (patientsList) => {
           onClick={() => scrollToSection(section.id)}
         className={`flex-grow px-4 py-2 rounded-lg transition-colors duration-200 text-center whitespace-nowrap ${
             activeSection === section.id
-              ? 'bg-indigo-400 text-white'
+              ? 'bg-blue-500 text-white'
               : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
           }`}
         >
@@ -346,11 +347,19 @@ const prioritizePatients = (patientsList) => {
     </div>
   );
 
+  // Helper function to determine if a column should have gray or white background
+  const getColumnBackgroundClass = (columnIndex) => {
+    return columnIndex % 2 === 0 ? 'bg-gray-100' : 'bg-white';
+  };
+
   const renderTableHeader = () => (
-    <thead className="sticky top-0 z-10 bg-blue-500">
-      <tr>
-        {sections.flatMap(section => section.columns).map(column => (
-          <th key={column} className="p-3 text-sm font-semibold text-left text-white whitespace-nowrap">
+    <thead>
+      <tr className="border-b border-blue-200">
+        {sections.flatMap(section => section.columns).map((column, columnIndex) => (
+          <th 
+            key={column} 
+            className={`${getColumnBackgroundClass(columnIndex)} text-center p-4 font-bold text-gray-700 text-sm`}
+          >
             {column}
           </th>
         ))}
@@ -359,19 +368,32 @@ const prioritizePatients = (patientsList) => {
   );
 
   const renderTableBody = () => (
-    <tbody className="bg-white divide-y divide-gray-200">
-      {filteredPatients.map((patient, index) => (
-        <tr key={patient._id} className="hover:bg-[#f5f5f5] transition-colors duration-200">
-          {sections.flatMap(section => section.columns).map(column => (
-            <td key={column} className="px-4 py-3 whitespace-nowrap text-sm text-gray-900">
-              {renderCellContent(patient, column, index)}
-            </td>
-          ))}
+    <tbody>
+      {filteredPatients && filteredPatients.length > 0 ? (
+        filteredPatients.map((patient, index) => (
+          <tr key={patient._id} className="border-b border-blue-200 hover:opacity-90 transition-opacity duration-200">
+            {sections.flatMap(section => section.columns).map((column, columnIndex) => (
+              <td 
+                key={column} 
+                className={`${getColumnBackgroundClass(columnIndex)} p-4 text-gray-900 text-center text-sm`}
+              >
+                {renderCellContent(patient, column, index)}
+              </td>
+            ))}
+          </tr>
+        ))
+      ) : (
+        <tr>
+          <td
+            colSpan={sections.flatMap(section => section.columns).length}
+            className="bg-white text-center text-gray-500 py-6"
+          >
+            No patients found.
+          </td>
         </tr>
-      ))}
+      )}
     </tbody>
   );
-
 
   const renderCellContent = (patient, column, index) => {
     switch (column) {
@@ -382,7 +404,7 @@ const prioritizePatients = (patientsList) => {
       case "Who is the Consultation for":
         return patient.medicalDetails.consultingFor || '---';
       case "Name":
-        return patient.name;
+        return <span className="font-medium text-gray-900">{patient.name}</span>;
       case "Phone Number":
         return patient.phone;
       case "Whatsapp Number":
@@ -415,7 +437,7 @@ const prioritizePatients = (patientsList) => {
                 <option value="Chronic">Chronic</option>
               </select>
             ) : (
-              <div className="flex items-center space-x-2">
+              <div className="flex items-center justify-center space-x-2">
                 <span className={`font-medium ${patient.medicalDetails?.diseaseType?.edit ? 'text-blue-600' : 'text-gray-700'}`}>
                   {patient.medicalDetails?.diseaseType?.name || 'Not specified'}  {/* Optional chaining */}
                 </span>
@@ -441,7 +463,7 @@ const prioritizePatients = (patientsList) => {
           <select
             value={patient.medicalDetails.enquiryStatus || ''}
             onChange={(e) => handleEnquiryStatusChange(patient._id, e.target.value)}
-            className="border border-gray-300 rounded px-2 py-1 text-sm"
+            className="border border-gray-300 rounded px-2 py-1 text-sm w-full max-w-xs"
           >
             <option value="">Select status</option>
             <option value="Interested">Interested</option>
@@ -456,81 +478,89 @@ const prioritizePatients = (patientsList) => {
       case "Omni Channel":
         return patient.patientEntry || '---';
       case "Message Sent":
-        // return patient.messageSent?.status ? 'Yes' : 'No';
         return patient.medicalDetails.messageSent?.status ? (
-          "Sent"
+          <span className="bg-green-100 text-green-600 font-semibold px-4 py-1 rounded-full text-xs">
+            Sent
+          </span>
         ) : (
           <button
-            className="send-message-button"
+            className="bg-blue-500 hover:bg-blue-600 text-white font-medium px-4 py-1 rounded-full text-xs transition"
             onClick={() => sendMessage(patient)}
           >
             Send Message
           </button>
         );
       case "Time Stamp":
-        return patient.medicalDetails.messageSent?.timeStamp;
+        return patient.medicalDetails.messageSent?.timeStamp || '---';
       case "Make a Call":
         return (
           <button 
-            onClick={() => makeCall(patient)}
-            className="inline-flex items-center px-3 py-2 border border-transparent text-sm leading-4 font-medium rounded-md text-white bg-[#1a237e] hover:bg-[#000051] focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#534bae] transition-all duration-300"
-          >
-            <FaPhoneAlt className="mr-2 -ml-0.5 h-4 w-4" /> Make Call
-          </button>
+  onClick={() => makeCall(patient)}
+  className="inline-flex items-center px-3 py-2 border border-transparent text-xs leading-4 font-medium rounded-full text-white bg-blue-500 hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-400 transition-all duration-300"
+>
+  <FaPhoneAlt className="mr-2 -ml-0.5 h-3 w-3" /> Make Call
+</button>
+
         );
       case "Recordings":
         return (
-          // <button
-          //   onClick={() => viewRecordings(patient)}
-          //   className="inline-flex items-center px-3 py-2 border border-transparent text-sm leading-4 font-medium rounded-md text-white bg-[#1a237e] hover:bg-[#000051] focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#534bae] transition-all duration-300"
-          // >
-          //   <FaRecordVinyl className="mr-2 -ml-0.5 h-4 w-4" /> View Recordings
-          // </button>
           <div>
-                  <RecordingsButton patient={patient} />
+            <RecordingsButton patient={patient} />
           </div>
         );
-        case "Follow up Comments":
-          return (
-              <CommentCell 
-                  patient={patient} 
-                  API_URL={API_URL}
-                  onCommentAdded={(updatedPatient) => {
-                    if (updatedPatient && updatedPatient._id) {
-                      setPatients((prevPatients) =>
-                        prevPatients.map((p) =>
-                          p._id === updatedPatient._id
-                            ? {
-                                ...p,
-                                medicalDetails: {
-                                  ...p.medicalDetails,
-                                  comments: updatedPatient.medicalDetails.comments || [],
-                                },
-                              }
-                            : p
-                        )
-                      );
-                    }
-                  }}
-              />
-          );
+      case "Follow up Comments":
+        return (
+          <CommentCell 
+            patient={patient} 
+            API_URL={API_URL}
+            onCommentAdded={(updatedPatient) => {
+              if (updatedPatient && updatedPatient._id) {
+                setPatients((prevPatients) =>
+                  prevPatients.map((p) =>
+                    p._id === updatedPatient._id
+                      ? {
+                          ...p,
+                          medicalDetails: {
+                            ...p.medicalDetails,
+                            comments: updatedPatient.medicalDetails.comments || [],
+                          },
+                        }
+                      : p
+                  )
+                );
+              }
+            }}
+          />
+        );
       
       case "Out of network":
         return patient.outOfNetwork || '---';
       case "appDownload":
-        return patient.appDownload != '0' ? <FaDownload className='green' /> : <FaTimesCircle className='red' />;
+        return patient.appDownload != '0' ? <FaDownload className='text-green-500' /> : <FaTimesCircle className='text-red-500' />;
       case "Call Status":
-        return getCallStatus(patient);
+        return (
+          <span className={`px-2 py-1 text-xs font-semibold rounded-full ${
+            getCallStatus(patient) === 'Completed' ? 'bg-green-100 text-green-600' :
+            getCallStatus(patient) === 'Lost' ? 'bg-red-100 text-red-600' :
+            'bg-yellow-100 text-yellow-600'
+          }`}>
+            {getCallStatus(patient)}
+          </span>
+        );
       case "Call Attempted tracking":
-        return patient.medicalDetails.callCount || 0;
+        return (
+          <span className="bg-gray-100 text-gray-700 px-2 py-1 rounded-full text-xs font-medium">
+            {patient.medicalDetails.callCount || 0}
+          </span>
+        );
       case "Conversion Status":
-        return patient.appointmentFixed === 'Yes' ? <FaCheckCircle className='green' /> : <FaTimesCircle className='red' />;
+        return patient.appointmentFixed === 'Yes' ? <FaCheckCircle className='text-green-500' /> : <FaTimesCircle className='text-red-500' />;
       case "Consultation payment":
-        return patient.appointmentFixed === 'Yes' ? <FaCheckCircle className='green' /> : <FaTimesCircle className='red' />;
+        return patient.appointmentFixed === 'Yes' ? <FaCheckCircle className='text-green-500' /> : <FaTimesCircle className='text-red-500' />;
       case "Appointment Fixed":
-        return patient.appointmentFixed === 'Yes' ? <FaCheckCircle className='green' /> : <FaTimesCircle className='red' />;
+        return patient.appointmentFixed === 'Yes' ? <FaCheckCircle className='text-green-500' /> : <FaTimesCircle className='text-red-500' />;
       case "Medicine & Shipping Payment confirmation":
-        return patient.medicalPayment === 'Yes' ? <FaCheckCircle className='green' /> : <FaTimesCircle className='red' />;
+        return patient.medicalPayment === 'Yes' ? <FaCheckCircle className='text-green-500' /> : <FaTimesCircle className='text-red-500' />;
       case "Role Allocation":
         return (
           <DoctorAllocationCell 
@@ -551,60 +581,56 @@ const prioritizePatients = (patientsList) => {
 
   return (
     <div className="space-y-6">
-      <div className="flex justify-between items-center mb-6 bg-white p-3 rounded-lg shadow-md">
-        <h2 className="text-2xl font-bold text-[#1a237e]">Patients List</h2>
-        <div className="flex items-center space-x-4">
-          <div className="relative flex items-center">
-            <div className="flex items-center bg-white rounded-l-lg border-2 border-r-0 border-[#1a237e] focus-within:border-[#534bae] transition-colors duration-300">
-              <FaSearch className="ml-3 text-[#1a237e]" />
-              <input
-                type="text"
-                placeholder="Search patients..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="p-2 pl-2 w-64 outline-none text-[#212121]"
-              />
-            </div>
-            <button 
-              className="p-3 bg-[#1a237e] text-white rounded-r-lg hover:bg-[#000051] transition-all duration-300 border-2 border-[#1a237e] hover:border-[#000051] shadow-sm"
-              onClick={() => setShowFilters(!showFilters)}
-            >
-              <FaFilter className="w-4 h-4" />
-            </button>
-          </div>
-          {showFilters && (
-            <select
-              className="p-2 border-2 border-[#1a237e] rounded-lg outline-none text-[#212121] bg-white hover:border-[#534bae] transition-colors duration-300 cursor-pointer"
-              value={filterOption}
-              onChange={(e) => setFilterOption(e.target.value)}
-            >
-              <option value="all">All Patients</option>
-              <option value="pending">Pending Calls</option>
-              <option value="done">Completed Calls</option>
-            </select> 
-          )}
-        </div>
-      </div>
-      
-      <TabSwitcher />
+  {/* Heading */}
+  <h2 className="text-2xl font-bold text-black-500 pd-2">Patients List</h2>
 
-      <div className="bg-white rounded-lg shadow-md overflow-hidden">
-        <div className="overflow-x-auto" ref={tableRef}>
-          <div className="inline-block min-w-full align-middle">
-            <div className="overflow-hidden border-b border-gray-200">
-              <div className="max-h-[calc(100vh-280px)] overflow-y-auto">
-                <table className="min-w-full mx-2 divide-y divide-gray-200">
-                  {renderTableHeader()}
-                  {renderTableBody()}
-                </table>
-              </div>
-            </div>
+  {/* Search + Filter */}
+  <div className="flex items-center space-x-3 bg-white p-3 rounded-lg shadow-sm w-fit">
+    <div className="flex items-center bg-white rounded-lg border border-gray-300 focus-within:border-gray-400 transition-colors duration-300">
+  <FaSearch className="ml-3 text-gray-400" />
+  <input
+    type="text"
+    placeholder="Search..."
+    value={searchTerm}
+    onChange={(e) => setSearchTerm(e.target.value)}
+    className="p-2 pl-2 w-64 outline-none text-gray-700 placeholder-gray-400"
+  />
+</div>
+
+    
+    
+  </div>
+
+  {/* Tabs */}
+  <TabSwitcher />
+
+  {/* Table */}
+  <div className="bg-white rounded-lg shadow-md overflow-hidden">
+    <div className="overflow-x-auto" ref={tableRef}>
+      <div className="inline-block min-w-full align-middle">
+        <div className="overflow-hidden border-b border-gray-200">
+          <div className="max-h-[calc(100vh-280px)] overflow-y-auto">
+            <table className="w-full border border-gray-200">
+              {renderTableHeader()}
+              {renderTableBody()}
+            </table>
           </div>
         </div>
       </div>
-      {showCallInterface && <CallInterface patient={currentCall} onClose={endCall} />}
-      {showRecordingsInterface && <RecordingsInterface recordings={currentRecordings} onClose={closeRecordings} />}
     </div>
+  </div>
+
+  {showCallInterface && (
+    <CallInterface patient={currentCall} onClose={endCall} />
+  )}
+  {showRecordingsInterface && (
+    <RecordingsInterface
+      recordings={currentRecordings}
+      onClose={closeRecordings}
+    />
+  )}
+</div>
+
   );
 };
 

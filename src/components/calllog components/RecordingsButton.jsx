@@ -222,12 +222,13 @@ const RecordingsButton = ({ patient }) => {
 
   return (
     <>
-      <button
-        onClick={viewRecordings}
-        className="inline-flex items-center px-3 py-2 border border-transparent text-sm leading-4 font-medium rounded-md text-white bg-[#1a237e] hover:bg-[#000051] focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#534bae] transition-all duration-300"
-      >
-        <FaRecordVinyl className="mr-2 -ml-0.5 h-4 w-4" /> View Recordings
-      </button>
+     <button
+  onClick={viewRecordings}
+  className="inline-flex items-center px-3 py-2 border border-transparent text-sm leading-4 font-medium rounded-md text-white bg-blue-500 hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-400 transition-all duration-300"
+>
+  <FaRecordVinyl className="mr-2 -ml-0.5 h-4 w-4" /> View Recordings
+</button>
+
       <Modal onClose={() => setShowModal(false)} />
     </>
   );
