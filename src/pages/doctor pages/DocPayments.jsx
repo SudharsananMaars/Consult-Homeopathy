@@ -179,6 +179,7 @@ const Payments = () => {
     return (
         <DoctorLayout>
             <div className="p-7">
+                <div className="bg-white rounded-xl shadow-md p-6">
                 <h1 className="text-2xl font-bold mb-4">Payments</h1>
 
                 {/* Filters */}
@@ -219,47 +220,62 @@ const Payments = () => {
                 </div>
 
                 {/* Payment Table */}
-                <table className="w-full table-auto border-collapse">
-                    <thead>
-                        <tr className="bg-gray-100 text-left">
-                            <th className="px-4 py-2">Payment ID</th>
-                            <th className="px-4 py-2">Patient Name</th>
-                            <th className="px-4 py-2">Date & Time</th>
-                            <th className="px-4 py-2">Service</th>
-                            <th className="px-4 py-2">Amount</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {currentPayments.length > 0 ? (
-                            currentPayments.map((payment) => {
-                                const serviceType = getServiceType(); // Temporary placeholder
-                                return (
-                                    <tr key={payment._id} className="border-b">
-                                        <td className="px-4 py-4">{payment._id}</td>
-                                        <td className="px-4 py-4">
-                                            {payment.appointmentId?.patient?.name || 'N/A'}
-                                        </td>
-                                        <td className="px-4 py-4">
-                                            {formatDateTime(payment.createdAt)}
-                                        </td>
-                                        <td className="px-4 py-4">
-                                            {payment.paidFor}
-                                        </td>
-                                        <td className="px-4 py-4">
-                                            ₹{payment.amount}
-                                        </td>
-                                    </tr>
-                                );
-                            })
-                        ) : (
-                            <tr>
-                                <td colSpan="5" className="text-center p-4">
-                                    No payments found.
-                                </td>
-                            </tr>
-                        )}
-                    </tbody>
-                </table>
+  <table className="w-full overflow-hidden rounded-lg">
+    <thead>
+      <tr className="border-b border-blue-200">
+        <th className="bg-gray-100 text-center p-4 font-bold text-gray-700 text-sm">
+          Payment ID
+        </th>
+        <th className="bg-white text-center p-4 font-bold text-gray-700 text-sm">
+          Patient Name
+        </th>
+        <th className="bg-gray-100 text-center p-4 font-bold text-gray-700 text-sm">
+          Date &amp; Time
+        </th>
+        <th className="bg-white text-center p-4 font-bold text-gray-700 text-sm">
+          Service
+        </th>
+        <th className="bg-gray-100 text-center p-4 font-bold text-gray-700 text-sm">
+          Amount
+        </th>
+      </tr>
+    </thead>
+    <tbody>
+      {currentPayments.length > 0 ? (
+        currentPayments.map((payment, idx) => (
+          <tr key={payment._id || idx} className="border-b border-blue-200">
+            {/* Payment ID */}
+            <td className="bg-gray-100 p-4 text-gray-900 text-center">
+              {payment._id}
+            </td>
+            {/* Patient Name */}
+            <td className="bg-white p-4 text-gray-600 text-center">
+              {payment.appointmentId?.patient?.name || "N/A"}
+            </td>
+            {/* Date & Time */}
+            <td className="bg-gray-100 p-4 text-gray-600 text-center">
+              {formatDateTime(payment.createdAt)}
+            </td>
+            {/* Service */}
+            <td className="bg-white p-4 text-gray-600 text-center">
+              {payment.paidFor}
+            </td>
+            {/* Amount */}
+            <td className="bg-gray-100 p-4 text-gray-900 font-medium text-center">
+              ₹{payment.amount}
+            </td>
+          </tr>
+        ))
+      ) : (
+        <tr>
+          <td colSpan={5} className="bg-white text-center text-gray-500 py-6">
+            No payments found.
+          </td>
+        </tr>
+      )}
+    </tbody>
+  </table>
+
 
                 {/* Pagination controls */}
                 <div className="flex justify-between items-center mt-4">
@@ -312,6 +328,7 @@ const Payments = () => {
                     </p>
                 </div>
             </div>
+        </div>
         </DoctorLayout>
     );
 };

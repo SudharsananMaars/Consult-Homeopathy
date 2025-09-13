@@ -99,68 +99,117 @@ useEffect(() => {
             {loading ? (
               <p className="text-gray-500 text-sm">Loading...</p>
             ) : (
-              <table className="min-w-full border rounded-xl overflow-hidden">
-                <thead className="bg-gray-100 text-sm text-gray-700">
-                  <tr>
-                    <th className="px-4 py-3 text-left">Patient Name</th>
-                    <th className="px-4 py-3 text-left">Total Doses</th>
-                    <th className="px-4 py-3 text-left">Doses Taken</th>
-                    <th className="px-4 py-3 text-left">Doses Missed</th>
-                    <th className="px-4 py-3 text-left">Doses Pending</th>
-                    <th className="px-4 py-3 text-left">View Medication</th>
-                    <th className="px-4 py-3 text-left">Call</th>
-                    <th className="px-4 py-3 text-left">Remarks</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y text-sm text-gray-800">
-                  {patients.map((p, index) => {
-                    const totalDoses = p.doses.taken.count + p.doses.missed.count + p.doses.pending.count;
-                    return (
-                      <tr key={p.patientId || index} className="hover:bg-gray-50">
-                        <td className="px-4 py-3">{p.name}</td>
-                        <td className="px-4 py-3">{totalDoses}</td>
-                        <td className="px-4 py-3">
-                          <span className="inline-block bg-green-100 text-green-800 text-xs font-semibold px-3 py-1 rounded-full">
-                            {p.doses.taken.count}
-                          </span>
-                        </td>
-                        <td className="px-4 py-3">
-                          <span className="inline-block bg-red-100 text-red-800 text-xs font-semibold px-3 py-1 rounded-full">
-                            {p.doses.missed.count}
-                          </span>
-                        </td>
-                        <td className="px-4 py-3">
-                          <span className="inline-block bg-gray-200 text-gray-700 text-xs font-semibold px-3 py-1 rounded-full">
-                            {p.doses.pending.count}
-                          </span>
-                        </td>
-                        <td className="px-4 py-3">
-                          <button 
-                          onClick={() => {
-                            setSelectedMedications(p.viewMedications || []);
-                            setShowModal(true);
-                          }}
-                          className="inline-flex items-center px-2.5 py-1.5 border text-xs font-medium rounded-[5px] text-white bg-[#1a237e] hover:bg-[#534bae] focus:ring-2 focus:ring-offset-2 focus:ring-[#534bae]">
-                            View
-                          </button>
-                        </td>
-                        <td className="px-4 py-3">
-                          <button className="inline-flex items-center px-2.5 py-1.5 border text-xs font-medium rounded-[5px] text-white bg-[#1a237e] hover:bg-[#534bae] focus:ring-2 focus:ring-offset-2 focus:ring-[#534bae]">
-                            Call
-                          </button>
-                        </td>
-                        <td className="px-4 py-3">
-                          <input
-                            type="text"
-                            placeholder="Add remark"
-                            className="w-full border px-2 py-1 rounded text-sm"
-                          />
-                        </td>
-                      </tr>
-                    );
-                  })}
-                </tbody>
-              </table>
+              <div className="overflow-x-auto rounded-lg shadow pt-5">
+  <table className="w-full overflow-hidden rounded-lg">
+    <thead>
+      <tr className="border-b border-blue-200">
+        <th className="bg-gray-100 text-center p-4 font-bold text-gray-700 text-sm">
+          Patient Name
+        </th>
+        <th className="bg-white text-center p-4 font-bold text-gray-700 text-sm">
+          Total Doses
+        </th>
+        <th className="bg-gray-100 text-center p-4 font-bold text-gray-700 text-sm">
+          Doses Taken
+        </th>
+        <th className="bg-white text-center p-4 font-bold text-gray-700 text-sm">
+          Doses Missed
+        </th>
+        <th className="bg-gray-100 text-center p-4 font-bold text-gray-700 text-sm">
+          Doses Pending
+        </th>
+        <th className="bg-white text-center p-4 font-bold text-gray-700 text-sm">
+          View Medication
+        </th>
+        <th className="bg-gray-100 text-center p-4 font-bold text-gray-700 text-sm">
+          Call
+        </th>
+        <th className="bg-white text-center p-4 font-bold text-gray-700 text-sm">
+          Remarks
+        </th>
+      </tr>
+    </thead>
+    <tbody>
+      {patients.length > 0 ? (
+        patients.map((p, idx) => {
+          const totalDoses =
+            p.doses.taken.count +
+            p.doses.missed.count +
+            p.doses.pending.count;
+          return (
+            <tr
+              key={p.patientId || idx}
+              className="border-b border-blue-200"
+            >
+              {/* Patient Name */}
+              <td className="bg-gray-100 p-4 text-gray-900 text-center">
+                {p.name}
+              </td>
+              {/* Total Doses */}
+              <td className="bg-white p-4 text-gray-600 text-center">
+                {totalDoses}
+              </td>
+              {/* Taken */}
+              <td className="bg-gray-100 p-4 text-center">
+                <span className="inline-block bg-green-100 text-green-800 text-xs font-semibold px-3 py-1 rounded-full">
+                  {p.doses.taken.count}
+                </span>
+              </td>
+              {/* Missed */}
+              <td className="bg-white p-4 text-center">
+                <span className="inline-block bg-red-100 text-red-800 text-xs font-semibold px-3 py-1 rounded-full">
+                  {p.doses.missed.count}
+                </span>
+              </td>
+              {/* Pending */}
+              <td className="bg-gray-100 p-4 text-center">
+                <span className="inline-block bg-yellow-100 text-orange-600 text-xs font-semibold px-3 py-1 rounded-full">
+                  {p.doses.pending.count}
+                </span>
+              </td>
+              {/* View Medication */}
+              <td className="bg-white p-4 text-center">
+                <button
+                  onClick={() => {
+                    setSelectedMedications(p.viewMedications || []);
+                    setShowModal(true);
+                  }}
+                  className="inline-flex items-center px-2.5 py-1.5 border text-xs font-medium rounded-[5px] text-white bg-blue-500 hover:bg-blue-700 focus:ring-2 focus:ring-offset-2 focus:ring-blue-700"
+                >
+                  View
+                </button>
+              </td>
+              {/* Call */}
+              <td className="bg-gray-100 p-4 text-center">
+                <button className="inline-flex items-center px-2.5 py-1.5 border text-xs font-medium rounded-[5px] text-white bg-blue-500 hover:bg-blue-700 focus:ring-2 focus:ring-offset-2 focus:ring-blue-700">
+                  Call
+                </button>
+              </td>
+              {/* Remarks */}
+              <td className="bg-white p-4 text-center">
+                <input
+                  type="text"
+                  placeholder="Add remark"
+                  className="w-full border px-2 py-1 rounded text-sm"
+                />
+              </td>
+            </tr>
+          );
+        })
+      ) : (
+        <tr>
+          <td
+            colSpan={8}
+            className="bg-white text-center text-gray-500 py-6"
+          >
+            No patient records found.
+          </td>
+        </tr>
+      )}
+    </tbody>
+  </table>
+</div>
+
             )}
           </div>
         </div>
@@ -171,34 +220,61 @@ useEffect(() => {
       <h3 className="text-lg font-semibold mb-4 text-gray-800">Medication Schedule</h3>
 
       {selectedMedications?.length > 0 ? (
-        <table className="min-w-full text-sm text-left text-gray-700 mb-4">
-          <thead className="bg-gray-100">
-            <tr>
-              <th className="px-4 py-2">Medicine</th>
-              <th className="px-4 py-2">Dose Time</th>
-              <th className="px-4 py-2">Status</th>
-            </tr>
-          </thead>
-          <tbody>
-            {selectedMedications.map((med, idx) => (
-              <tr key={idx} className="border-t">
-                <td className="px-4 py-2">{med.medicineName}</td>
-                <td className="px-4 py-2">{med.doseTime}</td>
-                <td className="px-4 py-2">
-                  <span
-                  className={`inline-block text-xs font-semibold px-3 py-1 rounded-full capitalize
-                    ${med.status === 'taken' ? 'bg-green-100 text-green-800' :
-                      med.status === 'missed' ? 'bg-red-100 text-red-800' :
-                      'bg-gray-200 text-gray-800'}
-                      `}
-                      >
-                        {med.status}
-                    </span>
-                  </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
+  <table className="w-full overflow-hidden rounded-lg">
+    <thead>
+      <tr className="border-b border-blue-200">
+        <th className="bg-gray-100 text-center p-4 font-bold text-gray-700 text-sm">
+          Medicine
+        </th>
+        <th className="bg-white text-center p-4 font-bold text-gray-700 text-sm">
+          Dose Time
+        </th>
+        <th className="bg-gray-100 text-center p-4 font-bold text-gray-700 text-sm">
+          Status
+        </th>
+      </tr>
+    </thead>
+    <tbody>
+      {selectedMedications.length > 0 ? (
+        selectedMedications.map((med, idx) => (
+          <tr key={idx} className="border-b border-blue-200">
+            {/* Medicine Name */}
+            <td className="bg-gray-100 p-4 text-gray-900 text-center">
+              {med.medicineName}
+            </td>
+            {/* Dose Time */}
+            <td className="bg-white p-4 text-gray-600 text-center">
+              {med.doseTime}
+            </td>
+            {/* Status */}
+            <td className="bg-gray-100 p-4 text-center">
+              <span
+                className={`inline-block text-xs font-semibold px-3 py-1 rounded-full capitalize
+                  ${
+                    med.status === "taken"
+                      ? "bg-green-100 text-green-800"
+                      : med.status === "missed"
+                      ? "bg-red-100 text-red-800"
+                      : "bg-gray-200 text-gray-800"
+                  }`}
+              >
+                {med.status}
+              </span>
+            </td>
+          </tr>
+        ))
+      ) : (
+        <tr>
+          <td
+            colSpan={3}
+            className="bg-white text-center text-gray-500 py-6"
+          >
+            No medications found.
+          </td>
+        </tr>
+      )}
+    </tbody>
+  </table>
       ) : (
         <p className="text-sm text-gray-500">No medication data available.</p>
       )}
@@ -206,7 +282,7 @@ useEffect(() => {
       <div className="flex justify-end">
         <button
           onClick={() => setShowModal(false)}
-          className="mt-2 px-4 py-1.5 bg-[#1a237e] text-white text-sm rounded hover:bg-[#534bae]"
+          className="mt-2 px-4 py-1.5 bg-blue-500 text-white text-sm rounded hover:bg-blue-700"
         >
           Close
         </button>

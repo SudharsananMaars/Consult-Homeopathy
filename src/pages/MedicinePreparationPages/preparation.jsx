@@ -239,22 +239,22 @@ const MedicinePreparation = () => {
 
           {/* Stats Cards */}
           <div className="grid grid-cols-3 gap-6 mb-8">
-            <div className="bg-blue-50 rounded-2xl p-6 text-center">
-              <h3 className="text-blue-600 font-medium mb-2 text-base">Total Prescriptions</h3>
+            <div className="bg-blue-100 rounded-2xl p-6 text-center">
+              <h3 className="text-blue-700 font-bold mb-2 text-xl">Total Prescriptions</h3>
               <div className="text-3xl font-bold text-blue-700">
                 {stats.total}
               </div>
             </div>
             
-            <div className="bg-green-50 rounded-2xl p-6 text-center">
-              <h3 className="text-green-600 font-medium mb-2 text-base">Completed</h3>
+            <div className="bg-green-100 rounded-2xl p-6 text-center">
+              <h3 className="text-green-600 font-bold mb-2 text-xl">Completed</h3>
               <div className="text-3xl font-bold text-green-700">
                 {stats.completed}
               </div>
             </div>
             
-            <div className="bg-orange-50 rounded-2xl p-6 text-center">
-              <h3 className="text-orange-600 font-medium mb-2 text-base">Pending</h3>
+            <div className="bg-yellow-100 rounded-2xl p-6 text-center">
+              <h3 className="text-orange-600 font-bold mb-2 text-xl">Pending</h3>
               <div className="text-3xl font-bold text-orange-700">
                 {stats.pending}
               </div>
@@ -294,15 +294,16 @@ const MedicinePreparation = () => {
                     </div>
                     
                     <div className="text-center">
-                      <button
-                        onClick={(e) => handleShippingStatusClick(e, prescription.appointmentId, prescription.prescriptionId, prescription.shipmentStatus)}
-                        className={getStatusBadgeClass(getStatusText(prescription.shipmentStatus))}
-                        title={prescription.shipmentStatus ? "Shipping completed" : "Click to manage shipping status"}
-                        disabled={prescription.shipmentStatus}
-                      >
-                        {getStatusText(prescription.shipmentStatus)}
-                      </button>
-                    </div>
+  <button
+    onClick={(e) => handleShippingStatusClick(e, prescription.appointmentId, prescription.prescriptionId, prescription.shipmentStatus)}
+    className={`${getStatusBadgeClass(getStatusText(prescription.shipmentStatus))} ml-5`}
+    title={prescription.shipmentStatus ? "Shipping completed" : "Click to manage shipping status"}
+    disabled={prescription.shipmentStatus}
+  >
+    {getStatusText(prescription.shipmentStatus)}
+  </button>
+</div>
+
                   </div>
                 </div>
               ))}

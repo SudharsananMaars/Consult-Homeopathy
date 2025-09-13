@@ -624,7 +624,7 @@ const MedicinePackaging = () => {
           {/* Connector 1 */}
           <div
             className={`${currentStep > 1 ? 'bg-green-500' : 'bg-gray-300'}`}
-            style={{ width: '380px', height: '2px', margin: '0 1rem' }}
+            style={{ width: '380px', height: '2px', margin: '0 1rem', marginTop: '-25px' }}
           ></div>
 
           {/* Step 2 */}
@@ -642,7 +642,7 @@ const MedicinePackaging = () => {
           {/* Connector 2 */}
           <div
             className={`${currentStep > 2 ? 'bg-green-500' : 'bg-gray-300'}`}
-            style={{ width: '380px', height: '2px', margin: '0 1rem' }}
+            style={{ width: '380px', height: '2px', margin: '0 1rem', marginTop: '-25px' }}
           ></div>
 
           {/* Step 3 */}

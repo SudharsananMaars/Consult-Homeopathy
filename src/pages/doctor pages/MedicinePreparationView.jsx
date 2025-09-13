@@ -867,33 +867,65 @@ const stopRecording = () => {
 
 {cameraVerified && (
   <div className="flex items-center gap-2 text-green-600 font-semibold text-sm mb-2">
-    <span>✅ Camera position verified</span>
+    <span> Camera position verified</span>
   </div>
 )}
 
 
   <div className="h-4"></div>
   {step > 0 && (
-      <div className="mb-8">
-        <div className="flex items-center justify-center">
-          <div className={`flex items-center justify-center w-10 h-10 rounded-full ${step >= 1 ? 'bg-[#22C55E] text-white' : 'bg-gray-300'}`}>
-            1
-          </div>
-          <div className={`flex-1 h-1 mx-2 ${step > 1 ? 'bg-gray-300' : 'bg-gray-300'}`}></div>
-          <div className={`flex items-center justify-center w-10 h-10 rounded-full ${step >= 2 ? 'bg-[#22C55E] text-white' : 'bg-gray-300'}`}>
-            2
-          </div>
-          <div className={`flex-1 h-1 mx-2 ${step > 2 ? 'bg-gray-300' : 'bg-gray-300'}`}></div>
-          <div className={`flex items-center justify-center w-10 h-10 rounded-full ${step >= 3 ? 'bg-[#22C55E] text-white' : 'bg-gray-300'}`}>
-            3
-          </div>
-        </div>
-        <div className="flex justify-between text-sm mt-2">
-          <div className="text-center w-24">Choose Dispense Bottle</div>
-          <div className="text-center w-32">Add Raw Materials</div>
-          <div className="text-center w-24">Record Material Leakage</div>
-        </div>
+    <div className="mb-8">
+  <div className="flex justify-between items-start">
+    {/* Step 1 */}
+    <div className="flex flex-col items-center w-32">
+      <div
+        className={`flex items-center justify-center w-10 h-10 rounded-full ${
+          step >= 1 ? 'bg-[#22C55E] text-white' : 'bg-gray-300'
+        }`}
+      >
+        1
       </div>
+      <div className="text-center mt-2 text-sm">
+        Choose Dispense Bottle
+      </div>
+    </div>
+
+    {/* Line between steps */}
+    <div className="flex-1 h-1 bg-gray-300 self-center -mt-9 mx-2"></div>
+
+    {/* Step 2 */}
+    <div className="flex flex-col items-center w-32">
+      <div
+        className={`flex items-center justify-center w-10 h-10 rounded-full ${
+          step >= 2 ? 'bg-[#22C55E] text-white' : 'bg-gray-300'
+        }`}
+      >
+        2
+      </div>
+      <div className="text-center mt-2 text-sm">
+        Add Raw Materials
+      </div>
+    </div>
+
+    {/* Line between steps */}
+    <div className="flex-1 h-1 bg-gray-300 self-center -mt-9 mx-2"></div>
+
+    {/* Step 3 */}
+    <div className="flex flex-col items-center w-32">
+      <div
+        className={`flex items-center justify-center w-10 h-10 rounded-full ${
+          step >= 3 ? 'bg-[#22C55E] text-white' : 'bg-gray-300'
+        }`}
+      >
+        3
+      </div>
+      <div className="text-center mt-2 text-sm">
+        Record Material Leakage
+      </div>
+    </div>
+  </div>
+</div>
+
       )}
 </div>      
   <div className="col-span-12 lg:col-span-8">
@@ -903,21 +935,21 @@ const stopRecording = () => {
       <div className="bg-white p-6 shadow-sm">
         {/* Statistics Cards */}
         <div className="grid grid-cols-4 gap-6 mb-6">
-  <div className="p-4 rounded-lg border bg-[#3489FD4D] border-gray-200 text-center">
-    <h3 className="text-sm font-bold mb-2 text-[#3489FD]">Total Items</h3>
-    <p className="text-2xl font-semibold text-[#3489FD]">{statistics.totalItems}</p>
+  <div className="p-5 rounded-lg border bg-blue-100 border-gray-200 text-center">
+    <h3 className="text-base font-semibold mb-1 text-blue-700">Total Items</h3>
+    <p className="text-xl font-semibold text-blue-700">{statistics.totalItems}</p>
   </div>
-  <div className="p-4 rounded-lg border bg-[#22C55E4D] border-gray-200 text-center">
-    <h3 className="text-sm text-[#22C55E] mb-2 text-[18px] font-bold">Completed</h3>
-    <p className="text-2xl font-semibold text-[#22C55E]">{statistics.completed}</p>
+  <div className="p-5 rounded-lg border bg-green-100 border-gray-200 text-center">
+    <h3 className="text-base text-green-600 mb-1 font-semibold">Completed</h3>
+    <p className="text-xl font-semibold text-green-600">{statistics.completed}</p>
   </div>
-  <div className="p-4 rounded-lg border bg-[#EFBB554D] border-gray-200 text-center">
-    <h3 className="text-sm text-[#EFBB55] mb-2 text-[18px] font-bold">Pending</h3>
-    <p className="text-2xl font-semibold text-[#EFBB55]">{statistics.pending}</p>
+  <div className="p-5 rounded-lg border bg-yellow-100 border-gray-200 text-center">
+    <h3 className="text-base text-orange-600 mb-1 font-semibold">Pending</h3>
+    <p className="text-xl font-semibold text-orange-600">{statistics.pending}</p>
   </div>
-  <div className="p-4 rounded-lg border bg-[#F031314D] border-gray-200 text-center">
-    <h3 className="text-sm text-[#F03131] mb-2 text-[18px] font-bold">Attempts</h3>
-    <p className="text-2xl font-semibold text-[#F03131]">{statistics.attempts}</p>
+  <div className="p-5 rounded-lg border bg-red-100 border-gray-200 text-center">
+    <h3 className="text-base text-red-600 mb-1 font-semibold">Attempts</h3>
+    <p className="text-xl font-semibold text-red-600">{statistics.attempts}</p>
   </div>
 </div>
       </div>
@@ -1090,7 +1122,6 @@ const stopRecording = () => {
     ) : (
       <>
         <h3 className="text-lg font-semibold text-gray-800 mb-4">Choose the Dispense Bottle</h3>
-        <div className="overflow-x-auto rounded-lg shadow pt-5">
   <table className="w-full overflow-hidden rounded-lg">
     <thead>
       <tr className="border-b border-blue-200">
@@ -1155,7 +1186,6 @@ const stopRecording = () => {
       )}
     </tbody>
   </table>
-</div>
 
 
         <div className="flex justify-between mt-10">
@@ -1192,7 +1222,6 @@ const stopRecording = () => {
             Add Raw Materials for: {selectedMedicine?.medicineName}
           </h2>
 
-          <div className="overflow-x-auto rounded-lg shadow pt-5 bg-white">
   {rawMaterials.length > 0 ? (
     <table className="w-full overflow-hidden rounded-lg">
       <thead>
@@ -1486,7 +1515,6 @@ const stopRecording = () => {
   ) : (
     <p className="text-gray-500 text-center py-8">No raw materials found for this medicine.</p>
   )}
-</div>
 <div className="h-5"></div>
           <div className="flex justify-between">
             <button
@@ -1537,7 +1565,7 @@ const stopRecording = () => {
       Record Material Leakage
     </h2>
 
-    <div className="overflow-x-auto rounded-lg shadow pt-5">
+
   <table className="w-full overflow-hidden rounded-lg">
     <thead>
       <tr className="border-b border-blue-200">
@@ -1577,7 +1605,6 @@ const stopRecording = () => {
       ))}
     </tbody>
   </table>
-</div>
 
 <div className="h-5"></div>
     {/* Footer Buttons */}

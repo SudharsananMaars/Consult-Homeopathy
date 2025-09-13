@@ -164,6 +164,7 @@ const Patients = () => {
     return (
         <DoctorLayout>
             <div className="p-7">
+                <div className="bg-white rounded-xl shadow-md p-6">
                 <h1 className="text-2xl font-bold mb-4">Patients</h1>
 
                 {/* Filters */}
@@ -211,64 +212,104 @@ const Patients = () => {
                     </select>
                 </div>
 
-                <div className="overflow-x-auto">
-                    {/* Patient Table */}
-                    <table className="w-full table-auto border-collapse">
-                        <thead>
-                            <tr className="bg-gray-100 text-left">
-                                <th className="px-4 py-2">Patient ID</th>
-                                <th className="px-4 py-2">Name</th>
-                                <th className="px-4 py-2">Recent Visit</th>
-                                <th className="px-4 py-2">Doctor Assigned</th>  
-                                <th className="px-4 py-2">Disease</th>
-                                <th className="px-4 py-2">Disease Type</th>
-                                <th className="px-4 py-2">Status</th>
-                                <th className="px-4 py-2">Follow Up</th>
-                                <th className="px-4 py-2">Actions</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {currentPatients.length > 0 ? (
-                                currentPatients.map((patient) => (
-                                    <tr key={patient.id} className="border-b hover:bg-gray-50">
-                                        <td className="px-4 py-4">{patient.id.slice(-6)}</td>
-                                        <td className="px-4 py-4">{patient.name}</td>
-                                        <td className="px-4 py-4">{patient.recentVisit}</td>
-                                        <td className="px-4 py-4">{patient.doctor}</td>
-                                        <td className="px-4 py-4">{patient.disease}</td>
-                                        <td className="px-4 py-4">{patient.diseaseType}</td>
-                                        <td className="px-4 py-4">
-                                            <span
-                                                className={`px-2 py-1 rounded-full text-sm font-semibold ${getStatusBgColor(
-                                                    patient.status
-                                                )}`}
-                                            >
-                                                {patient.status}
-                                            </span>
-                                        </td>
-                                        <td className="px-4 py-4">{patient.followUp}</td>
-                                        <td className="px-4 py-4">
-  <button
-    onClick={() => handleViewDetails(patient.id)}
-    className="inline-flex items-center px-2.5 py-1.5 border text-xs font-medium rounded-[5px] text-white bg-[#1a237e] hover:bg-[#534bae] focus:ring-2 focus:ring-offset-2 focus:ring-[#534bae]"
-  >
-    View
-  </button>
-</td>
-
-                                    </tr>
-                                ))
-                            ) : (
-                                <tr>
-                                    <td colSpan="9" className="text-center p-4">
-                                        No matching patients found.
-                                    </td>
-                                </tr>
-                            )}
-                        </tbody>
-                    </table>
-                </div>
-
+             
+  <table className="w-full overflow-hidden rounded-lg">
+    <thead>
+      <tr className="border-b border-blue-200">
+        <th className="bg-gray-100 text-center p-4 font-bold text-gray-700 text-sm">
+          Patient ID
+        </th>
+        <th className="bg-white text-center p-4 font-bold text-gray-700 text-sm">
+          Name
+        </th>
+        <th className="bg-gray-100 text-center p-4 font-bold text-gray-700 text-sm">
+          Recent Visit
+        </th>
+        <th className="bg-white text-center p-4 font-bold text-gray-700 text-sm">
+          Doctor Assigned
+        </th>
+        <th className="bg-gray-100 text-center p-4 font-bold text-gray-700 text-sm">
+          Disease
+        </th>
+        <th className="bg-white text-center p-4 font-bold text-gray-700 text-sm">
+          Disease Type
+        </th>
+        <th className="bg-gray-100 text-center p-4 font-bold text-gray-700 text-sm">
+          Status
+        </th>
+        <th className="bg-white text-center p-4 font-bold text-gray-700 text-sm">
+          Follow Up
+        </th>
+        <th className="bg-gray-100 text-center p-4 font-bold text-gray-700 text-sm">
+          Actions
+        </th>
+      </tr>
+    </thead>
+    <tbody>
+      {currentPatients.length > 0 ? (
+        currentPatients.map((patient, idx) => (
+          <tr key={patient.id || idx} className="border-b border-blue-200">
+            {/* Patient ID */}
+            <td className="bg-gray-100 p-4 text-gray-900 text-center">
+              {patient.id.slice(-6)}
+            </td>
+            {/* Name */}
+            <td className="bg-white p-4 text-gray-600 text-center">
+              {patient.name}
+            </td>
+            {/* Recent Visit */}
+            <td className="bg-gray-100 p-4 text-gray-600 text-center">
+              {patient.recentVisit}
+            </td>
+            {/* Doctor */}
+            <td className="bg-white p-4 text-gray-600 text-center">
+              {patient.doctor}
+            </td>
+            {/* Disease */}
+            <td className="bg-gray-100 p-4 text-gray-600 text-center">
+              {patient.disease}
+            </td>
+            {/* Disease Type */}
+            <td className="bg-white p-4 text-gray-600 text-center">
+              {patient.diseaseType}
+            </td>
+            {/* Status */}
+            <td className="bg-gray-100 p-4 text-center">
+              <span
+                className={`px-2 py-1 rounded-full text-sm font-semibold ${getStatusBgColor(
+                  patient.status
+                )}`}
+              >
+                {patient.status}
+              </span>
+            </td>
+            {/* Follow Up */}
+            <td className="bg-white p-4 text-gray-600 text-center">
+              {patient.followUp}
+            </td>
+            {/* Actions */}
+            <td className="bg-gray-100 p-4 text-center">
+              <button
+                onClick={() => handleViewDetails(patient.id)}
+                className="inline-flex items-center px-2.5 py-1.5 border text-xs font-medium rounded-[5px] text-white bg-blue-500 hover:bg-blue-700 focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+              >
+                View
+              </button>
+            </td>
+          </tr>
+        ))
+      ) : (
+        <tr>
+          <td
+            colSpan={9}
+            className="bg-white text-center text-gray-500 py-6"
+          >
+            No matching patients found.
+          </td>
+        </tr>
+      )}
+    </tbody>
+  </table>
                 {/* Pagination controls */}
                 <div className="flex flex-wrap justify-between items-center mt-4">
                     <div>
@@ -332,6 +373,7 @@ const Patients = () => {
                     </div>
                 </div>
             </div>
+        </div>
         </DoctorLayout>
     );
 };

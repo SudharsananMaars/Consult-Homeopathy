@@ -111,6 +111,7 @@ const AppointmentList = () => {
   return (
     <DoctorLayout>
       <div className="container mx-auto p-6">
+        <div className="bg-white rounded-xl shadow-md p-6">
         <div className="mb-6">
           <h1 className="text-3xl font-bold text-gray-900">Appointments</h1>
           <p className="text-gray-600 mt-2">Total appointments: {appointments.length}</p>
@@ -123,95 +124,75 @@ const AppointmentList = () => {
         ) : (
           <>
             {/* Desktop Table View */}
-            <div className="hidden lg:block bg-white shadow-lg rounded-lg overflow-hidden">
-              <div className="overflow-x-auto">
-                <table className="min-w-full divide-y divide-gray-200">
-                  <thead className="bg-gray-50">
-                    <tr>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Patient
-                      </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Contact
-                      </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Consulting For
-                      </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Date & Time
-                      </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Disease Type
-                      </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Payment
-                      </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Status
-                      </th>
-                    </tr>
-                  </thead>
-                  <tbody className="bg-white divide-y divide-gray-200">
-                    {currentAppointments.map((appointment, index) => (
-                      <tr key={appointment._id || index} className="hover:bg-gray-50">
-                        <td className="px-6 py-4 whitespace-nowrap">
-                          <div className="flex items-center">
-                            <div className="flex-shrink-0 h-10 w-10">
-                              <div className="h-10 w-10 rounded-full bg-blue-500 flex items-center justify-center">
-                                <span className="text-sm font-medium text-white">
-                                  {appointment.patient?.name?.charAt(0) || 'N'}
-                                </span>
-                              </div>
-                            </div>
-                            <div className="ml-4">
-                              <div className="text-sm font-medium text-gray-900">
-                                {appointment.patient?.name || 'N/A'}
-                              </div>
-                              <div className="text-sm text-gray-500">
-                                {appointment.patient?.age || 'N/A'} years, {appointment.patient?.gender || 'N/A'}
-                              </div>
-                            </div>
-                          </div>
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                          {appointment.patient?.phone || 'N/A'}
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap">
-                          <div className="text-sm text-gray-900">
-                            {appointment.consultingFor || appointment.diseaseName || 'N/A'}
-                          </div>
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap">
-                          <div className="text-sm text-gray-900">
-                            {formatDate(appointment.appointmentDate)}
-                          </div>
-                          <div className="text-sm text-gray-500">
-                            {appointment.timeSlot || 'N/A'}
-                          </div>
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap">
-                          <span className="px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full bg-blue-100 text-blue-800">
-                            {appointment.diseaseType?.name || 'N/A'}
-                          </span>
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap">
-                          <div className="text-sm text-gray-900">
-                            ₹{appointment.payment || 0}
-                          </div>
-                          <div className="text-xs text-gray-500">
-                            {appointment.isPaid ? 'Paid' : 'Unpaid'}
-                          </div>
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap">
-                          <StatusBadge status={appointment.status} />
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            </div>
+            
 
+  <table className="w-full overflow-hidden rounded-lg">
+  <thead>
+    <tr className="border-b border-blue-200">
+      <th className="bg-gray-100 text-center p-4 font-bold text-gray-700 text-sm">Patient</th>
+      <th className="bg-white text-center p-4 font-bold text-gray-700 text-sm">Contact</th>
+      <th className="bg-gray-100 text-center p-4 font-bold text-gray-700 text-sm">Date &amp; Time</th>
+      <th className="bg-white text-center p-4 font-bold text-gray-700 text-sm">Disease Type</th>
+      <th className="bg-gray-100 text-center p-4 font-bold text-gray-700 text-sm">Payment</th>
+      <th className="bg-white text-center p-4 font-bold text-gray-700 text-sm">Status</th>
+    </tr>
+  </thead>
+  <tbody>
+    {currentAppointments.map((appointment, index) => (
+      <tr
+        key={appointment._id || index}
+        className="border-b border-blue-200 hover:bg-gray-50"
+      >
+        {/* Patient */}
+        <td className="bg-gray-100 p-4 text-center">
+  <div className="flex flex-col items-center gap-1">
+    <div className="text-sm font-medium text-gray-900">
+      {appointment.patient?.name || "N/A"}
+    </div>
+    <div className="text-xs text-gray-500">
+      {appointment.patient?.age || "N/A"} yrs, {appointment.patient?.gender || "N/A"}
+    </div>
+  </div>
+</td>
+
+
+
+        {/* Contact */}
+        <td className="bg-white p-4 text-gray-700 text-center">
+          {appointment.patient?.phone || "N/A"}
+        </td>
+
+        {/* Date & Time */}
+        <td className="bg-gray-100 p-4 text-gray-700 text-center">
+          <div>{formatDate(appointment.appointmentDate)}</div>
+          <div className="text-xs text-gray-500">
+            {appointment.timeSlot || "N/A"}
+          </div>
+        </td>
+
+        {/* Disease Type */}
+        <td className="bg-white p-4 text-center">
+          <span className="px-2 py-1 inline-flex text-xs font-semibold rounded-full bg-blue-100 text-blue-800">
+            {appointment.diseaseType?.name || "N/A"}
+          </span>
+        </td>
+
+        {/* Payment */}
+        <td className="bg-gray-100 p-4 text-gray-700 text-center">
+          <div>₹{appointment.payment || 0}</div>
+          <div className="text-xs text-gray-500">
+            {appointment.isPaid ? "Paid" : "Unpaid"}
+          </div>
+        </td>
+
+        {/* Status */}
+        <td className="bg-white p-4 text-center">
+          <StatusBadge status={appointment.status} />
+        </td>
+      </tr>
+    ))}
+  </tbody>
+</table>
             {/* Mobile Card View */}
             <div className="lg:hidden space-y-4">
               {currentAppointments.map((appointment, index) => (
@@ -297,6 +278,7 @@ const AppointmentList = () => {
             )}
           </>
         )}
+      </div>
       </div>
     </DoctorLayout>
   );

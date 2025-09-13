@@ -36,7 +36,7 @@ const DoctorSettings = () => {
         `${API_URL}/api/doctor/updatesettings`, // Use PUT method for updating settings
         { videoPlatform: selectedPlatform },
         {
-          headers: { Authorization: `Bearer ${localStorage.getItem("accessToken")}` },
+          headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
         }
       )
       .then((response) => {
@@ -64,9 +64,9 @@ const DoctorSettings = () => {
 
     // Redirect to the OAuth authorization endpoint for the selected platform
     if (selectedPlatform === "GoogleMeet") {
-      window.location.href = "http://localhost:5000/google/authorize";
+      window.location.href = `${API_URL}/api/video-call/google/authorize`;
     } else if (selectedPlatform === "Zoom") {
-      window.location.href = "http://localhost:5000/zoom/authorize";
+      window.location.href = `${API_URL}/api/video-call/zoom/authorize`;
     }
   };
 

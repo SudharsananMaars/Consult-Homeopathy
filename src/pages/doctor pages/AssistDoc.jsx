@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef} from "react";
-import { FaEllipsisV, FaPlus, FaFileExport, FaEye, FaTrash } from "react-icons/fa";
+import { FaEllipsisV, FaPlus, FaFileExport, FaEye, FaTrash, FaTimes } from "react-icons/fa";
 import { useNavigate } from "react-router-dom";
 import AddDoctorModal from "/src/pages/doctor pages/AddDoctorModal";
 import config from '../../config';
@@ -17,6 +17,8 @@ const AssistDoc = () => {
     const [entriesPerPage, setEntriesPerPage] = useState(10);
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [selectedDoctor, setSelectedDoctor] = useState(null);
+    const [viewDetailsModal, setViewDetailsModal] = useState(false);
+    const [doctorDetails, setDoctorDetails] = useState(null);
     
     // Fetch doctors from API
     useEffect(() => {
@@ -45,12 +47,18 @@ const AssistDoc = () => {
                 throw new Error("Invalid doctor data");
             }
 
-            setSelectedDoctor(doctorData); // Pre-fill modal with fetched data
-            setIsModalOpen(true); // Open the modal
+            setSelectedDoctor(doctorData);
+            setIsModalOpen(true);
         } catch (error) {
             console.error("Error fetching doctor by ID:", error);
             alert("Failed to fetch doctor details.");   
         }
+    };
+
+    // Handle view details
+    const handleViewDetails = (doctor) => {
+        setDoctorDetails(doctor);
+        setViewDetailsModal(true);
     };
 
     // Handle filter changes
@@ -83,37 +91,29 @@ const AssistDoc = () => {
     // Handle pagination
     const paginate = (pageNumber) => setCurrentPage(pageNumber);
 
-    // View doctor details
-    const handleViewDetails = (employeeID) => {
-        navigate(`/assistdoc/doctorprofile/${employeeID}`);
-    };
-
     // Open Add Doctor Modal
     const handleAddDoctor = () => {
-        setSelectedDoctor(null); // Reset for add mode
+        setSelectedDoctor(null);
         setIsModalOpen(true);
     };
     
     // Open Edit Doctor Modal
     const handleEditDoctor = (employeeID) => {
-        setSelectedDoctor(null);  // Clear the previous selected doctor in case of modal reuse
+        setSelectedDoctor(null);
         fetchDoctorById(employeeID);
     };
 
     const handleDoctorSave = (updatedDoctor) => {
         if (selectedDoctor) {
-            // Edit mode: update existing doctor
             setDoctors((prevDoctors) =>
                 prevDoctors.map((doc) =>
                     doc.employeeID === updatedDoctor.employeeID ? updatedDoctor : doc
                 )
             );
         } else {
-            // Add mode: add a new doctor
             setDoctors((prevDoctors) => [...prevDoctors, updatedDoctor]);
         }
-    
-        closeModal(); // Close modal after saving
+        closeModal();
     };
     
     // Delete a doctor
@@ -123,7 +123,7 @@ const AssistDoc = () => {
                 await fetch(`${API_URL}/api/employees/delete/${employeeID}`, { method: "DELETE" });
                 setDoctors((prevDoctors) => prevDoctors.filter((doctor) => doctor.employeeID !== employeeID));
                 if (currentDoctors.length === 1 && currentPage > 1) {
-                    setCurrentPage(currentPage - 1); // Adjust pagination if the last entry is deleted
+                    setCurrentPage(currentPage - 1);
                 }
                 alert("Doctor deleted successfully!");
             } catch (error) {
@@ -158,11 +158,17 @@ const AssistDoc = () => {
 
     // Close dropdown when an option is clicked
     const handleOptionClick = () => {
-        setDropdownVisible(null); // Close the dropdown when any option is clicked
+        setDropdownVisible(null);
     };
+    
     const closeModal = () => {
-        setSelectedDoctor(null); // Reset selected doctor
-        setIsModalOpen(false); // Close modal
+        setSelectedDoctor(null);
+        setIsModalOpen(false);
+    };
+
+    const closeViewModal = () => {
+        setViewDetailsModal(false);
+        setDoctorDetails(null);
     };
     
     return (
@@ -178,317 +184,65 @@ const AssistDoc = () => {
                         onChange={handleFilterChange}
                         className="p-2 border border-gray-300 rounded-md hover:bg-gray-100"
                     />
-                    {/* <button
-                        onClick={() => alert("Exporting doctors' data...")}
-                        className="bg-blue-500 text-white p-2 rounded-md shadow-md hover:bg-blue-600 transition-all flex items-center"
-                    >
-                        <FaFileExport className="mr-2" />
-                        Export
-                    </button> */}
                 </div>
 
                 {/* Doctors Table */}
-                <div className="relative w-full">
-  {/* Scrollable container */}
-  <div className="overflow-auto" style={{ maxHeight: "500px" }}>
-  <table className="w-full border-collapse min-w-max">
-    <thead className="bg-gray-100 sticky top-0 z-20">
-      <tr>
-        {/* Fixed left columns */}
-        <th
-          className="px-0.5 py-1 text-left sticky left-0 bg-gray-100 z-30 m-0"
-          style={{ minWidth: "100px" }}
-        >
-          Doctor ID
-        </th>
-        <th
-          className="px-0.5 py-1 text-left sticky left-[150px] bg-gray-100 z-30 m-0"
-          style={{ minWidth: "90px" }}
-        >
-          Name
-        </th>
-        <th
-          className="px-0.5 py-1 text-left sticky left-[300px] bg-gray-100 z-30 m-0"
-          style={{ minWidth: "90px" }}
-        >
-          Designation
-        </th>
-
-        {/* Scrollable middle columns */}
-        <th className="px-0.5 py-1 text-left m-0" style={{ minWidth: "90px" }}>
-          Phone No
-        </th>
-        <th className="px-0.5 py-1 text-left m-0" style={{ minWidth: "90px" }}>
-          Email
-        </th>
-        <th className="px-0.5 py-1 text-left m-0" style={{ minWidth: "90px" }}>
-          Date of Birth
-        </th>
-        <th className="px-0.5 py-1 text-left m-0" style={{ minWidth: "90px" }}>
-          Gender
-        </th>
-        <th className="px-0.5 py-1 text-left m-0" style={{ minWidth: "90px" }}>
-          Marital Status
-        </th>
-        <th className="px-0.5 py-1 text-left m-0" style={{ minWidth: "90px" }}>
-          Nationality
-        </th>    
-        <th className="px-0.5 py-1 text-left m-0" style={{ minWidth: "90px" }}>
-          Secondary Contact
-        </th> 
-        <th className="px-0.5 py-1 text-left m-0" style={{ minWidth: "90px" }}>
-          Current Address
-        </th>    
-        <th className="px-0.5 py-1 text-left m-0" style={{ minWidth: "90px" }}>
-          Permanent Address
-        </th> 
-        <th className="px-0.5 py-1 text-left m-0" style={{ minWidth: "90px" }}>
-          Emergency Contact Name
-        </th>  
-        <th className="px-0.5 py-1 text-left m-0" style={{ minWidth: "90px" }}>
-          Emergency Contact Relationship
-        </th>
-        <th className="px-0.5 py-1 text-left m-0" style={{ minWidth: "90px" }}>
-          Emergency Contact Number
-        </th> 
-        <th className="px-0.5 py-1 text-left m-0" style={{ minWidth: "90px" }}>
-          Department
-        </th>     
-        <th className="px-0.5 py-1 text-left m-0" style={{ minWidth: "90px" }}>
-          Date of Joining
-        </th>
-        <th className="px-0.5 py-1 text-left m-0" style={{ minWidth: "90px" }}>
-          Employment Type
-        </th>
-        <th className="px-0.5 py-1 text-left m-0" style={{ minWidth: "90px" }}>
-          Work Location
-        </th>
-        <th className="px-0.5 py-1 text-left m-0" style={{ minWidth: "90px" }}>
-          Reporting Manager
-        </th>
-        <th className="px-0.5 py-1 text-left m-0" style={{ minWidth: "90px" }}>
-          Work Shift
-        </th>
-        <th className="px-0.5 py-1 text-left m-0" style={{ minWidth: "90px" }}>
-          Basic Salary
-        </th>
-        <th className="px-0.5 py-1 text-left m-0" style={{ minWidth: "90px" }}>
-          Allowances
-        </th>
-        <th className="px-0.5 py-1 text-left m-0" style={{ minWidth: "90px" }}>
-          Deductions
-        </th>
-        <th className="px-0.5 py-1 text-left m-0" style={{ minWidth: "90px" }}>
-          Bank Account Number
-        </th>
-        <th className="px-0.5 py-1 text-left m-0" style={{ minWidth: "90px" }}>
-          Bank Name
-        </th>
-        <th className="px-0.5 py-1 text-left m-0" style={{ minWidth: "90px" }}>
-          IFSC Code
-        </th>
-        <th className="px-0.5 py-1 text-left m-0" style={{ minWidth: "90px" }}>
-          Payment Frequency
-        </th>
-        <th className="px-0.5 py-1 text-left m-0" style={{ minWidth: "90px" }}>
-          PF Number
-        </th>
-        <th className="px-0.5 py-1 text-left m-0" style={{ minWidth: "90px" }}>
-          ESI Number
-        </th>
-        <th className="px-0.5 py-1 text-left m-0" style={{ minWidth: "90px" }}>
-          Tax Deduction Preferences
-        </th>
-        <th className="px-0.5 py-1 text-left m-0" style={{ minWidth: "90px" }}>
-        Username System Access
-        </th>
-        <th className="px-0.5 py-1 text-left m-0" style={{ minWidth: "90px" }}>
-        Temporary Password
-        </th>
-        <th className="px-0.5 py-1 text-left m-0" style={{ minWidth: "90px" }}>
-        Access Level
-        </th>
-        <th className="px-0.5 py-1 text-left m-0" style={{ minWidth: "90px" }}>
-        Highest Qualification
-        </th>
-        <th className="px-0.5 py-1 text-left m-0" style={{ minWidth: "90px" }}>
-        Specialization
-        </th>
-        <th className="px-0.5 py-1 text-left m-0" style={{ minWidth: "90px" }}>
-        Year Of Graduation
-        </th>
-        <th className="px-0.5 py-1 text-left m-0" style={{ minWidth: "90px" }}>
-        Previous Employer
-        </th>
-        <th className="px-0.5 py-1 text-left m-0" style={{ minWidth: "90px" }}>
-        Previous Duration
-        </th>
-        <th className="px-0.5 py-1 text-left m-0" style={{ minWidth: "90px" }}>
-        Previous Job Role
-        </th>
-        <th className="px-0.5 py-1 text-left m-0" style={{ minWidth: "90px" }}>
-        Total Experience
-        </th>
-        <th className="px-0.5 py-1 text-left m-0" style={{ minWidth: "90px" }}>
-        Medical Registration Number
-        </th>
-        <th className="px-0.5 py-1 text-left m-0" style={{ minWidth: "90px" }}>
-        
-        </th>
+                <div style={{ maxHeight: "500px" }}>
+  <table className="w-full overflow-hidden rounded-lg min-w-max">
+    <thead className="sticky top-0 z-20">
+      <tr className="border-b border-blue-200">
+        <th className="bg-gray-100 text-center p-4 font-bold text-gray-700 text-sm" style={{ minWidth: "120px" }}>Doctor ID</th>
+        <th className="bg-white text-center p-4 font-bold text-gray-700 text-sm" style={{ minWidth: "150px" }}>Name</th>
+        <th className="bg-gray-100 text-center p-4 font-bold text-gray-700 text-sm" style={{ minWidth: "150px" }}>Designation</th>
+        <th className="bg-white text-center p-4 font-bold text-gray-700 text-sm" style={{ minWidth: "120px" }}>Phone No</th>
+        <th className="bg-gray-100 text-center p-4 font-bold text-gray-700 text-sm" style={{ minWidth: "200px" }}>Email</th>
+        <th className="bg-white text-center p-4 font-bold text-gray-700 text-sm" style={{ minWidth: "120px" }}>Date of Birth</th>
+        <th className="bg-gray-100 text-center p-4 font-bold text-gray-700 text-sm" style={{ minWidth: "100px" }}>Gender</th>
+        <th className="bg-white text-center p-4 font-bold text-gray-700 text-sm" style={{ minWidth: "100px" }}>Actions</th>
       </tr>
     </thead>
     <tbody>
       {currentDoctors.length > 0 ? (
-        currentDoctors.map((doctor) => (
-          <tr key={doctor.employeeID} className="border-b">
-            {/* Fixed left columns */}
-            <td
-               className="px-0.5 py-3 text-left sticky left-0 bg-white m-0 cursor-pointer text-blue-500 hover:underline"
-               style={{ minWidth: "150px" }}
-               onClick={() => handleEditDoctor(doctor.employeeID)}
+        currentDoctors.map((doctor, idx) => (
+          <tr key={doctor.employeeID || idx} className="border-b border-blue-200 hover:bg-gray-50">
+            <td 
+              className="bg-gray-100 p-4 text-blue-500 hover:underline cursor-pointer text-center"
+              onClick={() => handleEditDoctor(doctor.employeeID)}
+              style={{ minWidth: "120px" }}
             >
               {doctor.employeeID}
             </td>
-            <td
-              className="px-0.5 py-3 text-left sticky left-[150px] bg-white m-0"
-              style={{ minWidth: "150px" }}
-            >
+            <td className="bg-white p-4 text-gray-700 text-center" style={{ minWidth: "150px" }}>
               {doctor.name}
             </td>
-            <td
-              className="px-0.5 py-3 text-left sticky left-[300px] bg-white m-0"
-              style={{ minWidth: "150px" }}
-            >
+            <td className="bg-gray-100 p-4 text-gray-700 text-center" style={{ minWidth: "150px" }}>
               {doctor.role}
             </td>
-
-            {/* Scrollable middle columns */}
-            <td className="px-0.5 py-3 text-left m-0" style={{ minWidth: "150px" }}>
+            <td className="bg-white p-4 text-gray-700 text-center" style={{ minWidth: "120px" }}>
               {doctor.phone}
             </td>
-            <td className="px-0.5 py-3 text-left m-0" style={{ minWidth: "150px" }}>
+            <td className="bg-gray-100 p-4 text-gray-700 text-center" style={{ minWidth: "200px" }}>
               {doctor.personalEmail}
             </td>
-            <td className="px-0.5 py-3 text-left m-0" style={{ minWidth: "150px" }}>
+            <td className="bg-white p-4 text-gray-700 text-center" style={{ minWidth: "120px" }}>
               {doctor.dateOfBirth}
             </td>
-            <td className="px-0.5 py-3 text-left m-0" style={{ minWidth: "150px" }}>
+            <td className="bg-gray-100 p-4 text-gray-700 text-center" style={{ minWidth: "100px" }}>
               {doctor.gender}
             </td>
-            <td className="px-0.5 py-3 text-left m-0" style={{ minWidth: "150px" }}>
-              {doctor.maritalStatus}
+            <td className="bg-white p-4 text-center" style={{ minWidth: "100px" }}>
+              <button
+                onClick={() => handleViewDetails(doctor)}
+                className="bg-blue-500 text-white px-3 py-1 rounded hover:bg-blue-600 text-xs font-medium transition-colors"
+              >
+                View
+              </button>
             </td>
-            <td className="px-0.5 py-3 text-left m-0" style={{ minWidth: "150px" }}>
-              {doctor.nationality}
-            </td>
-            <td className="px-0.5 py-3 text-left m-0" style={{ minWidth: "150px" }}>
-              {doctor.secondaryContact}
-            </td>
-            <td className="px-0.5 py-3 text-left m-0" style={{ minWidth: "150px" }}>
-              {doctor.currentAddress}
-            </td>
-            <td className="px-0.5 py-3 text-left m-0" style={{ minWidth: "150px" }}>
-              {doctor.permanentAddress}
-            </td>
-            <td className="px-0.5 py-3 text-left m-0" style={{ minWidth: "150px" }}>
-              {doctor.emergencyContactName}
-            </td>
-            <td className="px-0.5 py-3 text-left m-0" style={{ minWidth: "150px" }}>
-              {doctor.emergencyContactRelationship}
-            </td>
-            <td className="px-0.5 py-3 text-left m-0" style={{ minWidth: "150px" }}>
-              {doctor.emergencyContactNumber}
-            </td>
-            <td className="px-0.5 py-3 text-left m-0" style={{ minWidth: "150px" }}>
-              {doctor.department}
-            </td>
-            <td className="px-0.5 py-3 text-left m-0" style={{ minWidth: "150px" }}>
-              {doctor.dateOfJoining}
-            </td>
-            <td className="px-0.5 py-3 text-left m-0" style={{ minWidth: "150px" }}>
-              {doctor.employmentType}
-            </td>
-            <td className="px-0.5 py-3 text-left m-0" style={{ minWidth: "150px" }}>
-              {doctor.workLocation}
-            </td>
-            <td className="px-0.5 py-3 text-left m-0" style={{ minWidth: "150px" }}>
-              {doctor.reportingManager}
-            </td>
-            <td className="px-0.5 py-3 text-left m-0" style={{ minWidth: "150px" }}>
-              {doctor.workShift}
-            </td>
-            <td className="px-0.5 py-3 text-left m-0" style={{ minWidth: "150px" }}>
-              {doctor.basicSalary}
-            </td>
-            <td className="px-0.5 py-3 text-left m-0" style={{ minWidth: "150px" }}>
-              {doctor.allowances}
-            </td>
-            <td className="px-0.5 py-3 text-left m-0" style={{ minWidth: "150px" }}>
-              {doctor.deductions}
-            </td>
-            <td className="px-0.5 py-3 text-left m-0" style={{ minWidth: "150px" }}>
-              {doctor.bankAccountNumber}
-            </td>
-            <td className="px-0.5 py-3 text-left m-0" style={{ minWidth: "150px" }}>
-              {doctor.bankName}
-            </td>
-            <td className="px-0.5 py-3 text-left m-0" style={{ minWidth: "150px" }}>
-              {doctor.ifscCode}
-            </td>
-            <td className="px-0.5 py-3 text-left m-0" style={{ minWidth: "150px" }}>
-              {doctor.paymentFrequency}
-            </td>
-            <td className="px-0.5 py-3 text-left m-0" style={{ minWidth: "150px" }}>
-              {doctor.pfNumber}
-            </td>
-            <td className="px-0.5 py-3 text-left m-0" style={{ minWidth: "150px" }}>
-              {doctor.esiNumber}
-            </td>
-            <td className="px-0.5 py-3 text-left m-0" style={{ minWidth: "150px" }}>
-              {doctor.taxDeductionPreferences}
-            </td>
-            <td className="px-0.5 py-3 text-left m-0" style={{ minWidth: "150px" }}>
-              {doctor.usernameSystemAccess}
-            </td>
-            <td className="px-0.5 py-3 text-left m-0" style={{ minWidth: "150px" }}>
-              {doctor.temporaryPassword}
-            </td>
-            <td className="px-0.5 py-3 text-left m-0" style={{ minWidth: "150px" }}>
-              {doctor.accessLevel}
-            </td>
-            <td className="px-0.5 py-3 text-left m-0" style={{ minWidth: "150px" }}>
-              {doctor.highestQualification}
-            </td>
-            <td className="px-0.5 py-3 text-left m-0" style={{ minWidth: "150px" }}>
-              {doctor.specialization}
-            </td>
-            <td className="px-0.5 py-3 text-left m-0" style={{ minWidth: "150px" }}>
-              {doctor.yearOfGraduation}
-            </td>
-            <td className="px-0.5 py-3 text-left m-0" style={{ minWidth: "150px" }}>
-              {doctor.previousEmployer}
-            </td>
-            <td className="px-0.5 py-3 text-left m-0" style={{ minWidth: "150px" }}>
-              {doctor.previousDuration}
-            </td>
-            <td className="px-0.5 py-3 text-left m-0" style={{ minWidth: "150px" }}>
-              {doctor.previousJobRole}
-            </td>
-            <td className="px-0.5 py-3 text-left m-0" style={{ minWidth: "150px" }}>
-              {doctor.totalExperience}
-            </td>
-            <td className="px-0.5 py-3 text-left m-0" style={{ minWidth: "150px" }}>
-              {doctor.medicalRegistrationNumber}
-            </td>
-
-            {/* Fixed right column */}
-            {/* Table Body */}
-
-              </tr>
-            ))
+          </tr>
+        ))
       ) : (
         <tr>
-          <td colSpan="12" className="text-center py-3 px-0">
+          <td colSpan={8} className="bg-white text-center text-gray-500 py-6">
             No matching doctors found.
           </td>
         </tr>
@@ -497,7 +251,6 @@ const AssistDoc = () => {
   </table>
 </div>
 
-</div>
 
                 {/* Pagination Controls */}
                 <div className="flex justify-between items-center mt-4">
@@ -549,15 +302,294 @@ const AssistDoc = () => {
                 </div>
             </div>
 
+            {/* View Details Modal */}
+            {viewDetailsModal && doctorDetails && (
+    <div className="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center z-50 p-4">
+        <div className="bg-white rounded-xl shadow-2xl max-w-4xl w-full max-h-[90vh] overflow-hidden">
+            {/* Header */}
+            <div className="flex items-center justify-between px-6 py-4 border-b border-gray-200 bg-gradient-to-r from-blue-50 to-indigo-50">
+                <div>
+                    <h2 className="text-xl font-bold text-gray-800">
+                        Dr. {doctorDetails.name}
+                    </h2>
+                    <p className="text-sm text-gray-600">Employee ID: {doctorDetails.employeeID}</p>
+                </div>
+                <button
+                    onClick={closeViewModal}
+                    className="p-2 hover:bg-gray-100 rounded-full transition-colors duration-200"
+                >
+                    <FaTimes size={20} className="text-gray-500" />
+                </button>
+            </div>
+            
+            {/* Content */}
+            <div className="overflow-y-auto max-h-[calc(90vh-80px)]">
+                <div className="p-6 space-y-8">
+                    {/* Personal Information */}
+                    <section>
+                        <h3 className="text-lg font-semibold text-gray-800 mb-4 pb-2 border-b border-gray-100">
+                            Personal Information
+                        </h3>
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-4">
+                            <div className="space-y-3">
+                                <div className="flex flex-col">
+                                    <span className="text-xs font-medium text-gray-500 uppercase tracking-wide">Full Name</span>
+                                    <span className="text-sm text-gray-900 mt-1">{doctorDetails.name}</span>
+                                </div>
+                                <div className="flex flex-col">
+                                    <span className="text-xs font-medium text-gray-500 uppercase tracking-wide">Date of Birth</span>
+                                    <span className="text-sm text-gray-900 mt-1">{doctorDetails.dateOfBirth}</span>
+                                </div>
+                                <div className="flex flex-col">
+                                    <span className="text-xs font-medium text-gray-500 uppercase tracking-wide">Gender</span>
+                                    <span className="text-sm text-gray-900 mt-1">{doctorDetails.gender}</span>
+                                </div>
+                                <div className="flex flex-col">
+                                    <span className="text-xs font-medium text-gray-500 uppercase tracking-wide">Marital Status</span>
+                                    <span className="text-sm text-gray-900 mt-1">{doctorDetails.maritalStatus}</span>
+                                </div>
+                                <div className="flex flex-col">
+                                    <span className="text-xs font-medium text-gray-500 uppercase tracking-wide">Nationality</span>
+                                    <span className="text-sm text-gray-900 mt-1">{doctorDetails.nationality}</span>
+                                </div>
+                                <div className="flex flex-col">
+                                    <span className="text-xs font-medium text-gray-500 uppercase tracking-wide">Personal Email</span>
+                                    <span className="text-sm text-gray-900 mt-1 break-all">{doctorDetails.personalEmail}</span>
+                                </div>
+                            </div>
+                            <div className="space-y-3">
+                                <div className="flex flex-col">
+                                    <span className="text-xs font-medium text-gray-500 uppercase tracking-wide">Secondary Contact</span>
+                                    <span className="text-sm text-gray-900 mt-1">{doctorDetails.secondaryContact}</span>
+                                </div>
+                                <div className="flex flex-col">
+                                    <span className="text-xs font-medium text-gray-500 uppercase tracking-wide">Current Address</span>
+                                    <span className="text-sm text-gray-900 mt-1">{doctorDetails.currentAddress}</span>
+                                </div>
+                                <div className="flex flex-col">
+                                    <span className="text-xs font-medium text-gray-500 uppercase tracking-wide">Permanent Address</span>
+                                    <span className="text-sm text-gray-900 mt-1">{doctorDetails.permanentAddress}</span>
+                                </div>
+                                <div className="flex flex-col">
+                                    <span className="text-xs font-medium text-gray-500 uppercase tracking-wide">Emergency Contact</span>
+                                    <span className="text-sm text-gray-900 mt-1">{doctorDetails.emergencyContactName}</span>
+                                </div>
+                                <div className="flex flex-col">
+                                    <span className="text-xs font-medium text-gray-500 uppercase tracking-wide">Relationship</span>
+                                    <span className="text-sm text-gray-900 mt-1">{doctorDetails.emergencyContactRelationship}</span>
+                                </div>
+                                <div className="flex flex-col">
+                                    <span className="text-xs font-medium text-gray-500 uppercase tracking-wide">Emergency Number</span>
+                                    <span className="text-sm text-gray-900 mt-1">{doctorDetails.emergencyContactNumber}</span>
+                                </div>
+                            </div>
+                        </div>
+                    </section>
+
+                    {/* Job Details */}
+                    <section>
+                        <h3 className="text-lg font-semibold text-gray-800 mb-4 pb-2 border-b border-gray-100">
+                            Job Details
+                        </h3>
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-4">
+                            <div className="space-y-3">
+                                <div className="flex flex-col">
+                                    <span className="text-xs font-medium text-gray-500 uppercase tracking-wide">Employee ID</span>
+                                    <span className="text-sm text-gray-900 mt-1">{doctorDetails.employeeID}</span>
+                                </div>
+                                <div className="flex flex-col">
+                                    <span className="text-xs font-medium text-gray-500 uppercase tracking-wide">Job Title</span>
+                                    <span className="text-sm text-gray-900 mt-1">{doctorDetails.role}</span>
+                                </div>
+                                <div className="flex flex-col">
+                                    <span className="text-xs font-medium text-gray-500 uppercase tracking-wide">Department</span>
+                                    <span className="text-sm text-gray-900 mt-1">{doctorDetails.department}</span>
+                                </div>
+                                <div className="flex flex-col">
+                                    <span className="text-xs font-medium text-gray-500 uppercase tracking-wide">Date of Joining</span>
+                                    <span className="text-sm text-gray-900 mt-1">{doctorDetails.dateOfJoining}</span>
+                                </div>
+                            </div>
+                            <div className="space-y-3">
+                                <div className="flex flex-col">
+                                    <span className="text-xs font-medium text-gray-500 uppercase tracking-wide">Employment Type</span>
+                                    <span className="text-sm text-gray-900 mt-1">{doctorDetails.employmentType}</span>
+                                </div>
+                                <div className="flex flex-col">
+                                    <span className="text-xs font-medium text-gray-500 uppercase tracking-wide">Work Location</span>
+                                    <span className="text-sm text-gray-900 mt-1">{doctorDetails.workLocation}</span>
+                                </div>
+                                <div className="flex flex-col">
+                                    <span className="text-xs font-medium text-gray-500 uppercase tracking-wide">Reporting Manager</span>
+                                    <span className="text-sm text-gray-900 mt-1">{doctorDetails.reportingManager}</span>
+                                </div>
+                                <div className="flex flex-col">
+                                    <span className="text-xs font-medium text-gray-500 uppercase tracking-wide">Work Shift</span>
+                                    <span className="text-sm text-gray-900 mt-1">{doctorDetails.workShift}</span>
+                                </div>
+                            </div>
+                        </div>
+                    </section>
+
+                    {/* Compensation Details */}
+                    <section>
+                        <h3 className="text-lg font-semibold text-gray-800 mb-4 pb-2 border-b border-gray-100">
+                            Compensation Details
+                        </h3>
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-4">
+                            <div className="space-y-3">
+                                <div className="flex flex-col">
+                                    <span className="text-xs font-medium text-gray-500 uppercase tracking-wide">Basic Salary</span>
+                                    <span className="text-sm text-gray-900 mt-1">{doctorDetails.basicSalary}</span>
+                                </div>
+                                <div className="flex flex-col">
+                                    <span className="text-xs font-medium text-gray-500 uppercase tracking-wide">Allowances</span>
+                                    <span className="text-sm text-gray-900 mt-1">{doctorDetails.allowances}</span>
+                                </div>
+                                <div className="flex flex-col">
+                                    <span className="text-xs font-medium text-gray-500 uppercase tracking-wide">Deductions</span>
+                                    <span className="text-sm text-gray-900 mt-1">{doctorDetails.deductions}</span>
+                                </div>
+                                <div className="flex flex-col">
+                                    <span className="text-xs font-medium text-gray-500 uppercase tracking-wide">Bank Account</span>
+                                    <span className="text-sm text-gray-900 mt-1">{doctorDetails.bankAccountNumber}</span>
+                                </div>
+                                <div className="flex flex-col">
+                                    <span className="text-xs font-medium text-gray-500 uppercase tracking-wide">Bank & Branch</span>
+                                    <span className="text-sm text-gray-900 mt-1">{doctorDetails.bankName}</span>
+                                </div>
+                            </div>
+                            <div className="space-y-3">
+                                <div className="flex flex-col">
+                                    <span className="text-xs font-medium text-gray-500 uppercase tracking-wide">IFSC Code</span>
+                                    <span className="text-sm text-gray-900 mt-1">{doctorDetails.ifscCode}</span>
+                                </div>
+                                <div className="flex flex-col">
+                                    <span className="text-xs font-medium text-gray-500 uppercase tracking-wide">Payment Frequency</span>
+                                    <span className="text-sm text-gray-900 mt-1">{doctorDetails.paymentFrequency}</span>
+                                </div>
+                                <div className="flex flex-col">
+                                    <span className="text-xs font-medium text-gray-500 uppercase tracking-wide">PF Number</span>
+                                    <span className="text-sm text-gray-900 mt-1">{doctorDetails.pfNumber}</span>
+                                </div>
+                                <div className="flex flex-col">
+                                    <span className="text-xs font-medium text-gray-500 uppercase tracking-wide">ESI Number</span>
+                                    <span className="text-sm text-gray-900 mt-1">{doctorDetails.esiNumber}</span>
+                                </div>
+                                <div className="flex flex-col">
+                                    <span className="text-xs font-medium text-gray-500 uppercase tracking-wide">Tax Preferences</span>
+                                    <span className="text-sm text-gray-900 mt-1">{doctorDetails.taxDeductionPreferences}</span>
+                                </div>
+                            </div>
+                        </div>
+                    </section>
+
+                    {/* Education & Professional */}
+                    <section>
+                        <h3 className="text-lg font-semibold text-gray-800 mb-4 pb-2 border-b border-gray-100">
+                            Educational & Professional Background
+                        </h3>
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-4">
+                            <div className="space-y-3">
+                                <div className="flex flex-col">
+                                    <span className="text-xs font-medium text-gray-500 uppercase tracking-wide">Highest Qualification</span>
+                                    <span className="text-sm text-gray-900 mt-1">{doctorDetails.highestQualification}</span>
+                                </div>
+                                <div className="flex flex-col">
+                                    <span className="text-xs font-medium text-gray-500 uppercase tracking-wide">Specialization</span>
+                                    <span className="text-sm text-gray-900 mt-1">{doctorDetails.specialization}</span>
+                                </div>
+                                <div className="flex flex-col">
+                                    <span className="text-xs font-medium text-gray-500 uppercase tracking-wide">Year of Graduation</span>
+                                    <span className="text-sm text-gray-900 mt-1">{doctorDetails.yearOfGraduation}</span>
+                                </div>
+                            </div>
+                            <div className="space-y-3">
+                                <div className="flex flex-col">
+                                    <span className="text-xs font-medium text-gray-500 uppercase tracking-wide">Medical Registration</span>
+                                    <span className="text-sm text-gray-900 mt-1">{doctorDetails.medicalRegistrationNumber}</span>
+                                </div>
+                                <div className="flex flex-col">
+                                    <span className="text-xs font-medium text-gray-500 uppercase tracking-wide">Total Experience</span>
+                                    <span className="text-sm text-gray-900 mt-1">{doctorDetails.totalExperience}</span>
+                                </div>
+                            </div>
+                        </div>
+                    </section>
+
+                    {/* Previous Employment */}
+                    <section>
+                        <h3 className="text-lg font-semibold text-gray-800 mb-4 pb-2 border-b border-gray-100">
+                            Previous Employment
+                        </h3>
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-4">
+                            <div className="space-y-3">
+                                <div className="flex flex-col">
+                                    <span className="text-xs font-medium text-gray-500 uppercase tracking-wide">Company Name</span>
+                                    <span className="text-sm text-gray-900 mt-1">{doctorDetails.previousEmployer}</span>
+                                </div>
+                                <div className="flex flex-col">
+                                    <span className="text-xs font-medium text-gray-500 uppercase tracking-wide">Duration</span>
+                                    <span className="text-sm text-gray-900 mt-1">{doctorDetails.previousDuration}</span>
+                                </div>
+                            </div>
+                            <div className="space-y-3">
+                                <div className="flex flex-col">
+                                    <span className="text-xs font-medium text-gray-500 uppercase tracking-wide">Job Role</span>
+                                    <span className="text-sm text-gray-900 mt-1">{doctorDetails.previousJobRole}</span>
+                                </div>
+                            </div>
+                        </div>
+                    </section>
+
+                    {/* System Access */}
+                    <section>
+                        <h3 className="text-lg font-semibold text-gray-800 mb-4 pb-2 border-b border-gray-100">
+                            System Access & Credentials
+                        </h3>
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-4">
+                            <div className="space-y-3">
+                                <div className="flex flex-col">
+                                    <span className="text-xs font-medium text-gray-500 uppercase tracking-wide">Username</span>
+                                    <span className="text-sm text-gray-900 mt-1 font-mono bg-gray-50 px-2 py-1 rounded">
+                                        {doctorDetails.usernameSystemAccess}
+                                    </span>
+                                </div>
+                                <div className="flex flex-col">
+                                    <span className="text-xs font-medium text-gray-500 uppercase tracking-wide">Temporary Password</span>
+                                    <span className="text-sm text-gray-900 mt-1 font-mono bg-gray-50 px-2 py-1 rounded">
+                                        {doctorDetails.temporaryPassword}
+                                    </span>
+                                </div>
+                            </div>
+                            <div className="space-y-3">
+                                <div className="flex flex-col">
+                                    <span className="text-xs font-medium text-gray-500 uppercase tracking-wide">Access Level</span>
+                                    <span className="text-sm text-gray-900 mt-1">
+                                        <span className="bg-blue-100 text-blue-800 px-2 py-1 rounded-full text-xs font-medium">
+                                            {doctorDetails.accessLevel}
+                                        </span>
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+                    </section>
+                </div>
+            </div>
+        </div>
+    </div>
+)}
+
             {/* Add/Edit Doctor Modal */}
             {isModalOpen && (
                 <AddDoctorModal
                     isOpen={isModalOpen}
                     onClose={closeModal}
                     onSave={handleDoctorSave}
-                    doctor={selectedDoctor} // Pass selected doctor for editing
+                    doctor={selectedDoctor}
                 />
             )}
+            
             {/* Add New Doctor Button */}
             <div className="fixed bottom-5 right-5">
                 <button
