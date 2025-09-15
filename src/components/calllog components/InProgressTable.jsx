@@ -284,7 +284,7 @@ const prioritizePatients = (patientsList) => {
           onClick={() => scrollToSection(section.id)}
         className={`flex-grow px-4 py-2 rounded-lg transition-colors duration-200 text-center whitespace-nowrap ${
             activeSection === section.id
-              ? 'bg-indigo-400 text-white'
+              ? 'bg-blue-400 text-white'
               : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
           }`}
         >
@@ -364,7 +364,7 @@ const prioritizePatients = (patientsList) => {
               </select>
             ) : (
               <div className="flex items-center space-x-2">
-                <span className={`font-medium ${patient.diseaseType?.edit ? 'text-indigo-400' : 'text-gray-700'}`}>
+                <span className={`font-medium ${patient.diseaseType?.edit ? 'text-blue-400' : 'text-gray-700'}`}>
                   {patient.diseaseType?.name || 'Not specified'}
                 </span>
                 <button 

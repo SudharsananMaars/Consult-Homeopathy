@@ -300,7 +300,7 @@ const StatusCompleteTable = () => {
           onClick={() => scrollToSection(section.id)}
         className={`flex-grow px-4 py-2 rounded-lg transition-colors duration-200 text-center whitespace-nowrap ${
             activeSection === section.id
-              ? 'bg-indigo-400 text-white'
+              ? 'bg-blue-400 text-white'
               : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
           }`}
         >
@@ -311,7 +311,7 @@ const StatusCompleteTable = () => {
   );
 
   const renderTableHeader = () => (
-    <thead className="sticky top-0 z-10 bg-indigo-400">
+    <thead className="sticky top-0 z-10 bg-blue-400">
       <tr>
         {sections.flatMap(section => section.columns).map(column => (
           <th key={column} className="p-3 text-sm font-semibold text-left text-white whitespace-nowrap">
@@ -434,7 +434,7 @@ const StatusCompleteTable = () => {
         return (
           <button 
             onClick={() => makeCall(patient)}
-            className="inline-flex items-center px-3 py-2 border border-transparent text-sm leading-4 font-medium rounded-md text-white bg-indigo-300 hover:bg-indigo-400 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#534bae] transition-all duration-300"
+            className="inline-flex items-center px-3 py-2 border border-transparent text-sm leading-4 font-medium rounded-md text-white bg-blue-300 hover:bg-blue-400 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#534bae] transition-all duration-300"
           >
             <FaPhoneAlt className="mr-2 -ml-0.5 h-4 w-4" /> Make Call
           </button>
@@ -443,7 +443,7 @@ const StatusCompleteTable = () => {
         return (
           <button
             onClick={() => viewRecordings(patient)}
-            className="inline-flex items-center px-3 py-2 border border-transparent text-sm leading-4 font-medium rounded-md text-white bg-indigo-300 hover:bg-indigo-400 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#534bae] transition-all duration-300"
+            className="inline-flex items-center px-3 py-2 border border-transparent text-sm leading-4 font-medium rounded-md text-white bg-blue-300 hover:bg-blue-400 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#534bae] transition-all duration-300"
           >
             <FaRecordVinyl className="mr-2 -ml-0.5 h-4 w-4" /> View Recordings
           </button>

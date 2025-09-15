@@ -266,7 +266,7 @@ const AppointmentsPage = () => {
                                 href={appt.meetLink}
                                 target="_blank"
                                 rel="noopener noreferrer"
-                                className="inline-block px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 text-sm"
+                                className="inline-block px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 text-sm"
                               >
                                 Join Video Call
                               </a>

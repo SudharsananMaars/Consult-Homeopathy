@@ -252,9 +252,9 @@ const handleReschedule = (appointmentId) => {
   return (
     <div>
         <DoctorLayout>
-    <div className="p-6 space-y-6">
+    <div className="p-6 space-y-8">
       {/* Overview Cards - First Line Only */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4 md:gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-4 md:gap-10">
         {overviewCards.map((card, index) => (
           <div
             key={index}
@@ -262,21 +262,22 @@ const handleReschedule = (appointmentId) => {
           >
             <div className="flex items-center justify-between h-full">
   <div className="flex-1 flex flex-col justify-center -mt-4">
-    <p className="text-sm text-gray-600 font-semibold">{card.title}</p>
-    <p className={`text-2xl font-bold mt-3 ${
+    <p className="text-lg text-gray-600 font-semibold">{card.title}</p>
+    <p className={`text-3xl font-bold mt-3 ${
       card.color.includes('border-blue-500') ? 'text-blue-500' :
       card.color.includes('border-yellow-500') ? 'text-yellow-500' :
       card.color.includes('border-pink-500') ? 'text-pink-500' :
       card.color.includes('border-red-500') ? 'text-red-500' : 'text-gray-900'
     }`}>{card.count}</p>
   </div>
-  <div className="ml-4 flex items-center">
-    <img
-      src={card.image}
-      alt={card.title}
-      className="h-12 w-12 rounded-lg object-cover"
-    />
-  </div>
+<div className="ml-5 flex items-center">
+  <img
+    src={card.image}
+    alt={card.title}
+    className="h-20 w-20 rounded-lg object-cover"
+  />
+</div>
+
 </div>
           </div>
         ))}

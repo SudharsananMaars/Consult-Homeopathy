@@ -2,7 +2,6 @@ import React, { useEffect, useState } from "react";
 import axios from "axios";
 import defaultDoctorImage from "/src/assets/images/doctor images/doc.jpg";
 import config from "../../config";
-
 const API_URL = config.API_URL;
 
 const SidebarProfile = () => {
@@ -61,7 +60,7 @@ const SidebarProfile = () => {
         <img
           src={doctorDetails.profilePhoto || defaultDoctorImage}
           alt="Doctor Profile"
-          className="w-16 h-16 rounded-full object-cover border-3 border-white shadow-lg"
+          className="w-20 h-20 rounded-full object-cover border-3 border-white shadow-lg"
         />
       </div>
       

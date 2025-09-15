@@ -1259,7 +1259,7 @@ Would you like to continue the conversation or schedule a fresh appointment?`,
                                   onClick={() =>
                                     navigate("/appointments/upcoming")
                                   }
-                                  className="text-xs text-indigo-600 underline mt-1 inline-block"
+                                  className="text-xs text-blue-600 underline mt-1 inline-block"
                                 >
                                   View Appointment
                                 </button>
@@ -1269,7 +1269,7 @@ Would you like to continue the conversation or schedule a fresh appointment?`,
                                 "PRESCRIPTION_PAYMENT_DUE" && (
                                 <button
                                   onClick={() => navigate("/payments")}
-                                  className="text-xs text-indigo-600 underline mt-1 inline-block"
+                                  className="text-xs text-blue-600 underline mt-1 inline-block"
                                 >
                                   Make Payment
                                 </button>
@@ -1279,7 +1279,7 @@ Would you like to continue the conversation or schedule a fresh appointment?`,
                                 "PATIENT_CARE_STARTED" && (
                                 <button
                                   onClick={() => navigate("/prescription")}
-                                  className="text-xs text-indigo-600 underline mt-1 inline-block"
+                                  className="text-xs text-blue-600 underline mt-1 inline-block"
                                 >
                                   Go to Intake calendar
                                 </button>
@@ -1333,7 +1333,7 @@ Would you like to continue the conversation or schedule a fresh appointment?`,
                                 key={opt.id}
                                 onClick={() => handleBotOptionSelect(opt)}
                                 className="block w-full mt-3 px-5 py-3 rounded-xl text-left font-medium 
-             bg-gradient-to-r from-indigo-50 via-cyan-50 to-blue-50 
+             bg-gradient-to-r from-blue-50 via-cyan-50 to-blue-50 
              text-gray-700 border border-cyan-200 shadow-sm 
              hover:shadow-md hover:scale-[1.02] 
              hover:from-cyan-100 hover:to-blue-100

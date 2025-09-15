@@ -164,7 +164,7 @@ const IntervalsSection = ({ data, onUpdate }) => {
               type="text"
               value={interval}
               onChange={handleIntervalChange}
-              className="w-16 text-center border border-indigo-500 rounded-md p-2 focus:ring-indigo-500"
+              className="w-16 text-center border border-blue-500 rounded-md p-2 focus:ring-blue-500"
             />
           ) : (
             <div className="w-16 text-center border border-gray-300 rounded-md p-2">
@@ -181,7 +181,7 @@ const IntervalsSection = ({ data, onUpdate }) => {
               type="text"
               value={message}
               onChange={(e) => setMessage(e.target.value)}
-              className="w-full text-gray-700 text-sm font-semibold ml-20 border border-indigo-500 rounded-md p-2"
+              className="w-full text-gray-700 text-sm font-semibold ml-20 border border-blue-500 rounded-md p-2"
             />
           ) : (
             <p className="text-gray-700 text-sm font-semibold ml-20">
@@ -200,7 +200,7 @@ const IntervalsSection = ({ data, onUpdate }) => {
           ) : (
             <button
               onClick={() => setIsEditing(true)}
-              className="text-gray-500 hover:text-indigo-600 transition-colors"
+              className="text-gray-500 hover:text-blue-600 transition-colors"
             >
               <Edit2 size={16} />
             </button>
@@ -288,7 +288,7 @@ const PaymentMessageTemplateSection = ({ message, onUpdate }) => {
               ref={descriptionInputRef}
               value={description}
               onChange={(e) => setDescription(e.target.value)}
-              className="w-full h-24 text-gray-700 text-sm font-semibold border border-indigo-500 rounded-md p-2 focus:ring-indigo-500"
+              className="w-full h-24 text-gray-700 text-sm font-semibold border border-blue-500 rounded-md p-2 focus:ring-blue-500"
             />
           ) : (
             <p className="text-gray-700 text-sm font-semibold">{description}</p>
@@ -303,7 +303,7 @@ const PaymentMessageTemplateSection = ({ message, onUpdate }) => {
               disabled={!isEditing}
               className={`px-2 py-1 text-xs font-semibold rounded-md border ${
                 isEditing
-                  ? "border-indigo-500 text-indigo-600 hover:bg-indigo-100"
+                  ? "border-blue-500 text-blue-600 hover:bg-blue-100"
                   : "border-gray-300 text-gray-400 cursor-not-allowed"
               }`}
             >
@@ -323,7 +323,7 @@ const PaymentMessageTemplateSection = ({ message, onUpdate }) => {
           ) : (
             <button
               onClick={() => setIsEditing(true)}
-              className="text-gray-500 hover:text-indigo-600 transition-colors"
+              className="text-gray-500 hover:text-blue-600 transition-colors"
             >
               <Edit2 size={16} />
             </button>

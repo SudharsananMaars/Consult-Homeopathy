@@ -104,12 +104,7 @@ const Sidebar = ({ role }) => {
             name: "Leakage Detection",
             icon: Droplet,
           },
-          {
-            id: 13,
-            path: "/accounts",
-            name: "Accounts",
-            icon: CreditCard,
-          },
+        
           {
             id: 14,
             path: "/doctor-dashboard/all",
@@ -314,7 +309,7 @@ const Sidebar = ({ role }) => {
           <img
             src="/src/assets/images/doctor images/homeologo.png"
             alt="Homeopathy Logo"
-            className="h-20 w-auto object-contain"
+            className="h-24 w-auto object-contain"
           />
         </div>
 

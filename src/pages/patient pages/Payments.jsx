@@ -434,7 +434,7 @@ const Payments = () => {
                 </p>
                 <div className="mt-1 text-xs text-gray-600">All prescriptions</div>
               </div>
-              <div className="h-12 w-12 bg-gradient-to-br from-blue-100 to-indigo-100 rounded-xl flex items-center justify-center group-hover:scale-110 transition-transform duration-300">
+              <div className="h-12 w-12 bg-gradient-to-br from-blue-100 to-blue-100 rounded-xl flex items-center justify-center group-hover:scale-110 transition-transform duration-300">
                 <DollarSign className="h-6 w-6 text-blue-600" />
               </div>
             </div>
@@ -587,7 +587,7 @@ const Payments = () => {
                             ? 'bg-gray-100 text-gray-400 cursor-not-allowed scale-95'
                             : !isRazorpayLoaded
                             ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
-                            : 'bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white shadow-lg hover:shadow-xl hover:scale-105 active:scale-95'
+                            : 'bg-gradient-to-r from-blue-600 to-blue-600 hover:from-blue-700 hover:to-blue-700 text-white shadow-lg hover:shadow-xl hover:scale-105 active:scale-95'
                         }`}
                       >
                         {payingBill === bill.prescriptionId ? (

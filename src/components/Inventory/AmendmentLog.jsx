@@ -146,7 +146,7 @@ const AmendmentLog = () => {
                 .filter(entry => hasActualChanges(entry.changes)) // Only show entries with actual changes
                 .map((entry) => (
                 <tr key={entry._id} className="hover:bg-gray-50 align-top">
-                  <td className="px-4 py-3 font-medium text-indigo-700">{entry.rawMaterialName}</td>
+                  <td className="px-4 py-3 font-medium text-blue-700">{entry.rawMaterialName}</td>
                   <td className="px-4 py-3 space-y-1">{formatChanges(entry.changes)}</td>
                   <td className="px-4 py-3">{entry.updatedBy}</td>
                   <td className="px-4 py-3">{formatDate(entry.amendedAt)}</td>
