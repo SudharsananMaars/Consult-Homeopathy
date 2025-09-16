@@ -6,19 +6,58 @@ import config from "../../config";
 
 const API_URL = config.API_URL;
 
+// Create axios instance to avoid global interceptor conflicts
+const apiClient = axios.create({
+  baseURL: API_URL,
+});
+
+// Set up axios interceptor for handling token in requests
+const setupAxiosInterceptors = () => {
+  // Request interceptor to add token to headers
+  apiClient.interceptors.request.use(
+    (config) => {
+      const token = localStorage.getItem('token');
+      if (token) {
+        config.headers.Authorization = `Bearer ${token}`;
+      }
+      return config;
+    },
+    (error) => {
+      return Promise.reject(error);
+    }
+  );
+
+  // Response interceptor to handle 401 errors
+  apiClient.interceptors.response.use(
+    (response) => response,
+    (error) => {
+      if (error.response?.status === 401) {
+        // Token might be expired or invalid
+        localStorage.removeItem('token');
+        localStorage.removeItem('userId');
+        localStorage.removeItem('userName');
+        localStorage.removeItem('userRole');
+        localStorage.removeItem('userType');
+        window.location.href = '/login';
+      }
+      return Promise.reject(error);
+    }
+  );
+};
+
 const LoginPage = () => {
-  const [role, setRole] = useState(''); // 'doctor' or 'patient'
-  const [mobileNumber, setMobileNumber] = useState('');
+  const [identifier, setIdentifier] = useState(''); // email or phone number
   const [password, setPassword] = useState('');
   const [otp, setOtp] = useState('');
-  const [showPassword, setShowPassword] = useState(false); // Password field initially visible
-  const [errors, setErrors] = useState({ mobileNumber: '', password: '', otp: '' });
-  const [showOtpInput, setShowOtpInput] = useState(false); // Controls when OTP field is shown
+  const [showPassword, setShowPassword] = useState(false);
+  const [errors, setErrors] = useState({ identifier: '', password: '', otp: '' });
+  const [showOtpInput, setShowOtpInput] = useState(false);
   const [otpSent, setOtpSent] = useState(false);
   const [loginWithOTP, setLoginWithOTP] = useState(false);
   const [otpArray, setOtpArray] = useState(Array(6).fill(""));
   const initialTime = 15 * 60;
   const [timeLeft, setTimeLeft] = useState(initialTime);
+  const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
 
   const handleChange = (e, index) => {
@@ -43,12 +82,9 @@ const LoginPage = () => {
   };
 
   useEffect(() => {
-    const savedRole = localStorage.getItem("userRole");
-    if (savedRole) {
-      setRole(savedRole);
-    } else {
-      setRole("patient");
-    }
+    // Set up axios interceptors
+    setupAxiosInterceptors();
+    
     const timer = setInterval(() => {
       setTimeLeft((prevTime) => (prevTime > 0 ? prevTime - 1 : 0));
     }, 1000);
@@ -64,25 +100,31 @@ const LoginPage = () => {
       .padStart(2, "0")}`;
   };
 
+  const isEmail = (str) => {
+    return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(str);
+  };
+
+  const isPhoneNumber = (str) => {
+    return /^\+91\d{10}$/.test(str);
+  };
+
   const validateFields = () => {
     let isValid = true;
-    const newErrors = { mobileNumber: "", password: "", otp: "" };
+    const newErrors = { identifier: "", password: "", otp: "" };
 
-    if (!mobileNumber) {
-      newErrors.mobileNumber = "This field is required";
+    if (!identifier) {
+      newErrors.identifier = "This field is required";
       isValid = false;
-    } else if (!/^\+91\d{10}$/.test(mobileNumber)) {
-      newErrors.mobileNumber = 
-        "Enter a valid 10-digit mobile number starting with +91";
+    } else if (!isEmail(identifier) && !isPhoneNumber(identifier)) {
+      newErrors.identifier = "Enter a valid email or 10-digit mobile number starting with +91";
       isValid = false;
     }
 
     if (!loginWithOTP && !password) {
       newErrors.password = "This field is required";
       isValid = false;
-    } else if (!loginWithOTP && !/^(?=.*[@$!%*?&])[\S]{6,}$/.test(password)) {
-      newErrors.password =
-        "Password must be at least 6 characters long and include at least one letter and one special character (no spaces)";
+    } else if (!loginWithOTP && password.length < 6) {
+      newErrors.password = "Password must be at least 6 characters long";
       isValid = false;
     }
 
@@ -99,112 +141,173 @@ const LoginPage = () => {
   };
 
   const sendOtp = async () => {
-    if (validateFields()) {
-      try {
-        const token = localStorage.getItem("token");
-        const response = await axios.post(
-          `${API_URL}/api/otp/send-otp`,
-          {
-            phone: mobileNumber,
-            role: role === "patient" ? "Patient" : "Doctor",
-          },
-          {
-            headers: {
-              Authorization: `Bearer ${token}`,
-            },
-          }
-        );
-
-        if (response.data.success) {
-          setOtpSent(true);
-          setShowOtpInput(true);
-          alert("OTP sent successfully!");
-        } else {
-          alert("Failed to send OTP: " + response.data.message);
-        }
-      } catch (error) {
-        console.error("Error sending OTP:", error);
-        alert("Error sending OTP.");
-      }
-    }
-  };
-
-  const verifyOtp = async () => {
-    if (validateFields()) {
-      try {
-        const response = await axios.post(`${API_URL}/api/otp/verifyOtp`, {
-          phone: mobileNumber,
-          userOTP: otp,
-          userType: role === "patient" ? "Patient" : "Doctor",
-        });
-        if (response.data.success) {
-          setShowOtpInput(false);
-          // localStorage.removeItem('accessToken');
-          localStorage.setItem("token", response.data.accessToken);
-          localStorage.setItem("userId", response.data.userId);
-          localStorage.setItem("userType", response.data.userType);
-          alert("OTP verified successfully!");
-          if (role === "doctor") {
-            localStorage.setItem("role", response.data.role);
-            navigate("/dashboard");
-          } else if (role === "patient") {
-            // navigate('/form');
-            navigate("/home");
-          }
-          window.location.reload();
-        } else {
-          alert("Invalid or expired OTP");
-        }
-      } catch (error) {
-        console.error("Error verifying OTP:", error);
-        alert("Error verifying OTP.");
-      }
-    }
-  };
-
-  const handleLogin = async () => {
     if (!validateFields()) return;
-
+    
+    setLoading(true);
     try {
+      // For OTP sending, we typically don't need authentication
       const response = await axios.post(
-        `${API_URL}/api/otp/loginWithPassword`,
+        `${API_URL}/api/otp/send-otp`,
         {
-          phone: mobileNumber,
-          password,
-          role: role === "doctor" ? "Doctor" : "Patient",
+          phone: identifier,
+          email: isEmail(identifier) ? identifier : null,
         }
       );
 
       if (response.data.success) {
-        const { accessToken, refreshToken, userId, userType } = response.data;
-
-        localStorage.setItem("token", accessToken);
-        localStorage.setItem("refreshToken", refreshToken);
-        localStorage.setItem("userId", userId);
-        localStorage.setItem("userType", userType);
-
-        if (userType === "Patient") {
-          navigate("/home");
-        } else if (userType === "Doctor") {
-          localStorage.setItem("role", response.data.role);
-          navigate("/dashboard");
-        }
+        setOtpSent(true);
+        setShowOtpInput(true);
+        setTimeLeft(initialTime); // Reset timer
+        alert("OTP sent successfully!");
+      } else {
+        alert("Failed to send OTP: " + response.data.message);
       }
     } catch (error) {
-      console.error("Login error:", error.response?.data || error.message);
-      alert(error.response?.data?.message || "Login failed");
+      console.error("Error sending OTP:", error);
+      const errorMessage = error.response?.data?.message || "Error sending OTP";
+      alert(errorMessage);
+    } finally {
+      setLoading(false);
     }
   };
 
-  const handleRoleSwitch = () => {
-    const newRole = role === "doctor" ? "patient" : "doctor";
-    localStorage.setItem("userRole", newRole);
-    setRole(newRole);
-    window.location.reload();
+  const verifyOtp = async () => {
+    if (!validateFields()) return;
+    
+    setLoading(true);
+    try {
+      const response = await axios.post(`${API_URL}/api/otp/verifyOtp`, {
+        phone: identifier,
+        userOTP: otp,
+        email: isEmail(identifier) ? identifier : null,
+      });
+      
+      if (response.data.success) {
+        const { accessToken, userId, userType } = response.data;
+        
+        // Store user data
+        localStorage.setItem("token", accessToken);
+        localStorage.setItem("userId", userId);
+        localStorage.setItem("userType", userType);
+
+        // Set default authorization header
+        apiClient.defaults.headers.common['Authorization'] = `Bearer ${accessToken}`;
+        
+        alert("OTP verified successfully!");
+        
+        // Navigation logic
+        if (userType === "Doctor") {
+          localStorage.setItem("role", response.data.role);
+          navigate("/dashboard");
+        } else if (userType === "Patient") {
+          navigate("/home");
+        }
+        
+        window.location.reload();
+      } else {
+        alert("Invalid or expired OTP");
+      }
+    } catch (error) {
+      console.error("Error verifying OTP:", error);
+      const errorMessage = error.response?.data?.message || "Error verifying OTP";
+      alert(errorMessage);
+    } finally {
+      setLoading(false);
+    }
   };
 
+  const handleLogin = async () => {
+  if (!validateFields()) return;
+
+  setLoading(true);
+  try {
+    const response = await axios.post(
+      `${API_URL}/api/otp/first-login`,
+      {
+        identifier,
+        password,
+      }
+    );
+
+    if (response.data.success) {
+      // Update this line to match your API response structure
+      const { accessToken, userId, name, role, userType } = response.data;
+
+      // Store token and user data with safety checks
+      if (accessToken) localStorage.setItem("token", accessToken);
+      if (userId) localStorage.setItem("userId", userId.toString());
+      if (name) localStorage.setItem("userName", name); // changed from userName to name
+      if (role) {
+        localStorage.setItem("userRole", role); // changed from userRole to role
+        localStorage.setItem("userType", userType);
+      }
+
+      // Set default authorization header for future requests
+      if (accessToken) {
+        apiClient.defaults.headers.common['Authorization'] = `Bearer ${accessToken}`;
+      }
+
+      console.log("Login successful:", {
+        userId,
+        userName: name, // update console log too
+        userRole: role, // update console log too
+        userType
+      });
+
+      // Navigate based on user type (removed requiresPasswordReset logic since API doesn't provide it)
+      if (userType === "Doctor") {
+        localStorage.setItem("role", role);
+        navigate("/dashboard");
+      } else {
+        navigate("/home");
+      }
+    }
+  } catch (error) {
+    console.error("Login error:", error);
+    console.error("Error response:", error.response?.data);
+    
+    let errorMessage = "Login failed";
+    
+    if (error.response?.status === 401) {
+      errorMessage = "Invalid credentials. Please check your email/phone and password.";
+    } else if (error.response?.data?.message) {
+      errorMessage = error.response.data.message;
+    } else if (error.message) {
+      errorMessage = error.message;
+    }
+    
+    alert(errorMessage);
+  } finally {
+    setLoading(false);
+  }
+};
   const handleRegistration = () => {
     navigate("/firstform");
+  };
+
+  const handleIdentifierChange = (e) => {
+    let value = e.target.value;
+    
+    // If it looks like a phone number, format it
+    if (/^\d/.test(value) || value.startsWith('+')) {
+      value = value.replace(/[^\d+]/g, "");
+      if (!value.startsWith("+91")) {
+        value = "+91" + value.replace(/^\+91/, "");
+      }
+      if (value.length > 13) {
+        value = value.slice(0, 13);
+      }
+    }
+    
+    setIdentifier(value);
+  };
+
+  const resetOtpState = () => {
+    setOtpSent(false);
+    setShowOtpInput(false);
+    setOtpArray(Array(6).fill(""));
+    setOtp("");
+    setTimeLeft(initialTime);
   };
 
   return (
@@ -220,40 +323,28 @@ const LoginPage = () => {
 
         <div className="flex-1 p-8">
           <h1 className="text-2xl font-semibold text-center mb-6">
-            {role === "doctor" ? "Doctor Login" : "Patient Login"}
+            Login
           </h1>
           {!otpSent && (
             <>
               <div className="mb-4">
                 <label
                   className="block text-gray-700 mb-1"
-                  htmlFor="mobileNumber"
+                  htmlFor="identifier"
                 >
-                  Mobile Number
+                  Email or Mobile Number
                 </label>
                 <input
                   type="text"
-                  id="mobileNumber"
-                  value={mobileNumber}
-                  onChange={(e) => {
-                    let value = e.target.value.replace(/[^\d+]/g, "");
-
-                    if (!value.startsWith("+91")) {
-                      value = "+91" + value.replace(/^\+91/, "");
-                    }
-
-                    if (value.length > 13) {
-                      value = value.slice(0, 13);
-                    }
-
-                    setMobileNumber(value);
-                  }}
+                  id="identifier"
+                  value={identifier}
+                  onChange={handleIdentifierChange}
                   className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
-                  placeholder="Enter your mobile number"
+                  placeholder="Enter your email or mobile number"
                 />
-                {errors.mobileNumber && (
+                {errors.identifier && (
                   <p className="text-red-500 text-xs mt-1">
-                    {errors.mobileNumber}
+                    {errors.identifier}
                   </p>
                 )}
               </div>
@@ -266,26 +357,25 @@ const LoginPage = () => {
                   >
                     Password
                   </label>
-<div className="relative">
-  <input
-    type={showPassword ? 'text' : 'password'}
-    id="password"
-    name="new-password"
-    autoComplete="new-password"
-    value={password}
-    onChange={(e) => setPassword(e.target.value)}
-    className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm pr-16"
-    placeholder="Enter your password"
-  />
-  <button
-    type="button"
-    onClick={() => setShowPassword(!showPassword)}
-    className="absolute inset-y-0 right-0 flex items-center px-3 text-sm text-gray-600 hover:text-blue-600 focus:outline-none"
-  >
-    {showPassword ? 'Hide' : 'Show'}
-  </button>
-</div>
-
+                  <div className="relative">
+                    <input
+                      type={showPassword ? 'text' : 'password'}
+                      id="password"
+                      name="password"
+                      autoComplete="current-password"
+                      value={password}
+                      onChange={(e) => setPassword(e.target.value)}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm pr-16"
+                      placeholder="Enter your password"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowPassword(!showPassword)}
+                      className="absolute inset-y-0 right-0 flex items-center px-3 text-sm text-gray-600 hover:text-blue-600 focus:outline-none"
+                    >
+                      {showPassword ? 'Hide' : 'Show'}
+                    </button>
+                  </div>
 
                   {errors.password && <p className="text-red-500 text-xs mt-1">{errors.password}</p>}
                   <div className="mb-4 mt-2">
@@ -296,7 +386,7 @@ const LoginPage = () => {
                       onChange={() => {
                         setLoginWithOTP(!loginWithOTP);
                         setShowPassword(!loginWithOTP);
-                        setShowOtpInput(false);
+                        resetOtpState();
                       }}
                     />
                     <label
@@ -310,9 +400,10 @@ const LoginPage = () => {
                     <div className="mb-4 mt-4 flex justify-center">
                       <button
                         onClick={handleLogin}
-                        className="w-1/4 bg-blue-400 text-white py-2 px-4 rounded-full shadow-md hover:bg-blue-500 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+                        disabled={loading}
+                        className="w-1/4 bg-blue-400 text-white py-2 px-4 rounded-full shadow-md hover:bg-blue-500 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50"
                       >
-                        Login
+                        {loading ? 'Logging in...' : 'Login'}
                       </button>
                     </div>
                   )}
@@ -323,9 +414,10 @@ const LoginPage = () => {
                 <div className="mb-4 mt-10 flex justify-center">
                   <button
                     onClick={sendOtp}
-                    className="bg-blue-400 text-white py-2 px-4 rounded-full shadow-md hover:bg-blue-500 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+                    disabled={loading}
+                    className="bg-blue-400 text-white py-2 px-4 rounded-full shadow-md hover:bg-blue-500 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50"
                   >
-                    Send OTP
+                    {loading ? 'Sending...' : 'Send OTP'}
                   </button>
                 </div>
               )}
@@ -336,7 +428,7 @@ const LoginPage = () => {
             <div className="mb-4 text-center">
               <h2 className="text-lg mb-2 font-bold">OTP Verification</h2>
               <p className="text-sm text-gray-500 mb-4">
-                We will send you a one-time password to {mobileNumber}
+                We will send you a one-time password to {identifier}
               </p>
               <div className="flex justify-center space-x-2">
                 {otpArray.map((digit, index) => (
@@ -358,10 +450,10 @@ const LoginPage = () => {
               <div className="text-center">
                 <button
                   onClick={verifyOtp}
-                  className="bg-green-400 text-white py-2 px-4 mt-4 rounded-full shadow-md hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500"
-                  disabled={timeLeft === 0}
+                  disabled={timeLeft === 0 || loading}
+                  className="bg-green-400 text-white py-2 px-4 mt-4 rounded-full shadow-md hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 disabled:opacity-50"
                 >
-                  Verify OTP
+                  {loading ? 'Verifying...' : 'Verify OTP'}
                 </button>
                 <div className="text-center font-semibold text-sm mt-2 text-blue-600">
                   {timeLeft > 0 ? (
@@ -371,11 +463,13 @@ const LoginPage = () => {
                   )}
                 </div>
                 <div className="mt-4">
-                  <label className="text-blue-400 hover:text-blue-500">
-                    <button onClick={sendOtp}>
-                      Didn't receive any code? Resend OTP
-                    </button>
-                  </label>
+                  <button 
+                    onClick={sendOtp} 
+                    disabled={loading}
+                    className="text-blue-400 hover:text-blue-500 disabled:opacity-50"
+                  >
+                    Didn't receive any code? Resend OTP
+                  </button>
                 </div>
               </div>
             </div>
@@ -383,23 +477,12 @@ const LoginPage = () => {
 
           <div className="mt-4 text-center">
             <button
-              onClick={handleRoleSwitch}
+              onClick={handleRegistration}
               className="text-blue-500 hover:underline"
             >
-              {role === "doctor" ? "Login as Patient" : "Login as Doctor"}
+              Register as Patient
             </button>
           </div>
-
-          {role === "patient" && (
-            <div className="mt-4 text-center">
-              <button
-                onClick={handleRegistration}
-                className="text-blue-500 hover:underline"
-              >
-                Register Patient
-              </button>
-            </div>
-          )}
         </div>
       </div>
     </div>

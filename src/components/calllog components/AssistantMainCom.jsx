@@ -84,23 +84,23 @@ const AssistantMainCom = () => {
       <h2 className="text-3xl font-bold mb-6 text-gray-800">Status</h2>
       
       {/* Status Boxes */}
-      <div className="grid grid-cols-1 md:grid-cols-5 gap-6 mb-8 bg-white p-6 rounded-lg shadow">
-        <div className="flex items-center justify-center bg-indigo-400 text-white p-3 rounded-lg">
-          <FaCalendarAlt size={18} className="mr-2" />
-          <span className="font-semibold">Today</span>
-        </div>
-        {Object.entries({
-          'Total Patients': dashboardData.totalPatients,
-          'Patients Registered Today': dashboardData.newPatientsToday,
-          'Call Not Made Yet': dashboardData.pendingCallsFromApp,
-          'Pending Medical Records': dashboardData.pendingMedicalRecords
-        }).map(([title, value]) => (
-          <div key={title} className="flex flex-col items-center justify-center p-4 border-l last:border-none">
-            <span className="text-sm text-gray-500">{title}</span>
-            <span className="text-2xl font-bold text-gray-800">{value}</span>
-          </div>
-        ))}
-      </div>
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+  {[
+    { title: 'Total Patients', value: dashboardData.totalPatients, color: 'border-l-4 border-blue-500 text-blue-600' },
+    { title: 'Patients Registered Today', value: dashboardData.newPatientsToday, color: 'border-l-4 border-orange-500 text-orange-600' },
+    { title: 'Call Not Made Yet', value: dashboardData.pendingCallsFromApp, color: 'border-l-4 border-green-500 text-green-600' },
+    { title: 'Pending Medical Records', value: dashboardData.pendingMedicalRecords, color: 'border-l-4 border-red-500 text-red-600' },
+  ].map(({ title, value, color }) => (
+    <div
+      key={title}
+      className={`bg-white rounded-lg shadow p-4 flex flex-col h-28 justify-center ${color}`}
+    >
+      <span className="text-base font-semibold text-gray-500 mb-2">{title}</span>
+      <span className={`text-xl font-bold`}>{value}</span>
+    </div>
+  ))}
+</div>
+
 
       {/* Tabs */}
       <div className="mb-6">
@@ -137,12 +137,12 @@ const AssistantMainCom = () => {
         </div>
 
         {/* Desktop View - Tabs */}
-        <div className="hidden md:flex space-x-2 bg-gray-200 p-2 rounded-lg shadow">
+        <div className="hidden md:flex space-x-2 bg-white p-2 rounded-lg">
           {['all', 'myAllocation', 'lost', 'attemptBucket'].map((tab) => (
             <button
               key={tab}
               onClick={() => handleTabClick(tab)}
-              className={`flex-1 py-3 px-6 text-sm font-medium rounded-md text-center transition-colors duration-300 ${
+              className={`flex-1 py-3 px-6 text-sm font-medium rounded-md border border-gray-300 text-center transition-colors duration-300 ${
                 activeTab === tab
                   ? 'bg-indigo-400 text-white shadow-lg'
                   : 'bg-white text-gray-700 hover:bg-gray-100 hover:shadow'

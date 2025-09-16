@@ -13,11 +13,14 @@ import {
   Video,
   FileText,
   PieChart,
+  Pill,
+  Boxes,
   Droplet,
   CreditCard,
   UserCheck,
   HelpCircle,
   LogOut,
+  Syringe
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import SidebarProfile from "./DoctorSidebarProfile";
@@ -77,13 +80,13 @@ const Sidebar = ({ role }) => {
             id: 7,
             path: "/medicine-preparation",
             name: "Medicine Preparation",
-            icon: Package,
+            icon: Syringe,
           },
           {
             id: 8,
             path: "/medicine-preparation/preparation",
             name: "Medicine Preparation Dashboard",
-            icon: Package,
+            icon: Pill,
           },
           {
             id: 9,
@@ -106,24 +109,18 @@ const Sidebar = ({ role }) => {
           },
           {
             id: 13,
-            path: "/accounts",
-            name: "Accounts",
-            icon: CreditCard,
-          },
-          {
-            id: 14,
             path: "/doctor-dashboard/all",
             name: "Doctor CRM",
             icon: Stethoscope,
           },
           {
-            id: 15,
+            id: 14,
             path: "/allocation",
             name: "Doctor Allocation",
             icon: UserCheck,
           },
-          { id: 16, path: "/docsettings", name: "Settings", icon: Settings },
-          { id: 17, path: "/hrm", name: "HR Management", icon: Users },
+          { id: 15, path: "/docsettings", name: "Settings", icon: Settings },
+          { id: 16, path: "/hrm", name: "HR Management", icon: Users },
         ]
       : role === "assistant-doctor"
       ? [

@@ -1,5 +1,8 @@
 import React, { useState } from "react";
 import Layout from "../../components/patient components/Layout";
+import config from "../../config";
+
+const API_URL = config.API_URL;
 
 const Settings = () => {
   const [activeTab, setActiveTab] = useState("password");
@@ -8,6 +11,7 @@ const Settings = () => {
   const [oldPassword, setOldPassword] = useState("");
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
 
   // General notification settings
   const [emailNotifications, setEmailNotifications] = useState(false);
@@ -20,12 +24,51 @@ const Settings = () => {
   const [ringtone, setRingtone] = useState("");
   const [voiceAlerts, setVoiceAlerts] = useState(false);
 
-  const handlePasswordChange = (e) => {
+  const handlePasswordChange = async (e) => {
     e.preventDefault();
-    if (newPassword === confirmPassword) {
-      alert("Password changed successfully!");
-    } else {
+    
+    // Validation
+    if (newPassword !== confirmPassword) {
       alert("New passwords do not match!");
+      return;
+    }
+
+    if (newPassword.length < 6) {
+      alert("New password must be at least 6 characters long!");
+      return;
+    }
+
+    setIsLoading(true);
+
+    try {
+      const response = await fetch(`${API_URL}/api/otp/changePassword`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          oldPassword: oldPassword,
+          newPassword: newPassword,
+          retypedNewPassword: confirmPassword,
+        }),
+      });
+
+      const data = await response.json();
+
+      if (response.ok && data.success) {
+        alert(data.message || "Password changed successfully!");
+        // Clear the form
+        setOldPassword("");
+        setNewPassword("");
+        setConfirmPassword("");
+      } else {
+        alert(data.message || "Failed to change password. Please try again.");
+      }
+    } catch (error) {
+      console.error("Error changing password:", error);
+      alert("An error occurred while changing password. Please try again.");
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -75,6 +118,7 @@ const Settings = () => {
                     onChange={(e) => setOldPassword(e.target.value)}
                     className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
                     required
+                    disabled={isLoading}
                   />
                 </div>
 
@@ -89,6 +133,8 @@ const Settings = () => {
                     onChange={(e) => setNewPassword(e.target.value)}
                     className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
                     required
+                    disabled={isLoading}
+                    minLength={6}
                   />
                 </div>
 
@@ -103,15 +149,22 @@ const Settings = () => {
                     onChange={(e) => setConfirmPassword(e.target.value)}
                     className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
                     required
+                    disabled={isLoading}
+                    minLength={6}
                   />
                 </div>
 
                 <div className="mb-4 mt-10 flex justify-center">
                   <button
                     type="submit"
-                    className="bg-blue-600 text-white py-2 px-4 rounded-full shadow-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+                    disabled={isLoading}
+                    className={`py-2 px-4 rounded-full shadow-md focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 ${
+                      isLoading
+                        ? "bg-gray-400 text-white cursor-not-allowed"
+                        : "bg-blue-600 text-white hover:bg-blue-700"
+                    }`}
                   >
-                    Change Password
+                    {isLoading ? "Changing Password..." : "Change Password"}
                   </button>
                 </div>
               </form>
@@ -247,4 +300,3 @@ const Settings = () => {
 };
 
 export default Settings;
-

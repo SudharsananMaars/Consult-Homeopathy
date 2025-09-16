@@ -66,17 +66,22 @@ useEffect(() => {
 
         {/* Summary Cards */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div className="bg-white rounded-xl shadow p-6">
-            <h2 className="text-lg font-medium text-gray-700 mb-2">Total Patients</h2>
-            <p className="text-3xl font-bold text-blue-600">{totalPatients}</p>
-          </div>
+  {/* Total Patients Card */}
+  <div className="bg-white rounded-xl shadow p-6 border-l-4 border-blue-500">
+    <h2 className="text-lg font-medium text-gray-700 mb-3">Total Patients</h2>
+    <p className="text-3xl font-bold text-blue-600">{totalPatients}</p>
+  </div>
 
-          <div className="bg-white rounded-xl shadow p-6">
-            <h2 className="text-lg font-medium text-gray-700 mb-2">Medication Compliance</h2>
-            <p className="text-3xl font-bold text-green-600">{compliancePercent}%</p>
-            <p className="text-sm text-gray-500 mt-1">{totalTaken} / {totalDoses} doses taken</p>
-          </div>
-        </div>
+  {/* Medication Compliance Card */}
+  <div className="bg-white rounded-xl shadow p-6 border-l-4 border-green-500">
+    <h2 className="text-lg font-medium text-gray-700 mb-2">Medication Compliance</h2>
+    <p className="text-3xl font-bold text-green-600">{compliancePercent}%</p>
+    <p className="text-sm text-gray-500 mt-1">
+      {totalTaken} / {totalDoses} doses taken
+    </p>
+  </div>
+</div>
+
 
         {/* Table + Date Picker */}
         <div className="bg-white rounded-xl shadow p-6 space-y-4">
