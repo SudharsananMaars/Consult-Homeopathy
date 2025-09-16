@@ -264,7 +264,7 @@ const FeedbackPanel = () => {
             <select
               value={selectedUseCase}
               onChange={(e) => setSelectedUseCase(e.target.value)}
-              className="w-full p-3 border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 bg-white font-bold text-sm"
+              className="w-full p-3 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 bg-white font-bold text-sm"
             >
               <option value="">Select Messenger Use Case</option>
               {useCases
@@ -282,7 +282,7 @@ const FeedbackPanel = () => {
               onChange={(e) => setFeedbackPurpose(e.target.value)}
               placeholder="Feedback Purpose"
               rows={4}
-              className="w-full p-3 border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 font-semibold text-sm resize-none"
+              className="w-full p-3 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 font-semibold text-sm resize-none"
             />
 
             {/* Total Questions */}
@@ -293,7 +293,7 @@ const FeedbackPanel = () => {
               <select
                 value={totalQuestions}
                 onChange={(e) => setTotalQuestions(Number(e.target.value))}
-                className="flex-1 p-3 border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 bg-white font-bold text-sm"
+                className="flex-1 p-3 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 bg-white font-bold text-sm"
               >
                 {[...Array(10).keys()].map((i) => (
                   <option key={i + 1} value={i + 1}>
@@ -306,7 +306,7 @@ const FeedbackPanel = () => {
             <select
               value={afterXHours}
               onChange={(e) => setAfterXHours(e.target.value)}
-              className="w-full p-3 border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 bg-white font-bold text-sm"
+              className="w-full p-3 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 bg-white font-bold text-sm"
             >
               <option value="immediate">Immediate after closure</option>
               <option value="after">After X hours</option>
@@ -324,7 +324,7 @@ const FeedbackPanel = () => {
             ${
               afterXHours !== "after"
                 ? "bg-gray-100 border-gray-200 text-gray-400 cursor-not-allowed"
-                : "bg-white border-gray-300 focus:ring-indigo-500 focus:border-indigo-500 text-gray-700"
+                : "bg-white border-gray-300 focus:ring-blue-500 focus:border-blue-500 text-gray-700"
             }`}
               >
                 {[...Array(24).keys()].map((i) => (
@@ -377,7 +377,7 @@ const FeedbackPanel = () => {
                           value={editingText}
                           onChange={(e) => setEditingText(e.target.value)}
                           onKeyDown={(e) => handleKeyDown(e, index)}
-                          className="w-full border border-gray-300 rounded-md p-2 text-sm font-semibold focus:ring-indigo-500 focus:border-indigo-500"
+                          className="w-full border border-gray-300 rounded-md p-2 text-sm font-semibold focus:ring-blue-500 focus:border-blue-500"
                           autoFocus
                         />
                       ) : (
@@ -400,7 +400,7 @@ const FeedbackPanel = () => {
                       ) : (
                         <button
                           onClick={() => handleEditClick(index)}
-                          className="text-gray-500 hover:text-indigo-600 transition-colors"
+                          className="text-gray-500 hover:text-blue-600 transition-colors"
                         >
                           <Edit2 size={18} />
                         </button>

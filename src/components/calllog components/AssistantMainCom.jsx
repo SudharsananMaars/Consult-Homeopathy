@@ -71,7 +71,7 @@ const AssistantMainCom = () => {
 
   if (isLoading) {
     return <div className="flex justify-center items-center h-screen">
-      <div className="animate-spin rounded-full h-32 w-32 border-t-2 border-b-2 border-indigo-300"></div>
+      <div className="animate-spin rounded-full h-32 w-32 border-t-2 border-b-2 border-blue-300"></div>
     </div>;
   }
 
@@ -108,7 +108,7 @@ const AssistantMainCom = () => {
         <div className="relative md:hidden">
           <button
             onClick={toggleDropdown}
-            className="w-full bg-white border border-gray-300 rounded-md py-2 px-4 flex items-center justify-between text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-300"
+            className="w-full bg-white border border-gray-300 rounded-md py-2 px-4 flex items-center justify-between text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-300"
           >
             {activeTab.charAt(0).toUpperCase() + activeTab.slice(1)}
             <FaChevronDown className={`ml-2 transition-transform duration-200 ${isDropdownOpen ? 'transform rotate-180' : ''}`} />
@@ -144,7 +144,7 @@ const AssistantMainCom = () => {
               onClick={() => handleTabClick(tab)}
               className={`flex-1 py-3 px-6 text-sm font-medium rounded-md border border-gray-300 text-center transition-colors duration-300 ${
                 activeTab === tab
-                  ? 'bg-indigo-400 text-white shadow-lg'
+                  ? 'bg-blue-400 text-white shadow-lg'
                   : 'bg-white text-gray-700 hover:bg-gray-100 hover:shadow'
               }`}
             >

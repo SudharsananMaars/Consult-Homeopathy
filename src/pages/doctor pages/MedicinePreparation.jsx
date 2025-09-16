@@ -123,7 +123,7 @@ const MedicinePreparation = () => {
                           <div key={medicineIndex} className="bg-white border rounded-lg p-4">
                             <div className="flex items-center justify-between">
                               <div>
-                                <h4 className="text-md font-bold text-gray-800 mb-1">
+                                <h4 className="text-lg font-bold text-gray-800 mb-1">
                                   {medicine.medicineName}
                                 </h4>
                                 <p className="text-sm text-gray-600">

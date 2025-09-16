@@ -8,6 +8,7 @@ import config from '../../config';
 import CommentCell from './CommentCell';
 import DoctorAllocationCell from './DoctorAllocationComponent';
 import RecordingsButton from './RecordingsButton';
+
 const LostTable = () => {
   const [patients, setPatients] = useState([]);
   const [searchTerm, setSearchTerm] = useState('');
@@ -335,7 +336,7 @@ const LostTable = () => {
           onClick={() => scrollToSection(section.id)}
         className={`flex-grow px-4 py-2 rounded-lg transition-colors duration-200 text-center whitespace-nowrap ${
             activeSection === section.id
-              ? 'bg-indigo-400 text-white'
+              ? 'bg-blue-400 text-white'
               : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
           }`}
         >
@@ -346,58 +347,84 @@ const LostTable = () => {
   );
 
   const renderTableHeader = () => (
-    <thead className="sticky top-0 z-10 bg-blue-500">
-      <tr>
-        {sections.flatMap(section => section.columns).map(column => (
-          <th key={column} className="p-3 text-sm font-semibold text-left text-white whitespace-nowrap">
-            {column}
-          </th>
-        ))}
+    <thead>
+      <tr className="border-b border-blue-200">
+        {sections.flatMap((section, sectionIndex) => 
+          section.columns.map((column, columnIndex) => {
+            const isEvenColumn = (sectionIndex * section.columns.length + columnIndex) % 2 === 0;
+            return (
+              <th 
+                key={column} 
+                className={`${isEvenColumn ? 'bg-gray-100' : 'bg-white'} text-center p-4 font-bold text-gray-700 text-sm whitespace-nowrap`}
+              >
+                {column}
+              </th>
+            );
+          })
+        )}
       </tr>
     </thead>
   );
 
   const renderTableBody = () => (
-    <tbody className="bg-white divide-y divide-gray-200">
-      {filteredPatients.map((patient, index) => (
-        <tr key={patient._id} className="hover:bg-[#f5f5f5] transition-colors duration-200">
-          {sections.flatMap(section => section.columns).map(column => (
-            <td key={column} className="px-4 py-3 whitespace-nowrap text-sm text-gray-900">
-              {renderCellContent(patient, column, index)}
-            </td>
-          ))}
+    <tbody>
+      {filteredPatients && filteredPatients.length > 0 ? (
+        filteredPatients.map((patient, index) => (
+          <tr key={patient._id} className="border-b border-blue-200 hover:bg-gray-50 transition-colors duration-200">
+            {sections.flatMap((section, sectionIndex) => 
+              section.columns.map((column, columnIndex) => {
+                const isEvenColumn = (sectionIndex * section.columns.length + columnIndex) % 2 === 0;
+                return (
+                  <td 
+                    key={column} 
+                    className={`${isEvenColumn ? 'bg-gray-100' : 'bg-white'} p-4 text-gray-900 text-center text-sm`}
+                  >
+                    {renderCellContent(patient, column, index)}
+                  </td>
+                );
+              })
+            )}
+          </tr>
+        ))
+      ) : (
+        <tr>
+          <td
+            colSpan={sections.flatMap(section => section.columns).length}
+            className="bg-white text-center text-gray-500 py-6"
+          >
+            No patients found.
+          </td>
         </tr>
-      ))}
+      )}
     </tbody>
   );
-
 
   const renderCellContent = (patient, column, index) => {
     switch (column) {
       case "S.No":
-        return index + 1;
+        return <span className="font-medium text-gray-900">{index + 1}</span>;
       case "Patient Type":
-        return patient.newExisting || '---';
+        return <span className="text-gray-600">{patient.newExisting || '---'}</span>;
       case "Who is the Consultation for":
-        return patient.medicalDetails.consultingFor || '---';
+        return <span className="text-gray-600">{patient.medicalDetails.consultingFor || '---'}</span>;
       case "Name":
-        return patient.name;
+        return <span className="font-medium text-gray-900">{patient.name}</span>;
       case "Phone Number":
-        return patient.phone;
+        return <span className="text-gray-600">{patient.phone}</span>;
       case "Whatsapp Number":
-        return patient.whatsappNumber || '---';
+        return <span className="text-gray-600">{patient.whatsappNumber || '---'}</span>;
       case "Age":
-        return patient.age || '---';
+        return <span className="text-gray-600">{patient.age || '---'}</span>;
       case "Email":
-        return patient.email || '---';
+        return <span className="text-gray-600">{patient.email || '---'}</span>;
       case "Gender":
-        return patient.gender || '---';
+        return <span className="text-gray-600">{patient.gender || '---'}</span>;
       case "Current Location":
-        return patient.currentLocation || '---';
+        return <span className="text-gray-600">{patient.currentLocation || '---'}</span>;
       case "Consulting For":
-        return patient.medicalDetails.diseaseName || '---';
+        return <span className="text-gray-600">{patient.medicalDetails.diseaseName || '---'}</span>;
       case "If disease type is not available":
-        return patient.medicalDetails.diseaseName || '---';
+        return <span className="text-gray-600">{patient.medicalDetails.diseaseName || '---'}</span>;
       case "Acute / Chronic":
         return (
           <div>
@@ -414,7 +441,7 @@ const LostTable = () => {
                 <option value="Chronic">Chronic</option>
               </select>
             ) : (
-              <div className="flex items-center space-x-2">
+              <div className="flex items-center justify-center space-x-2">
                 <span className={`font-medium ${patient.medicalDetails?.diseaseType?.edit ? 'text-blue-600' : 'text-gray-700'}`}>
                   {patient.medicalDetails?.diseaseType?.name || 'Not specified'}  {/* Optional chaining */}
                 </span>
@@ -434,13 +461,13 @@ const LostTable = () => {
           </div>
         );   
       case "Patient Profile":
-        return patientFormsStatus[patient._id] || 'Loading...';
+        return <span className="text-gray-600">{patientFormsStatus[patient._id] || 'Loading...'}</span>;
       case "Enquiry Status":
         return (
           <select
             value={patient.medicalDetails.enquiryStatus || ''}
             onChange={(e) => handleEnquiryStatusChange(patient._id, e.target.value)}
-            className="border border-gray-300 rounded px-2 py-1 text-sm"
+            className="border border-gray-300 rounded px-2 py-1 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-blue-500"
           >
             <option value="">Select status</option>
             <option value="Interested">Interested</option>
@@ -449,102 +476,118 @@ const LostTable = () => {
           </select>
         );
       case "Role and Activity Status":
-        return patient.medicalDetails.follow || '---';
+        return <span className="text-gray-600">{patient.medicalDetails.follow || '---'}</span>;
       case "Messenger Comment":
-        return patient.medicalDetails.followComment || '---';
+        return <span className="text-gray-600">{patient.medicalDetails.followComment || '---'}</span>;
       case "Omni Channel":
-        return patient.patientEntry || '---';
+        return <span className="text-gray-600">{patient.patientEntry || '---'}</span>;
       case "Message Sent":
-        // return patient.messageSent?.status ? 'Yes' : 'No';
         return patient.medicalDetails.messageSent?.status ? (
-          "Sent"
+          <span className="bg-green-100 text-green-600 font-semibold px-3 py-1 rounded-full text-xs">
+            Sent
+          </span>
         ) : (
           <button
-            className="send-message-button"
+            className="bg-blue-500 hover:bg-blue-600 text-white font-medium px-3 py-1 rounded-full text-xs transition"
             onClick={() => sendMessage(patient)}
           >
             Send Message
           </button>
         );
       case "Time Stamp":
-        return patient.medicalDetails.messageSent?.timeStamp;
+        return <span className="text-gray-600">{patient.medicalDetails.messageSent?.timeStamp}</span>;
       case "Make a Call":
         return (
           <button 
             onClick={() => makeCall(patient)}
-            className="inline-flex items-center px-3 py-2 border border-transparent text-sm leading-4 font-medium rounded-md text-white bg-[#1a237e] hover:bg-[#000051] focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#534bae] transition-all duration-300"
+            className="bg-blue-500 hover:bg-blue-600 text-white font-medium px-3 py-1 rounded-full text-xs transition inline-flex items-center"
           >
-            <FaPhoneAlt className="mr-2 -ml-0.5 h-4 w-4" /> Make Call
+            <FaPhoneAlt className="mr-1 h-3 w-3" /> Call
           </button>
         );
       case "Recordings":
         return (
-          // <button
-          //   onClick={() => viewRecordings(patient)}
-          //   className="inline-flex items-center px-3 py-2 border border-transparent text-sm leading-4 font-medium rounded-md text-white bg-[#1a237e] hover:bg-[#000051] focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#534bae] transition-all duration-300"
-          // >
-          //   <FaRecordVinyl className="mr-2 -ml-0.5 h-4 w-4" /> View Recordings
-          // </button>
-          <div>
-                  <RecordingsButton patient={patient} />
+          <div className="flex justify-center">
+            <RecordingsButton patient={patient} />
           </div>
         );
-        case "Follow up Comments":
-          return (
-              <CommentCell 
-                  patient={patient} 
-                  API_URL={API_URL}
-                  onCommentAdded={(updatedPatient) => {
-                    if (updatedPatient && updatedPatient._id) {
-                      setPatients((prevPatients) =>
-                        prevPatients.map((p) =>
-                          p._id === updatedPatient._id
-                            ? {
-                                ...p,
-                                medicalDetails: {
-                                  ...p.medicalDetails,
-                                  comments: updatedPatient.medicalDetails.comments || [],
-                                },
-                              }
-                            : p
-                        )
-                      );
-                    }
-                  }}
-              />
-          );
-      
+      case "Follow up Comments":
+        return (
+          <div className="flex justify-center">
+            <CommentCell 
+              patient={patient} 
+              API_URL={API_URL}
+              onCommentAdded={(updatedPatient) => {
+                if (updatedPatient && updatedPatient._id) {
+                  setPatients((prevPatients) =>
+                    prevPatients.map((p) =>
+                      p._id === updatedPatient._id
+                        ? {
+                            ...p,
+                            medicalDetails: {
+                              ...p.medicalDetails,
+                              comments: updatedPatient.medicalDetails.comments || [],
+                            },
+                          }
+                        : p
+                    )
+                  );
+                }
+              }}
+            />
+          </div>
+        );
       case "Out of network":
-        return patient.outOfNetwork || '---';
+        return <span className="text-gray-600">{patient.outOfNetwork || '---'}</span>;
       case "appDownload":
-        return patient.appDownload != '0' ? <FaDownload className='green' /> : <FaTimesCircle className='red' />;
+        return patient.appDownload != '0' ? 
+          <FaDownload className='text-green-500 mx-auto' /> : 
+          <FaTimesCircle className='text-red-500 mx-auto' />;
       case "Call Status":
-        return getCallStatus(patient);
+        return (
+          <span className={`px-3 py-1 rounded-full text-xs font-semibold ${
+            getCallStatus(patient) === 'Completed' ? 'bg-green-100 text-green-600' :
+            getCallStatus(patient) === 'Lost' ? 'bg-red-100 text-red-600' :
+            'bg-yellow-100 text-yellow-600'
+          }`}>
+            {getCallStatus(patient)}
+          </span>
+        );
       case "Call Attempted tracking":
-        return patient.medicalDetails.callCount || 0;
+        return <span className="text-gray-600">{patient.medicalDetails.callCount || 0}</span>;
       case "Conversion Status":
-        return patient.appointmentFixed === 'Yes' ? <FaCheckCircle className='green' /> : <FaTimesCircle className='red' />;
+        return patient.appointmentFixed === 'Yes' ? 
+          <FaCheckCircle className='text-green-500 mx-auto' /> : 
+          <FaTimesCircle className='text-red-500 mx-auto' />;
       case "Consultation payment":
-        return patient.appointmentFixed === 'Yes' ? <FaCheckCircle className='green' /> : <FaTimesCircle className='red' />;
+        return patient.appointmentFixed === 'Yes' ? 
+          <FaCheckCircle className='text-green-500 mx-auto' /> : 
+          <FaTimesCircle className='text-red-500 mx-auto' />;
       case "Appointment Fixed":
-        return patient.appointmentFixed === 'Yes' ? <FaCheckCircle className='green' /> : <FaTimesCircle className='red' />;
+        return patient.appointmentFixed === 'Yes' ? 
+          <FaCheckCircle className='text-green-500 mx-auto' /> : 
+          <FaTimesCircle className='text-red-500 mx-auto' />;
       case "Medicine & Shipping Payment confirmation":
-        return patient.medicalPayment === 'Yes' ? <FaCheckCircle className='green' /> : <FaTimesCircle className='red' />;
+        return patient.medicalPayment === 'Yes' ? 
+          <FaCheckCircle className='text-green-500 mx-auto' /> : 
+          <FaTimesCircle className='text-red-500 mx-auto' />;
       case "Role Allocation":
         return (
-          <DoctorAllocationCell 
-            patient={patient}
-            currentDoctor={getDoctorForPatient(patient)}
-            onAllocationChange={(newDoctor) => {
-              setIndividualAllocations(prev => ({
-                ...prev,
-                [patient._id]: newDoctor
-              }));
-            }}
-          />
+          <div className="flex justify-center">
+            <DoctorAllocationCell 
+              patient={patient}
+              currentDoctor={getDoctorForPatient(patient)}
+              onAllocationChange={(newDoctor) => {
+                setIndividualAllocations(prev => ({
+                  ...prev,
+                  [patient._id]: newDoctor
+                }));
+              }}
+            />
+          </div>
         );
       default:
-        return '---';
+        return <span className="text-gray-600">---</span>;
     }
   };
 
@@ -590,9 +633,9 @@ const LostTable = () => {
       <div className="bg-white rounded-lg shadow-md overflow-hidden">
         <div className="overflow-x-auto" ref={tableRef}>
           <div className="inline-block min-w-full align-middle">
-            <div className="overflow-hidden border-b border-gray-200">
+            <div className="overflow-hidden">
               <div className="max-h-[calc(100vh-280px)] overflow-y-auto">
-                <table className="min-w-full mx-2 divide-y divide-gray-200">
+                <table className="w-full overflow-hidden rounded-lg">
                   {renderTableHeader()}
                   {renderTableBody()}
                 </table>

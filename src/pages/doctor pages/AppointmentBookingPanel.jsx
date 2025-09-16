@@ -126,7 +126,7 @@ const CustomTimePicker = ({ value, onChange, isEditing }) => {
         />
         <div
           className={`border ${
-            isEditing ? "border-indigo-500" : "border-gray-300"
+            isEditing ? "border-blue-500" : "border-gray-300"
           } text-gray-900 text-sm font-semibold rounded-lg block w-full pl-10 pr-3 py-2`}
         >
           {formatTo12Hour(value)}

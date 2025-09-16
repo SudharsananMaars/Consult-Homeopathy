@@ -84,7 +84,7 @@ const HomePage = () =>
         </div>
 
         {/* View Invoices Container */}
-        <div className="flex flex-col items-center justify-center bg-indigo-200 text-gray-700 shadow-lg rounded-lg p-6 w-40 h-52 md:w-52 md:h-60">
+        <div className="flex flex-col items-center justify-center bg-blue-200 text-gray-700 shadow-lg rounded-lg p-6 w-40 h-52 md:w-52 md:h-60">
           <img
             src={consultation}
             alt="View Invoices"

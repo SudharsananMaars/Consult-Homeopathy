@@ -92,7 +92,7 @@ const DoctorSettings = () => {
           <h2 className="text-xl font-semibold text-gray-700">Selected Platform: {selectedPlatform}</h2>
           <button
             onClick={handleSaveSettings}
-            className="mt-4 bg-indigo-500 hover:bg-indigo-600 text-white font-bold py-2 px-6 rounded shadow-md transition duration-300"
+            className="mt-4 bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-6 rounded shadow-md transition duration-300"
           >
             Save Settings
           </button>

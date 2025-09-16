@@ -46,7 +46,7 @@ const AmendmentHistory = () => {
 
   return (
     <div className="max-w-5xl mx-auto p-6">
-      <h1 className="text-3xl font-bold mb-8 text-indigo-700 text-center">Amendment History</h1>
+      <h1 className="text-3xl font-bold mb-8 text-blue-700 text-center">Amendment History</h1>
       <div className="space-y-8">
         {logs.map((log) => (
           <div key={log._id} className="bg-white rounded-lg shadow-md p-6 border border-gray-200">

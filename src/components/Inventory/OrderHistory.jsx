@@ -103,7 +103,7 @@ const OrderHistory = () => {
 
   return (
     <div className="max-w-4xl mx-auto px-4 py-8">
-      <h2 className="text-3xl font-semibold mb-8 text-center text-indigo-700">Order History</h2>
+      <h2 className="text-3xl font-semibold mb-8 text-center text-blue-700">Order History</h2>
       <div className="space-y-8">
         {orders.map((order) => (
           <div
@@ -111,7 +111,7 @@ const OrderHistory = () => {
             className="bg-white rounded-xl shadow-lg p-6 hover:shadow-2xl transition-shadow"
           >
             <div className="flex flex-wrap items-center justify-between mb-4">
-              <h3 className="text-lg font-bold text-indigo-800">Order #{order.orderNumber}</h3>
+              <h3 className="text-lg font-bold text-blue-800">Order #{order.orderNumber}</h3>
               <div className="flex items-center gap-3">
                 <span
                   className={`px-3 py-1 rounded-full text-sm font-medium ${

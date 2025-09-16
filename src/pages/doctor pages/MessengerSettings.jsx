@@ -5,14 +5,36 @@ import ShipmentOptionsCard from './ShipmentOptionsCard.jsx';
 
 const MessengerSettings = () => {
   return (
-  <div > 
-    <h2 className='font-bold text-xl'>Messanger</h2>
-        <FeedbackPanel />
-        <AppointmentBookingPanel />
-        <PaymentIntimationPanel/>
-        <ShipmentOptionsCard/>
+    <div className="space-y-8">
+      <h2 className="text-xl font-semibold text-gray-800 mb-6">Messenger</h2>
+      
+      <div className="space-y-6">
+        {/* Wrapper to ensure consistent alignment for all components */}
+        <div className="w-full">
+          <div className="max-w-6xl mx-auto">
+            <FeedbackPanel />
+          </div>
+        </div>
+        
+        <div className="w-full">
+          <div className="max-w-6xl mx-auto">
+            <AppointmentBookingPanel />
+          </div>
+        </div>
+        
+        <div className="w-full">
+          <div className="max-w-6xl mx-auto">
+            <PaymentIntimationPanel />
+          </div>
+        </div>
+        
+        <div className="w-full">
+          <div className="max-w-6xl mx-auto">
+            <ShipmentOptionsCard />
+          </div>
+        </div>
       </div>
-    
+    </div>
   );
 };
 

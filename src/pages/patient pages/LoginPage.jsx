@@ -440,7 +440,7 @@ const LoginPage = () => {
                     maxLength="1"
                     onChange={(e) => handleChange(e, index)}
                     onKeyDown={(e) => handleKeyDown(e, index)}
-                    className="w-12 h-12 text-center text-blue-500 text-lg border border-blue-400 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
+                    className="w-12 h-12 text-center text-blue-500 text-lg border border-blue-400 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
                   />
                 ))}
               </div>
