@@ -199,7 +199,9 @@ const LoginPage = () => {
         if (userType === "Doctor") {
           localStorage.setItem("role", response.data.role);
           navigate("/dashboard");
-        } else if (userType === "Patient") {
+
+        } 
+        else if (userType === "Patient") {
           navigate("/home");
         }
         
@@ -231,7 +233,7 @@ const LoginPage = () => {
 
     if (response.data.success) {
       // Update this line to match your API response structure
-      const { accessToken, userId, name, role, userType } = response.data;
+      const { accessToken, userId, name, role, userType, requiresPasswordReset} = response.data;
 
       // Store token and user data with safety checks
       if (accessToken) localStorage.setItem("token", accessToken);
@@ -255,7 +257,10 @@ const LoginPage = () => {
       });
 
       // Navigate based on user type (removed requiresPasswordReset logic since API doesn't provide it)
-      if (userType === "Doctor") {
+      if (requiresPasswordReset) {
+        navigate("/settings");
+    }
+      else if (userType === "Doctor") {
         localStorage.setItem("role", role);
         navigate("/dashboard");
       } else {

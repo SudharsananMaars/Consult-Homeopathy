@@ -2513,36 +2513,6 @@ const [polishingNote, setPolishingNote] = useState(false);
               />
             </div>
           </div>
-          <div className="mt-4">
-  <label className="block text-sm font-medium mb-1">
-    Special Note
-  </label>
-  <div className="relative">
-    <textarea
-      value={specialNote}
-      onChange={(e) => setSpecialNote(e.target.value)}
-      className="w-full border rounded px-3 py-2 pr-20"
-      rows="3"
-      placeholder="Enter special notes (will be automatically improved)..."
-    />
-    <button
-      type="button"
-      onClick={handlePolishSpecialNote}
-      disabled={polishingNote || !specialNote.trim()}
-      className="absolute top-2 right-2 px-3 py-1 bg-blue-600 text-white rounded text-sm hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed flex items-center"
-    >
-      {polishingNote ? (
-        <>
-          <FaSpinner className="animate-spin mr-1" />
-          Polishing...
-        </>
-      ) : (
-        "Polish Text"
-      )}
-    </button>
-  </div>
-</div>
-
           {/* Discount Section */}
 <div className="bg-white rounded-lg shadow p-6">
   <h2 className="text-lg font-semibold mb-4">Discount</h2>
@@ -2588,37 +2558,69 @@ const [polishingNote, setPolishingNote] = useState(false);
   </div>
 </div>
 
+<div className="mt-4">
+  <label className="block text-sm font-medium mb-1">
+    Special Note
+  </label>
+  <div className="relative">
+    <textarea
+      value={specialNote}
+      onChange={(e) => setSpecialNote(e.target.value)}
+      className="w-full border rounded px-3 py-2 pr-20"
+      rows="3"
+      placeholder="Enter special notes (will be automatically improved)..."
+    />
+    <button
+      type="button"
+      onClick={handlePolishSpecialNote}
+      disabled={polishingNote || !specialNote.trim()}
+      className="absolute top-2 right-2 px-3 py-1 bg-blue-600 text-white rounded text-sm hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed flex items-center"
+    >
+      {polishingNote ? (
+        <>
+          <FaSpinner className="animate-spin mr-1" />
+          Polishing...
+        </>
+      ) : (
+        "Polish Text"
+      )}
+    </button>
+  </div>
+</div>
+
           {/* Action Buttons */}
           <div className="flex justify-between items-center">
-            <button
-              onClick={() => setShowPrescriptionTable(true)}
-              className="px-6 py-2 border border-gray-300 rounded hover:bg-gray-50"
-            >
-              Back to Prescriptions
-            </button>
-            <div className="space-x-4">
-              <button
-                onClick={() => navigate("/doctor-dashboard")}
-                className="px-6 py-2 border border-gray-300 rounded hover:bg-gray-50"
-              >
-                Cancel
-              </button>
-              <button
-                onClick={handleSavePrescription}
-                disabled={saving}
-                className="px-6 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed flex items-center"
-              >
-                {saving ? (
-                  <>
-                    <FaSpinner className="animate-spin mr-2" />
-                    Saving...
-                  </>
-                ) : (
-                  "Save Prescription"
-                )}
-              </button>
-            </div>
-          </div>
+  <button
+    onClick={() => setShowPrescriptionTable(true)}
+    className="px-6 py-2 border border-gray-300 rounded hover:bg-gray-50"
+  >
+    Back to Prescriptions
+  </button>
+
+  <div className="flex items-center space-x-4">
+    <button
+      onClick={() => navigate("/doctor-dashboard")}
+      className="px-6 py-2 border border-gray-300 rounded hover:bg-gray-50 flex items-center"
+    >
+      Cancel
+    </button>
+    <button
+      onClick={handleSavePrescription}
+      disabled={saving}
+      className="px-6 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed flex items-center"
+    >
+      {saving ? (
+        <>
+          <FaSpinner className="animate-spin mr-2" />
+          Saving...
+        </>
+      ) : (
+        "Save Prescription"
+      )}
+    </button>
+  </div>
+</div>
+
         </div>
       )}
 

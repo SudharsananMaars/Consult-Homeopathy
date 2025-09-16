@@ -40,11 +40,14 @@ const Settings = () => {
 
     setIsLoading(true);
 
+    const token = localStorage.getItem("token");
+
     try {
       const response = await fetch(`${API_URL}/api/otp/changePassword`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
+           Authorization: `Bearer ${token}`,
         },
         body: JSON.stringify({
           oldPassword: oldPassword,
