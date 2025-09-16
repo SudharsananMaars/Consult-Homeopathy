@@ -17,7 +17,7 @@ const PrescriptionViewModal = () => {
   const [prescriptionData, setPrescriptionData] = useState(null);
   const [groupedPrescriptionData, setGroupedPrescriptionData] = useState(null);
   const [loading, setLoading] = useState(false);
-  
+
   const { prescriptionId } = useParams();
   const apiUrl = config.API_URL;
   const accessToken = localStorage.getItem("token");
@@ -26,7 +26,7 @@ const PrescriptionViewModal = () => {
     const fetchPrescriptionData = async () => {
       try {
         setLoading(true);
-        
+
         // Fetch from first API (existing)
         console.log(
           "Prescription api:",
@@ -40,23 +40,23 @@ const PrescriptionViewModal = () => {
             },
           }
         );
-        
+
         const firstData = firstResponse.data;
         console.log("First API - Prescription data:", firstData);
-        
+
         if (firstData.success) {
           setPrescriptionData(firstData.data);
-          
+
           // Get userId from localStorage for second API call
           const userId = localStorage.getItem("userId");
-          
+
           if (userId) {
             // Fetch from second API
             console.log(
               "Second API call:",
               `${apiUrl}/api/patient/prescriptions/grouped/${userId}`
             );
-            
+
             try {
               const secondResponse = await axios.get(
                 `${apiUrl}/api/patient/prescriptions/grouped/${userId}`,
@@ -66,16 +66,21 @@ const PrescriptionViewModal = () => {
                   },
                 }
               );
-              
+
               const secondData = secondResponse.data;
-              console.log("Second API - Grouped prescription data:", secondData);
+              console.log(
+                "Second API - Grouped prescription data:",
+                secondData
+              );
               setGroupedPrescriptionData(secondData);
             } catch (secondApiError) {
               console.error("Failed to fetch from second API:", secondApiError);
               // Continue with first API data even if second API fails
             }
           } else {
-            console.warn("userId not found in localStorage, skipping second API call");
+            console.warn(
+              "userId not found in localStorage, skipping second API call"
+            );
           }
         } else {
           console.error("Error:", firstData.message);
@@ -99,15 +104,17 @@ const PrescriptionViewModal = () => {
     }
 
     // Find the prescription data for the current prescriptionId
-    const currentPrescription = groupedPrescriptionData.prescriptions[prescriptionId];
-    
+    const currentPrescription =
+      groupedPrescriptionData.prescriptions[prescriptionId];
+
     if (!currentPrescription || !currentPrescription.medicineDurations) {
       return null;
     }
 
     // Find the medicine duration for the specific medicine
     const medicineDuration = currentPrescription.medicineDurations.find(
-      (duration) => duration.medicineName.toLowerCase() === medicineName.toLowerCase()
+      (duration) =>
+        duration.medicineName.toLowerCase() === medicineName.toLowerCase()
     );
 
     return medicineDuration;
@@ -116,7 +123,7 @@ const PrescriptionViewModal = () => {
   // Function to format date range
   const formatDateRange = (startDate, endDate) => {
     if (!startDate || !endDate) return "N/A";
-    
+
     const start = new Date(startDate).toLocaleDateString("en-US", {
       month: "short",
       day: "numeric",
@@ -125,7 +132,7 @@ const PrescriptionViewModal = () => {
       month: "short",
       day: "numeric",
     });
-    
+
     return `${start} - ${end}`;
   };
 
@@ -247,7 +254,9 @@ const PrescriptionViewModal = () => {
   // Check if prescription has any frequent frequency items
   const hasFrequentItems = () => {
     if (!prescriptionData || !prescriptionData.prescriptionItems) return false;
-    return prescriptionData.prescriptionItems.some(item => item.frequencyType === "frequent");
+    return prescriptionData.prescriptionItems.some(
+      (item) => item.frequencyType === "frequent"
+    );
   };
 
   if (loading) {
@@ -288,197 +297,166 @@ const PrescriptionViewModal = () => {
 
         {/* Header */}
         <div className="relative z-10">
+          {/* Top Gradient Line */}
           <div className="h-1.5 bg-[linear-gradient(to_right,_#ec4899_50%,_#1e3a8a_50%)]"></div>
 
-          <div className="flex justify-between items-center px-4 py-3 bg-white border-b-4 border-blue-900">
-            <div className="flex items-center">
-              <img
-                src="/src/assets/images/doctor images/homeologo.png"
-                alt="Consult Homeopathy Icon"
-                className="w-64 h-28 mr-3"
-              />
+          <div className="relative bg-white">
+            <div className="flex justify-between items-center px-4 py-3">
+              <div className="flex items-center">
+                <img
+                  src="/src/assets/images/doctor images/homeologo.png"
+                  alt="Consult Homeopathy Icon"
+                  className="w-72 h-32 mr-3"
+                />
+              </div>
+
+              <div className="text-right text-gray-700 flex items-center space-x-4">
+                <div>
+                  <h2 className="text-blue-900 font-bold text-3xl">
+                    Dr. Katyayani Shrivastava
+                  </h2>
+                  <p className="text-xl text-gray-700">
+                    BHMS, PGDEMS (TISS - Mumbai)
+                  </p>
+                  <p className="text-blue-900 font-semibold text-xl">
+                    +91 9406949646
+                  </p>
+                </div>
+                <img
+                  src="/src/assets/images/doctor images/caduceusImg.png"
+                  alt="Medical Symbol"
+                  className="w-24 h-16 mt-1 ml-auto"
+                />
+              </div>
             </div>
 
-            <div className="text-right text-gray-700 flex items-center space-x-4">
-              <div className="">
-                <h2 className="text-blue-900 font-bold text-lg">
-                  Dr. Katyayani Shrivastava
-                </h2>
-                <p className="text-sm text-gray-700">
-                  BHMS, PGDEMS (TISS - Mumbai)
-                </p>
-                <p className="text-blue-900 font-semibold text-sm">
-                  +91 9406949646
-                </p>
-              </div>
-              <img
-                src="/src/assets/images/doctor images/caduceusImg.png"
-                alt="Medical Symbol"
-                className="w-24 h-16 mt-1 ml-auto"
-              />
-            </div>
+            {/* Bottom Gradient Line */}
+            <div className="absolute bottom-0 left-0 w-full h-1.5 bg-[linear-gradient(to_right,_#ec4899_50%,_#1e3a8a_50%)]"></div>
           </div>
         </div>
 
         {/* Prescription Body */}
         <div className="relative z-10 p-8">
-          <div className="mb-6 text-center">
-            <h3 className="text-lg font-bold text-gray-800 mb-2">
-              PRESCRIPTION
-            </h3>
-            <div className="text-sm text-gray-600">
+          <div className="flex justify-between items-center mb-6">
+            {/* ID on the left */}
+            <div className="text-lg font-semibold text-black-600">
               ID: {prescriptionData._id.slice(-8)}
             </div>
+
+            {/* Status on the right */}
+            <div className="text-sm text-gray-600">
+              {" "}
+              <span
+                className={`px-2 py-1 rounded text-xs font-medium ${
+                  prescriptionData.action.status === "In Progress"
+                    ? "bg-yellow-100 text-yellow-800"
+                    : "bg-green-100 text-green-800"
+                }`}
+              >
+                {prescriptionData.action.status}
+              </span>
+            </div>
           </div>
-          
+
           {/* Start and End Dates */}
-          <div className="flex justify-center gap-6 mb-6 text-sm text-gray-700">
-            <div className="flex items-center gap-2">
-              <Calendar className="w-4 h-4 text-blue-700" />
-              <span className="font-medium">Start Date:</span>
+          <div className="flex flex-col gap-2 mb-6 text-sm text-gray-700 text-left">
+            <div>
+              <span className="font-medium">Start Date:</span>{" "}
               <span>{formatDate(prescriptionData.startDate)}</span>
             </div>
-            <div className="flex items-center gap-2">
-              <Calendar className="w-4 h-4 text-blue-700" />
-              <span className="font-medium">End Date:</span>
+            <div>
+              <span className="font-medium">End Date:</span>{" "}
               <span>{formatDate(prescriptionData.endDate)}</span>
             </div>
           </div>
 
-          <div className="border border-gray-300 overflow-x-auto">
-            <table className="w-full border-collapse text-xs">
-              <thead>
-                <tr className="bg-gray-50">
-                  <th className="border px-3 py-2 font-semibold text-gray-700 text-left">
-                    S No
-                  </th>
-                  <th className="border px-3 py-2 font-semibold text-gray-700 text-center">
-                    Label
-                  </th>
-                  <th className="border px-3 py-2 font-semibold text-gray-700 text-center">
-                    Date
-                  </th>
-                  <th className="border px-3 py-2 font-semibold text-gray-700 text-left">
-                    Medicine Name
-                  </th>
-                  <th className="border px-3 py-2 font-semibold text-gray-700 text-left">
-                    Form
-                  </th>
-                  <th className="border px-3 py-2 font-semibold text-gray-700 text-left">
-                    Duration
-                  </th>
-                  {hasFrequentItems() ? (
-                    <th className="border px-3 py-2 font-semibold text-gray-700 text-left">
-                      Dosage
-                    </th>
-                  ) : (
-                    <>
-                      <th className="border px-3 py-2 font-semibold text-gray-700 text-left">
-                        Morning
-                      </th>
-                      <th className="border px-3 py-2 font-semibold text-gray-700 text-left">
-                        Noon
-                      </th>
-                      <th className="border px-3 py-2 font-semibold text-gray-700 text-left">
-                        Evening
-                      </th>
-                      <th className="border px-3 py-2 font-semibold text-gray-700 text-left">
-                        Night
-                      </th>
-                    </>
-                  )}
-                  <th className="border px-3 py-2 font-semibold text-gray-700 text-left">
-                    Consumption
-                  </th>
-                </tr>
-              </thead>
-              <tbody>
-                {prescriptionData.prescriptionItems.map((item, index) => {
-                  const timing = item.standardSchedule?.[0]?.timing || {};
-                  
-                  // Get medicine duration from second API
-                  const medicineDuration = getMedicineDuration(item.medicineName, prescriptionData._id);
-                  const dateRange = medicineDuration 
-                    ? formatDateRange(medicineDuration.startDate, medicineDuration.endDate)
-                    : item.label; // Fallback to label if no duration found
-                  
-                  return (
-                    <React.Fragment key={index}>
-                      <tr>
-                        <td className="border px-3 py-2">{index + 1}</td>
-                        <td className="border px-3 py-2 font-bold text-center">
-                          {item.label}
-                        </td>
-                        <td className="border px-3 py-2 font-bold text-center text-blue-700">
-                          {dateRange}
-                        </td>
-                        <td className="border px-3 py-2">
-                          {item.medicineName}
-                        </td>
-                        <td className="border px-3 py-2">{item.form}</td>
-                        <td className="border px-3 py-2">
-                          {item.duration}
-                          {item.standardSchedule?.[0]?.day && (
-                            <div className="text-blue-600 mt-1">
-                              {item.standardSchedule[0].day}
-                            </div>
-                          )}
-                        </td>
-                        {hasFrequentItems() ? (
-                          <td className="border px-3 py-2">
-                            {item.frequencyType === "frequent" ? (
-                              renderGroupedSchedule(item, "morning")
-                            ) : (
-                              <div className="space-y-1">
-                                <div><strong>Morning:</strong> {renderGroupedSchedule(item, "morning")}</div>
-                                <div><strong>Noon:</strong> {renderGroupedSchedule(item, "afternoon")}</div>
-                                <div><strong>Evening:</strong> {renderGroupedSchedule(item, "evening")}</div>
-                                <div><strong>Night:</strong> {renderGroupedSchedule(item, "night")}</div>
-                              </div>
-                            )}
-                          </td>
-                        ) : (
-                          item.frequentSchedule && item.frequentSchedule.length > 0 ? (
-                            <td className="border px-3 py-2" colSpan={4}>
-                              {renderGroupedSchedule(item, "morning")}
-                            </td>
-                          ) : (
-                            <>
-                              <td className="border px-3 py-2">
-                                {renderGroupedSchedule(item, "morning")}
-                              </td>
-                              <td className="border px-3 py-2">
-                                {renderGroupedSchedule(item, "afternoon")}
-                              </td>
-                              <td className="border px-3 py-2">
-                                {renderGroupedSchedule(item, "evening")}
-                              </td>
-                              <td className="border px-3 py-2">
-                                {renderGroupedSchedule(item, "night")}
-                              </td>
-                            </>
-                          )
-                        )}
-                        <td className="border px-3 py-2 text-gray-700">
-                          {item.medicineConsumption || "N/A"}
-                        </td>
-                      </tr>
-                      {index <
-                        prescriptionData.prescriptionItems.length - 1 && (
-                        <tr>
-                          <td
-                            colSpan={hasFrequentItems() ? "8" : "11"}
-                            className="border px-3 py-1 text-gray-500 bg-gray-50 text-center"
-                          >
-                          </td>
-                        </tr>
-                      )}
-                    </React.Fragment>
-                  );
-                })}
-              </tbody>
-            </table>
-          </div>
+        <table className="w-full text-xs text-gray-500 border-separate border-spacing-y-2">
+  <thead>
+    <tr className="bg-gray-50">
+      <th className="px-3 py-2 font-semibold text-left">S No</th>
+      <th className="px-3 py-2 font-semibold text-center">Label</th>
+      <th className="px-3 py-2 font-semibold text-center">Date</th>
+      <th className="px-3 py-2 font-semibold text-left">Medicine Name</th>
+      <th className="px-3 py-2 font-semibold text-left">Form</th>
+      <th className="px-3 py-2 font-semibold text-left">Duration</th>
+      {hasFrequentItems() ? (
+        <th className="px-3 py-2 font-semibold text-left">Dosage</th>
+      ) : (
+        <>
+          <th className="px-3 py-2 font-semibold text-left">Morning</th>
+          <th className="px-3 py-2 font-semibold text-left">Noon</th>
+          <th className="px-3 py-2 font-semibold text-left">Evening</th>
+          <th className="px-3 py-2 font-semibold text-left">Night</th>
+        </>
+      )}
+      <th className="px-3 py-2 font-semibold text-left">Consumption</th>
+    </tr>
+  </thead>
+
+  <tbody>
+    {prescriptionData.prescriptionItems.map((item, index) => {
+      const medicineDuration = getMedicineDuration(item.medicineName, prescriptionData._id);
+      const dateRange = medicineDuration
+        ? formatDateRange(medicineDuration.startDate, medicineDuration.endDate)
+        : item.label;
+
+      const showData = (value) => (value ? value : "-");
+
+      return (
+        <tr key={index} className="align-middle">
+          <td className="px-3 py-2 text-center align-middle">{index + 1}</td>
+          <td className="px-3 py-2 text-center font-bold align-middle">{showData(item.label)}</td>
+          <td className="px-3 py-2 text-center font-bold align-middle">{showData(dateRange)}</td>
+          <td className="px-3 py-2 align-middle">{showData(item.medicineName)}</td>
+          <td className="px-3 py-2 align-middle">{showData(item.form)}</td>
+          <td className="px-3 py-2 align-middle">
+            {showData(item.duration)}
+            {item.standardSchedule?.[0]?.day && (
+              <div className="mt-1">{item.standardSchedule[0].day}</div>
+            )}
+          </td>
+
+          {hasFrequentItems() ? (
+            <td className="px-3 py-2 align-middle">
+              {item.frequencyType === "frequent" ? (
+                renderGroupedSchedule(item, "morning") || "-"
+              ) : (
+                <div className="space-y-1">
+                  <div>
+                    <strong>Morning:</strong> {renderGroupedSchedule(item, "morning") || "-"}
+                  </div>
+                  <div>
+                    <strong>Noon:</strong> {renderGroupedSchedule(item, "afternoon") || "-"}
+                  </div>
+                  <div>
+                    <strong>Evening:</strong> {renderGroupedSchedule(item, "evening") || "-"}
+                  </div>
+                  <div>
+                    <strong>Night:</strong> {renderGroupedSchedule(item, "night") || "-"}
+                  </div>
+                </div>
+              )}
+            </td>
+          ) : item.frequentSchedule && item.frequentSchedule.length > 0 ? (
+            <td className="px-3 py-2 align-middle" colSpan={4}>
+              {renderGroupedSchedule(item, "morning") || "-"}
+            </td>
+          ) : (
+            <>
+              <td className="px-3 py-2 align-middle">{renderGroupedSchedule(item, "morning") || "-"}</td>
+              <td className="px-3 py-2 align-middle">{renderGroupedSchedule(item, "afternoon") || "-"}</td>
+              <td className="px-3 py-2 align-middle">{renderGroupedSchedule(item, "evening") || "-"}</td>
+              <td className="px-3 py-2 align-middle">{renderGroupedSchedule(item, "night") || "-"}</td>
+            </>
+          )}
+
+          <td className="px-3 py-2 align-middle">{showData(item.medicineConsumption)}</td>
+        </tr>
+      );
+    })}
+  </tbody>
+</table>
+
 
           {/* Summary and Billing */}
           <div className="mt-8 grid grid-cols-1 md:grid-cols-2 gap-6 text-sm">
@@ -500,41 +478,25 @@ const PrescriptionViewModal = () => {
                   </span>
                 </div>
                 {groupedPrescriptionData && (
-                  <div className="flex justify-between">
-                    
-                  </div>
+                  <div className="flex justify-between"></div>
                 )}
               </div>
             </div>
           </div>
 
           {/* Footer Signature */}
-          <div className="mt-8 flex justify-between items-center">
-            <div className="text-sm text-gray-600">
-              Status:{" "}
-              <span
-                className={`px-2 py-1 rounded text-xs font-medium ${
-                  prescriptionData.action.status === "In Progress"
-                    ? "bg-yellow-100 text-yellow-800"
-                    : "bg-green-100 text-green-800"
-                }`}
-              >
-                {prescriptionData.action.status}
-              </span>
-            </div>
-            <div className="text-right">
-              <div className="border-t border-gray-300 pt-2 mt-8 w-48">
-                <div className="text-sm font-medium">
-                  Dr. Katyayani Shrivastava
-                </div>
-                <div className="text-xs text-gray-600">BHMS, PGDEMS</div>
+          <div className="mt-8 flex justify-end">
+            <div className="border-t border-gray-300 pt-2 mt-8 w-48 text-right">
+              <div className="text-sm font-medium">
+                Dr. Katyayani Shrivastava
               </div>
+              <div className="text-xs text-gray-600">BHMS, PGDEMS</div>
             </div>
           </div>
 
           {/* Footer Links */}
           <div className="mt-8 text-center text-sm text-blue-900">
-            <div className="font-bold text-xl">
+            <div className="font-bold text-2xl py-2">
               Online Consultation | Homeopathy Products | Counseling
             </div>
             <div className="flex justify-center items-center gap-4 mb-2">
@@ -564,16 +526,16 @@ const PrescriptionViewModal = () => {
                 href="https://www.consulthomeopathyonline.com"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="font-medium underline"
+                className="font-lg"
               >
                 www.consulthomeopathyonline.com
               </a>
             </div>
-            <div>#katyayanishomeopathy | #consulthomeopathy</div>
+            <div className="font-bold text-lg py-2">#katyayanishomeopathy | #consulthomeopathy</div>
           </div>
         </div>
 
-        <div className="h-1.5 bg-gradient-to-r from-pink-500 to-pink-600"></div>
+      <div className="absolute bottom-0 left-0 w-full h-1.5 bg-[linear-gradient(to_right,_#ec4899_50%,_#1e3a8a_50%)]"></div>
       </div>
     </div>
   );

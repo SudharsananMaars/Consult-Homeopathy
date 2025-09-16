@@ -208,7 +208,7 @@ const AppointmentsPage = () => {
                   className="bg-white rounded-2xl shadow-md border border-gray-200 p-6"
                 >
                   <div className="flex justify-between items-center mb-2">
-                    <h2 className="text-xl font-bold text-blue-800">
+                    <h2 className="text-xl font-bold text-black-600">
                       {appt.doctor?.name || "Dr. Unassigned"}
                     </h2>
                     <span className={getStatusBadge(appt.status)}>
@@ -217,13 +217,12 @@ const AppointmentsPage = () => {
                   </div>
 
                   <div className="text-gray-700 space-y-2">
-                    <div className="flex items-center gap-2">
-                      <FaCalendarAlt className="text-blue-500" />
-                      <span>
-                        {new Date(appt.appointmentDate).toLocaleDateString()} (
-                        {appt.timeSlot})
-                      </span>
-                    </div>
+                   <div className="flex items-center gap-2">
+  <FaCalendarAlt className="text-blue-500" />
+  <span>
+    {new Date(appt.appointmentDate).toLocaleDateString()} • {appt.timeSlot}
+  </span>
+</div>
 
                     {appt.diseaseName && (
                       <div className="text-sm text-gray-500">
@@ -266,7 +265,7 @@ const AppointmentsPage = () => {
                                 href={appt.meetLink}
                                 target="_blank"
                                 rel="noopener noreferrer"
-                                className="inline-block px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 text-sm"
+                                className="inline-block px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 text-sm"
                               >
                                 Join Video Call
                               </a>

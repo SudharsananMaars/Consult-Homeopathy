@@ -1,8 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import Layout from "/src/components/patient components/Layout.jsx";
-import { Heart, HeartOff } from 'lucide-react';
+import { Heart, HeartOff, MessageCircle, Share } from 'lucide-react';
 import config from "../../config";
-
 
 const API_URL = config.API_URL;
 
@@ -88,117 +87,182 @@ const PatientContent = () => {
 
   return (
     <Layout>
-      <div className="min-h-screen flex flex-col p-7">
-        <h2 className="text-2xl font-bold mb-4">Channel Content</h2>
+     
+        {/* Header */}
+      
+          <div className="max-w-2xl mx-auto px-4 py-8">
+            <h1 className="text-2xl font-bold text-gray-900">Channel Content</h1>
+          </div>
 
-        {loading ? (
-          <p className="text-gray-500 italic">Loading posts...</p>
-        ) : posts.length === 0 ? (
-          <p className="text-gray-500 italic">No posts found.</p>
-        ) : (
-          <div className="space-y-6">
-            {posts.map((post) => {
-              const isLiked = post.likes.includes('me');
 
-              return (
-                <div key={post._id} className="border rounded-lg p-4 shadow-sm bg-white">
-                  {/* Author info */}
-                  <div className="flex items-center gap-3 mb-2">
-                    <img
-                      src={post.author.profilePhoto}
-                      alt="Doctor"
-                      className="w-10 h-10 rounded-full object-cover"
-                    />
+        {/* Main Content */}
+        <div className="max-w-2xl mx-auto px-4 py-6">
+          {loading ? (
+            <div className="bg-white rounded-lg shadow p-8 text-center">
+              <div className="animate-pulse">
+                <div className="h-4 bg-gray-200 rounded w-32 mx-auto"></div>
+                <p className="text-gray-500 mt-2">Loading posts...</p>
+              </div>
+            </div>
+          ) : posts.length === 0 ? (
+            <div className="bg-white rounded-lg shadow p-8 text-center">
+              <div className="text-gray-400 mb-4">
+                <MessageCircle size={48} className="mx-auto" />
+              </div>
+              <p className="text-gray-500 text-lg">No posts found</p>
+              <p className="text-gray-400 text-sm mt-1">Check back later for new content</p>
+            </div>
+          ) : (
+            <div className="space-y-6">
+              {posts.map((post) => {
+                const isLiked = post.likes.includes('me');
+
+                return (
+                  <div key={post._id} className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
+                    {/* Post Header */}
+                    <div className="px-4 py-3 border-b border-gray-100">
+                      <div className="flex items-center space-x-3">
+                        <img
+                          src={post.author.profilePhoto}
+                          alt="Doctor"
+                          className="w-10 h-10 rounded-full object-cover ring-2 ring-blue-100"
+                        />
+                        <div className="flex-1">
+                          <p className="font-semibold text-gray-900">{post.author.name}</p>
+                          <p className="text-sm text-gray-500">{post.timeAgo}</p>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Post Content */}
                     <div>
-                      <p className="font-medium">{post.author.name}</p>
-                      <p className="text-xs text-gray-400">{post.timeAgo}</p>
+                      {/* Text Content */}
+                      {post.text && (
+                        <div className="px-4 py-3">
+                          <p className="text-gray-800 leading-relaxed">{post.text}</p>
+                        </div>
+                      )}
+
+                      {/* Media Content */}
+                      {post.mediaType === "image" && (
+                        <div className="relative bg-gray-100">
+                          <img
+                            src={post.mediaUrl}
+                            alt="Post content"
+                            className="w-full max-h-96 object-contain"
+                          />
+                        </div>
+                      )}
+
+                      {post.mediaType === "video" && (
+                        <div className="relative bg-black">
+                          <video 
+                            controls 
+                            className="w-full max-h-96"
+                            preload="metadata"
+                          >
+                            <source src={post.mediaUrl} type="video/mp4" />
+                            Your browser does not support the video tag.
+                          </video>
+                        </div>
+                      )}
                     </div>
-                  </div>
 
-                  {/* Text */}
-                  {post.text && <p className="mb-2">{post.text}</p>}
-
-                  {/* Media */}
-                  {post.mediaType === "image" && (
-                    <div className="w-full h-[400px] bg-black rounded-lg mb-2 flex justify-center items-center overflow-hidden">
-                      <img
-                        src={post.mediaUrl}
-                        alt="Post"
-                        className="h-full object-contain"
-                      />
+                    {/* Post Actions */}
+                    <div className="px-4 py-3 border-t border-gray-100">
+                      <div className="flex items-center space-x-6">
+                        <button
+                          onClick={() => handleLike(post._id)}
+                          className={`flex items-center space-x-2 px-3 py-1 rounded-full transition-colors ${
+                            isLiked 
+                              ? 'text-red-600 bg-red-50 hover:bg-red-100' 
+                              : 'text-gray-600 hover:bg-gray-50'
+                          }`}
+                        >
+                          {isLiked ? 
+                            <Heart size={18} className="fill-current" /> : 
+                            <Heart size={18} />
+                          }
+                          <span className="text-sm font-medium">
+                            {post.likes.length} {post.likes.length === 1 ? 'Like' : 'Likes'}
+                          </span>
+                        </button>
+                        
+                        <div className="flex items-center space-x-2 text-gray-600">
+                          <MessageCircle size={18} />
+                          <span className="text-sm font-medium">
+                            {post.comments.length} {post.comments.length === 1 ? 'Comment' : 'Comments'}
+                          </span>
+                        </div>
+                      </div>
                     </div>
-                  )}
 
-                  {post.mediaType === "video" && (
-                    <video controls className="w-full rounded-lg mb-2">
-                      <source src={post.mediaUrl} type="video/mp4" />
-                      Your browser does not support the video tag.
-                    </video>
-                  )}
-
-                  {/* Like button */}
-                  <div className="flex items-center gap-3 mt-2 text-gray-600 text-sm">
-                    <button
-                      onClick={() => handleLike(post._id)}
-                      className="flex items-center gap-1 hover:text-red-500 transition"
-                    >
-                      {isLiked ? <HeartOff size={16} /> : <Heart size={16} />}
-                      {post.likes.length} {post.likes.length === 1 ? 'Like' : 'Likes'}
-                    </button>
-                  </div>
-
-                  {/* Comments */}
-                  <div className="mt-4">
-                    <p className="text-sm font-medium text-gray-700 mb-1">Comments:</p>
-                    {post.comments.length === 0 ? (
-                      <p className="text-sm text-gray-400 italic">No comments yet.</p>
-                    ) : (
-                      <div className="space-y-2">
-                        {post.comments.map((comment) => (
-                          <div key={comment._id} className="text-sm border-t pt-2">
-                            <div className="flex items-center gap-2 mb-1">
+                    {/* Comments Section */}
+                    <div className="border-t border-gray-100">
+                      {/* Existing Comments */}
+                      {post.comments.length > 0 && (
+                        <div className="px-4 py-3 space-y-3 max-h-60 overflow-y-auto">
+                          {post.comments.map((comment) => (
+                            <div key={comment._id} className="flex space-x-3">
                               <img
                                 src={comment.user?.profilePhoto}
                                 alt="User"
-                                className="w-6 h-6 rounded-full object-cover"
+                                className="w-8 h-8 rounded-full object-cover flex-shrink-0"
                               />
-                              <span className="font-medium">{comment.user?.name}</span>
-                              <span className="text-xs text-gray-400">{comment.timeAgo}</span>
+                              <div className="flex-1 min-w-0">
+                                <div className="bg-gray-50 rounded-2xl px-3 py-2">
+                                  <p className="text-sm font-semibold text-gray-900">{comment.user?.name}</p>
+                                  <p className="text-sm text-gray-800">{comment.text}</p>
+                                </div>
+                                <p className="text-xs text-gray-500 mt-1 ml-3">{comment.timeAgo}</p>
+                              </div>
                             </div>
-                            <p className="ml-8 text-gray-700">{comment.text}</p>
-                          </div>
-                        ))}
-                      </div>
-                    )}
+                          ))}
+                        </div>
+                      )}
 
-                    {/* Comment input */}
-                    <div className="flex items-center mt-3 gap-2">
-                      <input
-                        type="text"
-                        value={commentInputs[post._id] || ''}
-                        onChange={(e) =>
-                          setCommentInputs((prev) => ({
-                            ...prev,
-                            [post._id]: e.target.value,
-                          }))
-                        }
-                        placeholder="Add a comment..."
-                        className="border rounded px-3 py-1 text-sm w-full"
-                      />
-                      <button
-                        onClick={() => handleComment(post._id)}
-                        className="bg-blue-500 text-white px-3 py-1 text-sm rounded hover:bg-blue-600"
-                      >
-                        Send
-                      </button>
+                      {/* Comment Input */}
+                      <div className="px-4 py-3 border-t border-gray-50">
+                        <div className="flex space-x-3">
+                          <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center flex-shrink-0">
+                            <span className="text-sm font-medium text-blue-600">You</span>
+                          </div>
+                          <div className="flex-1 flex space-x-2">
+                            <input
+                              type="text"
+                              value={commentInputs[post._id] || ''}
+                              onChange={(e) =>
+                                setCommentInputs((prev) => ({
+                                  ...prev,
+                                  [post._id]: e.target.value,
+                                }))
+                              }
+                              placeholder="Write a comment..."
+                              className="flex-1 bg-gray-50 border border-gray-200 rounded-full px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                              onKeyPress={(e) => {
+                                if (e.key === 'Enter') {
+                                  handleComment(post._id);
+                                }
+                              }}
+                            />
+                            <button
+                              onClick={() => handleComment(post._id)}
+                              disabled={!commentInputs[post._id]?.trim()}
+                              className="bg-blue-600 text-white px-4 py-2 rounded-full text-sm font-medium hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                            >
+                              Post
+                            </button>
+                          </div>
+                        </div>
+                      </div>
                     </div>
                   </div>
-                </div>
-              );
-            })}
-          </div>
-        )}
-      </div>
+                );
+              })}
+            </div>
+          )}
+        </div>
+     
     </Layout>
   );
 };

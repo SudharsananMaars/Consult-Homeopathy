@@ -188,7 +188,7 @@ const PatientInventory = () => {
     <Layout>
       <div className="p-6 max-w-7xl mx-auto relative">
         {/* Header */}
-        <h1 className="text-2xl font-bold text-gray-900 mb-6">Inventory</h1>
+        <h1 className="text-2xl font-bold text-gray-900 mb-6">Patient Inventory</h1>
 
         {/* Dashboard Stats */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4 mb-8">
@@ -198,7 +198,7 @@ const PatientInventory = () => {
               className={`${getStatCardStyles(stat.color)} p-4 rounded-lg shadow-sm bg-white`}
             >
               <div className="flex items-center justify-between mb-2">
-                <h3 className="text-sm font-medium text-gray-600">{stat.title}</h3>
+                <h3 className="text-lg font-bold text-black-600">{stat.title}</h3>
                 {stat.icon && <span className="text-lg">{stat.icon}</span>}
               </div>
               <div className="text-2xl font-bold text-gray-900 mb-2">{stat.value}</div>
@@ -213,7 +213,7 @@ const PatientInventory = () => {
         <div className="bg-white rounded-lg shadow-sm">
           <div className="p-6 border-b border-gray-200">
             <div className="flex items-center justify-between">
-              <h2 className="text-xl font-semibold text-gray-900">Patient-level medicine tracking</h2>
+              <h2 className="text-xl font-semibold text-gray-900">Patient Medicine Tracking</h2>
               <button 
                 className="text-gray-400 hover:text-gray-600"
                 onClick={handleEllipsisClick}
@@ -227,55 +227,55 @@ const PatientInventory = () => {
 
           {/* Table */}
           <div className="overflow-x-auto">
-            <table className="w-full">
-              <thead className="bg-gray-50">
-                <tr>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+            <table className="w-full overflow-hidden rounded-lg">
+              <thead>
+                <tr className="border-b border-blue-200">
+                  <th className="bg-gray-100 text-center p-4 font-bold text-gray-700 text-sm">
                     Medicine Name
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="bg-white text-center p-4 font-bold text-gray-700 text-sm">
                     Form
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="bg-gray-100 text-center p-4 font-bold text-gray-700 text-sm">
                     Quantity Prescribed
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="bg-white text-center p-4 font-bold text-gray-700 text-sm">
                     Quantity Consumed
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="bg-gray-100 text-center p-4 font-bold text-gray-700 text-sm">
                     Quantity Remaining
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="bg-white text-center p-4 font-bold text-gray-700 text-sm">
                     Status
                   </th>
                 </tr>
               </thead>
-              <tbody className="bg-white divide-y divide-gray-200">
+              <tbody>
                 {medicineData.length === 0 ? (
                   <tr>
-                    <td colSpan="6" className="px-6 py-8 text-center text-gray-500">
+                    <td colSpan="6" className="bg-white text-center text-gray-500 py-6">
                       No medicines found
                     </td>
                   </tr>
                 ) : (
                   medicineData.map((medicine, index) => (
-                    <tr key={index} className="hover:bg-gray-50">
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <span className="text-sm font-medium text-gray-900">{medicine.medicineName}</span>
+                    <tr key={index} className="border-b border-blue-200">
+                      <td className="bg-gray-100 p-4 font-medium text-gray-900 text-center">
+                        {medicine.medicineName}
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                      <td className="bg-white p-4 text-gray-600 text-center">
                         {medicine.form}
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                      <td className="bg-gray-100 p-4 text-gray-600 text-center">
                         {medicine.dispenseQuantity}
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                      <td className="bg-white p-4 text-gray-600 text-center">
                         {medicine.totalQuantityConsumed}
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                      <td className="bg-gray-100 p-4 text-gray-600 text-center">
                         {medicine.quantityRemaining}
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap">
+                      <td className="bg-white p-4 text-center">
                         <span
                           className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getStatusStyles(medicine.medicineStatus)}`}
                         >
@@ -312,49 +312,49 @@ const PatientInventory = () => {
               </div>
 
               <div className="overflow-y-auto max-h-[60vh]">
-                <table className="w-full">
-                  <thead className="bg-gray-50 sticky top-0">
-                    <tr>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                <table className="w-full overflow-hidden rounded-lg">
+                  <thead>
+                    <tr className="border-b border-blue-200">
+                      <th className="bg-gray-100 text-center p-4 font-bold text-gray-700 text-sm">
                         Medicine Name
                       </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      <th className="bg-white text-center p-4 font-bold text-gray-700 text-sm">
                         Type
                       </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      <th className="bg-gray-100 text-center p-4 font-bold text-gray-700 text-sm">
                         Quantity Pending
                       </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      <th className="bg-white text-center p-4 font-bold text-gray-700 text-sm">
                         Refill Quantity
                       </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      <th className="bg-gray-100 text-center p-4 font-bold text-gray-700 text-sm">
                         Place Order
                       </th>
                     </tr>
                   </thead>
-                  <tbody className="bg-white divide-y divide-gray-200">
+                  <tbody>
                     {selectedMedicines.length === 0 ? (
                       <tr>
-                        <td colSpan="5" className="px-6 py-8 text-center text-gray-500">
+                        <td colSpan="5" className="bg-white text-center text-gray-500 py-6">
                           No medicines need refilling at this time
                         </td>
                       </tr>
                     ) : (
                       selectedMedicines.map((medicine, index) => (
-                        <tr key={index} className="hover:bg-gray-50">
-                          <td className="px-6 py-4 whitespace-nowrap">
-                            <span className="text-sm font-medium text-gray-900">{medicine.medicineName}</span>
+                        <tr key={index} className="border-b border-blue-200">
+                          <td className="bg-gray-100 p-4 font-medium text-gray-900 text-center">
+                            {medicine.medicineName}
                           </td>
-                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                          <td className="bg-white p-4 text-gray-600 text-center">
                             {medicine.form}
                           </td>
-                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                          <td className="bg-gray-100 p-4 text-gray-600 text-center">
                             {medicine.quantityRemaining > 0 ? `${medicine.quantityRemaining} left` : 'Out of stock'}
                           </td>
-                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                          <td className="bg-white p-4 text-gray-600 text-center">
                             Qty: {medicine.dispenseQuantity}
                           </td>
-                          <td className="px-6 py-4 whitespace-nowrap">
+                          <td className="bg-gray-100 p-4 text-center">
                             <button
                               onClick={() => handleOrder(medicine)}
                               className="inline-flex items-center px-3 py-1 bg-blue-500 text-white text-sm font-medium rounded-md hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"

@@ -76,7 +76,7 @@ const SidebarProfile = () => {
         <img
           src={profilePhoto || defaultProfile}
           alt="Patient Profile"
-          className="w-16 h-16 rounded-full object-cover border-3 border-white shadow-lg"
+          className="w-20 h-20 rounded-full object-cover border-3 border-white shadow-lg"
         />
       </div>
       
