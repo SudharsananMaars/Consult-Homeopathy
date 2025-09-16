@@ -9,7 +9,7 @@ const ToggleSwitch = ({ enabled, onUpdate }) => (
   <div
     onClick={onUpdate}
     className={`relative inline-flex items-center h-6 rounded-full w-11 cursor-pointer transition-colors duration-300 ease-in-out ${
-      enabled ? "bg-[#837BFF]" : "bg-gray-300"
+      enabled ? "bg-blue-500" : "bg-gray-300"
     }`}
   >
     <span
@@ -26,7 +26,7 @@ ToggleSwitch.propTypes = {
 };
 
 const CardHeader = ({ title }) => (
-  <div className="bg-[#837BFF] text-white p-4">
+  <div className="bg-blue-500 text-white p-4">
     <h3 className="font-bold text-base">{title}</h3>
   </div>
 );

@@ -337,35 +337,51 @@ const handleReschedule = (appointmentId) => {
         </td>
 
         {/* Time */}
-        <td className="py-4">
-          <div className="flex items-center text-sm text-gray-600">
-            <FaClock className="mr-1 text-xs" /> {patient.time}
-          </div>
-        </td>
+<td className="py-4">
+  <div className="flex items-center text-sm text-gray-600">
+    <FaClock className="mr-1 text-xs" /> {patient.time}
+  </div>
+</td>
 
-        {/* Action */}
-        <td className="py-4">
-          <div className="flex items-center space-x-2 justify-end">
-            <button
-              className="px-3 py-1 text-xs font-medium text-white bg-green-500 rounded-full hover:bg-green-600 transition-colors"
-              onClick={() => handleJoinCall(patient.meetLink)}
-            >
-              Join
-            </button>
+{/* Action */}
+<td className="py-4">
+  {(() => {
+    const now = new Date();
+    const appointmentTime = new Date(patient.time); // make sure patient.time is ISO format or parse properly
+    const diffMinutes = (appointmentTime - now) / (1000 * 60);
 
-            <button
-              className="px-3 py-1 text-xs font-medium text-white bg-red-500 rounded-full hover:bg-red-600 transition-colors"
-              onClick={() => handleReschedule(patient.appointmentId)}
-            >
-              Reschedule
-            </button>
+    // enable between 15 mins before and 30 mins after
+    const isJoinEnabled = diffMinutes <= 15 && diffMinutes >= -30;
 
-            {/* Ellipsis Menu */}
-            <button className="p-2 text-gray-600 hover:text-gray-900">
-              <FaEllipsisV className="text-sm" />
-            </button>
-          </div>
-        </td>
+    return (
+      <div className="flex items-center space-x-2 justify-end">
+        <button
+          disabled={!isJoinEnabled}
+          className={`px-3 py-1 text-xs font-medium rounded-full transition-colors ${
+            isJoinEnabled
+              ? "bg-green-500 text-white hover:bg-green-600"
+              : "bg-gray-300 text-gray-500 cursor-not-allowed"
+          }`}
+          onClick={() => handleJoinCall(patient.meetLink)}
+        >
+          Join
+        </button>
+
+        <button
+          className="px-3 py-1 text-xs font-medium text-white bg-red-500 rounded-full hover:bg-red-600 transition-colors"
+          onClick={() => handleReschedule(patient.appointmentId)}
+        >
+          Reschedule
+        </button>
+
+        <button className="p-2 text-gray-600 hover:text-gray-900">
+          <FaEllipsisV className="text-sm" />
+        </button>
+      </div>
+    );
+  })()}
+</td>
+
       </tr>
     ))}
   </tbody>

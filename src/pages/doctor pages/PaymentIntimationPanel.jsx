@@ -10,7 +10,7 @@ const ToggleSwitch = ({ enabled, onToggle }) => (
   <div
     onClick={onToggle}
     className={`relative inline-flex items-center h-6 rounded-full w-11 cursor-pointer transition-colors duration-300 ease-in-out ${
-      enabled ? "bg-[#837BFF]" : "bg-gray-300"
+      enabled ? "bg-blue-500" : "bg-gray-300"
     }`}
   >
     <span
@@ -27,7 +27,7 @@ ToggleSwitch.propTypes = {
 };
 
 const CardHeader = ({ title }) => (
-  <div className="bg-[#837BFF] text-white p-3 rounded-t-lg">
+  <div className="bg-blue-500 text-white p-3 rounded-t-lg">
     <h3 className="font-bold text-base">{title}</h3>
   </div>
 );
@@ -149,7 +149,7 @@ const IntervalsSection = ({ data, onUpdate }) => {
 
   return (
     <div className="bg-white rounded-lg shadow-md">
-      <div className="bg-[#837BFF] text-white p-3 rounded-t-lg grid grid-cols-12 gap-4 items-center">
+      <div className="bg-blue-500 text-white p-3 rounded-t-lg grid grid-cols-12 gap-4 items-center">
         <h3 className="font-bold text-base col-span-2">Interval (hours)</h3>
         <h3 className="font-bold text-base col-span-8 ml-20">
           Follow-Up Message Template
@@ -275,7 +275,7 @@ const PaymentMessageTemplateSection = ({ message, onUpdate }) => {
 
   return (
     <div className="rounded-lg shadow-md mt-6">
-      <div className="bg-[#837BFF] text-white p-3 rounded-t-lg grid grid-cols-12 gap-4 items-center">
+      <div className="bg-blue-500 text-white p-3 rounded-t-lg grid grid-cols-12 gap-4 items-center">
         <h3 className="font-bold text-base col-span-6">Description</h3>
         <h3 className="font-bold text-base col-span-4 ml-40">Placeholders</h3>
         <h3 className="font-bold text-base col-span-2 text-right">Actions</h3>
@@ -485,7 +485,7 @@ const PaymentIntimationPanel = () => {
               onUpdate={updateFollowUpMessage}
             />
             {/* <div className="flex justify-end mt-4">
-              <button className="bg-[#837BFF] text-white font-semibold py-2 px-5 rounded-lg hover:bg-opacity-90 transition-colors">
+              <button className="bg-blue-500 text-white font-semibold py-2 px-5 rounded-lg hover:bg-opacity-90 transition-colors">
                 Add +
               </button>
             </div> */}
