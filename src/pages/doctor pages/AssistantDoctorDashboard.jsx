@@ -66,28 +66,6 @@ const AssistantDoctorDashboard = () => {
     
     <div className="dashboard-container">
       <div className="main-content">
-        <div className="header">
-          <button className="hamburger-menu" onClick={toggleSidebar}>
-            <FaBars size={20} />
-          </button>
-          <div className="progress-container">
-            <p className="date-container">
-              <span className="calendar-icon">
-                <FaCalendarAlt size={15} color="#000" />
-              </span>
-              {date}
-            </p>
-          </div>
-          <div className="header-right">
-            <span className="notification-icon">
-              <FaBell size={18} />
-            </span>
-            <span className="user-icon">
-              <FaUserCircle size={20}/>
-            </span>
-          </div>
-        </div>
-
         {renderMainContent()}
       </div>
     </div>

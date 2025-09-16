@@ -10,7 +10,7 @@ const ToggleSwitch = ({ isOn, handleToggle }) => (
   <div
     onClick={handleToggle}
     className={`relative inline-flex items-center h-6 rounded-full w-11 transition-colors duration-300 cursor-pointer ${
-      isOn ? "bg-[#837BFF]" : "bg-gray-300"
+      isOn ? "bg-blue-500" : "bg-gray-300"
     }`}
   >
     <span
@@ -236,7 +236,7 @@ const FeedbackPanel = () => {
         <h2 className="text-xl font-bold text-gray-800">Feedback Panel</h2>
 
         <div className="border rounded-lg shadow-sm bg-white">
-          <div className="bg-[#837BFF] text-white font-bold p-3 rounded-t-lg flex justify-between items-center text-base">
+          <div className="bg-blue-500 text-white font-bold p-3 rounded-t-lg flex justify-between items-center text-base">
             <span className="font-bold text-base">Messenger Use Case</span>
             <span className="font-bold text-base">On / Off</span>
           </div>
@@ -354,7 +354,7 @@ const FeedbackPanel = () => {
           </div>
 
           <div className="lg:col-span-2 border rounded-lg bg-white">
-            <div className="bg-[#837BFF] text-white p-3 rounded-t-lg flex justify-between items-center">
+            <div className="bg-blue-500 text-white p-3 rounded-t-lg flex justify-between items-center">
               <span className="font-bold text-base">
                 {feedbackName || "Feedback Name"}
               </span>

@@ -143,7 +143,7 @@ const DocSettings = () => {
                   onClick={() => setActiveTab("messengers")}
                   className={`px-6 py-3 text-sm font-medium transition-colors ${
                     activeTab === "messengers" 
-                      ? "border-b-2 border-blue-500 text-blue-600 bg-blue-500" 
+                      ? "border-b-2 border-blue-500 text-blue-600 bg-blue-50" 
                       : "text-gray-600 hover:text-gray-800"
                   }`}
                 >

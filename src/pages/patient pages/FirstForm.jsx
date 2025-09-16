@@ -145,7 +145,6 @@ const FirstForm = () => {
     symptom: "",
     currentLocation: "",
     patientEntry: "",
-    password: "",
   });
 
   const [formError, setFormError] = useState({});
@@ -158,10 +157,9 @@ const FirstForm = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [prediction, setPrediction] = useState(null);
   const [symptomError, setSymptomError] = useState("");
-  const [showPassword, setShowPassword] = useState(false);
   const [isPhonePrefilled, setIsPhonePrefilled] = useState(false);
-  const [isGenderPrefilled, setIsGenderPrefilled] = useState(false); // NEW
-  const [patientEntryPrefill, setPatientEntryPrefill] = useState(""); // NEW
+  const [isGenderPrefilled, setIsGenderPrefilled] = useState(false);
+  const [patientEntryPrefill, setPatientEntryPrefill] = useState("");
 
  useEffect(() => {
   const urlParams = new URLSearchParams(window.location.search);
@@ -371,9 +369,7 @@ const handleCountryChangeWhatsApp = (e) => {
     e.preventDefault();
     const errors = {};
 
-    // Validation
-    // if (!formData.consultingFor)
-    //   errors.consultingFor = "This field is required";
+    // Validation (removed password validation)
     if (!formData.fullName) errors.fullName = "This field is required";
     if (!formData.age) errors.age = "This field is required";
     if (!formData.mobileNumber) errors.mobileNumber = "This field is required";
@@ -384,13 +380,6 @@ const handleCountryChangeWhatsApp = (e) => {
     if (!formData.currentLocation)
       errors.currentLocation = "This field is required";
     if (!formData.patientEntry) errors.patientEntry = "This field is required";
-    if (!formData.password) {
-      errors.password = "This field is required";
-    } else if (formData.password.length < 6) {
-      errors.password = "Password must be at least 6 characters";
-    } else if (!/[!@#$%^&*(),.?":{}|<>]/.test(formData.password)) {
-      errors.password = "Password must contain at least one symbol";
-    }
 
     if (Object.keys(errors).length === 0) {
       try {
@@ -452,11 +441,11 @@ const handleCountryChangeWhatsApp = (e) => {
           currentLocation: formData.currentLocation,
           patientEntry: formData.patientEntry,
           symptomNotKnown: formData.symptom || "", // Add symptom if available
-          password: formData.password,
+          // Removed password field
         };
 
         // Create URL with query parameters if they exist
-        const apiUrl = new URL(`${API_URL}/api/patient/sendRegForm`);
+        const apiUrl = new URL(`${API_URL}/api/forms/first-form`);
         if (referralCode) {
           apiUrl.searchParams.append("referralCode", referralCode);
         }
@@ -477,7 +466,7 @@ const handleCountryChangeWhatsApp = (e) => {
 
           alert("Form Submitted Successfully");
 
-          // Reset form
+          // Reset form (removed password from reset)
           setFormData({
             consultingFor: "",
             fullName: "",
@@ -550,36 +539,6 @@ const handleCountryChangeWhatsApp = (e) => {
         </div>
 
         <div className="p-6 sm:p-8 grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-6">
-          {/* Consulting Person
-          <div className="col-span-1">
-            <label
-              htmlFor="consultingFor"
-              className="block text-sm font-medium text-gray-700 mb-1"
-            >
-              Consulting For <span className="text-red-500">*</span>
-            </label>
-            <Select
-              name="consultingFor"
-              options={consultingPersons}
-              value={
-                consultingPersons.find(
-                  (option) => option.value === formData.consultingFor
-                ) || null
-              }
-              onChange={(selectedOption) =>
-                handleSelectChange("consultingFor", selectedOption)
-              }
-              styles={customSelectStyles}
-              placeholder="Select..."
-              className="mt-1"
-            />
-            {formError.consultingFor && (
-              <div className="mt-1 text-sm text-red-600">
-                {formError.consultingFor}
-              </div>
-            )}
-          </div> */}
-
           {/* Full Name */}
           <div className="col-span-1">
             <label
@@ -914,7 +873,7 @@ const handleCountryChangeWhatsApp = (e) => {
               options={patientEntryOptions}
               value={
                 patientEntryPrefill
-                  ? { value: patientEntryPrefill, label: patientEntryPrefill } // freeze value
+                  ? { value: patientEntryPrefill, label: patientEntryPrefill }
                   : patientEntryOptions.find(
                       (option) => option.value === formData.patientEntry
                     ) || null
@@ -922,7 +881,7 @@ const handleCountryChangeWhatsApp = (e) => {
               onChange={(selectedOption) =>
                 handleSelectChange("patientEntry", selectedOption)
               }
-              isDisabled={!!patientEntryPrefill} // Disable if prefilled
+              isDisabled={!!patientEntryPrefill}
               styles={customSelectStyles}
               placeholder="Select option"
               className="mt-1"
@@ -931,39 +890,6 @@ const handleCountryChangeWhatsApp = (e) => {
             {formError.patientEntry && (
               <div className="mt-1 text-sm text-red-600">
                 {formError.patientEntry}
-              </div>
-            )}
-          </div>
-
-          {/* password */}
-          <div className="col-span-1">
-            <label
-              htmlFor="password"
-              className="block text-sm font-medium text-gray-700 mb-1"
-            >
-              Password <span className="text-red-500">*</span>
-            </label>
-            <div className="relative">
-              <input
-                type={showPassword ? "text" : "password"}
-                id="password"
-                name="password"
-                value={formData.password}
-                onChange={handleInputChange}
-                className="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm py-2 px-3 border pr-10"
-                placeholder="Enter your password"
-              />
-              <button
-                type="button"
-                onClick={() => setShowPassword(!showPassword)}
-                className="absolute inset-y-0 right-0 pr-3 flex items-center text-sm leading-5"
-              >
-                {showPassword ? "Hide" : "Show"}
-              </button>
-            </div>
-            {formError.password && (
-              <div className="mt-1 text-sm text-red-600">
-                {formError.password}
               </div>
             )}
           </div>

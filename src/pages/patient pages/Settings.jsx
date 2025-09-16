@@ -1,5 +1,8 @@
 import React, { useState } from "react";
 import Layout from "../../components/patient components/Layout";
+import config from "../../config";
+
+const API_URL = config.API_URL;
 
 const Settings = () => {
   const [activeTab, setActiveTab] = useState("password");
@@ -8,6 +11,7 @@ const Settings = () => {
   const [oldPassword, setOldPassword] = useState("");
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
 
   // General notification settings
   const [emailNotifications, setEmailNotifications] = useState(false);
@@ -20,18 +24,61 @@ const Settings = () => {
   const [ringtone, setRingtone] = useState("");
   const [voiceAlerts, setVoiceAlerts] = useState(false);
 
-  const handlePasswordChange = (e) => {
+  const handlePasswordChange = async (e) => {
     e.preventDefault();
-    if (newPassword === confirmPassword) {
-      alert("Password changed successfully!");
-    } else {
+    
+    // Validation
+    if (newPassword !== confirmPassword) {
       alert("New passwords do not match!");
+      return;
+    }
+
+    if (newPassword.length < 6) {
+      alert("New password must be at least 6 characters long!");
+      return;
+    }
+
+    setIsLoading(true);
+
+    const token = localStorage.getItem("token");
+
+    try {
+      const response = await fetch(`${API_URL}/api/otp/changePassword`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+           Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({
+          oldPassword: oldPassword,
+          newPassword: newPassword,
+          retypedNewPassword: confirmPassword,
+        }),
+      });
+
+      const data = await response.json();
+
+      if (response.ok && data.success) {
+        alert(data.message || "Password changed successfully!");
+        // Clear the form
+        setOldPassword("");
+        setNewPassword("");
+        setConfirmPassword("");
+      } else {
+        alert(data.message || "Failed to change password. Please try again.");
+      }
+    } catch (error) {
+      console.error("Error changing password:", error);
+      alert("An error occurred while changing password. Please try again.");
+    } finally {
+      setIsLoading(false);
     }
   };
 
   return (
     <div>
       <Layout>
+<<<<<<< HEAD
        
           <div className="max-w-4xl mx-auto py-8">
             <h1 className="text-3xl font-bold text-gray-900 mb-8">Settings</h1>
@@ -47,9 +94,98 @@ const Settings = () => {
                       activeTab === "password" 
                         ? "border-blue-600 text-blue-600" 
                         : "border-transparent text-gray-500 hover:text-gray-700"
+=======
+        <div className="p-8">
+          <h1 className="text-2xl font-semibold mb-4">Settings</h1>
+
+          {/* Tab Navigation */}
+          <div className="flex border-b border-gray-300 mb-4">
+            <button
+              onClick={() => setActiveTab("password")}
+              className={`px-4 py-2 text-sm font-medium ${
+                activeTab === "password"
+                  ? "border-b-2 border-blue-600 text-blue-600"
+                  : "text-gray-600"
+              }`}
+            >
+              Change Password
+            </button>
+            <button
+              onClick={() => setActiveTab("notifications")}
+              className={`px-4 py-2 text-sm font-medium ${
+                activeTab === "notifications"
+                  ? "border-b-2 border-blue-600 text-blue-600"
+                  : "text-gray-600"
+              }`}
+            >
+              Notification Settings
+            </button>
+          </div>
+
+          {/* Change Password Tab */}
+          {activeTab === "password" && (
+            <div className="mb-8">
+              <h2 className="text-xl font-semibold mb-2">Change Password</h2>
+              <form onSubmit={handlePasswordChange}>
+                <div className="mb-4">
+                  <label htmlFor="oldPassword" className="block text-sm font-medium text-gray-700">
+                    Old Password
+                  </label>
+                  <input
+                    type="password"
+                    id="oldPassword"
+                    value={oldPassword}
+                    onChange={(e) => setOldPassword(e.target.value)}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
+                    required
+                    disabled={isLoading}
+                  />
+                </div>
+
+                <div className="mb-4">
+                  <label htmlFor="newPassword" className="block text-sm font-medium text-gray-700">
+                    New Password
+                  </label>
+                  <input
+                    type="password"
+                    id="newPassword"
+                    value={newPassword}
+                    onChange={(e) => setNewPassword(e.target.value)}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
+                    required
+                    disabled={isLoading}
+                    minLength={6}
+                  />
+                </div>
+
+                <div className="mb-4">
+                  <label htmlFor="confirmPassword" className="block text-sm font-medium text-gray-700">
+                    Confirm New Password
+                  </label>
+                  <input
+                    type="password"
+                    id="confirmPassword"
+                    value={confirmPassword}
+                    onChange={(e) => setConfirmPassword(e.target.value)}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
+                    required
+                    disabled={isLoading}
+                    minLength={6}
+                  />
+                </div>
+
+                <div className="mb-4 mt-10 flex justify-center">
+                  <button
+                    type="submit"
+                    disabled={isLoading}
+                    className={`py-2 px-4 rounded-full shadow-md focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 ${
+                      isLoading
+                        ? "bg-gray-400 text-white cursor-not-allowed"
+                        : "bg-blue-600 text-white hover:bg-blue-700"
+>>>>>>> 208128331bfde71fff962d9ca6a3d56c6d7e4023
                     }`}
                   >
-                    Change Password
+                    {isLoading ? "Changing Password..." : "Change Password"}
                   </button>
                   <button
                     onClick={() => setActiveTab("notifications")}

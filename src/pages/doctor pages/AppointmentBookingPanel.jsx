@@ -33,7 +33,7 @@ const ToggleSwitch = ({ enabled, onChange }) => (
   <div
     onClick={() => onChange(!enabled)}
     className={`relative inline-flex items-center h-6 rounded-full w-11 cursor-pointer transition-colors duration-300 ease-in-out ${
-      enabled ? "bg-[#837BFF]" : "bg-gray-300"
+      enabled ? "bg-blue-500" : "bg-gray-300"
     }`}
   >
     <span
@@ -147,7 +147,7 @@ const CustomTimePicker = ({ value, onChange, isEditing }) => {
                   onClick={() => setSelectedHour(hour)}
                   className={`px-3 py-1 text-center rounded-md text-sm cursor-pointer ${
                     selectedHour === hour
-                      ? "bg-[#837BFF] text-white"
+                      ? "bg-blue-500 text-white"
                       : "hover:bg-gray-100"
                   }`}
                 >
@@ -162,7 +162,7 @@ const CustomTimePicker = ({ value, onChange, isEditing }) => {
                   onClick={() => setSelectedMinute(minute)}
                   className={`px-3 py-1 text-center rounded-md text-sm cursor-pointer ${
                     selectedMinute === minute
-                      ? "bg-[#837BFF] text-white"
+                      ? "bg-blue-500 text-white"
                       : "hover:bg-gray-100"
                   }`}
                 >
@@ -177,7 +177,7 @@ const CustomTimePicker = ({ value, onChange, isEditing }) => {
                   onClick={() => setSelectedPeriod(period)}
                   className={`px-3 py-1 text-center rounded-md text-sm cursor-pointer ${
                     selectedPeriod === period
-                      ? "bg-[#837BFF] text-white"
+                      ? "bg-blue-500 text-white"
                       : "hover:bg-gray-100"
                   }`}
                 >
@@ -189,7 +189,7 @@ const CustomTimePicker = ({ value, onChange, isEditing }) => {
           <div className="border-t p-2">
             <button
               onClick={handleSetTime}
-              className="w-full bg-[#837BFF] text-white text-sm font-bold py-2 rounded-lg hover:bg-[#6a61d3] transition-colors"
+              className="w-full bg-blue-500 text-white text-sm font-bold py-2 rounded-lg hover:bg-[#6a61d3] transition-colors"
             >
               Set Time
             </button>
@@ -573,7 +573,7 @@ const AppointmentBookingPanel = () => {
           Appointment Booking Panel
         </h1>
         <div className="border border-gray-200 rounded-lg">
-          <div className="bg-[#837BFF] text-white p-4 rounded-t-lg">
+          <div className="bg-blue-500 text-white p-4 rounded-t-lg">
             <div className="grid grid-cols-12 items-center gap-4">
               <div className="col-span-3">
                 <h2 className="font-bold text-base ">
@@ -650,7 +650,7 @@ const AppointmentBookingPanel = () => {
 
         <div className="space-y-4">
           <div className="border border-gray-200 rounded-lg">
-            <div className="bg-[#837BFF] text-white p-4 grid grid-cols-12 items-center gap-4 rounded-t-lg">
+            <div className="bg-blue-500 text-white p-4 grid grid-cols-12 items-center gap-4 rounded-t-lg">
               <div className="col-span-3">
                 <h2 className="font-bold text-base">Appointment Slot Types</h2>
               </div>
@@ -688,7 +688,7 @@ const AppointmentBookingPanel = () => {
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           <div className="border border-gray-200 rounded-lg overflow-hidden">
-            <div className="bg-[#837BFF] text-white p-4">
+            <div className="bg-blue-500 text-white p-4">
               <h3 className="font-bold text-base">
                 Consultation Priority Mapping
               </h3>
@@ -753,7 +753,7 @@ const AppointmentBookingPanel = () => {
           </div>
 
           <div className="border border-gray-200 rounded-lg overflow-hidden">
-            <div className="bg-[#837BFF] text-white p-4">
+            <div className="bg-blue-500 text-white p-4">
               <h3 className="font-bold text-base">Reschedule & Refund Rules</h3>
             </div>
             <div className="divide-y divide-gray-200">

@@ -65,7 +65,10 @@ const PrescriptionWriting = () => {
   const [appointmentData, setAppointmentData] = useState(null);
   const [showPrescriptionTable, setShowPrescriptionTable] = useState(true);
   const [frequencyType, setFrequencyType] = useState("standard");
-
+// Add these to your existing state declarations
+const [discountType, setDiscountType] = useState("percentage"); // or "fixed"
+const [discountValue, setDiscountValue] = useState(0);
+const [discountedAmount, setDiscountedAmount] = useState(0);
   // Modal states
   const [showFrequencyModal, setShowFrequencyModal] = useState(false);
   const [showDurationModal, setShowDurationModal] = useState(false);
@@ -75,6 +78,8 @@ const PrescriptionWriting = () => {
   const [allDurationRanges, setAllDurationRanges] = useState([]);
   const [currentMedicineIndex, setCurrentMedicineIndex] = useState(null);
   const [isDurationModalOpen, setIsDurationModalOpen] = useState(false);
+  const [specialNote, setSpecialNote] = useState("");
+const [polishingNote, setPolishingNote] = useState(false);
 
   const [allGapRanges, setAllGapRanges] = useState([]); // Track gap ranges for all medicines
   const [originalMedicineCourse, setOriginalMedicineCourse] = useState(10); // Store original course days
@@ -478,6 +483,21 @@ const PrescriptionWriting = () => {
       }
     }, 100);
   };
+
+  const calculateDiscountedAmount = () => {
+  const subtotal = prescriptionData.medicineCharges + 
+                   prescriptionData.shippingCharges + 
+                   prescriptionData.additionalCharges;
+  
+  let discount = 0;
+  if (discountType === "percentage") {
+    discount = (subtotal * discountValue) / 100;
+  } else {
+    discount = discountValue;
+  }
+  
+  return Math.max(0, subtotal - discount); // Ensure total doesn't go negative
+};
 
   const updatePreparationQuantity = (itemId, rawMaterialId, quantity) => {
     setPrescriptionData((prev) => {
@@ -940,11 +960,37 @@ const PrescriptionWriting = () => {
       parentPrescriptionId: prescriptionId,
     }));
   };
+  const handlePolishSpecialNote = async () => {
+  if (!specialNote.trim()) return;
+
+  try {
+    setPolishingNote(true);
+    const authAxios = createAuthAxios();
+    
+    const response = await authAxios.post(
+      `${API_URL}/api/gemini/polish-text`,
+      { text: specialNote }
+    );
+
+    if (response.data?.improvedText) {
+      setSpecialNote(response.data.improvedText);
+      toast.success("Text polished successfully!");
+    } else {
+      toast.error("Failed to polish text");
+    }
+  } catch (err) {
+    console.error("Error polishing text:", err);
+    toast.error("Error polishing text. Please try again.");
+  } finally {
+    setPolishingNote(false);
+  }
+};
 
   const prepareDataForBackend = (prescriptionData) => {
     const backendData = {
       appointmentID: patientData.medicalDetails._id,
       ...prescriptionData,
+      specialNote: specialNote,
       prescriptionItems: prescriptionData.prescriptionItems.map((item) => ({
         medicineName: item.medicineName || "",
         rawMaterialDetails: (item.preparationQuantity || []).map((rm) => ({
@@ -976,6 +1022,7 @@ const PrescriptionWriting = () => {
         durationRanges: item.durationRanges || [],
         gapRanges: item.gapRanges || [],
         selectedDurationDays: item.selectedDurationDays || [],
+        
       })),
     };
 
@@ -2466,38 +2513,114 @@ const PrescriptionWriting = () => {
               />
             </div>
           </div>
+          {/* Discount Section */}
+<div className="bg-white rounded-lg shadow p-6">
+  <h2 className="text-lg font-semibold mb-4">Discount</h2>
+  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+    <div>
+      <label className="block text-sm font-medium mb-1">
+        Discount Type
+      </label>
+      <select
+        value={discountType}
+        onChange={(e) => setDiscountType(e.target.value)}
+        className="w-full border rounded px-3 py-2"
+      >
+        <option value="percentage">Percentage (%)</option>
+        <option value="fixed">Fixed Amount (₹)</option>
+      </select>
+    </div>
+    <div>
+      <label className="block text-sm font-medium mb-1">
+        Discount Value
+      </label>
+      <input
+        type="number"
+        value={discountValue}
+        onChange={(e) => setDiscountValue(parseFloat(e.target.value) || 0)}
+        className="w-full border rounded px-3 py-2"
+        min="0"
+        step={discountType === "percentage" ? "1" : "0.01"}
+        max={discountType === "percentage" ? "100" : undefined}
+      />
+    </div>
+    <div>
+      <label className="block text-sm font-medium mb-1">
+        Final Total Amount
+      </label>
+      <input
+        type="number"
+        value={calculateDiscountedAmount()}
+        readOnly
+        className="w-full border rounded px-3 py-2 bg-white font-bold text-green-800"
+      />
+    </div>
+  </div>
+</div>
+
+<div className="mt-4">
+  <label className="block text-sm font-medium mb-1">
+    Special Note
+  </label>
+  <div className="relative">
+    <textarea
+      value={specialNote}
+      onChange={(e) => setSpecialNote(e.target.value)}
+      className="w-full border rounded px-3 py-2 pr-20"
+      rows="3"
+      placeholder="Enter special notes (will be automatically improved)..."
+    />
+    <button
+      type="button"
+      onClick={handlePolishSpecialNote}
+      disabled={polishingNote || !specialNote.trim()}
+      className="absolute top-2 right-2 px-3 py-1 bg-blue-600 text-white rounded text-sm hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed flex items-center"
+    >
+      {polishingNote ? (
+        <>
+          <FaSpinner className="animate-spin mr-1" />
+          Polishing...
+        </>
+      ) : (
+        "Polish Text"
+      )}
+    </button>
+  </div>
+</div>
 
           {/* Action Buttons */}
           <div className="flex justify-between items-center">
-            <button
-              onClick={() => setShowPrescriptionTable(true)}
-              className="px-6 py-2 border border-gray-300 rounded hover:bg-gray-50"
-            >
-              Back to Prescriptions
-            </button>
-            <div className="space-x-4">
-              <button
-                onClick={() => navigate("/doctor-dashboard")}
-                className="px-6 py-2 border border-gray-300 rounded hover:bg-gray-50"
-              >
-                Cancel
-              </button>
-              <button
-                onClick={handleSavePrescription}
-                disabled={saving}
-                className="px-6 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed flex items-center"
-              >
-                {saving ? (
-                  <>
-                    <FaSpinner className="animate-spin mr-2" />
-                    Saving...
-                  </>
-                ) : (
-                  "Save Prescription"
-                )}
-              </button>
-            </div>
-          </div>
+  <button
+    onClick={() => setShowPrescriptionTable(true)}
+    className="px-6 py-2 border border-gray-300 rounded hover:bg-gray-50"
+  >
+    Back to Prescriptions
+  </button>
+
+  <div className="flex items-center space-x-4">
+    <button
+      onClick={() => navigate("/doctor-dashboard")}
+      className="px-6 py-2 border border-gray-300 rounded hover:bg-gray-50 flex items-center"
+    >
+      Cancel
+    </button>
+    <button
+      onClick={handleSavePrescription}
+      disabled={saving}
+      className="px-6 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed flex items-center"
+    >
+      {saving ? (
+        <>
+          <FaSpinner className="animate-spin mr-2" />
+          Saving...
+        </>
+      ) : (
+        "Save Prescription"
+      )}
+    </button>
+  </div>
+</div>
+
         </div>
       )}
 
