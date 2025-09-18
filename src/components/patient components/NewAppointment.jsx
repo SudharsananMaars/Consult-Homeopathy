@@ -21,9 +21,9 @@ const NewAppointment = () => {
   const [timeSlots, setTimeSlots] = useState([]);
   const [isLoadingSlots, setIsLoadingSlots] = useState(false);
   const [paymentStatus, setPaymentStatus] = useState(null);
-  const [symptomInput, setSymptomInput] = useState('');
- const [isAnalyzing, setIsAnalyzing] = useState(false);
- const [analysisResult, setAnalysisResult] = useState(null);
+  const [symptomInput, setSymptomInput] = useState("");
+  const [isAnalyzing, setIsAnalyzing] = useState(false);
+  const [analysisResult, setAnalysisResult] = useState(null);
 
   const [consultingForOptions, setConsultingForOptions] = useState([]);
   const [consultingFor, setConsultingFor] = useState(null);
@@ -35,7 +35,7 @@ const NewAppointment = () => {
   const [isProcessing, setIsProcessing] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
   const [isRazorpayLoaded, setIsRazorpayLoaded] = useState(false);
-  const [consulting,setConsulting] = useState("");
+  const [consulting, setConsulting] = useState("");
 
   const today = dayjs();
   const minDate = today;
@@ -206,45 +206,42 @@ const NewAppointment = () => {
   }, [startDate]);
 
   useEffect(() => {
-  const fetchTimeSlots = async () => {
-    if (startDate) {
-      setIsLoadingSlots(true);
-      const token = localStorage.getItem("token");
-      const formattedDate = dayjs(startDate).format("YYYY-MM-DD");
-      
-      try {
-        const res = await axios.post(
-  `${API_URL}/api/patient/appointmentBookingTimeSlot`,
-  { date: formattedDate }, 
-  {
-    headers: {
-      Authorization: `Bearer ${token}`,
-      "Content-Type": "application/json",
-    },
-  }
-);
+    const fetchTimeSlots = async () => {
+      if (startDate) {
+        setIsLoadingSlots(true);
+        const token = localStorage.getItem("token");
+        const formattedDate = dayjs(startDate).format("YYYY-MM-DD");
 
-        
-        setTimeSlots(res.data.result || []);
-        setSelectedTime(null); // Reset selected time when date changes
-        setErrorMessage(""); // Clear any previous errors
-        
-      } catch (err) {
-        console.error("Error fetching time slots:", err);
-        setErrorMessage("Failed to load available time slots");
-        setTimeSlots([]); // Clear slots on error
-      } finally {
-        setIsLoadingSlots(false);
+        try {
+          const res = await axios.post(
+            `${API_URL}/api/patient/appointmentBookingTimeSlot`,
+            { date: formattedDate },
+            {
+              headers: {
+                Authorization: `Bearer ${token}`,
+                "Content-Type": "application/json",
+              },
+            }
+          );
+
+          setTimeSlots(res.data.result || []);
+          setSelectedTime(null); // Reset selected time when date changes
+          setErrorMessage(""); // Clear any previous errors
+        } catch (err) {
+          console.error("Error fetching time slots:", err);
+          setErrorMessage("Failed to load available time slots");
+          setTimeSlots([]); // Clear slots on error
+        } finally {
+          setIsLoadingSlots(false);
+        }
+      } else {
+        // Clear slots if no date selected
+        setTimeSlots([]);
       }
-    } else {
-      // Clear slots if no date selected
-      setTimeSlots([]);
-    }
-  };
+    };
 
-  fetchTimeSlots();
-}, [startDate]);
-
+    fetchTimeSlots();
+  }, [startDate]);
 
   // Check appointment status periodically if reserved
   useEffect(() => {
@@ -305,7 +302,7 @@ const NewAppointment = () => {
       appointmentDate,
       timeSlot: selectedTime,
       consultingFor: consultingFor.value,
-      consultingReason:  analysisResult.classification,
+      consultingReason: analysisResult.classification,
       symptom: consultingReason?.value === "Other" ? symptom : "",
     };
 
@@ -360,7 +357,7 @@ const NewAppointment = () => {
       const token = localStorage.getItem("token");
       const orderRes = await axios.post(
         `${API_URL}/api/payments/create-order`,
-        { amount : amount * 100, appointmentId },
+        { amount: amount * 100, appointmentId },
         { headers: { Authorization: `Bearer ${token}` } }
       );
       return orderRes.data.order;
@@ -371,39 +368,38 @@ const NewAppointment = () => {
   };
 
   const handleAnalyzeSymptom = async () => {
-  if (!symptomInput.trim()) return;
-  
-  setIsAnalyzing(true);
-  try {
-    const userId = localStorage.getItem('userId');
-    const token = localStorage.getItem('token'); 
+    if (!symptomInput.trim()) return;
 
-    const response = await fetch(`${API_URL}/api/groq/analyze`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${token}`, 
-      },
-      body: JSON.stringify({
-        message: symptomInput,
-        patientId: userId
-      })
-    });
-  
-    const result = await response.json();
-    
-    if (result.success) {
-      setAnalysisResult(result.data);
-    } else {
-      console.error('Analysis failed:', result);
+    setIsAnalyzing(true);
+    try {
+      const userId = localStorage.getItem("userId");
+      const token = localStorage.getItem("token");
+
+      const response = await fetch(`${API_URL}/api/groq/analyze`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({
+          message: symptomInput,
+          patientId: userId,
+        }),
+      });
+
+      const result = await response.json();
+
+      if (result.success) {
+        setAnalysisResult(result.data);
+      } else {
+        console.error("Analysis failed:", result);
+      }
+    } catch (error) {
+      console.error("Error analyzing symptom:", error);
+    } finally {
+      setIsAnalyzing(false);
     }
-  } catch (error) {
-    console.error('Error analyzing symptom:', error);
-  } finally {
-    setIsAnalyzing(false);
-  }
-};
-
+  };
 
   const verifyPayment = async (paymentResponse, appointmentId) => {
     try {
@@ -551,38 +547,39 @@ const NewAppointment = () => {
           </div>
 
           <div>
-  <label className="font-semibold block mb-2">
-    Enter your symptoms
-  </label>
-  <div className="flex gap-2">
-    <input
-      type="text"
-      value={symptomInput}
-      onChange={(e) => setSymptomInput(e.target.value)}
-      className="flex-1 border rounded p-2"
-      placeholder="Describe your symptoms..."
-    />
-    <button
-      onClick={handleAnalyzeSymptom}
-      disabled={!symptomInput.trim() || isAnalyzing}
-      className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
-    >
-      {isAnalyzing ? "Analyzing..." : "Analyze"}
-    </button>
-  </div>
-  {formErrors.symptomInput && (
-    <p className="text-red-500 text-sm mt-1">
-      {formErrors.symptomInput}
-    </p>
-  )}
-  {analysisResult && (
-    <div className="mt-2 p-3 bg-green-50 border border-green-200 rounded">
-      <p className="text-sm text-green-800">
-        <strong>Classification:</strong> {analysisResult.classification}
-      </p>
-    </div>
-  )}
-</div>
+            <label className="font-semibold block mb-2">
+              Enter your symptoms
+            </label>
+            <div className="flex gap-2">
+              <input
+                type="text"
+                value={symptomInput}
+                onChange={(e) => setSymptomInput(e.target.value)}
+                className="flex-1 border rounded p-2"
+                placeholder="Describe your symptoms..."
+              />
+              <button
+                onClick={handleAnalyzeSymptom}
+                disabled={!symptomInput.trim() || isAnalyzing}
+                className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {isAnalyzing ? "Analyzing..." : "Analyze"}
+              </button>
+            </div>
+            {formErrors.symptomInput && (
+              <p className="text-red-500 text-sm mt-1">
+                {formErrors.symptomInput}
+              </p>
+            )}
+            {analysisResult && (
+              <div className="mt-2 p-3 bg-green-50 border border-green-200 rounded">
+                <p className="text-sm text-green-800">
+                  <strong>Classification:</strong>{" "}
+                  {analysisResult.classification}
+                </p>
+              </div>
+            )}
+          </div>
 
           {consultingReason?.value === "Other" && (
             <div>
@@ -623,20 +620,20 @@ const NewAppointment = () => {
           <div>
             <label className="font-semibold block mb-2">Pick Your Time</label>
             <div className="grid grid-cols-3 gap-2">
-  {timeSlots.map((time) => (
-    <button
-      key={time}
-      onClick={() => setSelectedTime(time)}
-      className={`p-2 rounded border transition ${
-        selectedTime === time
-          ? "bg-blue-500 text-white"
-          : "bg-white hover:bg-blue-100"
-      }`}
-    >
-      {time}
-    </button>
-  ))}
-</div>
+              {timeSlots.map((time) => (
+                <button
+                  key={time}
+                  onClick={() => setSelectedTime(time)}
+                  className={`p-2 rounded border transition ${
+                    selectedTime === time
+                      ? "bg-blue-500 text-white"
+                      : "bg-white hover:bg-blue-100"
+                  }`}
+                >
+                  {time}
+                </button>
+              ))}
+            </div>
 
             {formErrors.time && (
               <p className="text-red-500 text-sm mt-1">{formErrors.time}</p>

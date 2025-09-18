@@ -179,7 +179,7 @@ const PaymentsHistory = () => {
             placeholder="Search by Payment ID"
             value={filters.paymentId}
             onChange={handleFilterChange}
-            className="p-3 border border-gray-300 rounded-md hover:bg-gray-100 flex-1"
+            className="p-3 border border-gray-300 rounded-md hover:bg-gray-100 w-80"
           />
           <select
             name="dateRange"
@@ -211,36 +211,44 @@ const PaymentsHistory = () => {
 
         {/* Payment Table */}
         <div className="bg-white rounded-lg shadow-md overflow-hidden">
-          <table className="w-full table-auto border-collapse">
+          <table className="w-full overflow-hidden rounded-lg">
             <thead>
-              <tr className="bg-gray-100 text-left">
-                <th className="px-6 py-4 font-semibold text-gray-700">Payment ID</th>
-                <th className="px-6 py-4 font-semibold text-gray-700">Amount</th>
-                <th className="px-6 py-4 font-semibold text-gray-700">Paid For</th>
-                <th className="px-6 py-4 font-semibold text-gray-700">Status</th>
-                <th className="px-6 py-4 font-semibold text-gray-700">Date & Time</th>
+              <tr className="border-b border-blue-200">
+                <th className="bg-gray-100 text-center p-4 font-bold text-gray-700 text-sm">
+                  Payment ID
+                </th>
+                <th className="bg-white text-center p-4 font-bold text-gray-700 text-sm">
+                  Amount
+                </th>
+                <th className="bg-gray-100 text-center p-4 font-bold text-gray-700 text-sm">
+                  Paid For
+                </th>
+                <th className="bg-white text-center p-4 font-bold text-gray-700 text-sm">
+                  Status
+                </th>
+                <th className="bg-gray-100 text-center p-4 font-bold text-gray-700 text-sm">
+                  Date & Time
+                </th>
               </tr>
             </thead>
             <tbody>
               {currentPayments.length > 0 ? (
                 currentPayments.map((payment) => (
-                  <tr key={payment._id} className="border-b hover:bg-gray-50">
-                    <td className="px-6 py-4">
-                      <span className="font-mono text-sm text-gray-600">
+                  <tr key={payment._id} className="border-b border-blue-200">
+                    <td className="bg-gray-100 p-4 font-medium text-gray-900 text-center">
+                      <span className="font-mono text-sm">
                         {payment.razorpayPaymentId || 'N/A'}
                       </span>
                     </td>
-                    <td className="px-6 py-4">
-                      <span className="font-semibold text-gray-800">
+                    <td className="bg-white p-4 text-gray-600 text-center">
+                      <span className="font-semibold">
                         ₹{payment.amount} {payment.currency}
                       </span>
                     </td>
-                    <td className="px-6 py-4">
-                      <span className="text-gray-700">
-                        {payment.paidFor || 'N/A'}
-                      </span>
+                    <td className="bg-gray-100 p-4 text-gray-600 text-center">
+                      {payment.paidFor || 'N/A'}
                     </td>
-                    <td className="px-6 py-4">
+                    <td className="bg-white p-4 text-center">
                       <span
                         className={`px-3 py-1 rounded-full text-sm font-semibold ${getStatusBgColor(
                           payment.status
@@ -249,14 +257,14 @@ const PaymentsHistory = () => {
                         {payment.status?.charAt(0).toUpperCase() + payment.status?.slice(1)}
                       </span>
                     </td>
-                    <td className="px-6 py-4 text-gray-600">
+                    <td className="bg-gray-100 p-4 text-gray-600 text-center">
                       {formatDateTime(payment.createdAt)}
                     </td>
                   </tr>
                 ))
               ) : (
                 <tr>
-                  <td colSpan="5" className="text-center p-8 text-gray-500">
+                  <td colSpan="5" className="bg-white text-center text-gray-500 py-6">
                     No payments found.
                   </td>
                 </tr>

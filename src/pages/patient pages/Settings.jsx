@@ -79,10 +79,10 @@ const Settings = () => {
     <div>
       <Layout>
         <div className="p-8">
-          <h1 className="text-2xl font-semibold mb-4">Settings</h1>
+          <h1 className="text-2xl font-semibold mb-6">Settings</h1>
 
           {/* Tab Navigation */}
-          <div className="flex border-b border-gray-300 mb-4">
+          <div className="flex border-b border-gray-300 mb-6">
             <button
               onClick={() => setActiveTab("password")}
               className={`px-4 py-2 text-sm font-medium ${
@@ -107,11 +107,11 @@ const Settings = () => {
 
           {/* Change Password Tab */}
           {activeTab === "password" && (
-            <div className="mb-8">
-              <h2 className="text-xl font-semibold mb-2">Change Password</h2>
+            <div className="mb-8 max-w-md">
+              <h2 className="text-xl font-semibold mb-4">Change Password</h2>
               <form onSubmit={handlePasswordChange}>
                 <div className="mb-4">
-                  <label htmlFor="oldPassword" className="block text-sm font-medium text-gray-700">
+                  <label htmlFor="oldPassword" className="block text-sm font-medium text-gray-700 mb-1">
                     Old Password
                   </label>
                   <input
@@ -119,14 +119,14 @@ const Settings = () => {
                     id="oldPassword"
                     value={oldPassword}
                     onChange={(e) => setOldPassword(e.target.value)}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 text-sm"
                     required
                     disabled={isLoading}
                   />
                 </div>
 
                 <div className="mb-4">
-                  <label htmlFor="newPassword" className="block text-sm font-medium text-gray-700">
+                  <label htmlFor="newPassword" className="block text-sm font-medium text-gray-700 mb-1">
                     New Password
                   </label>
                   <input
@@ -134,15 +134,15 @@ const Settings = () => {
                     id="newPassword"
                     value={newPassword}
                     onChange={(e) => setNewPassword(e.target.value)}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 text-sm"
                     required
                     disabled={isLoading}
                     minLength={6}
                   />
                 </div>
 
-                <div className="mb-4">
-                  <label htmlFor="confirmPassword" className="block text-sm font-medium text-gray-700">
+                <div className="mb-6">
+                  <label htmlFor="confirmPassword" className="block text-sm font-medium text-gray-700 mb-1">
                     Confirm New Password
                   </label>
                   <input
@@ -150,18 +150,18 @@ const Settings = () => {
                     id="confirmPassword"
                     value={confirmPassword}
                     onChange={(e) => setConfirmPassword(e.target.value)}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 text-sm"
                     required
                     disabled={isLoading}
                     minLength={6}
                   />
                 </div>
 
-                <div className="mb-4 mt-10 flex justify-center">
+                <div className="flex justify-start">
                   <button
                     type="submit"
                     disabled={isLoading}
-                    className={`py-2 px-4 rounded-full shadow-md focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 ${
+                    className={`py-2 px-6 rounded-md text-sm font-medium shadow-sm focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 ${
                       isLoading
                         ? "bg-gray-400 text-white cursor-not-allowed"
                         : "bg-blue-600 text-white hover:bg-blue-700"
@@ -176,11 +176,11 @@ const Settings = () => {
 
           {/* Notifications Tab */}
           {activeTab === "notifications" && (
-            <div className="mt-8">
+            <div className="mt-8 max-w-lg">
               {/* Sub-tabs */}
               <div className="flex space-x-4 border-b pb-2 mb-6">
                 <button
-                  className={`pb-1 border-b-2 ${
+                  className={`pb-1 border-b-2 text-sm ${
                     notificationTab === "general"
                       ? "border-blue-600 text-blue-600"
                       : "border-transparent text-gray-600"
@@ -190,7 +190,7 @@ const Settings = () => {
                   General Notifications
                 </button>
                 <button
-                  className={`pb-1 border-b-2 ${
+                  className={`pb-1 border-b-2 text-sm ${
                     notificationTab === "pills"
                       ? "border-blue-600 text-blue-600"
                       : "border-transparent text-gray-600"
@@ -204,38 +204,38 @@ const Settings = () => {
               {/* General Notifications */}
               {notificationTab === "general" && (
                 <>
-                  <div className="mb-4 flex items-center">
+                  <div className="mb-3 flex items-center">
                     <input
                       type="checkbox"
                       checked={emailNotifications}
                       onChange={(e) => setEmailNotifications(e.target.checked)}
                       className="h-4 w-4 text-blue-600 focus:ring-indigo-500 border-gray-300 rounded"
                     />
-                    <label className="ml-2 mt-2 text-sm font-medium text-gray-700">
+                    <label className="ml-2 text-sm font-medium text-gray-700">
                       Email Notifications
                     </label>
                   </div>
 
-                  <div className="mb-4 flex items-center">
+                  <div className="mb-3 flex items-center">
                     <input
                       type="checkbox"
                       checked={smsNotifications}
                       onChange={(e) => setSmsNotifications(e.target.checked)}
                       className="h-4 w-4 text-blue-600 focus:ring-indigo-500 border-gray-300 rounded"
                     />
-                    <label className="ml-2 mt-2 text-sm font-medium text-gray-700">
+                    <label className="ml-2 text-sm font-medium text-gray-700">
                       SMS Notifications
                     </label>
                   </div>
 
-                  <div className="mb-4 flex items-center">
+                  <div className="mb-6 flex items-center">
                     <input
                       type="checkbox"
                       checked={postNotifications}
                       onChange={(e) => setpostNotifications(e.target.checked)}
                       className="h-4 w-4 text-blue-600 focus:ring-indigo-500 border-gray-300 rounded"
                     />
-                    <label className="ml-2 mt-2 text-sm font-medium text-gray-700">
+                    <label className="ml-2 text-sm font-medium text-gray-700">
                       Posts/Videos
                     </label>
                   </div>
@@ -248,7 +248,7 @@ const Settings = () => {
                   <div className="mb-4">
                     <label className="block text-sm font-medium text-gray-700 mb-1">Pre-alert Time</label>
                     <select
-                      className="w-full border border-gray-300 rounded-md px-3 py-2"
+                      className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
                       value={preAlertTime}
                       onChange={(e) => setPreAlertTime(e.target.value)}
                     >
@@ -261,7 +261,7 @@ const Settings = () => {
                   <div className="mb-4">
                     <label className="block text-sm font-medium text-gray-700 mb-1">Ringtone</label>
                     <select
-                      className="w-full border border-gray-300 rounded-md px-3 py-2"
+                      className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
                       value={ringtone}
                       onChange={(e) => setRingtone(e.target.value)}
                     >
@@ -270,7 +270,7 @@ const Settings = () => {
                   </div>
 
                   {/* iOS-style Toggle */}
-                  <div className="mb-4 flex items-center justify-between">
+                  <div className="mb-6 flex items-center justify-between">
                     <label className="text-sm font-medium text-gray-700">Enable Voice Alerts</label>
                     <div
                       onClick={() => setVoiceAlerts(!voiceAlerts)}
@@ -289,7 +289,7 @@ const Settings = () => {
               )}
 
               <button
-                className="bg-green-600 text-white py-2 px-4 rounded-full shadow-md hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500"
+                className="bg-green-600 text-white py-2 px-6 rounded-md text-sm font-medium shadow-sm hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500"
                 onClick={() => alert("Notification settings saved!")}
               >
                 Save 

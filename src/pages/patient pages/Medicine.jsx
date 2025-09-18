@@ -31,7 +31,7 @@ const Medicine = () => {
     try {
       const token = localStorage.getItem("token");
       const response = await axios.patch(
-        `https://clinic-backend-jdob.onrender.com/api/patient/prescriptions/${prescriptionId}/receive`,
+        `${API_URL}/api/patient/prescriptions/${prescriptionId}/receive`,
         { isProductReceived: true },
         {
           headers: {
@@ -145,85 +145,87 @@ const ShipmentTable = ({
   onMarkReceived,
   onOpenItems,
 }) => (
-  <table className="min-w-full text-sm border-collapse overflow-hidden rounded-lg shadow">
-    <thead className="bg-gray-100">
-      <tr>
-        <Th className="text-center">S.No</Th>
-        <Th className="text-center">Tracking ID</Th>
-        <Th className="text-center">Shipping Partner</Th>
-        <Th className="text-center">Shipped Date</Th>
-        <Th className="text-center">Arrival Date</Th>
-        <Th className="text-center">Status</Th>
-        <Th className="text-center">Items</Th>
-        {showActions && <Th>Actions</Th>}
-      </tr>
-    </thead>
-    <tbody>
-      {data.length === 0 && (
-        <tr>
-          <td
-            colSpan={showActions ? 8 : 7}
-            className="text-center py-6 text-gray-500"
+  <div className="bg-white rounded-lg shadow-md overflow-hidden">
+    <table className="w-full overflow-hidden rounded-lg">
+      <thead>
+        <tr className="border-b border-blue-200">
+          <th className="bg-gray-100 text-center p-4 font-bold text-gray-700 text-sm">S.No</th>
+          <th className="bg-white text-center p-4 font-bold text-gray-700 text-sm">Tracking ID</th>
+          <th className="bg-gray-100 text-center p-4 font-bold text-gray-700 text-sm">Shipping Partner</th>
+          <th className="bg-white text-center p-4 font-bold text-gray-700 text-sm">Shipped Date</th>
+          <th className="bg-gray-100 text-center p-4 font-bold text-gray-700 text-sm">Arrival Date</th>
+          <th className="bg-white text-center p-4 font-bold text-gray-700 text-sm">Status</th>
+          <th className="bg-gray-100 text-center p-4 font-bold text-gray-700 text-sm">Items</th>
+          {showActions && <th className="bg-white text-center p-4 font-bold text-gray-700 text-sm">Actions</th>}
+        </tr>
+      </thead>
+      <tbody>
+        {data.length === 0 && (
+          <tr>
+            <td
+              colSpan={showActions ? 8 : 7}
+              className="bg-white text-center text-gray-500 py-6"
+            >
+              No records found.
+            </td>
+          </tr>
+        )}
+
+        {data.map((c, idx) => (
+          <tr
+            key={c.id}
+            className="border-b border-blue-200"
           >
-            No records found.
-          </td>
-        </tr>
-      )}
-
-      {data.map((c, idx) => (
-        <tr
-          key={c.id}
-          className="even:bg-gray-50 hover:bg-blue-50 transition-colors"
-        >
-          <Td className="text-center">{idx + 1}</Td>
-          <Td className="font-semibold text-center">{c.trackingId}</Td>
-          <Td className="font-semibold text-center">
-            {c.packagingDetails && c.packagingDetails.length > 0 
-              ? c.packagingDetails[0].deliveryPartner 
-              : 'N/A'}
-          </Td>
-          <Td className="text-center">{formatDate(c.shippedDate)}</Td>
-          <Td className="font-semibold text-center">
-            {c.packagingDetails && c.packagingDetails.length > 0 
-              ? formatDate(c.packagingDetails[0].arrivalDate) 
-              : 'N/A'}
-          </Td>
-          <Td className="text-center">
-            <span
-              className={`px-2 py-1 rounded-md text-xs font-medium ${
-                c.isProductReceived === true
-                  ? "bg-emerald-100 text-emerald-700"
-                  : "bg-yellow-100 text-yellow-700"
-              }`}
-            >
-              {c.isProductReceived === true ? "Received" : "Shipped"}
-            </span>
-          </Td>
-
-          <Td className="text-center">
-            <button
-              onClick={() => onOpenItems(c.items)}
-              className="py-1 px-2 rounded text-xs font-medium bg-blue-600 text-white hover:bg-blue-500 transition"
-              title="View items"
-            >
-              View
-            </button>
-          </Td>
-          {showActions && (
-            <Td className="text-center">
-              <button
-                onClick={() => onMarkReceived && onMarkReceived(c.id)}
-                className="px-3 py-1 rounded bg-emerald-600 text-white text-xs hover:bg-emerald-500"
-                title="Mark as Received"
+            <td className="bg-gray-100 p-4 font-medium text-gray-900 text-center">{idx + 1}</td>
+            <td className="bg-white p-4 text-gray-600 text-center font-semibold">{c.trackingId}</td>
+            <td className="bg-gray-100 p-4 text-gray-600 text-center font-semibold">
+              {c.packagingDetails && c.packagingDetails.length > 0 
+                ? c.packagingDetails[0].deliveryPartner 
+                : 'N/A'}
+            </td>
+            <td className="bg-white p-4 text-gray-600 text-center">{formatDate(c.shippedDate)}</td>
+            <td className="bg-gray-100 p-4 text-gray-600 text-center font-semibold">
+              {c.packagingDetails && c.packagingDetails.length > 0 
+                ? formatDate(c.packagingDetails[0].arrivalDate) 
+                : 'N/A'}
+            </td>
+            <td className="bg-white p-4 text-center">
+              <span
+                className={`px-2 py-1 rounded-md text-xs font-medium ${
+                  c.isProductReceived === true
+                    ? "bg-emerald-100 text-emerald-700"
+                    : "bg-yellow-100 text-yellow-700"
+                }`}
               >
-                Mark Received
+                {c.isProductReceived === true ? "Received" : "Shipped"}
+              </span>
+            </td>
+
+            <td className="bg-gray-100 p-4 text-center">
+              <button
+                onClick={() => onOpenItems(c.items)}
+                className="py-1 px-2 rounded text-xs font-medium bg-blue-600 text-white hover:bg-blue-500 transition"
+                title="View items"
+              >
+                View
               </button>
-            </Td>
-          )}
-        </tr>
-      ))}
-    </tbody>
-  </table>
+            </td>
+            {showActions && (
+              <td className="bg-white p-4 text-center">
+                <button
+                  onClick={() => onMarkReceived && onMarkReceived(c.id)}
+                  className="px-3 py-1 rounded bg-emerald-600 text-white text-xs hover:bg-emerald-500"
+                  title="Mark as Received"
+                >
+                  Mark Received
+                </button>
+              </td>
+            )}
+          </tr>
+        ))}
+      </tbody>
+    </table>
+  </div>
 );
 
 
@@ -242,22 +244,22 @@ const ItemsModal = ({ items, onClose }) => (
       <div className="p-6">
         <h2 className="text-lg font-semibold mb-4">Medicines in this Parcel</h2>
 
-        <table className="min-w-full text-sm border-collapse rounded">
-          <thead className="bg-gray-100">
-            <tr>
-              <Th>S.No.</Th>
-              <Th>Name</Th>
-              <Th>Qty</Th>
-              <Th>UoM</Th>
+        <table className="w-full overflow-hidden rounded-lg">
+          <thead>
+            <tr className="border-b border-blue-200">
+              <th className="bg-gray-100 text-center p-4 font-bold text-gray-700 text-sm">S.No.</th>
+              <th className="bg-white text-center p-4 font-bold text-gray-700 text-sm">Name</th>
+              <th className="bg-gray-100 text-center p-4 font-bold text-gray-700 text-sm">Qty</th>
+              <th className="bg-white text-center p-4 font-bold text-gray-700 text-sm">UoM</th>
             </tr>
           </thead>
           <tbody>
             {items.map((m, idx) => (
-              <tr key={idx} className="even:bg-gray-50">
-                <Td>{idx + 1}</Td>
-                <Td>{m.name}</Td>
-                <Td>{m.qty}</Td>
-                <Td>{m.uom}</Td>
+              <tr key={idx} className="border-b border-blue-200">
+                <td className="bg-gray-100 p-4 font-medium text-gray-900 text-center">{idx + 1}</td>
+                <td className="bg-white p-4 text-gray-600 text-center">{m.name}</td>
+                <td className="bg-gray-100 p-4 text-gray-600 text-center">{m.qty}</td>
+                <td className="bg-white p-4 text-gray-600 text-center">{m.uom}</td>
               </tr>
             ))}
           </tbody>
@@ -266,6 +268,7 @@ const ItemsModal = ({ items, onClose }) => (
     </div>
   </div>
 );
+
 const Th = ({ children }) => (
   <th className="text-left px-3 py-2 font-semibold text-gray-700 whitespace-nowrap text-center">
     {children}
