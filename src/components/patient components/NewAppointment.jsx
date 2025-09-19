@@ -618,7 +618,7 @@ const NewAppointment = () => {
           )}
 
           <div>
-            <label className="font-semibold block mb-2">Pick Your Time</label>
+            <label className="text-lg font-semibold block mb-2">Pick Your Time</label>
             <div className="grid grid-cols-3 gap-2">
               {timeSlots.map((time) => (
                 <button

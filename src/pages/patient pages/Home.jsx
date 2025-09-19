@@ -152,7 +152,7 @@ const Home = () => {
                   <h3 className="text-black-600 text-lg font-bold mb-2">
                     Upcoming Appointment
                   </h3>
-                  <p className="text-4xl font-bold text-blue-600 mb-2">
+                  <p className="text-4xl font-bold text-purple-500 mb-2">
                     {pendingAppointments}
                   </p>
                 </div>
@@ -168,7 +168,7 @@ const Home = () => {
                   <h3 className="text-black-600 text-lg font-bold mb-2">
                     Pending Transaction
                   </h3>
-                  <p className="text-4xl font-bold text-blue-600 mb-2">
+                  <p className="text-4xl font-bold text-pink-500 mb-2">
                     {pendingPayment}
                   </p>
                 </div>
@@ -184,7 +184,7 @@ const Home = () => {
                   <h3 className="text-black-600 text-lg font-bold mb-2">
                     Coupons
                   </h3>
-                  <p className="text-4xl font-bold text-blue-600 mb-2">
+                  <p className="text-4xl font-bold text-green-500 mb-2">
                     {couponCount}
                   </p>
                 </div>
