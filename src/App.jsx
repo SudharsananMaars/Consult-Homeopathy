@@ -144,6 +144,7 @@ import UnusedDetails from "./components/Inventory/UnusedDetails.jsx";
 import MedicinePreparationLogin from "./pages/MedicinePreparationPages/MedicinePreparationlogin";
 import Preparation from "./pages/MedicinePreparationPages/preparation";
 import AmendmentHistory from "./components/Vendor/AmendmentHistory.jsx";
+import SetPassword from "./pages/patient pages/SetPassword.jsx";
 
 // Error Fallback Component
 const ErrorFallback = () => <ServerError />;
@@ -333,6 +334,12 @@ function App() {
             <ProtectedRoute allowedRoles={["Patient"]}>
               <Workshops />
             </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/set-password/:id"
+          element={
+              <SetPassword />
           }
         />
         <Route
