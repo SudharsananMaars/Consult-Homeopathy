@@ -406,7 +406,7 @@ const LostTable = () => {
       case "Patient Type":
         return <span className="text-gray-600">{patient.newExisting || '---'}</span>;
       case "Who is the Consultation for":
-        return <span className="text-gray-600">{patient.medicalDetails.consultingFor || '---'}</span>;
+        return <span className="text-gray-600">{patient.consultingFor || '---'}</span>;
       case "Name":
         return <span className="font-medium text-gray-900">{patient.name}</span>;
       case "Phone Number":

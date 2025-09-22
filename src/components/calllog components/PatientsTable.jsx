@@ -402,7 +402,7 @@ const PatientsTable = () => {
       case "Patient Type":
         return patient.newExisting || '---';
       case "Who is the Consultation for":
-        return patient.medicalDetails.consultingFor || '---';
+        return patient.consultingFor || '---';
       case "Name":
         return <span className="font-medium text-gray-900">{patient.name}</span>;
       case "Phone Number":
@@ -472,7 +472,7 @@ const PatientsTable = () => {
           </select>
         );
       case "Role and Activity Status":
-        return patient.medicalDetails.follow || '---';
+        return patient.follow || '---';
       case "Messenger Comment":
         return patient.medicalDetails.followComment || '---';
       case "Omni Channel":
@@ -560,7 +560,7 @@ const PatientsTable = () => {
       case "Appointment Fixed":
         return patient.appointmentFixed === 'Yes' ? <FaCheckCircle className='text-green-500' /> : <FaTimesCircle className='text-red-500' />;
       case "Medicine & Shipping Payment confirmation":
-        return patient.medicalPayment === 'Yes' ? <FaCheckCircle className='text-green-500' /> : <FaTimesCircle className='text-red-500' />;
+        return patient.medicalDetails?.medicalPayment === 'Yes' ? <FaCheckCircle className='text-green-500' /> : <FaTimesCircle className='text-red-500' />;
       case "Role Allocation":
         return (
           <DoctorAllocationCell 

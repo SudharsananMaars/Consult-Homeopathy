@@ -301,9 +301,9 @@ const NewAppointment = () => {
     const payload = {
       appointmentDate,
       timeSlot: selectedTime,
-      consultingFor: consultingFor.value,
+      consultingFor: "Self",
       consultingReason: analysisResult.classification,
-      symptom: consultingReason?.value === "Other" ? symptom : "",
+      symptom: symptomInput,
     };
 
     // Debug log to see what's being sent
@@ -574,8 +574,7 @@ const NewAppointment = () => {
             {analysisResult && (
               <div className="mt-2 p-3 bg-green-50 border border-green-200 rounded">
                 <p className="text-sm text-green-800">
-                  <strong>Classification:</strong>{" "}
-                  {analysisResult.classification}
+                  <strong>Disease Has Been Analysed</strong>
                 </p>
               </div>
             )}
