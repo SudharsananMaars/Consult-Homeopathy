@@ -188,7 +188,7 @@ const Sidebar = ({ isMobileSidebarOpen, setIsMobileSidebarOpen }) => {
         transition={{ type: "spring", stiffness: 300, damping: 30 }}
       >
         {/* Logo section */}
-        <div className="px-6 py-6 flex justify-center">
+        <div className="px-1 py-1 flex justify-center">
           <img
             src="/src/assets/images/doctor images/homeologo.png"
             alt="Homeopathy Logo"

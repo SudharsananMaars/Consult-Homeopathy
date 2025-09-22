@@ -592,7 +592,7 @@ const LoginPage = () => {
                 onClick={handleRegistration}
                 className="text-blue-500 hover:underline"
               >
-                Register as Patient
+                Register to Start Your Healing
               </button>
             </div>
           )}

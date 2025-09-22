@@ -531,10 +531,10 @@ const handleCountryChangeWhatsApp = (e) => {
         {/* Header */}
         <div className="bg-gradient-to-r from-blue-600 to-indigo-700 px-6 py-5">
           <h2 className="text-2xl font-bold text-white">
-            Patient Registration Form
+            First-Time Registration
           </h2>
           <p className="text-blue-100 mt-1">
-            Please complete all required fields
+            All fields must be filled in
           </p>
         </div>
 
