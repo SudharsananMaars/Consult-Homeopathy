@@ -20,7 +20,7 @@ import DraftViewModal from "./DraftViewModal"; // Make sure the path is correct
 import PrescriptionViewModal from "../PrescriptionModule/PrescriptionViewModal";
 import MedicinePreparationView from "../../pages/doctor pages/MedicinePreparationView";
 
-const WorkTable = () => {
+const ExistingTable = () => {
   const [patients, setPatients] = useState([]);
   const [specialAllocationPatients, setSpecialAllocationPatients] = useState(
     []
@@ -143,7 +143,20 @@ const [countsLoading, setCountsLoading] = useState(true);
     }
   };
 
-  const fetchAppointmentCounts = async (classification = 'acute', newExisting = 'New') => {
+  const handleDoctorChange = async (patientId, doctorId) => {
+    try {
+      await axios.post(`${API_URL}/api/assign/allocations`, {
+        allocations: [{ role: "patient", doctorId, patientId }],
+      });
+      // Refresh the patient list or update the local state
+      fetchPatients();
+    } catch (error) {
+      console.error("Error updating doctor allocation:", error);
+      setError("Failed to update doctor allocation. Please try again.");
+    }
+  };
+
+  const fetchAppointmentCounts = async (classification = 'acute', newExisting = 'Existing') => {
   try {
     setCountsLoading(true);
     const response = await axios.patch(`${API_URL}/api/patient/sort-classification`, {
@@ -160,19 +173,6 @@ const [countsLoading, setCountsLoading] = useState(true);
     setCountsLoading(false);
   }
 };
-
-  const handleDoctorChange = async (patientId, doctorId) => {
-    try {
-      await axios.post(`${API_URL}/api/assign/allocations`, {
-        allocations: [{ role: "patient", doctorId, patientId }],
-      });
-      // Refresh the patient list or update the local state
-      fetchPatients();
-    } catch (error) {
-      console.error("Error updating doctor allocation:", error);
-      setError("Failed to update doctor allocation. Please try again.");
-    }
-  };
 
   const fetchDoctorFollowTypes = async () => {
     try {
@@ -254,7 +254,7 @@ const [countsLoading, setCountsLoading] = useState(true);
   }, [selectedFollowType]);
 
   useEffect(() => {
-  fetchAppointmentCounts(activeTab, 'New');
+  fetchAppointmentCounts(activeTab, 'Existing');
 }, [activeTab]);
 
 const handleTabChange = (tab) => {
@@ -263,7 +263,7 @@ const handleTabChange = (tab) => {
 
   const filteredPatients = patients.filter((patient) => {
     if (selectedFollowType === "View All") {
-      return patient.newExisting === "New";
+        return patient.newExisting === "New";
     }
 
     const isMatchingFollowType =
@@ -295,7 +295,7 @@ const handleTabChange = (tab) => {
     // console.log("Checking patient: ",patient);
     return (
       isMatchingFollowType &&
-      patient.newExisting === "New" &&
+      patient.newExisting === "Existing" &&
       (searchTerm === "" ||
         patient.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
         patient.phone.includes(searchTerm))
@@ -1469,10 +1469,9 @@ const handleTabChange = (tab) => {
   const tableConfig = getTableConfig();
 
   return (
-    
     <div className="w-full px-2 py-4">
-      <h2 className="text-2xl font-bold text-black-500 pb-2">Patients List</h2>
-      {/* Tabs Section */}
+        <h2 className="text-2xl font-bold text-black-500 pb-2">Patients List</h2>
+        {/* Tabs Section */}
 <div className="flex gap-1 mb-6">
   <button 
     onClick={() => handleTabChange('acute')}
@@ -1650,4 +1649,4 @@ const handleTabChange = (tab) => {
   );
 };
 
-export default WorkTable;
+export default ExistingTable;

@@ -3,6 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import PatientsTable from './PatientsTable';
 import WorkTable from './WorkTable';
+import ExistingTable from './ExistingTable';
 import StatusCompleteTable from './StatusCompleted';
 import InProgressTable from './InProgressTable';
 import LostTable from './LostTable';
@@ -56,6 +57,8 @@ const AssistantMainCom = () => {
         return <PatientsTable />;
       case 'myAllocation':
         return <WorkTable />;
+      case 'existing':
+        return <ExistingTable />;
       case 'lost':
         return <LostTable />;
       case 'attemptBucket':
@@ -138,7 +141,7 @@ const AssistantMainCom = () => {
 
         {/* Desktop View - Tabs */}
         <div className="hidden md:flex space-x-2 bg-white p-2 rounded-lg">
-          {['all', 'myAllocation', 'lost', 'attemptBucket'].map((tab) => (
+          {['all', 'myAllocation', 'existing', 'lost', 'attemptBucket'].map((tab) => (
             <button
               key={tab}
               onClick={() => handleTabClick(tab)}
@@ -149,7 +152,8 @@ const AssistantMainCom = () => {
               }`}
             >
               {tab === 'all' ? 'All'
-                : tab === 'myAllocation' ? 'My Allocation'
+                : tab === 'myAllocation' ? 'New'
+                : tab === 'existing' ? 'Existing'
                 : tab === 'lost' ? 'Lost'
                 : 'Attempt Bucket'}
             </button>
