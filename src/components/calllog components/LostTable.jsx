@@ -22,8 +22,20 @@ const LostTable = () => {
   const [patientFormsStatus, setPatientFormsStatus] = useState({});
   const [visibleSections, setVisibleSections] = useState([1]);
   const [searchQuery, setSearchQuery] = useState(''); 
+  const [statistics, setStatistics] = useState(null);
   const [allocations, setAllocations] = useState([]);
   const [individualAllocations, setIndividualAllocations] = useState({});
+  const [tab, setTab] = useState('acute');
+const [appointmentCounts, setAppointmentCounts] = useState({
+  "Consultation": 0,
+  "Prescription": 0,
+  "Payment": 0,
+  "Medicine Preparation": 0,
+  "Shipment": 0,
+  "Patient Care": 0
+});
+const [countsLoading, setCountsLoading] = useState(true);
+  
 
   const API_URL = config.API_URL;
 
@@ -73,6 +85,42 @@ const LostTable = () => {
     
     fetchPatientsAndFormStatus();
   }, []);
+
+  useEffect(() => {
+  const fetchDashboardStats = async () => {
+    try {
+      const res = await fetch(`${API_URL}/api/patient/dashboard-statistics`);
+      const data = await res.json();
+
+      if (data.success) {
+        setStatistics(data.statistics);
+      } else {
+        console.error("Failed to fetch statistics:", data);
+      }
+    } catch (err) {
+      console.error("Error fetching dashboard statistics:", err);
+    }
+  };
+
+  fetchDashboardStats();
+}, []);
+
+  const fetchAppointmentCounts = async (classification = 'acute') => {
+  try {
+    setCountsLoading(true);
+    const response = await axios.patch(`${API_URL}/api/patient/sort-lost-patients`, {
+      classification: classification,
+    });
+
+    if (response.data.success) {
+      setAppointmentCounts(response.data.countsByStage);
+    }
+  } catch (error) {
+    console.error('Error fetching appointment counts:', error);
+  } finally {
+    setCountsLoading(false);
+  }
+};
 
   const handleIndividualAllocation = async (patientId, doctorId) => {
     try {
@@ -206,6 +254,14 @@ const LostTable = () => {
       console.error('Error sending message:', error.response ? error.response.data : error.message);
     }
   };
+
+  useEffect(() => {
+  fetchAppointmentCounts(tab);
+}, [tab]);
+
+const handleTabChange = (tab) => {
+  setTab(tab);
+};
   
   const getCallStatus = (patient) => {
     if (!patient || typeof patient.medicalDetails.enquiryStatus === 'undefined') {
@@ -426,40 +482,7 @@ const LostTable = () => {
       case "If disease type is not available":
         return <span className="text-gray-600">{patient.medicalDetails.diseaseName || '---'}</span>;
       case "Acute / Chronic":
-        return (
-          <div>
-            {editingDiseaseType === patient._id ? (
-              <select
-                value={patient.medicalDetails?.diseaseType?.name || ''}  // Optional chaining here
-                onChange={(e) => handleEditDiseaseType(patient._id, e.target.value)}
-                onBlur={() => setEditingDiseaseType(null)}
-                autoFocus
-                className="w-full p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-              >
-                <option value="">Select Type</option>
-                <option value="Acute">Acute</option>
-                <option value="Chronic">Chronic</option>
-              </select>
-            ) : (
-              <div className="flex items-center justify-center space-x-2">
-                <span className={`font-medium ${patient.medicalDetails?.diseaseType?.edit ? 'text-blue-600' : 'text-gray-700'}`}>
-                  {patient.medicalDetails?.diseaseType?.name || 'Not specified'}  {/* Optional chaining */}
-                </span>
-                <button 
-                  onClick={() => setEditingDiseaseType(patient._id)}
-                  className="text-gray-500 hover:text-blue-600 focus:outline-none"
-                >
-                  <FaPencilAlt size={14} />
-                </button>
-              </div>
-            )}
-            {patient.diseaseType?.edit && patient.diseaseType.editedby && (
-              <div className="mt-1 text-xs text-gray-500">
-                Edited by: {patient.diseaseType.editedby}
-              </div>
-            )}
-          </div>
-        );   
+        return <span className="text-gray-600">{patient.classification || '---'}</span>;
       case "Patient Profile":
         return <span className="text-gray-600">{patientFormsStatus[patient._id] || 'Loading...'}</span>;
       case "Enquiry Status":
@@ -593,9 +616,11 @@ const LostTable = () => {
 
   return (
     <div className="space-y-6">
-      <div className="flex justify-between items-center mb-6 bg-white p-3 rounded-lg shadow-md">
-        <h2 className="text-2xl font-bold text-[#1a237e]">Patients List</h2>
+      <div className="flex justify-between items-center mb-6 bg-white p-3 rounded-lg">
+        <h2 className="text-2xl font-bold text-black">Patients List</h2>
+        
         <div className="flex items-center space-x-4">
+          
           <div className="relative flex items-center">
             <div className="flex items-center bg-white rounded-l-lg border-2 border-r-0 border-[#1a237e] focus-within:border-[#534bae] transition-colors duration-300">
               <FaSearch className="ml-3 text-[#1a237e]" />
@@ -627,9 +652,101 @@ const LostTable = () => {
           )}
         </div>
       </div>
-      
-      <TabSwitcher />
+      {/* Tabs Section */}
+<div className="flex gap-1 mb-6">
+  <button 
+    onClick={() => handleTabChange('acute')}
+    className={`flex items-center gap-2 px-4 py-2 rounded-lg border ${
+      tab === 'acute' 
+        ? 'bg-blue-50 text-blue-600 border-blue-200' 
+        : 'bg-gray-50 text-gray-600 border-gray-200'
+    }`}
+  >
+    <div className={`w-2 h-2 rounded-full ${
+      tab === 'acute' ? 'bg-blue-600' : 'bg-gray-400'
+    }`}></div>
+    Acute ({statistics?.notInterestedPatients?.acute ?? 0})
+  </button>
+  <button 
+    onClick={() => handleTabChange('chronic')}
+    className={`flex items-center gap-2 px-4 py-2 rounded-lg border ${
+      tab === 'chronic' 
+        ? 'bg-blue-50 text-blue-600 border-blue-200' 
+        : 'bg-gray-50 text-gray-600 border-gray-200'
+    }`}
+  >
+    <div className={`w-2 h-2 rounded-full ${
+      tab === 'chronic' ? 'bg-blue-600' : 'bg-gray-400'
+    }`}></div>
+    Chronic ({statistics?.notInterestedPatients?.chronic ?? 0})
+  </button>
+</div>
 
+{/* Status Cards */}
+<div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4 mb-6">
+  <div className="bg-white rounded-lg border border-gray-200 p-4 relative overflow-hidden">
+    <div className="absolute left-0 top-0 w-1 h-full bg-blue-500"></div>
+    <div className="ml-3">
+      <div className="text-sm text-gray-500 mb-1">Consultation</div>
+      <div className="text-2xl font-bold text-blue-500">
+        {countsLoading ? '...' : appointmentCounts["Consultation"] || 0}
+      </div>
+    </div>
+  </div>
+  
+  <div className="bg-white rounded-lg border border-gray-200 p-4 relative overflow-hidden">
+    <div className="absolute left-0 top-0 w-1 h-full bg-orange-500"></div>
+    <div className="ml-3">
+      <div className="text-sm text-gray-500 mb-1">Prescription</div>
+      <div className="text-2xl font-bold text-orange-500">
+        {countsLoading ? '...' : appointmentCounts["Prescription"] || 0}
+      </div>
+    </div>
+  </div>
+  
+  <div className="bg-white rounded-lg border border-gray-200 p-4 relative overflow-hidden">
+    <div className="absolute left-0 top-0 w-1 h-full bg-green-500"></div>
+    <div className="ml-3">
+      <div className="text-sm text-gray-500 mb-1">Payment</div>
+      <div className="text-2xl font-bold text-green-500">
+        {countsLoading ? '...' : appointmentCounts["Payment"] || 0}
+      </div>
+    </div>
+  </div>
+  
+  <div className="bg-white rounded-lg border border-gray-200 p-4 relative overflow-hidden">
+    <div className="absolute left-0 top-0 w-1 h-full bg-yellow-500"></div>
+    <div className="ml-3">
+      <div className="text-sm text-gray-500 mb-1">Medicine Preparation</div>
+      <div className="text-2xl font-bold text-yellow-500">
+        {countsLoading ? '...' : appointmentCounts["Medicine Preparation"] || 0}
+      </div>
+    </div>
+  </div>
+  
+  <div className="bg-white rounded-lg border border-gray-200 p-4 relative overflow-hidden">
+    <div className="absolute left-0 top-0 w-1 h-full bg-blue-500"></div>
+    <div className="ml-3">
+      <div className="text-sm text-gray-500 mb-1">Shipment</div>
+      <div className="text-2xl font-bold text-blue-500">
+        {countsLoading ? '...' : appointmentCounts["Shipment"] || 0}
+      </div>
+    </div>
+  </div>
+  
+  <div className="bg-white rounded-lg border border-gray-200 p-4 relative overflow-hidden">
+    <div className="absolute left-0 top-0 w-1 h-full bg-blue-500"></div>
+    <div className="ml-3">
+      <div className="text-sm text-gray-500 mb-1">Patient Care</div>
+      <div className="text-2xl font-bold text-blue-500">
+        {countsLoading ? '...' : appointmentCounts["Patient Care"] || 0}
+      </div>
+    </div>
+  </div>
+</div>
+
+      <TabSwitcher />
+      
       <div className="bg-white rounded-lg shadow-md overflow-hidden">
         <div className="overflow-x-auto" ref={tableRef}>
           <div className="inline-block min-w-full align-middle">
