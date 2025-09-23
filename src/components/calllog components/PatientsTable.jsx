@@ -19,11 +19,13 @@ const PatientsTable = () => {
   const [showRecordingsInterface, setShowRecordingsInterface] = useState(false);
   const [followUpStatuses, setFollowUpStatuses] = useState({});
   const [showFilters, setShowFilters] = useState(false);
+  const [tab, setTab] = useState('acute');
   const [patientFormsStatus, setPatientFormsStatus] = useState({});
   const [visibleSections, setVisibleSections] = useState([1]);
   const [searchQuery, setSearchQuery] = useState(''); 
   const [allocations, setAllocations] = useState([]);
   const [individualAllocations, setIndividualAllocations] = useState({});
+  const [statistics, setStatistics] = useState(null);
 
   const API_URL = config.API_URL;
   const userId = localStorage.getItem('userId');
@@ -92,6 +94,14 @@ const PatientsTable = () => {
     }
   };
 
+  useEffect(() => {
+  //fetchAppointmentCounts(activeTab, 'new');
+}, [tab]);
+
+const handleTabChange = (tab) => {
+  setTab(tab);
+};
+
   const getDoctorForPatient = (patient) => {
     // First check if there's an individual allocation
     if (individualAllocations[patient._id]) {
@@ -150,6 +160,25 @@ const PatientsTable = () => {
 
     return matchesSearchTerm && matchesFilter;
   }));
+
+  useEffect(() => {
+  const fetchDashboardStats = async () => {
+    try {
+      const res = await fetch(`${API_URL}/api/patient/dashboard-statistics`);
+      const data = await res.json();
+
+      if (data.success) {
+        setStatistics(data.statistics);
+      } else {
+        console.error("Failed to fetch statistics:", data);
+      }
+    } catch (err) {
+      console.error("Error fetching dashboard statistics:", err);
+    }
+  };
+
+  fetchDashboardStats();
+}, []);
 
   const makeCall = async (patient) => {
     try {
@@ -422,40 +451,7 @@ const PatientsTable = () => {
       case "If disease type is not available":
         return patient.medicalDetails.diseaseName || '---';
       case "Acute / Chronic":
-        return (
-          <div>
-            {editingDiseaseType === patient._id ? (
-              <select
-                value={patient.medicalDetails?.diseaseType?.name || ''}  // Optional chaining here
-                onChange={(e) => handleEditDiseaseType(patient._id, e.target.value)}
-                onBlur={() => setEditingDiseaseType(null)}
-                autoFocus
-                className="w-full p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-              >
-                <option value="">Select Type</option>
-                <option value="Acute">Acute</option>
-                <option value="Chronic">Chronic</option>
-              </select>
-            ) : (
-              <div className="flex items-center justify-center space-x-2">
-                <span className={`font-medium ${patient.medicalDetails?.diseaseType?.edit ? 'text-blue-600' : 'text-gray-700'}`}>
-                  {patient.medicalDetails?.diseaseType?.name || 'Not specified'}  {/* Optional chaining */}
-                </span>
-                <button 
-                  onClick={() => setEditingDiseaseType(patient._id)}
-                  className="text-gray-500 hover:text-blue-600 focus:outline-none"
-                >
-                  <FaPencilAlt size={14} />
-                </button>
-              </div>
-            )}
-            {patient.diseaseType?.edit && patient.diseaseType.editedby && (
-              <div className="mt-1 text-xs text-gray-500">
-                Edited by: {patient.diseaseType.editedby}
-              </div>
-            )}
-          </div>
-        );   
+        return patient.classification || '---';
       case "Patient Profile":
         return patientFormsStatus[patient._id] || 'Loading...';
       case "Enquiry Status":
@@ -583,6 +579,35 @@ const PatientsTable = () => {
     <div className="space-y-6">
   {/* Heading */}
   <h2 className="text-2xl font-bold text-black-500 pd-2">Patients List</h2>
+
+  <div className="flex gap-1 mb-6">
+  <button 
+    onClick={() => handleTabChange('acute')}
+    className={`flex items-center gap-2 px-4 py-2 rounded-lg border ${
+      tab === 'acute' 
+        ? 'bg-blue-50 text-blue-600 border-blue-200' 
+        : 'bg-gray-50 text-gray-600 border-gray-200'
+    }`}
+  >
+    <div className={`w-2 h-2 rounded-full ${
+      activeTab === 'acute' ? 'bg-blue-600' : 'bg-gray-400'
+    }`}></div>
+    Acute ({statistics?.allAppointments?.acute ?? 0})
+  </button>
+  <button 
+    onClick={() => handleTabChange('chronic')}
+    className={`flex items-center gap-2 px-4 py-2 rounded-lg border ${
+      tab === 'chronic' 
+        ? 'bg-blue-50 text-blue-600 border-blue-200' 
+        : 'bg-gray-50 text-gray-600 border-gray-200'
+    }`}
+  >
+    <div className={`w-2 h-2 rounded-full ${
+      tab === 'chronic' ? 'bg-blue-600' : 'bg-gray-400'
+    }`}></div>
+    Chronic ({statistics?.newAppointments?.chronic ?? 0})
+  </button>
+</div>
 
   {/* Search + Filter */}
   <div className="flex items-center space-x-3 bg-white p-3 rounded-lg shadow-sm w-fit">

@@ -49,6 +49,7 @@ const [countsLoading, setCountsLoading] = useState(true);
 
   const [showModal, setShowModal] = useState(false);
   const [modalContent, setModalContent] = useState(null);
+  const [statistics, setStatistics] = useState(null);
 
   const location = useLocation();
   const userId = localStorage.getItem("userId");
@@ -130,6 +131,25 @@ const [countsLoading, setCountsLoading] = useState(true);
     fetchDoctorFollowTypes();
     fetchPatients();
   }, []);
+
+  useEffect(() => {
+  const fetchDashboardStats = async () => {
+    try {
+      const res = await fetch(`${API_URL}/api/patient/dashboard-statistics`);
+      const data = await res.json();
+
+      if (data.success) {
+        setStatistics(data.statistics);
+      } else {
+        console.error("Failed to fetch statistics:", data);
+      }
+    } catch (err) {
+      console.error("Error fetching dashboard statistics:", err);
+    }
+  };
+
+  fetchDashboardStats();
+}, []);
 
   const fetchSpecialAllocations = async (doctorId) => {
     try {
@@ -259,9 +279,13 @@ const [countsLoading, setCountsLoading] = useState(true);
 
 const handleTabChange = (tab) => {
   setActiveTab(tab);
+  fetchPatients();
 };
 
   const filteredPatients = patients.filter((patient) => {
+    const tabFilter = activeTab === 'acute' 
+    ? patient.medicalDetails.classification === 'acute'
+    : patient.medicalDetails.classification === 'chronic';
     if (selectedFollowType === "View All") {
       return patient.newExisting === "New";
     }
@@ -296,6 +320,7 @@ const handleTabChange = (tab) => {
     return (
       isMatchingFollowType &&
       patient.newExisting === "New" &&
+      tabFilter &&
       (searchTerm === "" ||
         patient.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
         patient.phone.includes(searchTerm))
@@ -1485,7 +1510,7 @@ const handleTabChange = (tab) => {
     <div className={`w-2 h-2 rounded-full ${
       activeTab === 'acute' ? 'bg-blue-600' : 'bg-gray-400'
     }`}></div>
-    Acute
+    Acute ({statistics?.newAppointments?.acute ?? 0})
   </button>
   <button 
     onClick={() => handleTabChange('chronic')}
@@ -1498,7 +1523,7 @@ const handleTabChange = (tab) => {
     <div className={`w-2 h-2 rounded-full ${
       activeTab === 'chronic' ? 'bg-blue-600' : 'bg-gray-400'
     }`}></div>
-    Chronic
+    Chronic ({statistics?.newAppointments?.chronic ?? 0})
   </button>
 </div>
 
