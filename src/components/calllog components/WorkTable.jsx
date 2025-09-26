@@ -1498,34 +1498,68 @@ const handleTabChange = (tab) => {
     <div className="w-full px-2 py-4">
       <h2 className="text-2xl font-bold text-black-500 pb-2">Patients List</h2>
       {/* Tabs Section */}
-<div className="flex gap-1 mb-6">
-  <button 
-    onClick={() => handleTabChange('acute')}
-    className={`flex items-center gap-2 px-4 py-2 rounded-lg border ${
-      activeTab === 'acute' 
-        ? 'bg-blue-50 text-blue-600 border-blue-200' 
-        : 'bg-gray-50 text-gray-600 border-gray-200'
-    }`}
-  >
-    <div className={`w-2 h-2 rounded-full ${
-      activeTab === 'acute' ? 'bg-blue-600' : 'bg-gray-400'
-    }`}></div>
-    Acute ({statistics?.newAppointments?.acute ?? 0})
-  </button>
-  <button 
-    onClick={() => handleTabChange('chronic')}
-    className={`flex items-center gap-2 px-4 py-2 rounded-lg border ${
-      activeTab === 'chronic' 
-        ? 'bg-blue-50 text-blue-600 border-blue-200' 
-        : 'bg-gray-50 text-gray-600 border-gray-200'
-    }`}
-  >
-    <div className={`w-2 h-2 rounded-full ${
-      activeTab === 'chronic' ? 'bg-blue-600' : 'bg-gray-400'
-    }`}></div>
-    Chronic ({statistics?.newAppointments?.chronic ?? 0})
-  </button>
+<div className="flex flex-col md:flex-row items-center justify-between mb-6 gap-4">
+  {/* Left: Tabs */}
+  <div className="flex gap-2">
+    <button 
+      onClick={() => handleTabChange('acute')}
+      className={`flex items-center gap-2 px-4 py-2 rounded-lg border ${
+        activeTab === 'acute' 
+          ? 'bg-blue-50 text-blue-600 border-blue-200' 
+          : 'bg-gray-50 text-gray-600 border-gray-200'
+      }`}
+    >
+      <div className={`w-2 h-2 rounded-full ${
+        activeTab === 'acute' ? 'bg-blue-600' : 'bg-gray-400'
+      }`}></div>
+      Acute ({statistics?.newAppointments?.acute ?? 0})
+    </button>
+    <button 
+      onClick={() => handleTabChange('chronic')}
+      className={`flex items-center gap-2 px-4 py-2 rounded-lg border ${
+        activeTab === 'chronic' 
+          ? 'bg-blue-50 text-blue-600 border-blue-200' 
+          : 'bg-gray-50 text-gray-600 border-gray-200'
+      }`}
+    >
+      <div className={`w-2 h-2 rounded-full ${
+        activeTab === 'chronic' ? 'bg-blue-600' : 'bg-gray-400'
+      }`}></div>
+      Chronic ({statistics?.newAppointments?.chronic ?? 0})
+    </button>
+  </div>
+
+  {/* Right: Search + Dropdown */}
+  <div className="flex flex-col md:flex-row items-center gap-4">
+    {/* Search */}
+    <div className="relative w-72">
+      <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+        <IoIosSearch className="h-5 w-5 text-gray-500" />
+      </div>
+      <input
+        type="text"
+        placeholder="Search by name or phone number..."
+        value={searchTerm}
+        onChange={(e) => setSearchTerm(e.target.value)}
+        className="w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg bg-white focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
+      />
+    </div>
+
+    {/* Dropdown */}
+    <select
+      value={selectedFollowType}
+      onChange={handleFollowChange}
+      className="border border-gray-300 rounded-lg px-3 py-2 bg-white text-gray-700 focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
+    >
+      {followTypes.map((type) => (
+        <option key={type} value={type}>
+          {type}
+        </option>
+      ))}
+    </select>
+  </div>
 </div>
+
 
 {/* Status Cards */}
 <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4 mb-6">
@@ -1589,35 +1623,6 @@ const handleTabChange = (tab) => {
     </div>
   </div>
 </div>
-      <div className="mb-6 flex flex-col md:flex-row items-center justify-between">
-  {/* Left: Search Bar */}
-  <div className="relative w-72 mb-4 md:mb-0">
-    <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-      <IoIosSearch className="h-5 w-5 text-gray-500" />
-    </div>
-    <input
-      type="text"
-      placeholder="Search by name or phone number..."
-      value={searchTerm}
-      onChange={(e) => setSearchTerm(e.target.value)}
-      className="w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg bg-white focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
-    />
-  </div>
-
-  {/* Right: Dropdown */}
-  <select
-    value={selectedFollowType}
-    onChange={handleFollowChange}
-    className="border border-gray-300 rounded-lg px-3 py-2 bg-white text-gray-700 focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
-  >
-    {followTypes.map((type) => (
-      <option key={type} value={type}>
-        {type}
-      </option>
-    ))}
-  </select>
-</div>
-
       <div className="w-full overflow-x-auto">
         <table className="w-full overflow-hidden rounded-lg">
           <thead>

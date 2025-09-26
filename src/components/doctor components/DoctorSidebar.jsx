@@ -307,16 +307,16 @@ const Sidebar = ({ role }) => {
         transition={{ type: "spring", stiffness: 300, damping: 30 }}
       >
         {/* Logo section */}
-        <div className="px-6 py-0 flex justify-center">
+        <div className="px-6 py-2 flex justify-center">
           <img
-            src="/src/assets/images/doctor images/homeologo.png"
+            src="/src/assets/images/doctor images/homeologo2.png"
             alt="Homeopathy Logo"
-            className="h-24 w-auto object-contain"
+            className="h-18 w-auto object-contain"
           />
         </div>
 
         {/* Doctor Profile section */}
-        <div className="px-6 pb-6 flex flex-col items-center">
+        <div className="px-6 pb-6 py-4 flex flex-col items-center">
           <SidebarProfile />
         </div>
 

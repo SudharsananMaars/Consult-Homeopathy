@@ -19,7 +19,7 @@ import {
   CalendarToday,
   KeyboardArrowDown,
 } from "@mui/icons-material";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import DoctorNotification from "./DoctorNotification";
 import DoctorMessenger from "./DoctorMessenger";
 import axios from "axios";
@@ -28,8 +28,113 @@ import { useUnreadCount } from "../../contexts/UnreadCountContext";
 
 const API_URL = config.API_URL;
 
+// Configuration for icon types - set USE_GIF_ICONS to true to use GIFs
+const USE_GIF_ICONS = true; // Change this to false to use Material-UI icons
+
+// GIF icon paths - Update these paths to your actual GIF files
+const GIF_ICONS = {
+  message: "/src/assets/images/doctor images/Messenger.gif", // Replace with your message GIF path
+  notification: "/src/assets/images/doctor images/Notification.gif", // Replace with your notification GIF path
+  profile: "/src/assets/images/doctor images/Profile.gif" // Replace with your profile GIF path
+};
+
+// Page title function
+function getPageTitle(pathname) {
+  // Define route mappings for page titles
+  const routeMap = {
+    // Main routes
+    '/dashboard': 'Home',
+    
+    // Appointments
+    '/appointments/list': 'Appointment List',
+    '/appointments/calender': 'Appointment Calendar',
+    '/appointments': 'Appointments',
+    
+    // Patients & Doctors
+    '/patients': 'Patients',
+    '/assistdoc': 'Assistant Doctors',
+    '/assistdoc/docprofile': 'Doctor Profiles',
+    '/assistdoc/doctors': 'External Doctors',
+    
+    // Payments & Financial
+    '/docpayments': 'Payments',
+    '/overview': 'Overview',
+    
+    // Medicine & Inventory
+    '/medicine-preparation': 'Medicine Preparation',
+    '/medicine-preparation/preparation': 'Medicine Preparation Dashboard',
+    '/doctor-inventory': 'Patient Inventory',
+    '/inventory': 'Inventory',
+    
+    // Content & Workshops
+    '/workshoppage': 'Workshops',
+    '/content': 'Content',
+    
+    // Specialized Features
+    '/lekagedetection': 'Leakage Detection',
+    '/doctor-dashboard/all': 'Doctor CRM',
+    '/doctor-dashboard': 'Doctor CRM',
+    '/allocation': 'Doctor Allocation',
+    
+    // Management & Settings
+    '/hrm': 'HR Management',
+    '/docsettings': 'Settings',
+    '/assistleave': 'Leave Management',
+    '/newprofile': 'Profile',
+    '/needhelp': 'Help & Support',
+    
+    // Default fallback
+    '/': 'Home'
+  };
+
+  // First, try exact match
+  if (routeMap[pathname]) {
+    return routeMap[pathname];
+  }
+
+  // Handle dynamic routes or partial matches
+  for (const route in routeMap) {
+    if (pathname.startsWith(route) && route !== '/') {
+      return routeMap[route];
+    }
+  }
+
+  // Handle nested routes by extracting meaningful parts
+  const pathSegments = pathname.split('/').filter(segment => segment);
+  
+  if (pathSegments.length > 0) {
+    // Convert kebab-case or camelCase to Title Case
+    const lastSegment = pathSegments[pathSegments.length - 1];
+    return lastSegment
+      .split(/[-_]/)
+      .map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
+      .join(' ');
+  }
+
+  return 'Dashboard'; // Default fallback
+}
+
+// Icon component that can render either GIF or Material-UI icon
+const IconComponent = ({ type, materialIcon: MaterialIcon }) => {
+  if (USE_GIF_ICONS) {
+    return (
+      <img
+        src={GIF_ICONS[type]}
+        alt={`${type} icon`}
+        style={{
+          width: 24,
+          height: 26,
+          objectFit: 'contain'
+        }}
+      />
+    );
+  }
+  return <MaterialIcon />;
+};
+
 const Header = () => {
   const navigate = useNavigate();
+  const location = useLocation();
   const [isMessageActive, setIsMessageActive] = useState(false);
   const [isNotifyActive, setIsNotifyActive] = useState(false);
   const [isProfileActive, setIsProfileActive] = useState(false);
@@ -48,6 +153,7 @@ const Header = () => {
   const [elapsedTime, setElapsedTime] = useState("00:00:00");
   const [startTime, setStartTime] = useState(null);
 
+  const currentPageTitle = getPageTitle(location.pathname);
   const doctorId = localStorage.getItem("token");
   const { totalUnread, setUnreadCounts } = useUnreadCount();
 
@@ -73,8 +179,6 @@ const Header = () => {
     const token = localStorage.getItem("token");
     try {
       const response = await axios.get(
-        // `${API_URL}/api/doctor/getAppointedPatients?id=${userId}`,
-
         `${API_URL}/api/doctor/chatPatientWithDoctorAndIsReadCount`,
         {
           headers: { Authorization: `Bearer ${token}` },
@@ -278,113 +382,23 @@ const Header = () => {
           px: 3,
         }}
       >
-        {/* Left section - Working Hours Display (only when checked in) */}
-        <Box sx={{ flex: 1, display: "flex", alignItems: "center" }}>
-          {isCheckedIn && (
-            <Stack direction="row" spacing={2} alignItems="center">
-              <Typography
-                variant="body2"
-                sx={{
-                  color: "#1e293b",
-                  fontWeight: 600,
-                  display: { xs: "none", sm: "block" },
-                }}
-              >
-                Total Working Hours:{" "}
-                <Box component="span" sx={{ fontWeight: 700 }}>
-                  {formatTime(timer)}
-                </Box>
-              </Typography>
-              <Typography
-                variant="body2"
-                sx={{
-                  color: "#1e293b",
-                  fontWeight: 600,
-                  display: { xs: "block", sm: "none" },
-                }}
-              >
-                Time:{" "}
-                <Box component="span" sx={{ fontWeight: 700 }}>
-                  {formatTime(timer)}
-                </Box>
-              </Typography>
-              <Button
-                onClick={handleCheckOut}
-                variant="contained"
-                size="small"
-                sx={{
-                  backgroundColor: "#ef4444",
-                  "&:hover": {
-                    backgroundColor: "#dc2626",
-                  },
-                  textTransform: "none",
-                  fontWeight: 600,
-                  px: 2,
-                }}
-              >
-                <Box sx={{ display: { xs: "none", sm: "block" } }}>
-                  Check Out
-                </Box>
-                <Box sx={{ display: { xs: "block", sm: "none" } }}>Out</Box>
-              </Button>
-            </Stack>
-          )}
-        </Box>
+        {/* Left section - App Title and Current Page */}
+        <div className="flex flex-1 items-center">
+          <div className="flex items-center gap-3">
+            <h2 className="text-xl text-[#757575] font-semibold text-slate-800">
+              Consult Homeopathy
+            </h2>
+            <div className="flex items-center gap-2">
+              <span className="text-slate-400">|</span>
+              <span className="text-lg text-[#757575] font-semibold  text-slate-800">
+                {currentPageTitle}
+              </span>
+            </div>
+          </div>
+        </div>
 
         {/* Right section - Month dropdown and Action buttons */}
         <Stack direction="row" spacing={1.5} alignItems="center">
-          {/* Month Dropdown */}
-          <Button
-            onClick={toggleMonthDropdown}
-            variant="outlined"
-            startIcon={<CalendarToday />}
-            endIcon={<KeyboardArrowDown />}
-            sx={{
-              backgroundColor: "white",
-              borderColor: "#d1d5db",
-              color: "#374151",
-              textTransform: "none",
-              fontWeight: 500,
-              "&:hover": {
-                backgroundColor: "#EFF6FF",
-                borderColor: "#d1d5db",
-              },
-              px: 2,
-              py: 1,
-            }}
-          >
-            {selectedMonth}
-          </Button>
-
-          <Menu
-            anchorEl={monthAnchorEl}
-            open={isMonthDropdownOpen}
-            onClose={() => setMonthAnchorEl(null)}
-            PaperProps={{
-              sx: {
-                mt: 1,
-                maxHeight: 240,
-                width: 160,
-                boxShadow: "0 4px 6px -1px rgb(0 0 0 / 0.1)",
-              },
-            }}
-          >
-            {months.map((month, index) => (
-              <MenuItem
-                key={index}
-                onClick={() => handleMonthSelect(month)}
-                sx={{
-                  fontSize: "0.875rem",
-                  py: 1,
-                  "&:hover": {
-                    backgroundColor: "#EFF6FF",
-                  },
-                }}
-              >
-                {month}
-              </MenuItem>
-            ))}
-          </Menu>
 
           {/* Action Buttons */}
           <Badge
@@ -410,7 +424,7 @@ const Header = () => {
                 height: 44,
               }}
             >
-              <Message />
+              <IconComponent type="message" materialIcon={Message} />
             </IconButton>
           </Badge>
 
@@ -428,7 +442,7 @@ const Header = () => {
               height: 44,
             }}
           >
-            <Notifications />
+            <IconComponent type="notification" materialIcon={Notifications} />
           </IconButton>
 
           <IconButton
@@ -445,7 +459,7 @@ const Header = () => {
               height: 44,
             }}
           >
-            <AccountCircle />
+            <IconComponent type="profile" materialIcon={AccountCircle} />
           </IconButton>
         </Stack>
       </Toolbar>

@@ -164,240 +164,224 @@ const AssistantMainCom = () => {
 
       {/* Status Boxes */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-8 px-14">
-        {/* Active Patients Card */}
-        <div className="bg-white rounded-lg shadow flex border-l-8 border-blue-500">
-          {/* Left Section */}
-          <div className="flex flex-col justify-center items-start w-1/3 p-6 border-r border-gray-200">
-            <span className="text-lg text-gray-700 font-semibold">
-              Active Patients
-            </span>
-            <span className="text-3xl font-bold text-blue-600">
-              {dashboardData.activePatients}
-            </span>
+  {/* Active Patients Card */}
+  <div className="bg-white rounded-lg shadow flex border-l-8 border-blue-500">
+    {/* Left Section */}
+    <div className="flex flex-col justify-center items-start w-1/3 p-6 border-r border-gray-200">
+      <span className="text-lg text-gray-700 font-semibold">
+        Active Patients
+      </span>
+      <span className="text-3xl font-bold text-blue-600">
+        {dashboardData.activePatients}
+      </span>
+    </div>
+
+    {/* Right Section */}
+    <div className="flex flex-col justify-center w-2/3 p-4 space-y-4">
+      {/* New */}
+      <div className="flex items-center justify-between text-sm">
+        <span className="flex items-center gap-2">
+          <span className="text-green-500 font-semibold text-lg">↑</span>
+          <span className="text-black font-semibold">New</span>
+        </span>
+        <div className="flex items-center gap-3">
+          <div className="flex gap-1">
+            {[...Array(10)].map((_, i) => (
+              <div
+                key={i}
+                className={`h-3 w-2 rounded-sm ${
+                  i <
+                  calculateBars(
+                    dashboardData.newPatients,
+                    dashboardData.activePatients
+                  )
+                    ? "bg-cyan-400"
+                    : "bg-cyan-100"
+                }`}
+              ></div>
+            ))}
           </div>
-
-          {/* Right Section */}
-          <div className="flex flex-col justify-center w-2/3 p-4 space-y-4">
-            {/* New */}
-            <div className="flex items-center justify-start text-sm gap-20">
-              <span className="flex items-center gap-2">
-                <span className="text-green-500 font-semibold text-lg">↑</span>
-                <span className="text-lg text-black-500 font-semibold">
-                  New
-                </span>
-              </span>
-              <div className="flex items-center gap-3">
-                <div className="flex gap-1">
-                  {[...Array(10)].map((_, i) => (
-                    <div
-                      key={i}
-                      className={`h-5 w-3 rounded-sm ${
-                        i <
-                        calculateBars(
-                          dashboardData.newPatients,
-                          dashboardData.activePatients
-                        )
-                          ? "bg-cyan-400"
-                          : "bg-cyan-100"
-                      }`}
-                    ></div>
-                  ))}
-                </div>
-                <span className="text-gray-700 font-semibold">
-                  {dashboardData.newPatients}
-                </span>
-              </div>
-            </div>
-
-            {/* Existing */}
-            <div className="flex items-center justify-start text-sm gap-12">
-              <span className="flex items-center gap-2">
-                <span className="text-red-500 font-semibold text-lg">↓</span>
-                <span className="text-lg text-black-500 font-semibold">
-                  Existing
-                </span>
-              </span>
-              <div className="flex items-center gap-3">
-                <div className="flex gap-1">
-                  {[...Array(10)].map((_, i) => (
-                    <div
-                      key={i}
-                      className={`h-5 w-3 rounded-sm ${
-                        i <
-                        calculateBars(
-                          dashboardData.existingPatients,
-                          dashboardData.activePatients
-                        )
-                          ? "bg-orange-400"
-                          : "bg-orange-100"
-                      }`}
-                    ></div>
-                  ))}
-                </div>
-                <span className="text-gray-700 font-semibold">
-                  {dashboardData.existingPatients}
-                </span>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* Calls Made Card */}
-        <div className="bg-white rounded-lg shadow flex border-l-8 border-green-500">
-          {/* Left Section */}
-          <div className="flex flex-col justify-center items-start w-1/3 p-6 border-r border-gray-200">
-            <span className="text-lg text-black-500 font-semibold">
-              Calls Made
-            </span>
-            <span className="text-3xl font-bold text-green-600">
-              {dashboardData.callsMade}
-            </span>
-          </div>
-
-          {/* Right Section */}
-          <div className="flex flex-col justify-center w-2/3 p-4 space-y-4">
-            {/* New */}
-            <div className="flex items-center justify-start text-sm gap-20">
-              <span className="flex items-center gap-2">
-                <span className="text-green-500 font-semibold text-lg">↑</span>
-                <span className="text-lg text-black-500 font-semibold">
-                  New
-                </span>
-              </span>
-              <div className="flex items-center gap-3">
-                <div className="flex gap-1">
-                  {[...Array(10)].map((_, i) => (
-                    <div
-                      key={i}
-                      className={`h-4 w-3 rounded-sm ${
-                        i <
-                        calculateBars(
-                          dashboardData.newCalls,
-                          dashboardData.callsMade
-                        )
-                          ? "bg-cyan-400"
-                          : "bg-cyan-100"
-                      }`}
-                    ></div>
-                  ))}
-                </div>
-                <span className="text-gray-700 font-semibold">
-                  {dashboardData.newCalls}
-                </span>
-              </div>
-            </div>
-
-            {/* Existing */}
-            <div className="flex items-center justify-start text-sm gap-12">
-              <span className="flex items-center gap-2">
-                <span className="text-red-500 font-semibold text-lg">↓</span>
-                <span className="text-lg text-black-500 font-semibold">
-                  Existing
-                </span>
-              </span>
-              <div className="flex items-center gap-3">
-                <div className="flex gap-1">
-                  {[...Array(10)].map((_, i) => (
-                    <div
-                      key={i}
-                      className={`h-4 w-3 rounded-sm ${
-                        i <
-                        calculateBars(
-                          dashboardData.existingCalls,
-                          dashboardData.callsMade
-                        )
-                          ? "bg-orange-400"
-                          : "bg-orange-100"
-                      }`}
-                    ></div>
-                  ))}
-                </div>
-                <span className="text-gray-700 font-semibold">
-                  {dashboardData.existingCalls}
-                </span>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* Third Card Placeholder */}
-        <div className="bg-white rounded-lg shadow flex border-l-8 border-purple-500">
-          {/* Left Section */}
-          <div className="flex flex-col justify-center items-start w-1/3 p-6 border-r border-gray-200">
-            <span className="text-lg text-gray-700 font-semibold">
-              Total Lost
-            </span>
-            <span className="text-3xl font-bold text-purple-600">
-              {dashboardData.totalLost}
-            </span>
-          </div>
-
-          {/* Right Section (Copied Graph Style) */}
-          <div className="flex flex-col justify-center w-2/3 p-4 space-y-4">
-            {/* New */}
-            <div className="flex items-center justify-start text-sm gap-20">
-              <span className="flex items-center gap-2">
-                <span className="text-green-500 font-semibold text-lg">↑</span>
-                <span className="text-lg text-black-500 font-semibold">
-                  New
-                </span>
-              </span>
-              <div className="flex items-center gap-3">
-                <div className="flex gap-1">
-                  {[...Array(10)].map((_, i) => (
-                    <div
-                      key={i}
-                      className={`h-4 w-3 rounded-sm ${
-                        i <
-                        calculateBars(
-                          dashboardData.newLost,
-                          dashboardData.totalLost
-                        )
-                          ? "bg-cyan-400"
-                          : "bg-cyan-100"
-                      }`}
-                    ></div>
-                  ))}
-                </div>
-                <span className="text-gray-700 font-semibold">
-                  {dashboardData.newLost}
-                </span>
-              </div>
-            </div>
-
-            {/* Existing */}
-            <div className="flex items-center justify-start text-sm gap-14">
-              <span className="flex items-center gap-2">
-                <span className="text-red-500 font-semibold text-lg">↓</span>
-                <span className="text-lg text-black-500 font-semibold">
-                  Existing
-                </span>
-              </span>
-              <div className="flex items-center gap-3">
-                <div className="flex gap-1">
-                  {[...Array(10)].map((_, i) => (
-                    <div
-                      key={i}
-                      className={`h-4 w-3 rounded-sm ${
-                        i <
-                        calculateBars(
-                          dashboardData.existingLost,
-                          dashboardData.totalLost
-                        )
-                          ? "bg-orange-400"
-                          : "bg-orange-100"
-                      }`}
-                    ></div>
-                  ))}
-                </div>
-                <span className="text-gray-700 font-semibold">
-                  {dashboardData.existingLost}
-                </span>
-              </div>
-            </div>
-          </div>
+          <span className="text-gray-700 font-medium">
+            {dashboardData.newPatients}
+          </span>
         </div>
       </div>
+
+      {/* Existing */}
+      <div className="flex items-center justify-between text-sm">
+        <span className="flex items-center gap-2">
+          <span className="text-red-500 font-semibold text-lg">↓</span>
+          <span className="text-black font-semibold">Existing</span>
+        </span>
+        <div className="flex items-center gap-3">
+          <div className="flex gap-1">
+            {[...Array(10)].map((_, i) => (
+              <div
+                key={i}
+                className={`h-3 w-2 rounded-sm ${
+                  i <
+                  calculateBars(
+                    dashboardData.existingPatients,
+                    dashboardData.activePatients
+                  )
+                    ? "bg-orange-400"
+                    : "bg-orange-100"
+                }`}
+              ></div>
+            ))}
+          </div>
+          <span className="text-gray-700 font-medium">
+            {dashboardData.existingPatients}
+          </span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  {/* Calls Made Card */}
+  <div className="bg-white rounded-lg shadow flex border-l-8 border-green-500">
+    {/* Left Section */}
+    <div className="flex flex-col justify-center items-start w-1/3 p-6 border-r border-gray-200">
+      <span className="text-lg text-black-500 font-semibold">Calls Made</span>
+      <span className="text-3xl font-bold text-green-600">
+        {dashboardData.callsMade}
+      </span>
+    </div>
+
+    {/* Right Section */}
+    <div className="flex flex-col justify-center w-2/3 p-4 space-y-4">
+      {/* New */}
+      <div className="flex items-center justify-between text-sm">
+        <span className="flex items-center gap-2">
+          <span className="text-green-500 font-semibold text-lg">↑</span>
+          <span className="text-black font-semibold">New</span>
+        </span>
+        <div className="flex items-center gap-3">
+          <div className="flex gap-1">
+            {[...Array(10)].map((_, i) => (
+              <div
+                key={i}
+                className={`h-3 w-2 rounded-sm ${
+                  i <
+                  calculateBars(
+                    dashboardData.newCalls,
+                    dashboardData.callsMade
+                  )
+                    ? "bg-cyan-400"
+                    : "bg-cyan-100"
+                }`}
+              ></div>
+            ))}
+          </div>
+          <span className="text-gray-700 font-medium">
+            {dashboardData.newCalls}
+          </span>
+        </div>
+      </div>
+
+      {/* Existing */}
+      <div className="flex items-center justify-between text-sm">
+        <span className="flex items-center gap-2">
+          <span className="text-red-500 font-semibold text-lg">↓</span>
+          <span className="text-black font-semibold">Existing</span>
+        </span>
+        <div className="flex items-center gap-3">
+          <div className="flex gap-1">
+            {[...Array(10)].map((_, i) => (
+              <div
+                key={i}
+                className={`h-3 w-2 rounded-sm ${
+                  i <
+                  calculateBars(
+                    dashboardData.existingCalls,
+                    dashboardData.callsMade
+                  )
+                    ? "bg-orange-400"
+                    : "bg-orange-100"
+                }`}
+              ></div>
+            ))}
+          </div>
+          <span className="text-gray-700 font-medium">
+            {dashboardData.existingCalls}
+          </span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  {/* Third Card Placeholder */}
+   <div className="bg-white rounded-lg shadow flex border-l-8 border-purple-500">
+    {/* Left Section */}
+    <div className="flex flex-col justify-center items-start w-1/3 p-6 border-r border-gray-200">
+      <span className="text-lg text-gray-700 font-semibold">Total Lost</span>
+      <span className="text-3xl font-bold text-purple-600">
+        {dashboardData.totalLost}
+      </span>
+    </div>
+
+    {/* Right Section (Copied Graph Style) */}
+    <div className="flex flex-col justify-center w-2/3 p-4 space-y-4">
+      {/* New */}
+      <div className="flex items-center justify-between text-sm">
+        <span className="flex items-center gap-2">
+          <span className="text-green-500 font-semibold text-lg">↑</span>
+          <span className="text-black font-semibold">New</span>
+        </span>
+        <div className="flex items-center gap-3">
+          <div className="flex gap-1">
+            {[...Array(10)].map((_, i) => (
+              <div
+                key={i}
+                className={`h-3 w-2 rounded-sm ${
+                  i <
+                  calculateBars(
+                    dashboardData.newLost,
+                    dashboardData.totalLost
+                  )
+                    ? "bg-cyan-400"
+                    : "bg-cyan-100"
+                }`}
+              ></div>
+            ))}
+          </div>
+          <span className="text-gray-700 font-medium">
+            {dashboardData.newLost}
+          </span>
+        </div>
+      </div>
+
+      {/* Existing */}
+      <div className="flex items-center justify-between text-sm">
+        <span className="flex items-center gap-2">
+          <span className="text-red-500 font-semibold text-lg">↓</span>
+          <span className="text-black font-semibold">Existing</span>
+        </span>
+        <div className="flex items-center gap-3">
+          <div className="flex gap-1">
+            {[...Array(10)].map((_, i) => (
+              <div
+                key={i}
+                className={`h-3 w-2 rounded-sm ${
+                  i <
+                  calculateBars(
+                    dashboardData.existingLost,
+                    dashboardData.totalLost
+                  )
+                    ? "bg-orange-400"
+                    : "bg-orange-100"
+                }`}
+              ></div>
+            ))}
+          </div>
+          <span className="text-gray-700 font-medium">
+            {dashboardData.existingLost}
+          </span>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
 
       {/* Tabs */}
       <div className="mb-6">
@@ -442,7 +426,7 @@ const AssistantMainCom = () => {
 
         {/* Desktop View - Tabs */}
         <div className="hidden md:flex space-x-2 bg-white p-2 rounded-lg">
-          {["all", "myAllocation", "existing", "lost", "attemptBucket"].map(
+          {["all", "myAllocation", "existing", "lost"].map(
             (tab) => (
               <button
                 key={tab}

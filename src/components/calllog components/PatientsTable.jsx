@@ -13,6 +13,7 @@ const PatientsTable = () => {
   const [patients, setPatients] = useState([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [filterOption, setFilterOption] = useState('all');
+  const [countsLoading, setCountsLoading] = useState(false);
   const [showCallInterface, setShowCallInterface] = useState(false);
   const [currentCall, setCurrentCall] = useState(null);
   const [currentRecordings, setCurrentRecordings] = useState(null);
@@ -26,6 +27,14 @@ const PatientsTable = () => {
   const [allocations, setAllocations] = useState([]);
   const [individualAllocations, setIndividualAllocations] = useState({});
   const [statistics, setStatistics] = useState(null);
+  const [appointmentCounts, setAppointmentCounts] = useState({
+  "Consultation": 0,
+  "Prescription": 0,
+  "Payment": 0,
+  "Medicine Preparation": 0,
+  "Shipment": 0,
+  "Patient Care": 0
+});
 
   const API_URL = config.API_URL;
   const userId = localStorage.getItem('userId');
@@ -75,6 +84,21 @@ const PatientsTable = () => {
     
     fetchPatientsAndFormStatus();
   }, []);
+
+  const fetchAppointmentCounts = async () => {
+  try {
+    setCountsLoading(true);
+    const response = await axios.get(`${API_URL}/api/patient/perfect-sort-stage`);
+
+    if (response.data.success) {
+      setAppointmentCounts(response.data.appointmentCounts);
+    }
+  } catch (error) {
+    console.error('Error fetching appointment counts:', error);
+  } finally {
+    setCountsLoading(false);
+  }
+};
 
   const handleIndividualAllocation = async (patientId, doctorId) => {
     try {
@@ -179,6 +203,10 @@ const handleTabChange = (tab) => {
 
   fetchDashboardStats();
 }, []);
+
+useEffect(() => {
+    fetchAppointmentCounts();
+  }, []);
 
   const makeCall = async (patient) => {
     try {
@@ -580,51 +608,113 @@ const handleTabChange = (tab) => {
   {/* Heading */}
   <h2 className="text-2xl font-bold text-black-500 pd-2">Patients List</h2>
 
-  <div className="flex gap-1 mb-6">
-  <button 
-    onClick={() => handleTabChange('acute')}
-    className={`flex items-center gap-2 px-4 py-2 rounded-lg border ${
-      tab === 'acute' 
-        ? 'bg-blue-50 text-blue-600 border-blue-200' 
-        : 'bg-gray-50 text-gray-600 border-gray-200'
-    }`}
-  >
-    <div className={`w-2 h-2 rounded-full ${
-      activeTab === 'acute' ? 'bg-blue-600' : 'bg-gray-400'
-    }`}></div>
-    Acute ({statistics?.allAppointments?.acute ?? 0})
-  </button>
-  <button 
-    onClick={() => handleTabChange('chronic')}
-    className={`flex items-center gap-2 px-4 py-2 rounded-lg border ${
-      tab === 'chronic' 
-        ? 'bg-blue-50 text-blue-600 border-blue-200' 
-        : 'bg-gray-50 text-gray-600 border-gray-200'
-    }`}
-  >
-    <div className={`w-2 h-2 rounded-full ${
-      tab === 'chronic' ? 'bg-blue-600' : 'bg-gray-400'
-    }`}></div>
-    Chronic ({statistics?.newAppointments?.chronic ?? 0})
-  </button>
-</div>
+  <div className="flex flex-col md:flex-row items-center justify-between mb-6 gap-4">
+  {/* Left: Tabs */}
+  <div className="flex gap-2">
+    <button 
+      onClick={() => handleTabChange('acute')}
+      className={`flex items-center gap-2 px-4 py-2 rounded-lg border ${
+        tab === 'acute' 
+          ? 'bg-blue-50 text-blue-600 border-blue-200' 
+          : 'bg-gray-50 text-gray-600 border-gray-200'
+      }`}
+    >
+      <div className={`w-2 h-2 rounded-full ${
+        tab === 'acute' ? 'bg-blue-600' : 'bg-gray-400'
+      }`}></div>
+      Acute ({statistics?.allAppointments?.acute ?? 0})
+    </button>
+    <button 
+      onClick={() => handleTabChange('chronic')}
+      className={`flex items-center gap-2 px-4 py-2 rounded-lg border ${
+        tab === 'chronic' 
+          ? 'bg-blue-50 text-blue-600 border-blue-200' 
+          : 'bg-gray-50 text-gray-600 border-gray-200'
+      }`}
+    >
+      <div className={`w-2 h-2 rounded-full ${
+        tab === 'chronic' ? 'bg-blue-600' : 'bg-gray-400'
+      }`}></div>
+      Chronic ({statistics?.newAppointments?.chronic ?? 0})
+    </button>
+  </div>
 
-  {/* Search + Filter */}
+  {/* Right: Search */}
   <div className="flex items-center space-x-3 bg-white p-3 rounded-lg shadow-sm w-fit">
     <div className="flex items-center bg-white rounded-lg border border-gray-300 focus-within:border-gray-400 transition-colors duration-300">
-  <FaSearch className="ml-3 text-gray-400" />
-  <input
-    type="text"
-    placeholder="Search..."
-    value={searchTerm}
-    onChange={(e) => setSearchTerm(e.target.value)}
-    className="p-2 pl-2 w-64 outline-none text-gray-700 placeholder-gray-400"
-  />
+      <FaSearch className="ml-3 text-gray-400" />
+      <input
+        type="text"
+        placeholder="Search..."
+        value={searchTerm}
+        onChange={(e) => setSearchTerm(e.target.value)}
+        className="p-2 pl-2 w-64 outline-none text-gray-700 placeholder-gray-400"
+      />
+    </div>
+  </div>
 </div>
 
-    
-    
+<div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4 mb-6">
+  <div className="bg-white rounded-lg border border-gray-200 p-4 relative overflow-hidden">
+    <div className="absolute left-0 top-0 w-1 h-full bg-blue-500"></div>
+    <div className="ml-3">
+      <div className="text-sm text-gray-500 mb-1">Consultation</div>
+      <div className="text-2xl font-bold text-blue-500">
+        {countsLoading ? '...' : appointmentCounts["Consultation"] || 0}
+      </div>
+    </div>
   </div>
+  
+  <div className="bg-white rounded-lg border border-gray-200 p-4 relative overflow-hidden">
+    <div className="absolute left-0 top-0 w-1 h-full bg-orange-500"></div>
+    <div className="ml-3">
+      <div className="text-sm text-gray-500 mb-1">Prescription</div>
+      <div className="text-2xl font-bold text-orange-500">
+        {countsLoading ? '...' : appointmentCounts["Prescription"] || 0}
+      </div>
+    </div>
+  </div>
+  
+  <div className="bg-white rounded-lg border border-gray-200 p-4 relative overflow-hidden">
+    <div className="absolute left-0 top-0 w-1 h-full bg-green-500"></div>
+    <div className="ml-3">
+      <div className="text-sm text-gray-500 mb-1">Payment</div>
+      <div className="text-2xl font-bold text-green-500">
+        {countsLoading ? '...' : appointmentCounts["Payment"] || 0}
+      </div>
+    </div>
+  </div>
+  
+  <div className="bg-white rounded-lg border border-gray-200 p-4 relative overflow-hidden">
+    <div className="absolute left-0 top-0 w-1 h-full bg-yellow-500"></div>
+    <div className="ml-3">
+      <div className="text-sm text-gray-500 mb-1">Medicine Preparation</div>
+      <div className="text-2xl font-bold text-yellow-500">
+        {countsLoading ? '...' : appointmentCounts["Medicine Preparation"] || 0}
+      </div>
+    </div>
+  </div>
+  
+  <div className="bg-white rounded-lg border border-gray-200 p-4 relative overflow-hidden">
+    <div className="absolute left-0 top-0 w-1 h-full bg-blue-500"></div>
+    <div className="ml-3">
+      <div className="text-sm text-gray-500 mb-1">Shipment</div>
+      <div className="text-2xl font-bold text-blue-500">
+        {countsLoading ? '...' : appointmentCounts["Shipment"] || 0}
+      </div>
+    </div>
+  </div>
+  
+  <div className="bg-white rounded-lg border border-gray-200 p-4 relative overflow-hidden">
+    <div className="absolute left-0 top-0 w-1 h-full bg-blue-500"></div>
+    <div className="ml-3">
+      <div className="text-sm text-gray-500 mb-1">Patient Care</div>
+      <div className="text-2xl font-bold text-blue-500">
+        {countsLoading ? '...' : appointmentCounts["Patient Care"] || 0}
+      </div>
+    </div>
+  </div>
+</div>
 
   {/* Tabs */}
   <TabSwitcher />

@@ -54,24 +54,25 @@ const SidebarProfile = () => {
   }
 
   return (
-    <div className="flex flex-col items-center space-y-3">
-      {/* Profile Image - Larger and centered */}
-      <div className="relative">
-        <img
-          src={doctorDetails.profilePhoto || defaultDoctorImage}
-          alt="Doctor Profile"
-          className="w-20 h-20 rounded-full object-cover border-3 border-white shadow-lg"
-        />
-      </div>
-      
-      {/* Doctor Name - Centered */}
-      <div className="text-center">
-        <h3 className="text-lg font-semibold text-gray-800">
-           {doctorDetails.name || "Me"}
-        </h3>
-      </div>
+  <div className="flex flex-col items-center space-y-3">
+    {/* Profile Image - Larger and curved */}
+    <div className="relative">
+      <img
+        src={doctorDetails.profilePhoto || defaultDoctorImage}
+        alt="Doctor Profile"
+        className="w-24 h-24 rounded-2xl object-cover border-3 border-white shadow-lg"
+      />
     </div>
-  );
+    
+    {/* Doctor Name - Centered */}
+    <div className="text-center">
+      <h3 className="text-lg font-semibold text-gray-800">
+        {doctorDetails.name || "Me"}
+      </h3>
+    </div>
+  </div>
+);
+
 };
 
 export default SidebarProfile;
