@@ -834,6 +834,7 @@ const handleTabChange = (tab) => {
             "View Prescription",
             "Voice call",
             "Recordings",
+            "Mark As Lost",
             "Mark Done",
           ],
           data: filteredPatients.map((item, index) => {
@@ -893,6 +894,11 @@ const handleTabChange = (tab) => {
                   handleAction("Recordings", item)
                 )}
               </div>,
+              <div key={`mark-as-lost-${item._id}`} className="action-buttons">
+              {renderButton("Mark As Lost", () =>
+                handleAction("MarkAsLost", item)
+              )}
+            </div>,
               <div key={`mark-done-${item._id}`} className="action-buttons">
                 {renderButton("Mark Done", () =>
                   handleAction("MarkDone", item)
@@ -1428,9 +1434,27 @@ const handleTabChange = (tab) => {
         alert(`Starting video call with ${item.name}`);
         handleJoinRoom(item);
         break;
-      case "VoiceCall":
-        alert(`Calling ${item.phone}`);
-        break;
+        case "VoiceCall":
+    alert(`Calling ${item.phone}`);
+    const token = localStorage.getItem("token");
+    fetch(`${API_URL}/api/doctor/${item._id}/increment-call`, {
+        method: "PATCH",
+        headers: {
+            'Authorization': `Bearer ${token}`
+        }
+    })
+    .then(response => {
+        if (!response.ok) {
+            throw new Error("Failed to increment call");
+        }
+        // Optionally handle success
+    })
+    .catch(error => {
+        console.error(error);
+        // Optionally handle error
+    });
+    break;
+
       case "Recordings":
         alert(`Viewing recordings for ${item.name}`);
         break;
@@ -1456,6 +1480,42 @@ const handleTabChange = (tab) => {
         const appointment_Id = item.medicalDetails._id;
         navigate(`/prepare-medicine/${appointment_Id}`);
         break;
+        case "MarkAsLost":
+  try {
+    const prescriptionId = item.medicalDetails.prescription_id;
+    
+    if (!prescriptionId) {
+      alert("Prescription ID not found for this patient");
+      return;
+    }
+
+    const token = localStorage.getItem("token");
+
+    if (!token) {
+      alert("Authentication token not found. Please login again.");
+      return;
+    }
+
+    const response = await axios.patch(
+      `${API_URL}/api/doctor/${prescriptionId}/mark-lost`,
+      { shipmentLost: true },
+      {
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json"
+        }
+      }
+    );
+
+    if (response.status === 200) {
+      alert(`Shipment marked as lost for ${item.name}`);
+      fetchPatients(); // Refresh the patient list
+    }
+  } catch (error) {
+    console.error("Error marking shipment as lost:", error);
+    alert(`Failed to mark shipment as lost: ${error.response?.data?.message || error.message}`);
+  }
+  break;
       case "MarkDone":
         try {
           const response = await axios.put(

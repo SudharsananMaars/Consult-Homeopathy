@@ -235,7 +235,7 @@ const MedicinePackaging = () => {
       console.log("Medicine prepared status update successful");
 
       // Navigate after both calls succeed
-      navigate('/doctor-dashboard/myAllocation');
+      navigate('/medicine-preparation/preparation');
 
     } catch (error) {
       console.error(
