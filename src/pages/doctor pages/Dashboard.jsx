@@ -7,6 +7,8 @@ import MedicinePreparation from "/src/pages/DashboardComponents/MedicinePreparat
 import PatientCare from "/src/pages/DashboardComponents/PatientCare.jsx";
 import TotalPatientBase from "/src/pages/DashboardComponents/TotalPatientBase.jsx";
 import TotalEarnings from "/src/pages/DashboardComponents/TotalEarnings.jsx";
+import PatientCommunication from "/src/pages/DashboardComponents/PatientCommunication.jsx";
+import Appointments from "/src/pages/DashboardComponents/Appointments.jsx";
 
 function Dashboard() {
   return (
@@ -25,7 +27,6 @@ function Dashboard() {
 
           {/* Bottom: Combined Appointments / Stats / Calendar Card */}
           <div className="bg-white rounded-xl shadow-lg p-6 flex items-center justify-center" style={{ height: '100%' }}>
-            <span className="text-gray-400">Appointments Component</span>
           </div>
         </div>
       </div>
