@@ -84,11 +84,11 @@ const MedicineDashboardComponent = () => {
 
   if (error) {
     return (
-      <div className="p-6 bg-white rounded-xl shadow-lg w-full max-w-4xl font-sans">
+    
         <div className="flex items-center justify-center h-64">
           <p className="text-xl text-red-500">Error: {error}</p>
         </div>
-      </div>
+     
     );
   }
 

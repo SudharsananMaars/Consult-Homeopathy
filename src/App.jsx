@@ -95,6 +95,7 @@ import MedicinePackaging from "./pages/doctor pages/MedicinePackaging.jsx";
 import PrescriptionViewModal from "./components/PrescriptionModule/PrescriptionViewModal.jsx";
 import InventoryPage from "./components/calllog components/InventoryPage.jsx";
 import "@fortawesome/fontawesome-free/css/all.min.css";
+import DebitCreditNote from './pages/doctor pages/DebitCreditNote'; 
 
 // import '@zoomus/websdk/dist/css/bootstrap.css';
 // import '@zoomus/websdk/dist/css/react-select.css';
@@ -629,6 +630,15 @@ function App() {
           element={
             <ProtectedRoute allowedRoles={["Doctor"]}>
               <WorkshopPage />
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/debitcredit"
+          element={
+            <ProtectedRoute allowedRoles={["Doctor"]}>
+              <DebitCreditNote />
             </ProtectedRoute>
           }
         />

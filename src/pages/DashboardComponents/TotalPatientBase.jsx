@@ -1,66 +1,62 @@
 import React, { useState, useEffect } from 'react';
-import config from '/src/config.js';
-  
-const API_URL = config.API_URL;
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from 'recharts';
 
-export default function TotalPatient() {
+// Mock config - replace with your actual config
+const API_URL = '';
+
+export default function TotalPatientBase() {
   const [statusData, setStatusData] = useState([]);
   const [entryData, setEntryData] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [activeTab, setActiveTab] = useState('Instagram');
 
   useEffect(() => {
     const fetchData = async () => {
-      console.log('Fetching data...');
-      console.log('API URL:', API_URL);
-      
+      // Mock data for demonstration
+      if (!API_URL) {
+        setTimeout(() => {
+          setStatusData([
+            { status: 'Active', count: 400 },
+            { status: 'Inactive', count: 350 },
+            { status: 'Dormant', count: 350 },
+            { status: 'Exit', count: 350 }
+          ]);
+          setEntryData([
+            { source: 'Website', periodCount: 100, periodPercentageChange: null },
+            { source: 'Instagram', periodCount: 400, periodPercentageChange: 20 },
+            { source: 'Facebook', periodCount: 100, periodPercentageChange: -15 },
+            { source: 'Call', periodCount: 200, periodPercentageChange: 10 },
+            { source: 'Referral', periodCount: 50, periodPercentageChange: null },
+            { source: 'Walk-in', periodCount: 150, periodPercentageChange: 5 }
+          ]);
+          setLoading(false);
+        }, 500);
+        return;
+      }
+
       try {
         setLoading(true);
         
-        // Fetch status counts
-        const statusUrl = `${API_URL}/api/analytics/status-counts`;
-        console.log('Status URL:', statusUrl);
-        
-        const statusResponse = await fetch(statusUrl, {
+        const statusResponse = await fetch(`${API_URL}/api/analytics/status-counts`, {
           method: 'PATCH',
-          headers: {
-            'Content-Type': 'application/json',
-          },
+          headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ filter: 'month' }),
         });
 
-        console.log('Status response status:', statusResponse.status);
-
-        if (!statusResponse.ok) {
-          throw new Error(`Failed to fetch status: ${statusResponse.status}`);
-        }
-
+        if (!statusResponse.ok) throw new Error(`Failed to fetch status: ${statusResponse.status}`);
         const statusDataResult = await statusResponse.json();
-        console.log('Status data:', statusDataResult);
         setStatusData(statusDataResult);
 
-        // Fetch entry counts
-        const entryUrl = `${API_URL}/api/analytics/entry-counts`;
-        console.log('Entry URL:', entryUrl);
-        
-        const entryResponse = await fetch(entryUrl, {
+        const entryResponse = await fetch(`${API_URL}/api/analytics/entry-counts`, {
           method: 'PATCH',
-          headers: {
-            'Content-Type': 'application/json',
-          },
+          headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ filter: 'month' }),
         });
 
-        console.log('Entry response status:', entryResponse.status);
-
-        if (!entryResponse.ok) {
-          throw new Error(`Failed to fetch entries: ${entryResponse.status}`);
-        }
-
+        if (!entryResponse.ok) throw new Error(`Failed to fetch entries: ${entryResponse.status}`);
         const entryDataResult = await entryResponse.json();
-        console.log('Entry data:', entryDataResult);
         setEntryData(entryDataResult.entryCounts || []);
-
         setError(null);
       } catch (err) {
         console.error('Error fetching data:', err);
@@ -102,66 +98,77 @@ export default function TotalPatient() {
   };
 
   const acquisitionSources = [
-    { name: "Website", barColor: "bg-cyan-600" },
-    { name: "Instagram", barColor: "bg-pink-600" },
-    { name: "Facebook", barColor: "bg-blue-600" },
-    { name: "Call", barColor: "bg-cyan-600" },
-    { name: "Referral", barColor: "bg-purple-700" },
-    { name: "Walk-in", barColor: "bg-cyan-600" },
+    { name: "Website", barColor: "bg-cyan-500", icon: "🌐" },
+    { name: "Instagram", barColor: "bg-pink-500", icon: "📷" },
+    { name: "Facebook", barColor: "bg-blue-600", icon: "📘" },
+    { name: "Call", barColor: "bg-cyan-500", icon: "📞" },
+    { name: "Referral", barColor: "bg-purple-600", icon: "👥" },
+    { name: "Walk-in", barColor: "bg-cyan-500", icon: "🚶" },
   ];
 
   const maxCount = Math.max(...entryData.map(e => e.periodCount), 1);
 
+  // Mock engagement data
+  const engagementData = [
+    { week: 'Week 1', Posts: 75, Videos: 45 },
+    { week: 'Week 2', Posts: 82, Videos: 55 },
+    { week: 'Week 3', Posts: 88, Videos: 62 },
+    { week: 'Week 4', Posts: 78, Videos: 58 },
+    { week: 'Week 5', Posts: 92, Videos: 68 },
+    { week: 'Week 6', Posts: 85, Videos: 60 }
+  ];
+
   return (
-    <div className="w-full h-full flex flex-col">
+    <div className="bg-white rounded-xl shadow-lg p-6 h-full flex flex-col overflow-auto">
       {/* Header */}
-      <div className="mb-6">
-        <div className="text-sm text-gray-600 font-normal">Total Patient Base</div>
-        <div className="text-4xl font-extrabold">
+      <div className="mb-4">
+        <div className="text-sm text-gray-500 font-medium mb-1">Total Patient Base</div>
+        <div className="text-4xl font-bold text-gray-900">
           {loading ? '...' : error ? 'Error' : totalPatients.toLocaleString()}
         </div>
         {error && (
-          <div className="text-xs text-red-500 mt-1">
-            {error}
-          </div>
+          <div className="text-xs text-red-500 mt-1">{error}</div>
         )}
       </div>
 
       {/* Patient Status Bars */}
-      <div className="grid grid-cols-4 gap-3 mb-6">
+      <div className="grid grid-cols-4 gap-2 mb-6">
         {Object.entries(statusConfig).map(([status, { color, count }]) => (
-          <div key={status} className={`${color} rounded-lg text-white text-center py-2 font-semibold`}>
-            {status}<br />{loading ? '...' : count.toLocaleString()}
+          <div key={status} className={`${color} rounded-lg text-white text-center py-3 px-2`}>
+            <div className="text-xs font-medium mb-1">{status}</div>
+            <div className="text-lg font-bold">{loading ? '...' : count}</div>
           </div>
         ))}
       </div>
 
       {/* Patient Acquisition */}
       <div className="mb-6">
-        <div className="text-gray-700 font-semibold mb-2">Patient Acquisition</div>
-        <div className="space-y-2">
-          {acquisitionSources.map(({ name, barColor }, idx) => {
+        <div className="text-gray-800 font-semibold mb-3 text-sm">Patient Acquisition</div>
+        <div className="space-y-2.5">
+          {acquisitionSources.map(({ name, barColor, icon }, idx) => {
             const count = getEntryCount(name);
             const change = getEntryChange(name);
             const barWidth = maxCount > 0 ? (count / maxCount) * 100 : 0;
             
             return (
-              <div key={idx} className="flex items-center space-x-3">
-                <div className="text-gray-600 w-16 text-xs">{name}</div>
-                <div className="flex-1 h-3 rounded-full bg-gray-200 relative">
+              <div key={idx} className="flex items-center gap-2 text-xs">
+                <span className="text-base">{icon}</span>
+                <div className="text-gray-700 w-16 font-medium">{name}</div>
+                <div className="flex-1 h-2.5 rounded-full bg-gray-100 relative overflow-hidden">
                   <div 
-                    className={`${barColor} h-3 rounded-full transition-all duration-300`} 
+                    className={`${barColor} h-full rounded-full transition-all duration-500`} 
                     style={{ width: `${barWidth}%` }} 
                   />
                 </div>
-                <div className="text-xs w-8 text-right">
+                <div className="w-10 text-right font-semibold text-gray-700">
                   {loading ? '...' : count}
                 </div>
                 {change && !loading && (
-                  <div className={`flex items-center text-xs font-semibold ml-2 ${change.isUp ? "text-green-600" : "text-red-600"}`}>
+                  <div className={`flex items-center font-bold w-16 justify-end ${change.isUp ? "text-green-600" : "text-red-600"}`}>
                     {change.isUp ? "↑" : "↓"} {Math.abs(change.percentage)}%
                   </div>
                 )}
+                {!change && !loading && <div className="w-16"></div>}
               </div>
             );
           })}
@@ -169,36 +176,74 @@ export default function TotalPatient() {
       </div>
 
       {/* Top Performing Content with Tabs */}
-      <div className="mb-4">
-        <div className="flex space-x-6 border-b border-gray-200 mb-4">
+      <div className="mb-5">
+        <div className="text-gray-800 font-semibold mb-3 text-sm">Top Performing Content</div>
+        <div className="flex gap-4 border-b border-gray-200 mb-3">
           {["Instagram", "Facebook", "Youtube"].map((tab) => (
             <button
               key={tab}
-              className="text-xs text-gray-600 pb-2 border-b-2 border-transparent hover:border-gray-400"
+              onClick={() => setActiveTab(tab)}
+              className={`text-xs pb-2 px-1 border-b-2 transition-colors ${
+                activeTab === tab 
+                  ? 'border-blue-500 text-blue-600 font-semibold' 
+                  : 'border-transparent text-gray-500 hover:text-gray-700'
+              }`}
               type="button"
             >
               {tab}
             </button>
           ))}
         </div>
-        <div className="flex justify-between mb-2">
-          <div className="text-green-600 font-semibold">Posts 120</div>
-          <div className="text-red-600 font-semibold">Videos 35</div>
+        
+        <div className="grid grid-cols-2 gap-3 mb-3">
+          <div className="border-2 border-green-300 rounded-lg p-2 text-center bg-green-50">
+            <div className="text-xs text-gray-600 mb-1">Posts</div>
+            <div className="text-lg font-bold text-green-600">120</div>
+          </div>
+          <div className="border-2 border-red-300 rounded-lg p-2 text-center bg-red-50">
+            <div className="text-xs text-gray-600 mb-1">Videos</div>
+            <div className="text-lg font-bold text-red-600">35</div>
+          </div>
         </div>
-        <div className="flex justify-between text-xs font-semibold">
-          <div className="text-blue-600">Total Views 1.2M</div>
-          <div className="text-pink-600">Likes 56K</div>
-          <div className="text-yellow-600">Shares 8K</div>
+        
+        <div className="grid grid-cols-3 gap-2">
+          <div className="border border-blue-200 rounded-lg p-2 text-center bg-blue-50">
+            <div className="text-xs text-gray-600 mb-1">Total Views</div>
+            <div className="text-sm font-bold text-blue-600">1.2M</div>
+          </div>
+          <div className="border border-pink-200 rounded-lg p-2 text-center bg-pink-50">
+            <div className="text-xs text-gray-600 mb-1">Likes</div>
+            <div className="text-sm font-bold text-pink-600">56K</div>
+          </div>
+          <div className="border border-yellow-200 rounded-lg p-2 text-center bg-yellow-50">
+            <div className="text-xs text-gray-600 mb-1">Shares</div>
+            <div className="text-sm font-bold text-yellow-600">8K</div>
+          </div>
         </div>
       </div>
 
-      {/* Engagement Trends Chart - Placeholder */}
-      <div>
-        <div className="text-gray-600 text-sm font-semibold mb-2">Engagement Trends</div>
-        <div className="relative w-full h-28 bg-gray-100 rounded-lg flex items-center justify-center">
-          <div className="text-center">
-            <div className="text-gray-400 text-sm font-medium">Bargraph</div>
-          </div>
+      {/* Engagement Trends Chart */}
+      <div className="flex-1 min-h-[160px]">
+        <div className="text-gray-800 font-semibold mb-2 text-sm">Engagement Trends</div>
+        <div className="bg-gradient-to-b from-blue-50 to-cyan-50 rounded-lg p-3 h-40 border border-blue-100">
+          <ResponsiveContainer width="100%" height="100%">
+            <BarChart data={engagementData} margin={{ top: 5, right: 5, left: -20, bottom: 5 }}>
+              <CartesianGrid strokeDasharray="3 3" stroke="#e0e0e0" />
+              <XAxis dataKey="week" tick={{ fontSize: 10 }} />
+              <YAxis tick={{ fontSize: 10 }} />
+              <Tooltip 
+                contentStyle={{ fontSize: '11px', borderRadius: '8px' }}
+                cursor={{ fill: 'rgba(0, 0, 0, 0.05)' }}
+              />
+              <Legend 
+                iconType="circle" 
+                iconSize={8}
+                wrapperStyle={{ fontSize: '10px', paddingTop: '8px' }}
+              />
+              <Bar dataKey="Posts" fill="#3b82f6" radius={[4, 4, 0, 0]} />
+              <Bar dataKey="Videos" fill="#f59e0b" radius={[4, 4, 0, 0]} />
+            </BarChart>
+          </ResponsiveContainer>
         </div>
       </div>
     </div>

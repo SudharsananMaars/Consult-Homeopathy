@@ -16,17 +16,19 @@ function Dashboard() {
       <div className="grid grid-cols-12 gap-6" style={{ minHeight: '700px' }}>
         {/* LEFT COLUMN: Total Patient Base */}
         <div className="col-span-3 bg-white rounded-xl shadow-lg p-6 overflow-auto" style={{ height: '724px' }}>
+          <TotalPatientBase/>
         </div>
 
         {/* RIGHT COLUMN: 2 cards 50/50 height */}
         <div className="col-span-9 grid gap-6" style={{ height: '724px', gridTemplateRows: '1fr 1fr' }}>
           {/* Top: Total Earnings Card */}
           <div className="bg-white rounded-xl shadow-lg p-6 flex items-center justify-center" style={{ height: '100%' }}>
-            <span className="text-gray-400">Total Earnings Component</span>
+            <TotalEarnings/>
           </div>
 
           {/* Bottom: Combined Appointments / Stats / Calendar Card */}
           <div className="bg-white rounded-xl shadow-lg p-6 flex items-center justify-center" style={{ height: '100%' }}>
+          
           </div>
         </div>
       </div>
@@ -34,27 +36,28 @@ function Dashboard() {
       {/* Bottom row: 3 cards */}
       <div className="grid grid-cols-3 gap-6 mt-6">
         <div className="bg-white rounded-xl shadow-lg p-6 min-h-[170px] flex items-center justify-center">
-          <span className="text-gray-400">Med Prep Component</span>
+          <MedicinePreparation/>
         </div>
         <div className="bg-white rounded-xl shadow-lg p-6 min-h-[170px] flex items-center justify-center">
-          <span className="text-gray-400">Shipment Component</span>
+          <Shipment/>
         </div>
         <div className="bg-white rounded-xl shadow-lg p-6 min-h-[170px] flex items-center justify-center">
-          <span className="text-gray-400">Patient Care Component</span>
+          <PatientCare/>
         </div>
       </div>
 
       {/* Patient Communication & Feedback */}
       <div className="bg-white rounded-xl shadow-lg p-6 mt-6 min-h-[150px] flex items-center justify-center">
+        <PatientCommunication/>
       </div>
 
       {/* Workforce & Inventory/OrderTracking row */}
       <div className="grid grid-cols-12 gap-6 mt-6">
         <div className="col-span-4 bg-white rounded-xl shadow-lg p-6 flex items-center justify-center min-h-[170px]">
-          <span className="text-gray-400">Workforce Overview Component</span>
+          <WorkforceOverview/>
         </div>
         <div className="col-span-8 bg-white rounded-xl shadow-lg p-6 flex items-center justify-center min-h-[170px]">
-          <span className="text-gray-400">Inventory Component</span>
+          <InventoryOverview/>
         </div>
       </div>
     </DoctorLayout>
