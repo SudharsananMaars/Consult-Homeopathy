@@ -13,51 +13,63 @@ import Appointments from "/src/pages/DashboardComponents/Appointments.jsx";
 function Dashboard() {
   return (
     <DoctorLayout>
-      <div className="grid grid-cols-12 gap-6" style={{ minHeight: '700px' }}>
-        {/* LEFT COLUMN: Total Patient Base */}
-        <div className="col-span-3 bg-white rounded-xl shadow-lg p-6 overflow-auto" style={{ height: '724px' }}>
-          <TotalPatientBase/>
-        </div>
-
-        {/* RIGHT COLUMN: 2 cards 50/50 height */}
-        <div className="col-span-9 grid gap-6" style={{ height: '724px', gridTemplateRows: '1fr 1fr' }}>
-          {/* Top: Total Earnings Card */}
-          <div className="bg-white rounded-xl shadow-lg p-6 flex items-center justify-center" style={{ height: '100%' }}>
-            <TotalEarnings/>
+      <div className="p-6 space-y-6">
+        {/* First Row: TotalPatientBase (left) + TotalEarnings & Appointments (right) */}
+        <div className="flex gap-6">
+          {/* Left: Total Patient Base - 370px width */}
+          <div className="w-[500px] flex-shrink-0">
+            <div className="bg-white rounded-xl shadow-lg p-6 h-[734px] overflow-auto">
+              <TotalPatientBase/>
+            </div>
           </div>
 
-          {/* Bottom: Combined Appointments / Stats / Calendar Card */}
-          <div className="bg-white rounded-xl shadow-lg p-6 flex items-center justify-center" style={{ height: '100%' }}>
-          
+          {/* Right: Two stacked cards - 758px width */}
+          <div className="flex-1 flex flex-col gap-6">
+            {/* Top: Total Earnings - 352px height */}
+            <div className="bg-white rounded-xl shadow-lg p-6 h-[357px] overflow-auto">
+              <TotalEarnings/>
+            </div>
+
+            {/* Bottom: Appointments - 352px height */}
+            <div className="bg-white rounded-xl shadow-lg p-6 h-[357px] overflow-auto">
+              <Appointments/>
+            </div>
           </div>
         </div>
-      </div>
 
-      {/* Bottom row: 3 cards */}
-      <div className="grid grid-cols-3 gap-6 mt-6">
-        <div className="bg-white rounded-xl shadow-lg p-6 min-h-[170px] flex items-center justify-center">
-          <MedicinePreparation/>
+        {/* Second Row: 3 cards (MedicinePreparation, Shipment, PatientCare) */}
+        <div className="grid grid-cols-3 gap-6">
+          <div className="bg-white rounded-xl shadow-lg p-6 h-[270px] overflow-auto">
+            <MedicinePreparation/>
+          </div>
+          <div className="bg-white rounded-xl shadow-lg p-6 h-[270px] overflow-auto">
+            <Shipment/>
+          </div>
+          <div className="bg-white rounded-xl shadow-lg p-6 h-[270px] overflow-auto">
+            <PatientCare/>
+          </div>
         </div>
-        <div className="bg-white rounded-xl shadow-lg p-6 min-h-[170px] flex items-center justify-center">
-          <Shipment/>
-        </div>
-        <div className="bg-white rounded-xl shadow-lg p-6 min-h-[170px] flex items-center justify-center">
-          <PatientCare/>
-        </div>
-      </div>
 
-      {/* Patient Communication & Feedback */}
-      <div className="bg-white rounded-xl shadow-lg p-6 mt-6 min-h-[150px] flex items-center justify-center">
-        <PatientCommunication/>
-      </div>
-
-      {/* Workforce & Inventory/OrderTracking row */}
-      <div className="grid grid-cols-12 gap-6 mt-6">
-        <div className="col-span-4 bg-white rounded-xl shadow-lg p-6 flex items-center justify-center min-h-[170px]">
-          <WorkforceOverview/>
+        {/* Third Row: Patient Communication - full width */}
+        <div className="bg-white rounded-xl shadow-lg p-6 h-[270px] overflow-auto">
+          <PatientCommunication/>
         </div>
-        <div className="col-span-8 bg-white rounded-xl shadow-lg p-6 flex items-center justify-center min-h-[170px]">
-          <InventoryOverview/>
+
+        {/* Fourth Row: WorkforceOverview (left) + InventoryOverview (right) */}
+        <div className="flex gap-6">
+          {/* Left: Workforce - 370px width */}
+          <div className="w-[500px] flex-shrink-0">
+            <div className="bg-white rounded-xl shadow-lg p-6 h-[270px] overflow-auto">
+              <WorkforceOverview/>
+            </div>
+          </div>
+
+          {/* Right: Inventory - remaining width (758px) */}
+          <div className="flex-1">
+            <div className="bg-white rounded-xl shadow-lg p-6 h-[270px] overflow-auto">
+              <InventoryOverview/>
+            </div>
+          </div>
         </div>
       </div>
     </DoctorLayout>
