@@ -665,27 +665,56 @@ Would you like to continue the conversation or schedule a fresh appointment?`,
     setMessages((prev) => [...prev, qMessage]);
   };
 
-  const handleFeedbackAnswer = (questionId, rating) => {
-    console.log("Answer:", questionId, rating);
-    // TODO: Optionally send answer to backend
-    setRatings((prev) => ({ ...prev, [questionId]: rating }));
-
-    const nextIndex = currentQuestionIndex + 1;
-    if (nextIndex < feedbackQuestions.length) {
-      setCurrentQuestionIndex(nextIndex);
-      showFeedbackQuestion(
-        feedbackQuestions[nextIndex],
-        nextIndex,
-        feedbackQuestions.length
-      );
-    } else {
-      // ✅ all questions answered
-      setIsFeedbackFlowActive(false);
-      setBotInitialized(false);
-
-      setTimeout(() => initializeBotGreeting(), 1000);
+  const handleFeedbackAnswer = async (questionId, rating) => {
+  console.log("Answer:", questionId, rating);
+  
+  // Store the answer with full question details
+  const currentQuestion = feedbackQuestions[currentQuestionIndex];
+  setRatings((prev) => ({ 
+    ...prev, 
+    [questionId]: {
+      question: currentQuestion.question,
+      category: currentQuestion.category,
+      rating: rating
     }
-  };
+  }));
+
+  const nextIndex = currentQuestionIndex + 1;
+  if (nextIndex < feedbackQuestions.length) {
+    setCurrentQuestionIndex(nextIndex);
+    showFeedbackQuestion(feedbackQuestions[nextIndex], nextIndex, feedbackQuestions.length);
+  } else {
+    // ✅ ALL QUESTIONS ANSWERED - SUBMIT TO BACKEND
+    setIsFeedbackFlowActive(false);
+    await submitFeedbackResponses();
+    
+    // Restart bot flow
+    setBotInitialized(false);
+    setTimeout(() => initializeBotGreeting(), 1000);
+  }
+};
+
+const submitFeedbackResponses = async () => {
+  try {
+    const token = localStorage.getItem("token");
+    
+    // Convert ratings object to array format required by API
+    const responses = Object.values(ratings);
+    
+    await axios.patch(
+      `${API_URL}/api/analytics/feedback-response`,
+      { responses },
+      { headers: { Authorization: `Bearer ${token}` } }
+    );
+    
+    console.log("✅ Feedback submitted successfully");
+    
+    // Clear ratings after submission
+    setRatings({});
+  } catch (err) {
+    console.error("Failed to submit feedback:", err);
+  }
+};
 
   const formatFileSize = (bytes) => {
     if (bytes === 0) return "0 Bytes";
@@ -923,12 +952,20 @@ Would you like to continue the conversation or schedule a fresh appointment?`,
       }
     };
 
+    const handleFeedbackRequest = async (data) => {
+    console.log("🔔 Feedback request received:", data);
+    // Fetch questions and start feedback flow
+    await fetchFeedbackQuestionsForCourseCompletion();
+  };
+
     socket.current.on("receiveMessage", handleReceiveMessage);
     socket.current.on("botStatusChanged", handleBotStatus);
+    socket.current.on("requestFeedback", handleFeedbackRequest);
 
     return () => {
       socket.current.off("receiveMessage", handleReceiveMessage);
       socket.current.off("botStatusChanged", handleBotStatus);
+      socket.current.off("requestFeedback", handleFeedbackRequest);
     };
   }, [
     socket,
@@ -939,6 +976,28 @@ Would you like to continue the conversation or schedule a fresh appointment?`,
     fetchFeedbackQuestions,
     initializeBotGreeting,
   ]);
+
+const fetchFeedbackQuestionsForCourseCompletion = async () => {
+  try {
+    const token = localStorage.getItem("token");
+    const res = await axios.get(
+      `${API_URL}/api/analytics/display-questions`,
+      { headers: { Authorization: `Bearer ${token}` } }
+    );
+    
+    // Set questions and start feedback flow
+    const questions = res.data.questions || res.data || [];
+    setFeedbackQuestions(questions);
+    setCurrentQuestionIndex(0);
+    setIsFeedbackFlowActive(true);
+    
+    if (questions.length > 0) {
+      showFeedbackQuestion(questions[0], 0, questions.length);
+    }
+  } catch (err) {
+    console.error("Failed to fetch course completion feedback:", err);
+  }
+};
 
   const fetchPatientProfile = async () => {
     try {

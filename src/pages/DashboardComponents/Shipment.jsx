@@ -1,23 +1,76 @@
 import React, { useState, useEffect } from "react";
+import config from '/src/config.js';
 
-// Mock config for demo
-const config = { API_URL: "https://api.example.com" };
 const API_URL = config.API_URL;
 
 function ShipmentOverview() {
   const [shipmentData, setShipmentData] = useState({
-    total: 4000,
+    total: 0,
     avgTurnaround: "4h",
-    ackReceived: 335,
-    awaitingDispatch: 110,
-    ackMissing: 120,
-    shipmentLost: 120,
+    ackReceived: 0,
+    awaitingDispatch: 0,
+    ackMissing: 0,
+    shipmentLost: 0,
     onTimePercentage: 75,
     slaMet: 10,
     slaNotMet: 10,
   });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
+  const [selectedMonth, setSelectedMonth] = useState("month");
+
+  // Fetch shipment data from API
+  useEffect(() => {
+    const fetchShipmentData = async () => {
+      setLoading(true);
+      setError(null);
+      
+      try {
+        const response = await fetch(`${API_URL}/api/analytics/shipment-summary`, {
+          method: 'PATCH',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            filter: selectedMonth
+          })
+        });
+
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`);
+        }
+
+        const data = await response.json();
+        
+        if (data.success && data.summary) {
+          const summary = data.summary;
+          const total = (summary.productsShipped || 0) + 
+                       (summary.productsReceived || 0) + 
+                       (summary.shipmentsLost || 0) + 
+                       (summary.awaitingDispatch || 0);
+          
+          setShipmentData({
+            total: total,
+            avgTurnaround: "4h",
+            ackReceived: summary.productsReceived || 0,
+            awaitingDispatch: summary.awaitingDispatch || 0,
+            ackMissing: summary.productsShipped || 0,
+            shipmentLost: summary.shipmentsLost || 0,
+            onTimePercentage: 75,
+            slaMet: 10,
+            slaNotMet: 10,
+          });
+        }
+      } catch (err) {
+        setError(err.message);
+        console.error('Error fetching shipment data:', err);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchShipmentData();
+  }, [selectedMonth]);
 
   // Calculate percentages for shipment status donut
   const total =
@@ -129,94 +182,93 @@ function ShipmentOverview() {
 
               {/* Charts */}
               <div className="grid grid-cols-2 gap-4 flex-1">
-  {/* Shipment Status Donut */}
-  <div className="flex flex-col items-center group relative">
-    <div className="relative flex items-center justify-center">
-      <svg
-        width="85"
-        height="85"
-        viewBox="0 0 100 100"
-        className="transform -rotate-90"
-      >
-        <circle
-          cx="50"
-          cy="50"
-          r="40"
-          fill="none"
-          stroke="#22d3ee"
-          strokeWidth="20"
-          strokeDasharray={`${ackReceivedPct * 2.513} 251.3`}
-          strokeDashoffset="0"
-        />
-        <circle
-          cx="50"
-          cy="50"
-          r="40"
-          fill="none"
-          stroke="#f97316"
-          strokeWidth="20"
-          strokeDasharray={`${awaitingDispatchPct * 2.513} 251.3`}
-          strokeDashoffset={`-${ackReceivedPct * 2.513}`}
-        />
-      </svg>
-      <div className="absolute inset-0 flex items-center justify-center">
-        <span className="text-base font-bold text-gray-800">100%</span>
-      </div>
-    </div>
+                {/* Shipment Status Donut */}
+                <div className="flex flex-col items-center group relative">
+                  <div className="relative flex items-center justify-center">
+                    <svg
+                      width="85"
+                      height="85"
+                      viewBox="0 0 100 100"
+                      className="transform -rotate-90"
+                    >
+                      <circle
+                        cx="50"
+                        cy="50"
+                        r="40"
+                        fill="none"
+                        stroke="#22d3ee"
+                        strokeWidth="20"
+                        strokeDasharray={`${ackReceivedPct * 2.513} 251.3`}
+                        strokeDashoffset="0"
+                      />
+                      <circle
+                        cx="50"
+                        cy="50"
+                        r="40"
+                        fill="none"
+                        stroke="#f97316"
+                        strokeWidth="20"
+                        strokeDasharray={`${awaitingDispatchPct * 2.513} 251.3`}
+                        strokeDashoffset={`-${ackReceivedPct * 2.513}`}
+                      />
+                    </svg>
+                    <div className="absolute inset-0 flex items-center justify-center">
+                      <span className="text-base font-bold text-gray-800">100%</span>
+                    </div>
+                  </div>
 
-    {/* Labels shown on hover */}
-    <div className="absolute bottom-[-40px] flex flex-col gap-1 text-[10px] opacity-0 group-hover:opacity-100 transition-opacity duration-200">
-      <div className="flex items-center gap-1">
-        <div className="w-2 h-2 rounded-full bg-cyan-400"></div>
-        <span className="text-gray-600">{ackReceivedPct}% Received</span>
-      </div>
-      <div className="flex items-center gap-1">
-        <div className="w-2 h-2 rounded-full bg-orange-500"></div>
-        <span className="text-gray-600">{awaitingDispatchPct}% Pending</span>
-      </div>
-    </div>
-  </div>
+                  {/* Labels shown on hover */}
+                  <div className="absolute bottom-[-40px] flex flex-col gap-1 text-[10px] opacity-0 group-hover:opacity-100 transition-opacity duration-200">
+                    <div className="flex items-center gap-1">
+                      <div className="w-2 h-2 rounded-full bg-cyan-400"></div>
+                      <span className="text-gray-600">{ackReceivedPct}% Received</span>
+                    </div>
+                    <div className="flex items-center gap-1">
+                      <div className="w-2 h-2 rounded-full bg-orange-500"></div>
+                      <span className="text-gray-600">{awaitingDispatchPct}% Pending</span>
+                    </div>
+                  </div>
+                </div>
 
-  {/* On-Time Shipping */}
-  <div className="flex flex-col items-center relative">
-    <div className="relative flex items-center justify-center">
-      <svg
-        width="85"
-        height="85"
-        viewBox="0 0 100 100"
-        className="transform -rotate-90"
-      >
-        <circle cx="50" cy="50" r="40" fill="none" stroke="#e5e7eb" strokeWidth="12" />
-        <circle
-          cx="50"
-          cy="50"
-          r="40"
-          fill="none"
-          stroke="#3b82f6"
-          strokeWidth="12"
-          strokeDasharray={`${shipmentData.onTimePercentage * 2.513} 251.3`}
-          strokeLinecap="round"
-        />
-      </svg>
-      <div className="absolute inset-0 flex items-center justify-center">
-        <span className="text-base font-bold text-blue-600">{shipmentData.onTimePercentage}%</span>
-      </div>
-    </div>
-  </div>
-</div>
+                {/* On-Time Shipping */}
+                <div className="flex flex-col items-center relative">
+                  <div className="relative flex items-center justify-center">
+                    <svg
+                      width="85"
+                      height="85"
+                      viewBox="0 0 100 100"
+                      className="transform -rotate-90"
+                    >
+                      <circle cx="50" cy="50" r="40" fill="none" stroke="#e5e7eb" strokeWidth="12" />
+                      <circle
+                        cx="50"
+                        cy="50"
+                        r="40"
+                        fill="none"
+                        stroke="#3b82f6"
+                        strokeWidth="12"
+                        strokeDasharray={`${shipmentData.onTimePercentage * 2.513} 251.3`}
+                        strokeLinecap="round"
+                      />
+                    </svg>
+                    <div className="absolute inset-0 flex items-center justify-center">
+                      <span className="text-base font-bold text-blue-600">{shipmentData.onTimePercentage}%</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
 
-{/* SLA info row below both graphs */}
-<div className="flex justify-between mt-2 text-[12px] w-full">
-  <div className="text-center">
-    <span className="text-green-600 font-semibold">SLA Met: </span>
-    <span className="text-gray-700">{shipmentData.slaMet}</span>
-  </div>
-  <div className="text-center">
-    <span className="text-red-600 font-semibold">SLA Not-Met: </span>
-    <span className="text-gray-700">{shipmentData.slaNotMet}</span>
-  </div>
-</div>
-
+              {/* SLA info row below both graphs */}
+              <div className="flex justify-between mt-2 text-[12px] w-full">
+                <div className="text-center">
+                  <span className="text-green-600 font-semibold">SLA Met: </span>
+                  <span className="text-gray-700">{shipmentData.slaMet}</span>
+                </div>
+                <div className="text-center">
+                  <span className="text-red-600 font-semibold">SLA Not-Met: </span>
+                  <span className="text-gray-700">{shipmentData.slaNotMet}</span>
+                </div>
+              </div>
             </div>
           </div>
         </div>

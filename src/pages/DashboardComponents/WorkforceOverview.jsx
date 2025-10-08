@@ -1,4 +1,7 @@
 import React, { useState, useEffect } from "react";
+import config from '/src/config.js';
+
+const API_URL = config.API_URL;
 
 // Function to calculate the percentage for the attendance bar
 const calculatePercentage = (value, total) => {
@@ -6,18 +9,36 @@ const calculatePercentage = (value, total) => {
 };
 
 function WorkforceOverview() {
-  const [data, setData] = useState({
-    success: true,
-    totalDoctors: 250,
-    summary: {
-      present: 120,
-      absent: 100,
-      late: 30
-    },
-    date: "2025-10-08"
-  });
-  const [loading, setLoading] = useState(false);
+  const [data, setData] = useState(null);
+  const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+
+  useEffect(() => {
+    const fetchAttendanceData = async () => {
+      try {
+        setLoading(true);
+        const response = await fetch(`${API_URL}/api/analytics/attendance-summary`);
+        
+        if (!response.ok) {
+          throw new Error('Failed to fetch attendance data');
+        }
+        
+        const result = await response.json();
+        
+        if (result.success) {
+          setData(result);
+        } else {
+          throw new Error('Invalid response from server');
+        }
+      } catch (err) {
+        setError(err.message);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchAttendanceData();
+  }, []);
 
   // --- Conditional Rendering for Loading/Error States ---
   if (loading) {
@@ -31,6 +52,10 @@ function WorkforceOverview() {
 
   if (error) {
     return <div className="p-4 text-center text-red-500">Error: {error}</div>;
+  }
+
+  if (!data) {
+    return null;
   }
   
   // Destructure the necessary data after ensuring it's loaded and successful

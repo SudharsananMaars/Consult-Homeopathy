@@ -1,12 +1,15 @@
 import React, { useState, useEffect } from "react";
+import config from '/src/config.js';
+
+const API_URL = config.API_URL;
 
 export default function PatientCare() {
   const [data, setData] = useState({
-    consistentPatients: 40,
-    inconsistentPatients: 25,
-    nonAdherentPatients: 3,
+    consistentPatients: 0,
+    inconsistentPatients: 0,
+    nonAdherentPatients: 0,
   });
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [tatData, setTatData] = useState({
     shipmentToPatientCare: {
@@ -16,6 +19,47 @@ export default function PatientCare() {
     },
   });
   const [tatLoading, setTatLoading] = useState(false);
+
+  // Fetch adherence summary data
+  useEffect(() => {
+    const fetchAdherenceData = async () => {
+      try {
+        setLoading(true);
+        setError(null);
+        
+        const response = await fetch(`${API_URL}/api/analytics/adherence-summary`, {
+          method: 'PATCH',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            filter: 'month'
+          }),
+        });
+
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`);
+        }
+
+        const result = await response.json();
+        
+        if (result.success && result.summary) {
+          setData({
+            consistentPatients: result.summary.consistentPatients || 0,
+            inconsistentPatients: result.summary.inconsistentPatients || 0,
+            nonAdherentPatients: result.summary.nonAdherentPatients || 0,
+          });
+        }
+      } catch (err) {
+        console.error('Error fetching adherence data:', err);
+        setError(err.message);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchAdherenceData();
+  }, []);
 
   const totalPatients =
     data.consistentPatients +
@@ -82,43 +126,42 @@ export default function PatientCare() {
           {/* Content Row */}
           <div className="flex gap-4 items-center">
             {/* Status Counts */}
-           <div className="flex flex-col gap-2">
-  {/* Consistent */}
-  <div className="bg-white rounded-lg shadow-sm border border-gray-100 flex">
-    {/* Left color block */}
-    <div className="w-1 bg-green-500 rounded-l-lg"></div>
-    {/* Content */}
-    <div className="flex flex-col justify-center px-2 py-1">
-      <div className="text-gray-700 font-medium text-xs">Consistent</div>
-      <div className="text-green-600 font-bold text-base leading-tight">
-        {data.consistentPatients}
-      </div>
-    </div>
-  </div>
+            <div className="flex flex-col gap-2">
+              {/* Consistent */}
+              <div className="bg-white rounded-lg shadow-sm border border-gray-100 flex">
+                {/* Left color block */}
+                <div className="w-1 bg-green-500 rounded-l-lg"></div>
+                {/* Content */}
+                <div className="flex flex-col justify-center px-2 py-1">
+                  <div className="text-gray-700 font-medium text-xs">Consistent</div>
+                  <div className="text-green-600 font-bold text-base leading-tight">
+                    {data.consistentPatients}
+                  </div>
+                </div>
+              </div>
 
-  {/* Inconsistent */}
-  <div className="bg-white rounded-lg shadow-sm border border-gray-100 flex">
-    <div className="w-1 bg-yellow-400 rounded-l-lg"></div>
-    <div className="flex flex-col justify-center px-2 py-1">
-      <div className="text-gray-700 font-medium text-xs">Inconsistent</div>
-      <div className="text-yellow-500 font-bold text-base leading-tight">
-        {data.inconsistentPatients}
-      </div>
-    </div>
-  </div>
+              {/* Inconsistent */}
+              <div className="bg-white rounded-lg shadow-sm border border-gray-100 flex">
+                <div className="w-1 bg-yellow-400 rounded-l-lg"></div>
+                <div className="flex flex-col justify-center px-2 py-1">
+                  <div className="text-gray-700 font-medium text-xs">Inconsistent</div>
+                  <div className="text-yellow-500 font-bold text-base leading-tight">
+                    {data.inconsistentPatients}
+                  </div>
+                </div>
+              </div>
 
-  {/* Non-Adherent */}
-  <div className="bg-white rounded-lg shadow-sm border border-gray-100 flex">
-    <div className="w-1 bg-red-500 rounded-l-lg"></div>
-    <div className="flex flex-col justify-center px-2 py-1">
-      <div className="text-gray-700 font-medium text-xs">Non-Adherent</div>
-      <div className="text-red-500 font-bold text-base leading-tight">
-        {data.nonAdherentPatients}
-      </div>
-    </div>
-  </div>
-</div>
-
+              {/* Non-Adherent */}
+              <div className="bg-white rounded-lg shadow-sm border border-gray-100 flex">
+                <div className="w-1 bg-red-500 rounded-l-lg"></div>
+                <div className="flex flex-col justify-center px-2 py-1">
+                  <div className="text-gray-700 font-medium text-xs">Non-Adherent</div>
+                  <div className="text-red-500 font-bold text-base leading-tight">
+                    {data.nonAdherentPatients}
+                  </div>
+                </div>
+              </div>
+            </div>
 
             {/* Care Completion */}
             <div className="bg-white rounded-lg shadow-sm border border-gray-100 flex flex-col items-center justify-center py-3 px-4">

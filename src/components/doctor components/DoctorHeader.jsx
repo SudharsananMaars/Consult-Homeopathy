@@ -384,84 +384,69 @@ const Header = () => {
       >
         {/* Left section - App Title and Current Page */}
         <div className="flex flex-1 items-center">
-          <div className="flex items-center gap-3">
-            <h2 className="text-xl text-[#757575] font-semibold text-slate-800">
-              Consult Homeopathy
-            </h2>
             <div className="flex items-center gap-2">
-              <span className="text-slate-400">|</span>
               <span className="text-lg text-[#757575] font-semibold  text-slate-800">
                 {currentPageTitle}
               </span>
             </div>
-          </div>
         </div>
 
         {/* Right section - Month dropdown and Action buttons */}
         <Stack direction="row" spacing={1.5} alignItems="center">
+  {/* Action Buttons */}
+  <Badge
+    badgeContent={totalUnread}
+    color="error"
+    overlap="circular"
+    anchorOrigin={{
+      vertical: "top",
+      horizontal: "right",
+    }}
+  >
+    <IconButton
+      onClick={handleMessage}
+      sx={{
+        backgroundColor: "white",
+        boxShadow: "0 1px 3px 0 rgb(0 0 0 / 0.1)",
+        color: "#6b7280",
+        "&:hover": {
+          backgroundColor: "#EFF6FF",
+          color: "#374151",
+        },
+        width: 44,
+        height: 44,
+      }}
+    >
+      <IconComponent type="message" materialIcon={Message} />
+    </IconButton>
+  </Badge>
+  
+  <IconButton
+    onClick={handleNotify}
+    sx={{
+      backgroundColor: "white",
+      boxShadow: "0 1px 3px 0 rgb(0 0 0 / 0.1)",
+      color: "#6b7280",
+      "&:hover": {
+        backgroundColor: "#EFF6FF",
+        color: "#374151",
+      },
+      width: 44,
+      height: 44,
+    }}
+  >
+    <IconComponent type="notification" materialIcon={Notifications} />
+  </IconButton>
 
-          {/* Action Buttons */}
-          <Badge
-            badgeContent={totalUnread}
-            color="error"
-            overlap="circular"
-            anchorOrigin={{
-              vertical: "top",
-              horizontal: "right",
-            }}
-          >
-            <IconButton
-              onClick={handleMessage}
-              sx={{
-                backgroundColor: "white",
-                boxShadow: "0 1px 3px 0 rgb(0 0 0 / 0.1)",
-                color: "#6b7280",
-                "&:hover": {
-                  backgroundColor: "#EFF6FF",
-                  color: "#374151",
-                },
-                width: 44,
-                height: 44,
-              }}
-            >
-              <IconComponent type="message" materialIcon={Message} />
-            </IconButton>
-          </Badge>
-
-          <IconButton
-            onClick={handleNotify}
-            sx={{
-              backgroundColor: "white",
-              boxShadow: "0 1px 3px 0 rgb(0 0 0 / 0.1)",
-              color: "#6b7280",
-              "&:hover": {
-                backgroundColor: "#EFF6FF",
-                color: "#374151",
-              },
-              width: 44,
-              height: 44,
-            }}
-          >
-            <IconComponent type="notification" materialIcon={Notifications} />
-          </IconButton>
-
-          <IconButton
-            onClick={handleProfile}
-            sx={{
-              backgroundColor: "white",
-              boxShadow: "0 1px 3px 0 rgb(0 0 0 / 0.1)",
-              color: "#6b7280",
-              "&:hover": {
-                backgroundColor: "#EFF6FF",
-                color: "#000000ff",
-              },
-              width: 44,
-              height: 44,
-            }}
-          >
-            <IconComponent type="profile" materialIcon={AccountCircle} />
-          </IconButton>
-        </Stack>
+  {/* Logo with spacing */}
+  <Box sx={{ ml: 3 }}>
+    <img
+      src="/src/assets/images/doctor images/homeologo2.png"
+      alt="Homeopathy Logo"
+      className="h-12 w-auto object-contain"
+    />
+  </Box>
+</Stack>
       </Toolbar>
 
       {/* Conditionally Render Messenger Popup */}

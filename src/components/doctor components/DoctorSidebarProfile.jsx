@@ -57,12 +57,13 @@ const SidebarProfile = () => {
   <div className="flex flex-col items-center space-y-3">
     {/* Profile Image - Larger and curved */}
     <div className="relative">
-      <img
-        src={doctorDetails.profilePhoto || defaultDoctorImage}
-        alt="Doctor Profile"
-        className="w-24 h-24 rounded-2xl object-cover border-3 border-white shadow-lg"
-      />
-    </div>
+  <img
+    src={doctorDetails.profilePhoto || defaultDoctorImage}
+    alt="Doctor Profile"
+    className="w-24 h-24 rounded-full object-cover border-4 border-white shadow-lg"
+  />
+</div>
+
     
     {/* Doctor Name - Centered */}
     <div className="text-center">

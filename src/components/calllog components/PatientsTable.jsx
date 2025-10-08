@@ -26,6 +26,7 @@ const PatientsTable = () => {
   const [searchQuery, setSearchQuery] = useState(''); 
   const [allocations, setAllocations] = useState([]);
   const [individualAllocations, setIndividualAllocations] = useState({});
+  const [statusFilter, setStatusFilter] = useState('Active');
   const [statistics, setStatistics] = useState(null);
   const [appointmentCounts, setAppointmentCounts] = useState({
   "Consultation": 0,
@@ -173,17 +174,20 @@ const handleTabChange = (tab) => {
   };
 
   const filteredPatients = prioritizePatients(patients.filter(patient => {
-    const matchesSearchTerm =
-      patient.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      (patient.mobileNumber && String(patient.mobileNumber).includes(searchTerm));
+  const matchesSearchTerm =
+    patient.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    (patient.mobileNumber && String(patient.mobileNumber).includes(searchTerm));
 
-    const matchesFilter =
-      filterOption === 'all' ||
-      (filterOption === 'pending' && patient.appointmentFixed === 'No') ||
-      (filterOption === 'done' && patient.appointmentFixed === 'Yes');
+  const matchesFilter =
+    filterOption === 'all' ||
+    (filterOption === 'pending' && patient.appointmentFixed === 'No') ||
+    (filterOption === 'done' && patient.appointmentFixed === 'Yes');
 
-    return matchesSearchTerm && matchesFilter;
-  }));
+  // Add status filter
+  const matchesStatus = patient.userStatus === statusFilter;
+
+  return matchesSearchTerm && matchesFilter && matchesStatus;
+}));
 
   useEffect(() => {
   const fetchDashboardStats = async () => {
@@ -608,7 +612,7 @@ useEffect(() => {
   {/* Heading */}
   <h2 className="text-2xl font-bold text-black-500 pd-2">Patients List</h2>
 
-  <div className="flex flex-col md:flex-row items-center justify-between mb-6 gap-4">
+<div className="flex flex-col md:flex-row items-center justify-between mb-6 gap-4">
   {/* Left: Tabs */}
   <div className="flex gap-2">
     <button 
@@ -639,8 +643,24 @@ useEffect(() => {
     </button>
   </div>
 
-  {/* Right: Search */}
-  <div className="flex items-center space-x-3 bg-white p-3 rounded-lg shadow-sm w-fit">
+  {/* Right: Filter and Search */}
+  <div className="flex items-center gap-3">
+    {/* Status Filter Dropdown */}
+    <div className="flex items-center bg-white rounded-lg border border-gray-300 focus-within:border-gray-400 transition-colors duration-300">
+      <FaFilter className="ml-3 text-gray-400" />
+      <select
+        value={statusFilter}
+        onChange={(e) => setStatusFilter(e.target.value)}
+        className="p-2 pl-2 outline-none text-gray-700 bg-transparent cursor-pointer"
+      >
+        <option value="Active">Active</option>
+        <option value="Inactive">Inactive</option>
+        <option value="Dormant">Dormant</option>
+        <option value="Exit">Exit</option>
+      </select>
+    </div>
+
+    {/* Search Bar */}
     <div className="flex items-center bg-white rounded-lg border border-gray-300 focus-within:border-gray-400 transition-colors duration-300">
       <FaSearch className="ml-3 text-gray-400" />
       <input
