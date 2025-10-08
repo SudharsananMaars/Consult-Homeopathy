@@ -60,9 +60,10 @@ function ShipmentOverview() {
             awaitingDispatch: summary.awaitingDispatch || 0,
             ackMissing: summary.productsShipped || 0,
             shipmentLost: summary.shipmentsLost || 0,
-            onTimePercentage: 75,
-            slaMet: 10,
-            slaNotMet: 10,
+            shipmentsStatus: 75,
+            onTimePercentage: summary.deliveredPercentage,
+            slaMet: summary.slaMetCount,
+            slaNotMet: summary.slaNotMetCount,
           });
         }
       } catch (err) {
