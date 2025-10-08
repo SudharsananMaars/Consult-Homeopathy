@@ -241,21 +241,21 @@ const TotalEarningsComponent = () => {
     <div className="flex items-center gap-1">
       <span className="text-gray-700 font-semibold text-[12px]">Pending</span>
       <span>:</span>
-      <span className="text-sm font-bold text-gray-800">₹1000</span>
+      <span className="text-sm font-bold text-gray-800">₹0</span>
     </div>
 
     {/* Consultation Box */}
     <div className="flex items-center gap-1 border-2 border-purple-200 rounded px-2 py-1">
       <span className="text-purple-700 font-semibold text-[12px]">Consultation</span>
       <span>:</span>
-      <span className="text-sm font-bold text-purple-700">₹500</span>
+      <span className="text-sm font-bold text-purple-700">₹0</span>
     </div>
 
     {/* Medicine Prep Box */}
     <div className="flex items-center gap-1 border-2 border-teal-200 rounded px-2 py-1">
       <span className="text-teal-700 font-semibold text-[12px]">Medicine Prep</span>
       <span>:</span>
-      <span className="text-sm font-bold text-teal-700">₹500</span>
+      <span className="text-sm font-bold text-teal-700">₹0</span>
     </div>
   </div>
 </div>

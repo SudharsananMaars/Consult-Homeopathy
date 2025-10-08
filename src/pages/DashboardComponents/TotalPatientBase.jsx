@@ -115,9 +115,9 @@ export default function TotalPatient() {
 
   // Mock data for top performing content
   const mockContentData = {
-    Instagram: { posts: 120, videos: 35, totalViews: '1.2M', likes: '56K', shares: '8K' },
-    Facebook: { posts: 85, videos: 22, totalViews: '890K', likes: '42K', shares: '5K' },
-    Youtube: { posts: 45, videos: 67, totalViews: '2.1M', likes: '98K', shares: '12K' }
+    Instagram: { posts: 5, videos: 0, totalViews: '10', likes: '0', shares: '0' },
+    Facebook: { posts: 0, videos: 0, totalViews: '0', likes: '0', shares: '0' },
+    Youtube: { posts: 0, videos: 0, totalViews: '0', likes: '0', shares: '0' }
   };
 
   const contentData = mockContentData[activeTab];

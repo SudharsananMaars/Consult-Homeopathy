@@ -364,85 +364,78 @@ const PatientCommunicationCard = () => {
         );
     };
 
-    const renderChannelSplit = () => {
-        const data = [
-            { channel: "Messenger", responded: 35, pending: 10, missed: 5 },
-            { channel: "Calls", responded: 10, pending: 8, missed: 20 },
-        ];
+  const renderChannelSplit = () => {
+    const data = [
+        { channel: "Messenger", responded: 35, pending: 10, missed: 5 },
+        { channel: "Calls", responded: 10, pending: 8, missed: 20 },
+    ];
 
-        const maxValue = 50;
+    const maxValue = 50;
 
-        return (
-            <div className="p-3 h-[160px] w-[260px]">
-                <p className="text-[13px] font-semibold text-gray-800 mb-3 text-center">
-                    Channel Split
-                </p>
+    return (
+        <div className="p-3 w-[260px]">
+            <p className="text-[13px] font-semibold text-gray-800 mb-3 text-center">
+                Channel Split
+            </p>
 
-                <div className="relative flex flex-col space-y-3 pl-[80px]">
-                    <div className="absolute inset-0 flex justify-between z-0">
-                        {[0, 10, 20, 30, 40, 50].map((val) => (
+            <div className="flex flex-col space-y-4">
+                {data.map((item, index) => (
+                    <div key={index} className="flex items-start space-x-2">
+                        {/* Channel Label */}
+                        <span className="text-[11px] text-gray-700 w-[70px] text-right pt-[2px]">
+                            {item.channel}
+                        </span>
+
+                        {/* Vertical Separator Line */}
+                        <div className="w-[1px] bg-gray-500 h-[42px]" />
+
+                        {/* Bars stacked vertically */}
+                        <div className="flex flex-col space-y-1 w-full">
                             <div
-                                key={val}
-                                className="h-full border-l border-dotted border-gray-300"
+                                className="h-[10px] rounded-full bg-blue-400"
+                                style={{ width: `${(item.responded / maxValue) * 100}%` }}
                             ></div>
-                        ))}
+                            <div
+                                className="h-[10px] rounded-full bg-orange-300"
+                                style={{ width: `${(item.pending / maxValue) * 100}%` }}
+                            ></div>
+                            <div
+                                className="h-[10px] rounded-full bg-red-400"
+                                style={{ width: `${(item.missed / maxValue) * 100}%` }}
+                            ></div>
+                        </div>
                     </div>
+                ))}
+            </div>
 
-                    {data.map((item, index) => {
-                        const respondedWidth = (item.responded / maxValue) * 100;
-                        const pendingWidth = (item.pending / maxValue) * 100;
-                        const missedWidth = (item.missed / maxValue) * 100;
+            {/* Scale Labels */}
+            <div className="flex justify-between text-[10px] text-gray-500 mt-3 ml-[72px]">
+                {[0, 10, 20, 30, 40, 50].map((val) => (
+                    <span key={val}>{val}</span>
+                ))}
+            </div>
 
-                        return (
-                            <div key={index} className="flex items-center relative z-10 h-[14px]">
-                                <span className="absolute left-0 text-[11px] text-gray-700 w-[70px] text-right">
-                                    {item.channel}
-                                </span>
-
-                                <div className="absolute left-[75px] h-full border-l border-gray-600"></div>
-
-                                <div className="flex flex-row h-full ml-[8px] rounded-full overflow-hidden">
-                                    <div
-                                        className="bg-blue-400"
-                                        style={{ width: `${respondedWidth}%` }}
-                                    ></div>
-                                    <div
-                                        className="bg-orange-300"
-                                        style={{ width: `${pendingWidth}%` }}
-                                    ></div>
-                                    <div
-                                        className="bg-red-400"
-                                        style={{ width: `${missedWidth}%` }}
-                                    ></div>
-                                </div>
-                            </div>
-                        );
-                    })}
+            {/* Legend */}
+            <div className="flex gap-3 text-[10px] justify-center pt-2 mt-1">
+                <div className="flex items-center gap-1">
+                    <div className="w-2 h-2 rounded-sm bg-blue-400"></div>
+                    <span className="text-gray-600">Responded</span>
                 </div>
-
-                <div className="flex justify-between text-[10px] text-gray-500 mt-3 pl-[82px]">
-                    {[0, 10, 20, 30, 40, 50].map((val) => (
-                        <span key={val}>{val}</span>
-                    ))}
+                <div className="flex items-center gap-1">
+                    <div className="w-2 h-2 rounded-sm bg-orange-300"></div>
+                    <span className="text-gray-600">Pending</span>
                 </div>
-
-                <div className="flex gap-3 text-[10px] justify-center pt-2 mt-1">
-                    <div className="flex items-center gap-1">
-                        <div className="w-2 h-2 rounded-sm bg-blue-400"></div>
-                        <span className="text-gray-600">Responded</span>
-                    </div>
-                    <div className="flex items-center gap-1">
-                        <div className="w-2 h-2 rounded-sm bg-orange-300"></div>
-                        <span className="text-gray-600">Pending</span>
-                    </div>
-                    <div className="flex items-center gap-1">
-                        <div className="w-2 h-2 rounded-sm bg-red-400"></div>
-                        <span className="text-gray-600">Missed</span>
-                    </div>
+                <div className="flex items-center gap-1">
+                    <div className="w-2 h-2 rounded-sm bg-red-400"></div>
+                    <span className="text-gray-600">Missed</span>
                 </div>
             </div>
-        );
-    };
+        </div>
+    );
+};
+
+
+
 
     const renderFeedback = () => {
         const categories = [
@@ -613,7 +606,7 @@ const PatientCommunicationCard = () => {
     };
 
     return (
-        <div className="h-full flex flex-col p-6 bg-gray-50">
+        <div className="h-full flex flex-col p-4 ">
             <div className="flex items-start justify-between gap-6 h-full">
                 
                 <div className="flex flex-col gap-3" style={{ minWidth: '240px' }}>

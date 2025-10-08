@@ -71,7 +71,7 @@ function WorkforceOverview() {
 
   return (
     <div className="h-full flex flex-col">
-      <h3 className="text-base font-bold text-gray-800 mb-3">Workforce Overview</h3>
+      <h3 className="text-lg font-semibold text-black-500 mb-3">Workforce Overview</h3>
       
       <div className="flex gap-4 items-start">
         {/* Left: Stats Cards */}
