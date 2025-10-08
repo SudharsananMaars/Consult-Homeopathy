@@ -141,28 +141,27 @@ function InventoryOverview() {
           const reliabilityHeight = (vendor.reliabilityScore / maxValue) * 100;
 
           return (
-           <div key={idx} className="flex flex-col items-center flex-1">
-  {/* Bar container */}
-  <div
-    className="w-full flex gap-1 items-end"
-    style={{ height: "80px" }}
-  >
-    <div
-      className="flex-1 bg-green-500 rounded-t"
-      style={{ height: `${priceHeight}%` }}
-    ></div>
-    <div
-      className="flex-1 bg-blue-500 rounded-t"
-      style={{ height: `${reliabilityHeight}%` }}
-    ></div>
-  </div>
+            <div key={idx} className="flex flex-col items-center flex-1">
+              {/* Bar container */}
+              <div
+                className="w-full flex gap-1 items-end"
+                style={{ height: "80px" }}
+              >
+                <div
+                  className="flex-1 bg-green-500 rounded-t"
+                  style={{ height: `${priceHeight}%` }}
+                ></div>
+                <div
+                  className="flex-1 bg-blue-500 rounded-t"
+                  style={{ height: `${reliabilityHeight}%` }}
+                ></div>
+              </div>
 
-  {/* X-axis / Vendor name */}
-  <div className="text-xs text-gray-600 mt-2 text-center">
-    {vendor.vendorName}
-  </div>
-</div>
-
+              {/* X-axis / Vendor name */}
+              <div className="text-xs text-gray-600 mt-2 text-center">
+                {vendor.vendorName}
+              </div>
+            </div>
           );
         })}
       </div>
@@ -291,8 +290,6 @@ function InventoryOverview() {
 
             <div className="flex-1">{renderVendorChart()}</div>
 
-       
-
             {/* Legend */}
             <div className="flex gap-3 text-xs justify-center mt-1">
               <div className="flex items-center gap-1">
@@ -308,25 +305,21 @@ function InventoryOverview() {
         </div>
 
         {/* Order Frequency Chart */}
-      <div className="flex-1 flex flex-col mt-2">
-  <div className="text-xs font-semibold text-gray-700 mb-1">
-    Order Frequency Chart
-  </div>
+        <div className="flex-1 flex flex-col mt-2">
+          <div className="text-xs font-semibold text-gray-700 mb-1">
+            Order Frequency Chart
+          </div>
 
-  <div className="rounded-lg p-2 pt-3 flex-1 flex flex-col">
-    {/* Y-axis top label */}
-    <div className="text-xs text-gray-400 mb-1">500</div>
+          <div className="rounded-lg p-2 pt-3 flex-1 flex flex-col">
+            {/* Y-axis top label */}
+            <div className="text-xs text-gray-400 mb-1">500</div>
 
-    {/* Chart container */}
-    <div className="flex-1">
-      {renderOrderChart()}
-    </div>
-
-    {/* Y-axis bottom label */}
-  
-  </div>
-</div>
-
+            {/* Chart container */}
+            <div className="flex-1">
+              {renderOrderChart()}
+            </div>
+          </div>
+        </div>
 
         {/* Right Section: Materials & Expiry */}
         <div className="flex flex-col gap-3" style={{ minWidth: "140px" }}>
@@ -336,20 +329,22 @@ function InventoryOverview() {
             </div>
             <div className="flex items-center gap-2">
               <div className="flex">
-                {[...Array(6)].map((_, i) => (
+                {[...Array(Math.round((inventoryData?.otherMaterialsPercentage || 0) / 10))].map((_, i) => (
                   <div
                     key={i}
                     className="w-2.5 h-3 rounded bg-blue-600 mr-0.5"
                   />
                 ))}
-                {[...Array(4)].map((_, i) => (
+                {[...Array(10 - Math.round((inventoryData?.otherMaterialsPercentage || 0) / 10))].map((_, i) => (
                   <div
                     key={i}
                     className="w-2.5 h-3 rounded bg-blue-200 mr-0.5"
                   />
                 ))}
               </div>
-              <span className="text-sm font-bold text-gray-700">60%</span>
+              <span className="text-sm font-bold text-gray-700">
+                {isLoading ? "..." : `${inventoryData?.otherMaterialsPercentage || 0}%`}
+              </span>
             </div>
           </div>
 
@@ -359,20 +354,22 @@ function InventoryOverview() {
             </div>
             <div className="flex items-center gap-2">
               <div className="flex">
-                {[...Array(3)].map((_, i) => (
+                {[...Array(Math.round((inventoryData?.packagingPercentage || 0) / 10))].map((_, i) => (
                   <div
                     key={i}
                     className="w-2.5 h-3 rounded bg-pink-500 mr-0.5"
                   />
                 ))}
-                {[...Array(2)].map((_, i) => (
+                {[...Array(10 - Math.round((inventoryData?.packagingPercentage || 0) / 10))].map((_, i) => (
                   <div
                     key={i}
                     className="w-2.5 h-3 rounded bg-pink-200 mr-0.5"
                   />
                 ))}
               </div>
-              <span className="text-sm font-bold text-gray-700">30%</span>
+              <span className="text-sm font-bold text-gray-700">
+                {isLoading ? "..." : `${inventoryData?.packagingPercentage || 0}%`}
+              </span>
             </div>
           </div>
 

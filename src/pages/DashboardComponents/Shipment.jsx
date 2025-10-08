@@ -6,7 +6,7 @@ const API_URL = config.API_URL;
 function ShipmentOverview() {
   const [shipmentData, setShipmentData] = useState({
     total: 0,
-    avgTurnaround: "4h",
+    avgTurnaround: "0m",
     ackReceived: 0,
     awaitingDispatch: 0,
     ackMissing: 0,
@@ -18,6 +18,7 @@ function ShipmentOverview() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [selectedMonth, setSelectedMonth] = useState("month");
+  const [tatLoading, setTatLoading] = useState(false);
 
   // Fetch shipment data from API
   useEffect(() => {
@@ -53,9 +54,9 @@ function ShipmentOverview() {
             (summary.shipmentsLost || 0) +
             (summary.awaitingDispatch || 0);
 
-          setShipmentData({
+          setShipmentData((prev) => ({
+            ...prev,
             total: total,
-            avgTurnaround: "4h",
             ackReceived: summary.productsReceived || 0,
             awaitingDispatch: summary.awaitingDispatch || 0,
             ackMissing: summary.productsShipped || 0,
@@ -64,7 +65,7 @@ function ShipmentOverview() {
             onTimePercentage: summary.deliveredPercentage,
             slaMet: summary.slaMetCount,
             slaNotMet: summary.slaNotMetCount,
-          });
+          }));
         }
       } catch (err) {
         setError(err.message);
@@ -76,6 +77,54 @@ function ShipmentOverview() {
 
     fetchShipmentData();
   }, [selectedMonth]);
+
+  // Fetch TAT data
+  useEffect(() => {
+    const fetchTATData = async () => {
+      try {
+        setTatLoading(true);
+
+        const response = await fetch(`${API_URL}/api/analytics/TAT`, {
+          method: "PATCH",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            filter: selectedMonth,
+          }),
+        });
+
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`);
+        }
+
+        const result = await response.json();
+
+        if (result.data) {
+          setShipmentData((prev) => ({
+            ...prev,
+            avgTurnaround:
+              result.data.preparationToShipment?.overall?.averageFormatted ||
+              "0m",
+          }));
+        }
+      } catch (err) {
+        console.error("Error fetching TAT data:", err);
+        // Don't set main error state, just keep default TAT values
+      } finally {
+        setTatLoading(false);
+      }
+    };
+
+    fetchTATData();
+  }, [selectedMonth]);
+
+  const formatTAT = (value) => {
+    if (!value) return "N/A"; // fallback
+    // Match numbers followed by "m" or "hr"
+    const match = value.match(/(\d+\s*(?:m|hr))/);
+    return match ? match[0] : "N/A";
+  };
 
   // Calculate percentages for shipment status donut
   const total =
@@ -121,9 +170,13 @@ function ShipmentOverview() {
               </p>
               <p className="text-xs text-gray-600 text-center">
                 Med Completion → Delivery:{" "}
-                <span className="font-bold text-gray-800">
-                  {shipmentData.avgTurnaround || "N/A"}
-                </span>
+                {tatLoading ? (
+                  <span className="font-bold text-gray-400">...</span>
+                ) : (
+                  <span className="font-bold text-gray-800">
+                    {formatTAT(shipmentData.avgTurnaround)}
+                  </span>
+                )}
               </p>
             </div>
           </div>
@@ -136,7 +189,9 @@ function ShipmentOverview() {
               <div className="bg-white rounded-lg shadow-sm border border-gray-100 flex h-[60px]">
                 <div className="w-1 bg-green-500 rounded-l-lg"></div>
                 <div className="flex flex-col justify-center px-2 py-1">
-                  <p className="text-[12px] font-semibold text-gray-600 mb-0">Ack Received</p>
+                  <p className="text-[12px] font-semibold text-gray-600 mb-0">
+                    Ack Received
+                  </p>
                   <p className="text-sm font-bold text-gray-800">
                     {shipmentData.ackReceived}
                   </p>
@@ -160,7 +215,9 @@ function ShipmentOverview() {
               <div className="bg-white rounded-lg shadow-sm border border-gray-100 flex h-[60px]">
                 <div className="w-1 bg-yellow-500 rounded-l-lg"></div>
                 <div className="flex flex-col justify-center px-2 py-1">
-                  <p className="text-[12px]  font-semibold text-gray-600 mb-0">Ack Missing</p>
+                  <p className="text-[12px]  font-semibold text-gray-600 mb-0">
+                    Ack Missing
+                  </p>
                   <p className="text-sm font-bold text-gray-800">
                     {shipmentData.ackMissing}
                   </p>
@@ -194,99 +251,105 @@ function ShipmentOverview() {
               </div>
 
               {/* Charts */}
-              <div className="grid grid-cols-2 gap-4 flex-1">
-                {/* Shipment Status Donut */}
-                <div className="flex flex-col items-center group relative">
-                  <div className="relative flex items-center justify-center">
-                    <svg
-                      width="85"
-                      height="85"
-                      viewBox="0 0 100 100"
-                      className="transform -rotate-90"
-                    >
-                      <circle
-                        cx="50"
-                        cy="50"
-                        r="40"
-                        fill="none"
-                        stroke="#22d3ee"
-                        strokeWidth="20"
-                        strokeDasharray={`${ackReceivedPct * 2.513} 251.3`}
-                        strokeDashoffset="0"
-                      />
-                      <circle
-                        cx="50"
-                        cy="50"
-                        r="40"
-                        fill="none"
-                        stroke="#f97316"
-                        strokeWidth="20"
-                        strokeDasharray={`${awaitingDispatchPct * 2.513} 251.3`}
-                        strokeDashoffset={`-${ackReceivedPct * 2.513}`}
-                      />
-                    </svg>
-                    <div className="absolute inset-0 flex items-center justify-center">
-                      <span className="text-base font-bold text-gray-800">
-                        100%
-                      </span>
-                    </div>
-                  </div>
+            <div className="grid grid-cols-2 gap-4 flex-1">
+  {/* Shipment Status Donut */}
+  <div className="flex flex-col items-center group relative">
+    <div className="relative flex items-center justify-center">
+      <svg
+        width="85"
+        height="85"
+        viewBox="0 0 100 100"
+        className="transform -rotate-90"
+      >
+        <circle
+          cx="50"
+          cy="50"
+          r="40"
+          fill="none"
+          stroke="#22d3ee"
+          strokeWidth="20"
+          strokeDasharray={`${ackReceivedPct * 2.513} 251.3`}
+          strokeDashoffset="0"
+        />
+        <circle
+          cx="50"
+          cy="50"
+          r="40"
+          fill="none"
+          stroke="#f97316"
+          strokeWidth="20"
+          strokeDasharray={`${awaitingDispatchPct * 2.513} 251.3`}
+          strokeDashoffset={`-${ackReceivedPct * 2.513}`}
+        />
+      </svg>
+      <div className="absolute inset-0 flex items-center justify-center">
+        <span className="text-base font-bold text-gray-800">
+          {shipmentData.totalPercentage || 100}%
+        </span>
+      </div>
+    </div>
 
-                  {/* Labels shown on hover */}
-                  <div className="absolute bottom-[-40px] flex flex-col gap-1 text-[10px] opacity-0 group-hover:opacity-100 transition-opacity duration-200">
-                    <div className="flex items-center gap-1">
-                      <div className="w-2 h-2 rounded-full bg-cyan-400"></div>
-                      <span className="text-gray-600">
-                        {ackReceivedPct}% Received
-                      </span>
-                    </div>
-                    <div className="flex items-center gap-1">
-                      <div className="w-2 h-2 rounded-full bg-orange-500"></div>
-                      <span className="text-gray-600">
-                        {awaitingDispatchPct}% Pending
-                      </span>
-                    </div>
-                  </div>
-                </div>
+    {/* Hover card below the chart but slightly closer */}
+    <div className="absolute bottom-[-35px] flex flex-col gap-1 text-[10px] opacity-0 group-hover:opacity-100 transition-opacity duration-200 bg-white border border-gray-200 rounded-lg p-2 shadow-md w-max">
+      <div className="flex items-center gap-1">
+        <div className="w-2 h-2 rounded-full bg-cyan-400"></div>
+        <span className="text-gray-700 font-medium">
+          {ackReceivedPct}% Received
+        </span>
+      </div>
+      <div className="flex items-center gap-1">
+        <div className="w-2 h-2 rounded-full bg-orange-500"></div>
+        <span className="text-gray-700 font-medium">
+          {awaitingDispatchPct}% Pending
+        </span>
+      </div>
+    </div>
+  </div>
 
-                {/* On-Time Shipping */}
-                <div className="flex flex-col items-center relative">
-                  <div className="relative flex items-center justify-center">
-                    <svg
-                      width="85"
-                      height="85"
-                      viewBox="0 0 100 100"
-                      className="transform -rotate-90"
-                    >
-                      <circle
-                        cx="50"
-                        cy="50"
-                        r="40"
-                        fill="none"
-                        stroke="#e5e7eb"
-                        strokeWidth="12"
-                      />
-                      <circle
-                        cx="50"
-                        cy="50"
-                        r="40"
-                        fill="none"
-                        stroke="#3b82f6"
-                        strokeWidth="12"
-                        strokeDasharray={`${
-                          shipmentData.onTimePercentage * 2.513
-                        } 251.3`}
-                        strokeLinecap="round"
-                      />
-                    </svg>
-                    <div className="absolute inset-0 flex items-center justify-center">
-                      <span className="text-base font-bold text-blue-600">
-                        {shipmentData.onTimePercentage}%
-                      </span>
-                    </div>
-                  </div>
-                </div>
-              </div>
+  {/* On-Time Shipping */}
+  <div className="flex flex-col items-center group relative">
+    <div className="relative flex items-center justify-center">
+      <svg
+        width="85"
+        height="85"
+        viewBox="0 0 100 100"
+        className="transform -rotate-90"
+      >
+        <circle
+          cx="50"
+          cy="50"
+          r="40"
+          fill="none"
+          stroke="#e5e7eb"
+          strokeWidth="12"
+        />
+        <circle
+          cx="50"
+          cy="50"
+          r="40"
+          fill="none"
+          stroke="#3b82f6"
+          strokeWidth="12"
+          strokeDasharray={`${shipmentData.onTimePercentage * 2.513} 251.3`}
+          strokeLinecap="round"
+        />
+      </svg>
+      <div className="absolute inset-0 flex items-center justify-center">
+        <span className="text-base font-bold text-blue-600">
+          {shipmentData.onTimePercentage}%
+        </span>
+      </div>
+    </div>
+
+    {/* Hover card below */}
+    <div className="absolute bottom-[-35px] text-[10px] opacity-0 group-hover:opacity-100 transition-opacity duration-200 bg-white border border-gray-200 rounded-lg p-2 shadow-md w-max">
+      <span className="text-gray-700 font-medium">
+        {shipmentData.onTimePercentage}% On-Time
+      </span>
+    </div>
+  </div>
+</div>
+
 
               {/* SLA info row below both graphs */}
               <div className="flex justify-between mt-2 text-[12px] w-full">

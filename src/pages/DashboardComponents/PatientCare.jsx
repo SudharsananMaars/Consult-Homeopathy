@@ -21,7 +21,7 @@ export default function PatientCare() {
   const [tatData, setTatData] = useState({
     shipmentToPatientCare: {
       overall: {
-        averageFormatted: "4d",
+        averageFormatted: "0m",
       },
     },
   });
@@ -75,6 +75,56 @@ export default function PatientCare() {
     fetchAdherenceData();
   }, []);
 
+  // Fetch TAT data
+  useEffect(() => {
+    const fetchTATData = async () => {
+      try {
+        setTatLoading(true);
+        
+        const response = await fetch(`${API_URL}/api/analytics/TAT`, {
+          method: 'PATCH',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            filter: 'month'
+          }),
+        });
+
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`);
+        }
+
+        const result = await response.json();
+        
+        if (result.data) {
+          setTatData({
+            shipmentToPatientCare: {
+              overall: {
+                averageFormatted: result.data.shipmentToPatientCare?.overall?.averageFormatted || "0m",
+              },
+            },
+          });
+        }
+      } catch (err) {
+        console.error('Error fetching TAT data:', err);
+        // Don't set main error state, just keep default TAT values
+      } finally {
+        setTatLoading(false);
+      }
+    };
+
+    fetchTATData();
+  }, []);
+
+  const formatTAT = (value) => {
+  if (!value) return "0m"; // fallback
+  // Keep only numbers followed by "m" or "hr"
+  const match = value.match(/(\d+\s*(?:m|hr))/);
+  return match ? match[0] : "0m";
+};
+
+
   const totalPatients =
     data.consistentPatients +
     data.inconsistentPatients +
@@ -87,6 +137,9 @@ export default function PatientCare() {
   const circumference = 2 * Math.PI * 30;
   const completionOffset =
     circumference - (circumference * careCompletionPercentage) / 100;
+
+
+  
 
   return (
     <div className="h-full flex flex-col">
@@ -103,7 +156,7 @@ export default function PatientCare() {
           {/* Header Row */}
           <div className="flex justify-between items-start mb-4">
             <div>
-              <div className="text-xl font-bold text-gray-800">
+              <div className="text-lg font-semibold text-black-500">
                 Patient Care
               </div>
               <div className="text-sm text-gray-500 mt-0.5">
@@ -120,21 +173,21 @@ export default function PatientCare() {
               </div>
             </div>
             <div className="border border-gray-200 rounded-lg p-3 shadow-md flex flex-col items-center">
-              <p className="text-xs font-semibold text-gray-700 mb-1 text-center">
-                Avg Turnaround Time
-              </p>
-              <p className="text-xs text-gray-600 text-center">
-                Delivery → First Dose:{" "}
-                {tatLoading ? (
-                  <span className="font-bold text-gray-400">...</span>
-                ) : (
-                  <span className="font-bold text-gray-800">
-                    {tatData?.shipmentToPatientCare?.overall
-                      ?.averageFormatted || "0m"}
-                  </span>
-                )}
-              </p>
-            </div>
+  <p className="text-xs font-semibold text-gray-700 mb-1 text-center">
+    Avg Turnaround Time
+  </p>
+  <p className="text-xs text-gray-600 text-center">
+    Delivery → First Dose:{" "}
+    {tatLoading ? (
+      <span className="font-bold text-gray-400">...</span>
+    ) : (
+      <span className="font-bold text-gray-800">
+        {formatTAT(tatData?.shipmentToPatientCare?.overall?.averageFormatted)}
+      </span>
+    )}
+  </p>
+</div>
+
           </div>
 
           {/* Content Row */}
@@ -142,7 +195,7 @@ export default function PatientCare() {
             {/* Status Counts */}
             <div className="flex flex-col gap-1.5">
               {/* Consistent */}
-              <div className="bg-white rounded-lg shadow-sm border border-gray-100 flex">
+              <div className="bg-white rounded-lg shadow-sm border border-gray-100 flex w-36">
                 {/* Left color block */}
                 <div className="w-1 bg-green-500 rounded-l-lg"></div>
                 {/* Content */}
@@ -178,7 +231,7 @@ export default function PatientCare() {
             </div>
 
             {/* Care Completion */}
-            <div className="bg-white rounded-lg shadow-sm border border-gray-100 flex flex-col items-center justify-center py-3 px-4">
+            <div className="bg-white rounded-lg shadow-sm border border-gray-100 flex flex-col items-center justify-center py-3 px-4 w-48">
               <span className="font-semibold text-gray-700 text-xs mb-1">
                 Care Completion
               </span>

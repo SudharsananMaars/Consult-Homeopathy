@@ -393,7 +393,7 @@ const [feedbackError, setFeedbackError] = useState(null);
                 </div>
                 <div>
                     <div className="text-xs text-gray-500 mb-0.5">Avg. Responses per Patient</div>
-                    <div className="text-sm font-bold text-gray-800">{averageResponses}</div>
+                    <div className="text-sm font-bold text-green-600">{averageResponses}</div>
                 </div>
                 <div className="col-span-2 text-center pt-1">
                     <div className="text-xs text-gray-500 mb-0.5">Communication Quality Score</div>
