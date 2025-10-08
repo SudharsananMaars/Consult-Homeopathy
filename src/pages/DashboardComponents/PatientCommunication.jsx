@@ -17,6 +17,9 @@ const PatientCommunicationCard = () => {
     const [isQuestionsLoading, setIsQuestionsLoading] = useState(false);
     const [questionsError, setQuestionsError] = useState(null);
     const [isSaving, setIsSaving] = useState(false);
+    const [feedbackData, setFeedbackData] = useState(null);
+const [isFeedbackLoading, setIsFeedbackLoading] = useState(false);
+const [feedbackError, setFeedbackError] = useState(null);
 
     // Fetch questions when modal opens
     useEffect(() => {
@@ -182,6 +185,42 @@ const PatientCommunicationCard = () => {
 
         fetchMessengerData();
     }, []);
+
+    useEffect(() => {
+    const fetchFeedbackData = async () => {
+        setIsFeedbackLoading(true);
+        setFeedbackError(null);
+        
+        try {
+            const response = await fetch(`${API_URL}/api/analytics/rate-summary`, {
+                method: 'PATCH',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ filter: 'month' })
+            });
+
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+
+            const data = await response.json();
+            
+            if (data.success && data.data) {
+                setFeedbackData(data.data);
+            } else {
+                throw new Error('Invalid response format');
+            }
+        } catch (err) {
+            console.error('Error fetching feedback data:', err);
+            setFeedbackError(err.message);
+        } finally {
+            setIsFeedbackLoading(false);
+        }
+    };
+
+    fetchFeedbackData();
+}, []);
 
     // Fetch quality assurance data from API
     useEffect(() => {
@@ -438,16 +477,47 @@ const PatientCommunicationCard = () => {
 
 
     const renderFeedback = () => {
-        const categories = [
-            { name: 'Consultation', value: 4, color: 'bg-purple-400' },
-            { name: 'Medicine/Delivery', value: 5, color: 'bg-blue-400' },
-            { name: 'Communication', value: 3, color: 'bg-indigo-400' },
-            { name: 'Overall', value: 4.3, color: 'bg-purple-500' },
-        ];
-
-        const maxStars = 5;
-
+    if (isFeedbackLoading) {
         return (
+            <div className="text-center py-4 text-xs text-gray-500">
+                Loading feedback data...
+            </div>
+        );
+    }
+
+    if (feedbackError) {
+        return (
+            <div className="bg-red-50 border border-red-200 rounded-lg p-3 text-red-700">
+                <p className="font-semibold mb-1 text-xs">Error loading feedback</p>
+                <p className="text-xs">{feedbackError}</p>
+            </div>
+        );
+    }
+
+    // Default categories structure
+    const defaultCategories = [
+        { name: 'Consultation', value: 0, color: 'bg-purple-400' },
+        { name: 'Medicine Delivery', value: 0, color: 'bg-blue-400' },
+        { name: 'Communication', value: 0, color: 'bg-indigo-400' },
+        { name: 'Overall', value: 0, color: 'bg-purple-500' },
+    ];
+
+    // Map API data to categories
+    const categories = defaultCategories.map(cat => {
+        const apiCategory = feedbackData?.categories?.find(
+            c => c.category.toLowerCase() === cat.name.toLowerCase()
+        );
+        return {
+            ...cat,
+            value: apiCategory ? apiCategory.averageRating : 0
+        };
+    });
+
+    const overallScore = feedbackData?.overallAverageScore || 0;
+    const maxStars = 5;
+
+    return (
+        <>
             <div className="space-y-2">
                 {categories.map((cat, idx) => (
                     <div key={idx} className="flex items-center justify-between gap-2">
@@ -468,8 +538,15 @@ const PatientCommunicationCard = () => {
                     </div>
                 ))}
             </div>
-        );
-    };
+            <div className="flex items-center justify-center mt-3 gap-2 pt-2 border-t border-gray-100">
+                <span className="bg-yellow-100 rounded-full px-3 py-1 text-xs font-bold text-yellow-700">
+                    Avg Score {overallScore.toFixed(1)}
+                </span>
+                <span className="text-yellow-400 text-xl">★</span>
+            </div>
+        </>
+    );
+};
 
     const renderModal = () => {
         if (!isModalOpen) return null;
@@ -624,24 +701,20 @@ const PatientCommunicationCard = () => {
                 </div>
 
                 <div className="flex flex-col gap-2 flex-1">
-                    <div className="flex items-center justify-between">
-                        <div className="text-xs font-semibold text-gray-700">Feedback</div>
-                        <button 
-                            onClick={() => setIsModalOpen(true)}
-                            className="text-xs bg-white rounded-md px-2 py-1 border border-gray-300 hover:bg-gray-50 transition-colors flex items-center gap-1"
-                        >
-                            <span>Manage Questions</span>
-                            <span className="text-gray-400">⚙</span>
-                        </button>
-                    </div>
-                    <div className="bg-white rounded-lg p-3 border border-gray-100 shadow-sm">
-                        {renderFeedback()}
-                        <div className="flex items-center justify-center mt-3 gap-2 pt-2 border-t border-gray-100">
-                            <span className="bg-yellow-100 rounded-full px-3 py-1 text-xs font-bold text-yellow-700">Avg Score 4.3</span>
-                            <span className="text-yellow-400 text-xl">★</span>
-                        </div>
-                    </div>
-                </div>
+    <div className="flex items-center justify-between">
+        <div className="text-xs font-semibold text-gray-700">Feedback</div>
+        <button 
+            onClick={() => setIsModalOpen(true)}
+            className="text-xs bg-white rounded-md px-2 py-1 border border-gray-300 hover:bg-gray-50 transition-colors flex items-center gap-1"
+        >
+            <span>Manage Questions</span>
+            <span className="text-gray-400">⚙</span>
+        </button>
+    </div>
+    <div className="bg-white rounded-lg p-3 border border-gray-100 shadow-sm">
+        {renderFeedback()}
+    </div>
+</div>
             </div>
 
             {renderModal()}

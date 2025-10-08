@@ -8,6 +8,13 @@ export default function PatientCare() {
     consistentPatients: 0,
     inconsistentPatients: 0,
     nonAdherentPatients: 0,
+    totalPatientCare: 0,
+    churnRatePercentage: 0,
+    prescriptionsMissingStartDate: 0,
+    followUpCalls: {
+      madePercentage: 0,
+      missedPercentage: 0,
+    },
   });
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -48,6 +55,13 @@ export default function PatientCare() {
             consistentPatients: result.summary.consistentPatients || 0,
             inconsistentPatients: result.summary.inconsistentPatients || 0,
             nonAdherentPatients: result.summary.nonAdherentPatients || 0,
+            totalPatientCare: result.summary.totalPatientCare || 0,
+            churnRatePercentage: result.summary.churnRatePercentage || 0,
+            prescriptionsMissingStartDate: result.summary.prescriptionsMissingStartDate || 0,
+            followUpCalls: {
+              madePercentage: result.summary.followUpCalls?.madePercentage || 0,
+              missedPercentage: result.summary.followUpCalls?.missedPercentage || 0,
+            },
           });
         }
       } catch (err) {
@@ -101,7 +115,7 @@ export default function PatientCare() {
               <div className="mt-1 flex items-center gap-1">
                 <span className="text-sm">⚠️</span>
                 <span className="text-red-500 font-semibold text-xs text-center">
-                  Missing Start Dates: 8
+                  Missing Start Dates: {data.prescriptionsMissingStartDate}
                 </span>
               </div>
             </div>
@@ -226,8 +240,8 @@ export default function PatientCare() {
                   fill="none"
                   stroke="#F8B651"
                   strokeWidth="6"
-                  strokeDasharray="112"
-                  strokeDashoffset="0"
+                  strokeDasharray={circumference}
+                  strokeDashoffset={0}
                   strokeLinecap="round"
                   transform="rotate(-90 35 35)"
                 />
@@ -238,8 +252,8 @@ export default function PatientCare() {
                   fill="none"
                   stroke="#29BF67"
                   strokeWidth="6"
-                  strokeDasharray="139.2"
-                  strokeDashoffset="112"
+                  strokeDasharray={circumference}
+                  strokeDashoffset={(circumference * data.followUpCalls.missedPercentage) / 100}
                   strokeLinecap="round"
                   transform="rotate(-90 35 35)"
                 />
@@ -247,11 +261,11 @@ export default function PatientCare() {
               <div className="flex gap-2 mt-1 text-xs items-center">
                 <span className="flex items-center gap-1">
                   <span className="inline-block w-2 h-2 bg-yellow-400 rounded-full"></span>
-                  <span className="text-gray-600">Pending</span>
+                  <span className="text-gray-600">Pending: {data.followUpCalls.missedPercentage}%</span>
                 </span>
                 <span className="flex items-center gap-1">
                   <span className="inline-block w-2 h-2 bg-green-500 rounded-full"></span>
-                  <span className="text-gray-600">Done</span>
+                  <span className="text-gray-600">Done: {data.followUpCalls.madePercentage}%</span>
                 </span>
               </div>
             </div>
