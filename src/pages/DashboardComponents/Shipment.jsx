@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import config from '/src/config.js';
+import config from "/src/config.js";
 
 const API_URL = config.API_URL;
 
@@ -24,31 +24,35 @@ function ShipmentOverview() {
     const fetchShipmentData = async () => {
       setLoading(true);
       setError(null);
-      
+
       try {
-        const response = await fetch(`${API_URL}/api/analytics/shipment-summary`, {
-          method: 'PATCH',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            filter: selectedMonth
-          })
-        });
+        const response = await fetch(
+          `${API_URL}/api/analytics/shipment-summary`,
+          {
+            method: "PATCH",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+              filter: selectedMonth,
+            }),
+          }
+        );
 
         if (!response.ok) {
           throw new Error(`HTTP error! status: ${response.status}`);
         }
 
         const data = await response.json();
-        
+
         if (data.success && data.summary) {
           const summary = data.summary;
-          const total = (summary.productsShipped || 0) + 
-                       (summary.productsReceived || 0) + 
-                       (summary.shipmentsLost || 0) + 
-                       (summary.awaitingDispatch || 0);
-          
+          const total =
+            (summary.productsShipped || 0) +
+            (summary.productsReceived || 0) +
+            (summary.shipmentsLost || 0) +
+            (summary.awaitingDispatch || 0);
+
           setShipmentData({
             total: total,
             avgTurnaround: "4h",
@@ -63,7 +67,7 @@ function ShipmentOverview() {
         }
       } catch (err) {
         setError(err.message);
-        console.error('Error fetching shipment data:', err);
+        console.error("Error fetching shipment data:", err);
       } finally {
         setLoading(false);
       }
@@ -128,43 +132,51 @@ function ShipmentOverview() {
             {/* Left Side - Status Cards (2x2 Grid) */}
             <div className="flex-1 grid grid-cols-2 gap-2">
               {/* Ack Received */}
-              <div className="bg-white border-l-4 border-green-500 rounded-lg p-1 shadow-sm h-[55px] flex flex-col justify-center">
-                <p className="text-[12px] text-sm text-gray-600 mb-0">
-                  Ack Received
-                </p>
-                <p className="text-sm font-bold text-gray-800">
-                  {shipmentData.ackReceived}
-                </p>
+              <div className="bg-white rounded-lg shadow-sm border border-gray-100 flex h-[60px]">
+                <div className="w-1 bg-green-500 rounded-l-lg"></div>
+                <div className="flex flex-col justify-center px-2 py-1">
+                  <p className="text-[12px] font-semibold text-gray-600 mb-0">Ack Received</p>
+                  <p className="text-sm font-bold text-gray-800">
+                    {shipmentData.ackReceived}
+                  </p>
+                </div>
               </div>
 
               {/* Awaiting Dispatch */}
-              <div className="bg-white border-l-4 border-orange-500 rounded-lg p-1 shadow-sm h-[55px] flex flex-col justify-center">
-                <p className="text-[12px] text-sm text-gray-600 mb-0">
-                  Awaiting Dispatch
-                </p>
-                <p className="text-sm font-bold text-gray-800">
-                  {shipmentData.awaitingDispatch}
-                </p>
+              <div className="bg-white rounded-lg shadow-sm border border-gray-100 flex h-[60px]">
+                <div className="w-1 bg-orange-500 rounded-l-lg"></div>
+                <div className="flex flex-col justify-center px-2 py-1">
+                  <p className="text-[12px] font-semibold text-gray-600 mb-0">
+                    Awaiting Dispatch
+                  </p>
+                  <p className="text-sm font-bold text-gray-800">
+                    {shipmentData.awaitingDispatch}
+                  </p>
+                </div>
               </div>
 
               {/* Ack Missing */}
-              <div className="bg-white border-l-4 border-yellow-500 rounded-lg p-1 shadow-sm h-[55px] flex flex-col justify-center">
-                <p className="text-[12px] text-sm text-gray-600 mb-0">
-                  Ack Missing
-                </p>
-                <p className="text-sm font-bold text-gray-800">
-                  {shipmentData.ackMissing}
-                </p>
+              <div className="bg-white rounded-lg shadow-sm border border-gray-100 flex h-[60px]">
+                <div className="w-1 bg-yellow-500 rounded-l-lg"></div>
+                <div className="flex flex-col justify-center px-2 py-1">
+                  <p className="text-[12px]  font-semibold text-gray-600 mb-0">Ack Missing</p>
+                  <p className="text-sm font-bold text-gray-800">
+                    {shipmentData.ackMissing}
+                  </p>
+                </div>
               </div>
 
               {/* Shipment Lost */}
-              <div className="bg-white border-l-4 border-red-500 rounded-lg p-1 shadow-sm h-[55px] flex flex-col justify-center">
-                <p className="text-[12px] text-sm text-gray-600 mb-0">
-                  Shipment Lost
-                </p>
-                <p className="text-sm font-bold text-gray-800">
-                  {shipmentData.shipmentLost}
-                </p>
+              <div className="bg-white rounded-lg shadow-sm border border-gray-100 flex h-[60px]">
+                <div className="w-1 bg-red-500 rounded-l-lg"></div>
+                <div className="flex flex-col justify-center px-2 py-1">
+                  <p className="text-[12px] font-semibold text-gray-600 mb-0">
+                    Shipment Lost
+                  </p>
+                  <p className="text-sm font-bold text-gray-800">
+                    {shipmentData.shipmentLost}
+                  </p>
+                </div>
               </div>
             </div>
 
@@ -213,7 +225,9 @@ function ShipmentOverview() {
                       />
                     </svg>
                     <div className="absolute inset-0 flex items-center justify-center">
-                      <span className="text-base font-bold text-gray-800">100%</span>
+                      <span className="text-base font-bold text-gray-800">
+                        100%
+                      </span>
                     </div>
                   </div>
 
@@ -221,11 +235,15 @@ function ShipmentOverview() {
                   <div className="absolute bottom-[-40px] flex flex-col gap-1 text-[10px] opacity-0 group-hover:opacity-100 transition-opacity duration-200">
                     <div className="flex items-center gap-1">
                       <div className="w-2 h-2 rounded-full bg-cyan-400"></div>
-                      <span className="text-gray-600">{ackReceivedPct}% Received</span>
+                      <span className="text-gray-600">
+                        {ackReceivedPct}% Received
+                      </span>
                     </div>
                     <div className="flex items-center gap-1">
                       <div className="w-2 h-2 rounded-full bg-orange-500"></div>
-                      <span className="text-gray-600">{awaitingDispatchPct}% Pending</span>
+                      <span className="text-gray-600">
+                        {awaitingDispatchPct}% Pending
+                      </span>
                     </div>
                   </div>
                 </div>
@@ -239,7 +257,14 @@ function ShipmentOverview() {
                       viewBox="0 0 100 100"
                       className="transform -rotate-90"
                     >
-                      <circle cx="50" cy="50" r="40" fill="none" stroke="#e5e7eb" strokeWidth="12" />
+                      <circle
+                        cx="50"
+                        cy="50"
+                        r="40"
+                        fill="none"
+                        stroke="#e5e7eb"
+                        strokeWidth="12"
+                      />
                       <circle
                         cx="50"
                         cy="50"
@@ -247,12 +272,16 @@ function ShipmentOverview() {
                         fill="none"
                         stroke="#3b82f6"
                         strokeWidth="12"
-                        strokeDasharray={`${shipmentData.onTimePercentage * 2.513} 251.3`}
+                        strokeDasharray={`${
+                          shipmentData.onTimePercentage * 2.513
+                        } 251.3`}
                         strokeLinecap="round"
                       />
                     </svg>
                     <div className="absolute inset-0 flex items-center justify-center">
-                      <span className="text-base font-bold text-blue-600">{shipmentData.onTimePercentage}%</span>
+                      <span className="text-base font-bold text-blue-600">
+                        {shipmentData.onTimePercentage}%
+                      </span>
                     </div>
                   </div>
                 </div>
@@ -261,12 +290,18 @@ function ShipmentOverview() {
               {/* SLA info row below both graphs */}
               <div className="flex justify-between mt-2 text-[12px] w-full">
                 <div className="text-center">
-                  <span className="text-green-600 font-semibold">SLA Met: </span>
+                  <span className="text-green-600 font-semibold">
+                    SLA Met:{" "}
+                  </span>
                   <span className="text-gray-700">{shipmentData.slaMet}</span>
                 </div>
                 <div className="text-center">
-                  <span className="text-red-600 font-semibold">SLA Not-Met: </span>
-                  <span className="text-gray-700">{shipmentData.slaNotMet}</span>
+                  <span className="text-red-600 font-semibold">
+                    SLA Not-Met:{" "}
+                  </span>
+                  <span className="text-gray-700">
+                    {shipmentData.slaNotMet}
+                  </span>
                 </div>
               </div>
             </div>

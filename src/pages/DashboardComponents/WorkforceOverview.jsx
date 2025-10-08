@@ -79,14 +79,14 @@ function WorkforceOverview() {
           {/* Total Employees Card */}
           <div className="relative bg-white rounded-lg shadow-sm border border-gray-100 pl-4 pr-4 py-3 w-40">
             <div className="absolute left-0 top-2 bottom-2 w-1 bg-blue-500 rounded-full"></div>
-            <div className="text-xs text-gray-600 mb-0.5">Total Employees</div>
+            <div className="text-xs  font-semibold text-gray-600 mb-0.5">Total Employees</div>
             <div className="text-2xl font-bold text-blue-500">{totalDoctors}</div>
           </div>
           
           {/* Active Employees Card */}
           <div className="relative bg-white rounded-lg shadow-sm border border-gray-100 pl-4 pr-4 py-3 w-40">
             <div className="absolute left-0 top-2 bottom-2 w-1 bg-cyan-400 rounded-full"></div>
-            <div className="text-xs text-gray-600 mb-0.5">Active Employees</div>
+            <div className="text-xs font-semibold text-gray-600 mb-0.5">Active Employees</div>
             <div className="text-2xl font-bold text-cyan-400">{present}</div>
           </div>
         </div>

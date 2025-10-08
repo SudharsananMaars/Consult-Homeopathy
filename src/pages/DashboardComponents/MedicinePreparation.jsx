@@ -10,13 +10,6 @@ const MedicineDashboardComponent = () => {
   const [tatData, setTatData] = useState(null);
   const [tatLoading, setTatLoading] = useState(true);
 
-  // Mock data for the bar graph
-  const mockGraphData = [
-    { label: "Preparation Shortfall", value: 25, color: "#3b82f6" },
-    { label: "Inventory Short", value: 45, color: "#3b82f6" },
-    { label: "Staff Allocation", value: 55, color: "#3b82f6" },
-  ];
-
   useEffect(() => {
     const fetchData = async () => {
       try {
@@ -98,7 +91,14 @@ const MedicineDashboardComponent = () => {
     );
   }
 
-  const maxValue = Math.max(...mockGraphData.map((d) => d.value));
+  // Graph data from API
+  const graphData = data ? [
+    { label: "Preparation Shortfall", value: data.preparationShortfalls || 0, color: "#3b82f6" },
+    { label: "Inventory Short", value: data.inventoryShortage || 0, color: "#3b82f6" },
+    { label: "Staff Allocation", value: data.awaitingStaffAllocation || 0, color: "#3b82f6" },
+  ] : [];
+
+  const maxValue = 60
 
   function formatTime(timeStr) {
     if (!timeStr) return "";
@@ -119,7 +119,7 @@ const MedicineDashboardComponent = () => {
             Medicine Preparation
           </h2>
           <p className="text-sm text-gray-500 mt-1">
-            Total Medicines : {data?.totalInitializedMedicines || 4000}
+            Total Medicines : {data?.totalInitializedMedicines || 0}
           </p>
         </div>
 
@@ -136,7 +136,7 @@ const MedicineDashboardComponent = () => {
               <span className="font-bold text-gray-800">
                 {formatTime(
                   tatData?.paymentToPreparation?.overall?.averageFormatted ||
-                    "4h"
+                    "N/A"
                 )}
               </span>
             )}
@@ -148,25 +148,31 @@ const MedicineDashboardComponent = () => {
       <div className="flex gap-4 flex-1">
         {/* Left: Completed and Pending */}
         <div className="flex flex-col gap-2 w-32">
-          {/* Completed */}
-          <div className="border-l-4 border-green-500 bg-white rounded-lg p-2 shadow-md">
-            <p className="text-xs text-gray-600">Completed</p>
-            <p className="text-xl font-bold text-green-600">
-              {data?.completedMedicines || 40}
-            </p>
-          </div>
+  {/* Completed */}
+  <div className="bg-white rounded-lg shadow-sm border border-gray-100 flex h-[55px]">
+    <div className="w-1 bg-green-500 rounded-l-lg"></div>
+    <div className="flex flex-col justify-center px-2 py-1">
+      <p className="text-[12px] font-semibold text-gray-600 mb-0">Completed</p>
+      <p className="text-base font-bold text-green-600">
+        {data?.completedMedicines || 0}
+      </p>
+    </div>
+  </div>
 
-          {/* Pending */}
-          <div className="border-l-4 border-orange-400 bg-white rounded-lg p-2 shadow-md">
-            <p className="text-xs text-gray-600">Pending</p>
-            <p className="text-xl font-bold text-orange-400">
-              {data?.pendingMedicines || 25}
-            </p>
-          </div>
-        </div>
+  {/* Pending */}
+  <div className="bg-white rounded-lg shadow-sm border border-gray-100 flex h-[55px]">
+    <div className="w-1 bg-orange-400 rounded-l-lg"></div>
+    <div className="flex flex-col justify-center px-2 py-1">
+      <p className="text-[12px] font-semibold text-gray-600 mb-0">Pending</p>
+      <p className="text-base font-bold text-orange-400">
+        {data?.pendingMedicines || 0}
+      </p>
+    </div>
+  </div>
+</div>
+
 
         {/* Center: Pending by Cause Graph */}
-        {/* Pending by Cause */}
         <div className="h-[150px] w-[220px]">
           <p className="text-center text-[13px] font-semibold text-gray-800 mb-2">
             Pending by Cause
@@ -175,7 +181,7 @@ const MedicineDashboardComponent = () => {
           {/* Graph container */}
           <div className="relative flex flex-col space-y-1.5">
             {/* Bars */}
-            {mockGraphData.map((item, index) => (
+            {graphData.map((item, index) => (
               <div key={index} className="flex items-center">
                 {/* Label */}
                 <span className="text-[10px] text-gray-700 w-[90px] text-right pr-2">
@@ -225,16 +231,13 @@ const MedicineDashboardComponent = () => {
           {/* Leakage */}
           <div>
             <p className="text-xs font-semibold text-red-500 mb-1">Leakage</p>
-            {data?.leakageDetails && data.leakageDetails.length > 0 ? (
+            {data?.cumulativeLeakedQuantity > 0 ? (
               <div className="text-xs text-gray-700 space-y-1">
-                {data.leakageDetails.slice(0, 2).map((item, index) => (
-                  <p key={index}>{item}</p>
-                ))}
+                <p>{data.cumulativeLeakedQuantity} units</p>
               </div>
             ) : (
-              <div className="text-xs text-gray-700 space-y-1">
-                <p>5 ml</p>
-                <p>4 dr</p>
+              <div className="text-xs text-gray-700">
+                <p>No leakage detected</p>
               </div>
             )}
           </div>
@@ -249,10 +252,10 @@ const MedicineDashboardComponent = () => {
             </p>
             <div className="text-xs text-gray-700 space-y-1">
               <p>
-                Flagged: <span className="font-bold">5</span>
+                Flagged: <span className="font-bold">{data?.shortfallsFlagged || 0}</span>
               </p>
               <p>
-                Resolved: <span className="font-bold">4</span>
+                Resolved: <span className="font-bold">{data?.shortfallsResolved || 0}</span>
               </p>
             </div>
           </div>

@@ -252,7 +252,7 @@ function InventoryOverview() {
             {/* Above Threshold */}
             <div className="relative bg-white rounded-md shadow-sm border border-gray-100 pl-2.5 pr-2.5 py-1.5">
               <div className="absolute left-0 top-0 h-full w-1 rounded-l-md bg-sky-400" />
-              <div className="text-[10px] text-gray-600">Above Threshold</div>
+              <div className="text-[12px] font-semibold text-gray-600">Above Threshold</div>
               <div className="text-lg font-bold text-sky-400 leading-snug">
                 {isLoading ? "..." : aboveThresholdCount}
               </div>
@@ -261,7 +261,7 @@ function InventoryOverview() {
             {/* Below Threshold */}
             <div className="relative bg-white rounded-md shadow-sm border border-gray-100 pl-2.5 pr-2.5 py-1.5">
               <div className="absolute left-0 top-0 h-full w-1 rounded-l-md bg-red-500" />
-              <div className="text-[10px] text-gray-600">Below Threshold</div>
+              <div className="text-[12px] font-semibold text-gray-600">Below Threshold</div>
               <div className="text-lg font-bold text-red-600 leading-snug">
                 {isLoading ? "..." : belowThresholdCount}
               </div>
@@ -270,7 +270,7 @@ function InventoryOverview() {
             {/* Stockouts */}
             <div className="relative bg-white rounded-md shadow-sm border border-gray-100 pl-2.5 pr-2.5 py-1.5">
               <div className="absolute left-0 top-0 h-full w-1 rounded-l-md bg-amber-400" />
-              <div className="text-[10px] text-gray-600">Stockouts</div>
+              <div className="text-[12px] font-semibold text-gray-600">Stockouts</div>
               <div className="text-lg font-bold text-amber-500 leading-snug">
                 {isLoading ? "..." : stockoutsCount}
               </div>

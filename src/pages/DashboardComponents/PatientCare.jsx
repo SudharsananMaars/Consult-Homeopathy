@@ -126,14 +126,14 @@ export default function PatientCare() {
           {/* Content Row */}
           <div className="flex gap-4 items-center">
             {/* Status Counts */}
-            <div className="flex flex-col gap-2">
+            <div className="flex flex-col gap-1.5">
               {/* Consistent */}
               <div className="bg-white rounded-lg shadow-sm border border-gray-100 flex">
                 {/* Left color block */}
                 <div className="w-1 bg-green-500 rounded-l-lg"></div>
                 {/* Content */}
                 <div className="flex flex-col justify-center px-2 py-1">
-                  <div className="text-gray-700 font-medium text-xs">Consistent</div>
+                  <div className="text-gray-700 font-semibold text-xs">Consistent</div>
                   <div className="text-green-600 font-bold text-base leading-tight">
                     {data.consistentPatients}
                   </div>
@@ -144,7 +144,7 @@ export default function PatientCare() {
               <div className="bg-white rounded-lg shadow-sm border border-gray-100 flex">
                 <div className="w-1 bg-yellow-400 rounded-l-lg"></div>
                 <div className="flex flex-col justify-center px-2 py-1">
-                  <div className="text-gray-700 font-medium text-xs">Inconsistent</div>
+                  <div className="text-gray-700 font-semibold text-xs">Inconsistent</div>
                   <div className="text-yellow-500 font-bold text-base leading-tight">
                     {data.inconsistentPatients}
                   </div>
@@ -155,7 +155,7 @@ export default function PatientCare() {
               <div className="bg-white rounded-lg shadow-sm border border-gray-100 flex">
                 <div className="w-1 bg-red-500 rounded-l-lg"></div>
                 <div className="flex flex-col justify-center px-2 py-1">
-                  <div className="text-gray-700 font-medium text-xs">Non-Adherent</div>
+                  <div className="text-gray-700 font-semibold text-xs">Non-Adherent</div>
                   <div className="text-red-500 font-bold text-base leading-tight">
                     {data.nonAdherentPatients}
                   </div>

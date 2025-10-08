@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import DoctorLayout from "/src/components/doctor components/DoctorLayout.jsx";
 import WorkforceOverview from "/src/pages/DashboardComponents/WorkforceOverview.jsx";
 import InventoryOverview from "/src/pages/DashboardComponents/InventoryOverview.jsx";
@@ -11,9 +11,47 @@ import PatientCommunication from "/src/pages/DashboardComponents/PatientCommunic
 import Appointments from "/src/pages/DashboardComponents/Appointments.jsx";
 
 function Dashboard() {
+  const [selectedFilter, setSelectedFilter] = useState('Day');
+
   return (
     <DoctorLayout>
-      <div className="p-6 space-y-6">
+      <div className="p-2 space-y-2">
+        {/* Filter Section */}
+       <div className="flex justify-end">
+  <div className="inline-flex border-2 border-blue-500 rounded-full p-0.5 bg-white">
+    <button
+      onClick={() => setSelectedFilter('Day')}
+      className={`px-4 py-1 rounded-full text-xs font-medium transition-all ${
+        selectedFilter === 'Day'
+          ? 'bg-blue-500 text-white shadow-md'
+          : 'text-gray-600 hover:text-gray-800'
+      }`}
+    >
+      Day
+    </button>
+    <button
+      onClick={() => setSelectedFilter('Week')}
+      className={`px-4 py-1 rounded-full text-xs font-medium transition-all ${
+        selectedFilter === 'Week'
+          ? 'bg-blue-500 text-white shadow-md'
+          : 'text-gray-600 hover:text-gray-800'
+      }`}
+    >
+      Week
+    </button>
+    <button
+      onClick={() => setSelectedFilter('Month')}
+      className={`px-4 py-1 rounded-full text-xs font-medium transition-all ${
+        selectedFilter === 'Month'
+          ? 'bg-blue-500 text-white shadow-md'
+          : 'text-gray-600 hover:text-gray-800'
+      }`}
+    >
+      Month
+    </button>
+  </div>
+</div>
+
         {/* First Row: TotalPatientBase (left) + TotalEarnings & Appointments (right) */}
         <div className="flex gap-6">
           {/* Left: Total Patient Base - 370px width */}

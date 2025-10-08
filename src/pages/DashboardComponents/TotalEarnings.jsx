@@ -16,30 +16,18 @@ const API_URL = config.API_URL;
 
 const TotalEarningsComponent = () => {
   const [data, setData] = useState(null);
+  const [chartData, setChartData] = useState(null);
+  const [pendingData, setPendingData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-
-  // Mock data for charts
-  const mockReceivableData = [
-    { category: "Booking fee", amount: 2000 },
-    { category: "Consultation fee", amount: 2500 },
-    { category: "Medicine prep", amount: 2800 },
-    { category: "Shipment fee", amount: 3500 },
-    { category: "Miscellaneous", amount: 1000 },
-  ];
-
-  const mockPayableData = [
-    { category: "Vendor", amount: 500 },
-    { category: "Staff", amount: 3500 },
-    { category: "Logistics", amount: 2000 },
-    { category: "Miscellaneous", amount: 3000 },
-  ];
 
   useEffect(() => {
     const fetchData = async () => {
       try {
         setLoading(true);
-        const response = await fetch(
+
+        // Fetch debit-credit summary
+        const summaryResponse = await fetch(
           `${API_URL}/api/analytics/debit-credit-summary`,
           {
             method: "PATCH",
@@ -52,19 +40,69 @@ const TotalEarningsComponent = () => {
           }
         );
 
-        if (!response.ok) {
-          throw new Error("Failed to fetch data");
+        if (!summaryResponse.ok) {
+          throw new Error("Failed to fetch summary data");
         }
 
-        const result = await response.json();
+        const summaryResult = await summaryResponse.json();
 
-        if (result.success) {
-          setData(result.data);
-        } else {
-          throw new Error("API returned unsuccessful response");
+        if (!summaryResult.success) {
+          throw new Error("API returned unsuccessful response for summary");
         }
+
+        setData(summaryResult.data);
+
+        // Fetch chart data
+        const chartResponse = await fetch(
+          `${API_URL}/api/analytics/dc-chart-data`,
+          {
+            method: "PATCH",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+              filter: "month",
+            }),
+          }
+        );
+
+        if (!chartResponse.ok) {
+          throw new Error("Failed to fetch chart data");
+        }
+
+        const chartResult = await chartResponse.json();
+
+        if (!chartResult.success) {
+          throw new Error("API returned unsuccessful response for chart data");
+        }
+
+        setChartData(chartResult.data);
+
+        // Fetch pending payments data
+        const pendingResponse = await fetch(
+          `${API_URL}/api/analytics/pending-payments`,
+          {
+            method: "GET",
+            headers: {
+              "Content-Type": "application/json",
+            },
+          }
+        );
+
+        if (!pendingResponse.ok) {
+          throw new Error("Failed to fetch pending payments data");
+        }
+
+        const pendingResult = await pendingResponse.json();
+
+        if (!pendingResult.success) {
+          throw new Error("API returned unsuccessful response for pending payments");
+        }
+
+        setPendingData(pendingResult.data);
       } catch (err) {
         setError(err.message);
+        console.error("API Error:", err);
       } finally {
         setLoading(false);
       }
@@ -94,6 +132,20 @@ const TotalEarningsComponent = () => {
   const netEarnings = data
     ? (data.totalReceivables - data.totalPayables).toFixed(2)
     : 0;
+
+  // Transform API data for receivables chart
+  const receivableData =
+    chartData?.receivablesByCategory?.map((item) => ({
+      category: item.x,
+      amount: item.y,
+    })) || [];
+
+  // Transform API data for payables chart
+  const payableData =
+    chartData?.payablesByCategory?.map((item) => ({
+      category: item.x,
+      amount: item.y,
+    })) || [];
 
   return (
     <div className="w-full h-full flex flex-col overflow-auto pb-0">
@@ -144,7 +196,7 @@ const TotalEarningsComponent = () => {
           </h4>
           <ResponsiveContainer width="100%" height="85%">
             <AreaChart
-              data={mockReceivableData}
+              data={receivableData}
               margin={{ top: 5, right: 5, left: -20, bottom: 0 }}
             >
               <defs>
@@ -195,7 +247,7 @@ const TotalEarningsComponent = () => {
           </h4>
           <ResponsiveContainer width="100%" height="85%">
             <AreaChart
-              data={mockPayableData}
+              data={payableData}
               margin={{ top: 5, right: 5, left: -20, bottom: 0 }}
             >
               <defs>
@@ -236,30 +288,50 @@ const TotalEarningsComponent = () => {
 
       {/* Bottom Stats - Fixed height */}
       <div className="rounded-lg p-2 border-2 border-orange-200 flex-shrink-0">
-  <div className="flex items-center gap-60">
-    {/* Pending */}
-    <div className="flex items-center gap-1">
-      <span className="text-gray-700 font-semibold text-[12px]">Pending</span>
-      <span>:</span>
-      <span className="text-sm font-bold text-gray-800">₹0</span>
-    </div>
+        <div className="flex items-center gap-60">
+          {/* Pending */}
+          <div className="flex items-center gap-1">
+            <span className="text-gray-700 font-semibold text-[12px]">
+              Pending
+            </span>
+            <span>:</span>
+            <span className="text-sm font-bold text-gray-800">
+              ₹{pendingData?.totalPendingCost?.toLocaleString("en-IN", {
+                minimumFractionDigits: 0,
+                maximumFractionDigits: 0,
+              }) || 0}
+            </span>
+          </div>
 
-    {/* Consultation Box */}
-    <div className="flex items-center gap-1 border-2 border-purple-200 rounded px-2 py-1">
-      <span className="text-purple-700 font-semibold text-[12px]">Consultation</span>
-      <span>:</span>
-      <span className="text-sm font-bold text-purple-700">₹0</span>
-    </div>
+          {/* Consultation Box */}
+          <div className="flex items-center gap-1 border-2 border-purple-200 rounded px-2 py-1">
+            <span className="text-purple-700 font-semibold text-[12px]">
+              Consultation
+            </span>
+            <span>:</span>
+            <span className="text-sm font-bold text-purple-700">
+              ₹{pendingData?.totalUnpaidAppointments?.toLocaleString("en-IN", {
+                minimumFractionDigits: 0,
+                maximumFractionDigits: 0,
+              }) || 0}
+            </span>
+          </div>
 
-    {/* Medicine Prep Box */}
-    <div className="flex items-center gap-1 border-2 border-teal-200 rounded px-2 py-1">
-      <span className="text-teal-700 font-semibold text-[12px]">Medicine Prep</span>
-      <span>:</span>
-      <span className="text-sm font-bold text-teal-700">₹0</span>
-    </div>
-  </div>
-</div>
-
+          {/* Medicine Prep Box */}
+          <div className="inline-flex items-center gap-1 border-2 border-teal-200 rounded px-3 py-1 w-40">
+            <span className="text-teal-700 font-semibold text-[12px]">
+              Medicine Prep
+            </span>
+            <span>:</span>
+            <span className="text-sm font-bold text-teal-700">
+              ₹{pendingData?.totalUnpaidPrescriptions?.toLocaleString("en-IN", {
+                minimumFractionDigits: 0,
+                maximumFractionDigits: 0,
+              }) || 0}
+            </span>
+          </div>
+        </div>
+      </div>
     </div>
   );
 };
