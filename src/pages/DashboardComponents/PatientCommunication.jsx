@@ -173,11 +173,14 @@ const [feedbackError, setFeedbackError] = useState(null);
                 setMessengerError(err.message);
                 // Fallback to mock data on error
                 setMessengerData({
-                    patientsWithMessage: 40,
-                    patientsWithUnreadMessages: 40,
-                    doctorToPatientResponses: 25,
-                    outstandingMessages: 3
-                });
+    patientsWithMessage: 40,
+    patientsWithUnreadMessages: 40,
+    doctorToPatientResponses: 25,
+    outstandingMessages: 3,
+    totalFollowUpCallsMade: 10,
+    followUpCallsPending: 8,
+    followUpCallsMissed: 20
+});
             } finally {
                 setIsMessengerLoading(false);
             }
@@ -404,12 +407,46 @@ const [feedbackError, setFeedbackError] = useState(null);
     };
 
   const renderChannelSplit = () => {
+   const summary = messengerData || {};
+
+   if (isMessengerLoading) {
+    return (
+        <div className="p-3 w-[260px] text-center py-4 text-xs text-gray-500">
+            Loading channel data...
+        </div>
+    );
+}
+
+if (messengerError) {
+    return (
+        <div className="p-3 w-[260px]">
+            <div className="bg-red-50 border border-red-200 rounded-lg p-3 text-red-700">
+                <p className="font-semibold mb-1 text-xs">Error loading data</p>
+                <p className="text-xs">{messengerError}</p>
+            </div>
+        </div>
+    );
+}
+    
     const data = [
-        { channel: "Messenger", responded: 35, pending: 10, missed: 5 },
-        { channel: "Calls", responded: 10, pending: 8, missed: 20 },
+        { 
+            channel: "Messenger", 
+            responded: summary.doctorToPatientResponses || 0, 
+            pending: summary.patientsWithUnreadMessages || 0, 
+            missed: summary.outstandingMessages || 0 
+        },
+        { 
+            channel: "Calls", 
+            responded: summary.totalFollowUpCallsMade || 0, 
+            pending: summary.followUpCallsPending || 0, 
+            missed: summary.followUpCallsMissed || 0 
+        },
     ];
 
-    const maxValue = 50;
+    const maxValue = Math.max(
+        50,
+        ...data.flatMap(item => [item.responded, item.pending, item.missed])
+    );
 
     return (
         <div className="p-3 w-[260px]">
