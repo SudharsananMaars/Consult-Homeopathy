@@ -74,7 +74,7 @@ const SidebarProfile = () => {
   </div>
 
   {/* Horizontal separator */}
-  <div className="w-full h-[2px] bg-[#8A8BF5] rounded-full mt-1"></div>
+  <div className="w-full h-[2px] bg-[#7C7EF0] rounded-full mt-1"></div>
 </div>
 
   );

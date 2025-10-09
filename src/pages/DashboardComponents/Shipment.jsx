@@ -265,7 +265,7 @@ function ShipmentOverview({ filter = 'month' }) {
                         r="40"
                         fill="none"
                         stroke="#22d3ee"
-                        strokeWidth="20"
+                        strokeWidth="12"
                         strokeDasharray={`${ackReceivedPct * 2.513} 251.3`}
                         strokeDashoffset="0"
                       />
@@ -275,7 +275,7 @@ function ShipmentOverview({ filter = 'month' }) {
                         r="40"
                         fill="none"
                         stroke="#f97316"
-                        strokeWidth="20"
+                        strokeWidth="12"
                         strokeDasharray={`${awaitingDispatchPct * 2.513} 251.3`}
                         strokeDashoffset={`-${ackReceivedPct * 2.513}`}
                       />

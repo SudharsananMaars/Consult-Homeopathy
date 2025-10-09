@@ -3,7 +3,7 @@ import config from "/src/config.js";
 
 const API_URL = config.API_URL;
 
-const PatientCommunicationCard = ({ filter = 'month' }) => {
+const PatientCommunicationCard = ({ filter = "month" }) => {
   const [qualityData, setQualityData] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState(null);
@@ -608,7 +608,9 @@ const PatientCommunicationCard = ({ filter = 'month' }) => {
                   <span
                     key={i}
                     className={`text-sm ${
-                      i < Math.floor(cat.value) ? "text-yellow-400" : "text-gray-300"
+                      i < Math.floor(cat.value)
+                        ? "text-yellow-400"
+                        : "text-gray-300"
                     }`}
                   >
                     ★
@@ -833,7 +835,7 @@ const PatientCommunicationCard = ({ filter = 'month' }) => {
           {renderMessengerContent()}
         </div>
 
-        <div className="flex-shrink-0" style={{ width: "240px" }}>
+        <div className="flex-shrink-0 pr-10" style={{ width: "240px" }}>
           {renderChannelSplit()}
         </div>
 

@@ -3,7 +3,7 @@ import config from "/src/config.js";
 
 const API_URL = config.API_URL;
 
-function InventoryOverview({ filter = 'month' }) {
+function InventoryOverview({ filter = "month" }) {
   const [inventoryData, setInventoryData] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -230,7 +230,9 @@ function InventoryOverview({ filter = 'month' }) {
           <div className="flex flex-col gap-1.5">
             <div className="relative bg-white rounded-md shadow-sm border border-gray-100 pl-2.5 pr-2.5 py-1.5">
               <div className="absolute left-0 top-0 h-full w-1 rounded-l-md bg-sky-400" />
-              <div className="text-[12px] font-semibold text-gray-600">Above Threshold</div>
+              <div className="text-[12px] font-semibold text-gray-600">
+                Above Threshold
+              </div>
               <div className="text-lg font-bold text-sky-400 leading-snug">
                 {isLoading ? "..." : aboveThresholdCount}
               </div>
@@ -238,7 +240,9 @@ function InventoryOverview({ filter = 'month' }) {
 
             <div className="relative bg-white rounded-md shadow-sm border border-gray-100 pl-2.5 pr-2.5 py-1.5">
               <div className="absolute left-0 top-0 h-full w-1 rounded-l-md bg-red-500" />
-              <div className="text-[12px] font-semibold text-gray-600">Below Threshold</div>
+              <div className="text-[12px] font-semibold text-gray-600">
+                Below Threshold
+              </div>
               <div className="text-lg font-bold text-red-600 leading-snug">
                 {isLoading ? "..." : belowThresholdCount}
               </div>
@@ -246,7 +250,9 @@ function InventoryOverview({ filter = 'month' }) {
 
             <div className="relative bg-white rounded-md shadow-sm border border-gray-100 pl-2.5 pr-2.5 py-1.5">
               <div className="absolute left-0 top-0 h-full w-1 rounded-l-md bg-amber-400" />
-              <div className="text-[12px] font-semibold text-gray-600">Stockouts</div>
+              <div className="text-[12px] font-semibold text-gray-600">
+                Stockouts
+              </div>
               <div className="text-lg font-bold text-amber-500 leading-snug">
                 {isLoading ? "..." : stockoutsCount}
               </div>
@@ -254,8 +260,8 @@ function InventoryOverview({ filter = 'month' }) {
           </div>
         </div>
 
-        <div className="flex-1 flex flex-col mt-2">
-          <div className="text-xs font-semibold text-gray-700 mb-1 mt-1.5">
+        <div className="flex-1 flex flex-col mt-5 pt-3">
+          <div className="text-sm font-semibold text-gray-700 mb-1 mt-1.5">
             Vendor Performance
           </div>
           <div className="rounded-lg p-2 pt-3 flex-1 flex flex-col">
@@ -278,34 +284,48 @@ function InventoryOverview({ filter = 'month' }) {
           </div>
         </div>
 
-        <div className="flex-1 flex flex-col mt-2">
-          <div className="text-xs font-semibold text-gray-700 mb-1">
+        <div className="flex-1 flex flex-col mt-5 pt-3">
+          <div className="text-sm font-semibold text-gray-700 mb-1">
             Order Frequency Chart
           </div>
 
           <div className="rounded-lg p-2 pt-3 flex-1 flex flex-col">
             <div className="text-xs text-gray-400 mb-1">500</div>
 
-            <div className="flex-1">
-              {renderOrderChart()}
-            </div>
+            <div className="flex-1">{renderOrderChart()}</div>
           </div>
         </div>
 
-        <div className="flex flex-col gap-3" style={{ minWidth: "140px" }}>
+        <div
+          className="flex flex-col gap-3 mt-5 pt-3"
+          style={{ minWidth: "140px" }}
+        >
           <div>
-            <div className="text-xs font-semibold text-gray-700 mb-1">
+            <div className="text-sm font-semibold text-gray-700 mb-1">
               Raw Materials
             </div>
             <div className="flex items-center gap-2">
               <div className="flex">
-                {[...Array(Math.round((inventoryData?.otherMaterialsPercentage || 0) / 10))].map((_, i) => (
+                {[
+                  ...Array(
+                    Math.round(
+                      (inventoryData?.otherMaterialsPercentage || 0) / 10
+                    )
+                  ),
+                ].map((_, i) => (
                   <div
                     key={i}
                     className="w-2.5 h-3 rounded bg-blue-600 mr-0.5"
                   />
                 ))}
-                {[...Array(10 - Math.round((inventoryData?.otherMaterialsPercentage || 0) / 10))].map((_, i) => (
+                {[
+                  ...Array(
+                    10 -
+                      Math.round(
+                        (inventoryData?.otherMaterialsPercentage || 0) / 10
+                      )
+                  ),
+                ].map((_, i) => (
                   <div
                     key={i}
                     className="w-2.5 h-3 rounded bg-blue-200 mr-0.5"
@@ -313,7 +333,9 @@ function InventoryOverview({ filter = 'month' }) {
                 ))}
               </div>
               <span className="text-sm font-bold text-gray-700">
-                {isLoading ? "..." : `${inventoryData?.otherMaterialsPercentage || 0}%`}
+                {isLoading
+                  ? "..."
+                  : `${inventoryData?.otherMaterialsPercentage || 0}%`}
               </span>
             </div>
           </div>
@@ -324,13 +346,22 @@ function InventoryOverview({ filter = 'month' }) {
             </div>
             <div className="flex items-center gap-2">
               <div className="flex">
-                {[...Array(Math.round((inventoryData?.packagingPercentage || 0) / 10))].map((_, i) => (
+                {[
+                  ...Array(
+                    Math.round((inventoryData?.packagingPercentage || 0) / 10)
+                  ),
+                ].map((_, i) => (
                   <div
                     key={i}
                     className="w-2.5 h-3 rounded bg-pink-500 mr-0.5"
                   />
                 ))}
-                {[...Array(10 - Math.round((inventoryData?.packagingPercentage || 0) / 10))].map((_, i) => (
+                {[
+                  ...Array(
+                    10 -
+                      Math.round((inventoryData?.packagingPercentage || 0) / 10)
+                  ),
+                ].map((_, i) => (
                   <div
                     key={i}
                     className="w-2.5 h-3 rounded bg-pink-200 mr-0.5"
@@ -338,7 +369,9 @@ function InventoryOverview({ filter = 'month' }) {
                 ))}
               </div>
               <span className="text-sm font-bold text-gray-700">
-                {isLoading ? "..." : `${inventoryData?.packagingPercentage || 0}%`}
+                {isLoading
+                  ? "..."
+                  : `${inventoryData?.packagingPercentage || 0}%`}
               </span>
             </div>
           </div>

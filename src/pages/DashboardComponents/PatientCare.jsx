@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from "react";
-import config from '/src/config.js';
+import config from "/src/config.js";
 
 const API_URL = config.API_URL;
 
-export default function PatientCare({ filter = 'month' }) {
+export default function PatientCare({ filter = "month" }) {
   const [data, setData] = useState({
     consistentPatients: 0,
     inconsistentPatients: 0,
@@ -33,23 +33,26 @@ export default function PatientCare({ filter = 'month' }) {
       try {
         setLoading(true);
         setError(null);
-        
-        const response = await fetch(`${API_URL}/api/analytics/adherence-summary`, {
-          method: 'PATCH',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            filter: filter
-          }),
-        });
+
+        const response = await fetch(
+          `${API_URL}/api/analytics/adherence-summary`,
+          {
+            method: "PATCH",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+              filter: filter,
+            }),
+          }
+        );
 
         if (!response.ok) {
           throw new Error(`HTTP error! status: ${response.status}`);
         }
 
         const result = await response.json();
-        
+
         if (result.success && result.summary) {
           setData({
             consistentPatients: result.summary.consistentPatients || 0,
@@ -57,15 +60,17 @@ export default function PatientCare({ filter = 'month' }) {
             nonAdherentPatients: result.summary.nonAdherentPatients || 0,
             totalPatientCare: result.summary.totalPatientCare || 0,
             churnRatePercentage: result.summary.churnRatePercentage || 0,
-            prescriptionsMissingStartDate: result.summary.prescriptionsMissingStartDate || 0,
+            prescriptionsMissingStartDate:
+              result.summary.prescriptionsMissingStartDate || 0,
             followUpCalls: {
               madePercentage: result.summary.followUpCalls?.madePercentage || 0,
-              missedPercentage: result.summary.followUpCalls?.missedPercentage || 0,
+              missedPercentage:
+                result.summary.followUpCalls?.missedPercentage || 0,
             },
           });
         }
       } catch (err) {
-        console.error('Error fetching adherence data:', err);
+        console.error("Error fetching adherence data:", err);
         setError(err.message);
       } finally {
         setLoading(false);
@@ -80,14 +85,14 @@ export default function PatientCare({ filter = 'month' }) {
     const fetchTATData = async () => {
       try {
         setTatLoading(true);
-        
+
         const response = await fetch(`${API_URL}/api/analytics/TAT`, {
-          method: 'PATCH',
+          method: "PATCH",
           headers: {
-            'Content-Type': 'application/json',
+            "Content-Type": "application/json",
           },
           body: JSON.stringify({
-            filter: filter
+            filter: filter,
           }),
         });
 
@@ -96,21 +101,23 @@ export default function PatientCare({ filter = 'month' }) {
         }
 
         const result = await response.json();
-        
+
         if (result.data) {
           setTatData({
             shipmentToPatientCare: {
               overall: {
-                averageFormatted: result.data.shipmentToPatientCare?.overall?.averageFormatted || "0m",
+                averageFormatted:
+                  result.data.shipmentToPatientCare?.overall
+                    ?.averageFormatted || "0m",
               },
             },
           });
         }
       } catch (err) {
-        console.error('Error fetching TAT data:', err);
+        console.error("Error fetching TAT data:", err);
         // Don't set main error state, just keep default TAT values
       } finally {
-       setTatLoading(false);
+        setTatLoading(false);
       }
     };
 
@@ -149,7 +156,8 @@ export default function PatientCare({ filter = 'month' }) {
       ) : (
         <div className="flex flex-col h-full">
           {/* Header Row */}
-          <div className="flex justify-between items-start mb-4">
+          <div className="flex justify-between items-start mb-2 pb-0">
+
             <div>
               <div className="text-lg font-semibold text-black-500">
                 Patient Care
@@ -177,7 +185,9 @@ export default function PatientCare({ filter = 'month' }) {
                   <span className="font-bold text-gray-400">...</span>
                 ) : (
                   <span className="font-bold text-gray-800">
-                    {formatTAT(tatData?.shipmentToPatientCare?.overall?.averageFormatted)}
+                    {formatTAT(
+                      tatData?.shipmentToPatientCare?.overall?.averageFormatted
+                    )}
                   </span>
                 )}
               </p>
@@ -185,14 +195,16 @@ export default function PatientCare({ filter = 'month' }) {
           </div>
 
           {/* Content Row */}
-          <div className="flex gap-4 items-center">
+          <div className="flex gap-4 items-center ">
             {/* Status Counts */}
             <div className="flex flex-col gap-1.5">
               {/* Consistent */}
               <div className="bg-white rounded-lg shadow-sm border border-gray-100 flex w-36">
                 <div className="w-1 bg-green-500 rounded-l-lg"></div>
                 <div className="flex flex-col justify-center px-2 py-1">
-                  <div className="text-gray-700 font-semibold text-xs">Consistent</div>
+                  <div className="text-gray-700 font-semibold text-xs">
+                    Consistent
+                  </div>
                   <div className="text-green-600 font-bold text-base leading-tight">
                     {data.consistentPatients}
                   </div>
@@ -203,7 +215,9 @@ export default function PatientCare({ filter = 'month' }) {
               <div className="bg-white rounded-lg shadow-sm border border-gray-100 flex">
                 <div className="w-1 bg-yellow-400 rounded-l-lg"></div>
                 <div className="flex flex-col justify-center px-2 py-1">
-                  <div className="text-gray-700 font-semibold text-xs">Inconsistent</div>
+                  <div className="text-gray-700 font-semibold text-xs">
+                    Inconsistent
+                  </div>
                   <div className="text-yellow-500 font-bold text-base leading-tight">
                     {data.inconsistentPatients}
                   </div>
@@ -214,7 +228,9 @@ export default function PatientCare({ filter = 'month' }) {
               <div className="bg-white rounded-lg shadow-sm border border-gray-100 flex">
                 <div className="w-1 bg-red-500 rounded-l-lg"></div>
                 <div className="flex flex-col justify-center px-2 py-1">
-                  <div className="text-gray-700 font-semibold text-xs">Non-Adherent</div>
+                  <div className="text-gray-700 font-semibold text-xs">
+                    Non-Adherent
+                  </div>
                   <div className="text-red-500 font-bold text-base leading-tight">
                     {data.nonAdherentPatients}
                   </div>
@@ -298,7 +314,9 @@ export default function PatientCare({ filter = 'month' }) {
                   stroke="#29BF67"
                   strokeWidth="6"
                   strokeDasharray={circumference}
-                  strokeDashoffset={(circumference * data.followUpCalls.missedPercentage) / 100}
+                  strokeDashoffset={
+                    (circumference * data.followUpCalls.missedPercentage) / 100
+                  }
                   strokeLinecap="round"
                   transform="rotate(-90 35 35)"
                 />
@@ -306,11 +324,15 @@ export default function PatientCare({ filter = 'month' }) {
               <div className="flex gap-2 mt-1 text-xs items-center">
                 <span className="flex items-center gap-1">
                   <span className="inline-block w-2 h-2 bg-yellow-400 rounded-full"></span>
-                  <span className="text-gray-600">Pending: {data.followUpCalls.missedPercentage}%</span>
+                  <span className="text-gray-600">
+                    Pending: {data.followUpCalls.missedPercentage}%
+                  </span>
                 </span>
                 <span className="flex items-center gap-1">
                   <span className="inline-block w-2 h-2 bg-green-500 rounded-full"></span>
-                  <span className="text-gray-600">Done: {data.followUpCalls.madePercentage}%</span>
+                  <span className="text-gray-600">
+                    Done: {data.followUpCalls.madePercentage}%
+                  </span>
                 </span>
               </div>
             </div>

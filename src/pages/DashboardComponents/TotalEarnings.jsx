@@ -291,7 +291,7 @@ const TotalEarningsComponent = ({ filter = 'month' }) => {
         <div className="flex items-center gap-60">
           {/* Pending */}
           <div className="flex items-center gap-1">
-           <span className="text-gray-700 font-semibold text-[12px]">
+           <span className="text-gray-700 font-semibold text-[14px]">
               Pending
             </span>
             <span>:</span>
@@ -305,7 +305,7 @@ const TotalEarningsComponent = ({ filter = 'month' }) => {
 
           {/* Consultation Box */}
           <div className="flex items-center gap-1 border-2 border-purple-200 rounded px-2 py-1">
-            <span className="text-purple-700 font-semibold text-[12px]">
+            <span className="text-purple-700 font-semibold text-[14px]">
               Consultation
             </span>
             <span>:</span>
@@ -318,8 +318,8 @@ const TotalEarningsComponent = ({ filter = 'month' }) => {
           </div>
 
           {/* Medicine Prep Box */}
-          <div className="inline-flex items-center gap-1 border-2 border-teal-200 rounded px-3 py-1 w-40">
-            <span className="text-teal-700 font-semibold text-[12px]">
+          <div className="inline-flex items-center gap-1 border-2 border-teal-200 rounded px-3 py-1 w-44">
+            <span className="text-teal-700 font-semibold text-[14px]">
               Medicine Prep
             </span>
             <span>:</span>

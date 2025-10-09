@@ -68,10 +68,15 @@ const locationOptions = [
 ];
 
 const patientEntryOptions = [
+  { value: "Website", label: "Website" },
   { value: "Instagram", label: "Instagram" },
   { value: "Facebook", label: "Facebook" },
-  { value: "Google", label: "Google" }
+  { value: "Google", label: "Google" },
+  { value: "Call", label: "Call" },
+  { value: "Referral", label: "Referral" },
+  { value: "Walk-in", label: "Walk-in" },
 ];
+
 
 const FirstForm = () => {
   const [formData, setFormData] = useState({
