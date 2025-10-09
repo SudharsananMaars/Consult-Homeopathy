@@ -21,6 +21,8 @@ const Payments = () => {
 
     const [currentPage, setCurrentPage] = useState(1);
     const [entriesPerPage, setEntriesPerPage] = useState(10);
+    const [showPending, setShowPending] = useState(false);
+    const [pendingPayments, setPendingPayments] = useState([]);
 
     // Get userId from localStorage or context (adjust based on your app structure)
     const userId = localStorage.getItem("userId"); // Replace with actual user ID logic
@@ -28,6 +30,7 @@ const Payments = () => {
     // Fetch payments data from API
     useEffect(() => {
         fetchPayments();
+        fetchPendingPayments();
     }, []);
 
     const fetchPayments = async () => {
@@ -54,6 +57,27 @@ const Payments = () => {
             console.error('Error fetching payments:', err);
         } finally {
             setLoading(false);
+        }
+    };
+
+    const fetchPendingPayments = async () => {
+        try {
+            const token = localStorage.getItem("token");
+
+            const response = await axios.get(
+                `${API_URL}/api/analytics/pending-payments-list`,
+                {
+                    headers: {
+                        Authorization: `Bearer ${token}`,
+                    },
+                }
+            );
+            
+            if (response.data.success && response.data.data) {
+                setPendingPayments(response.data.data);
+            }
+        } catch (err) {
+            console.error('Error fetching pending payments:', err);
         }
     };
 
@@ -102,14 +126,15 @@ const Payments = () => {
     };
 
     // Filter payments based on search criteria
-    const filteredPayments = payments.filter((payment) => {
-        const matchesPatientId = payment._id?.toLowerCase().includes(filters.patientId.toLowerCase()) || '';
-        const matchesService = filters.service === "" || getServiceType().toLowerCase().includes(filters.service.toLowerCase());
+    const filteredPayments = (showPending ? pendingPayments : payments).filter((payment) => {
+        const paymentId = showPending ? payment.referenceId : payment._id;
+        const matchesPatientId = paymentId?.toLowerCase().includes(filters.patientId.toLowerCase()) || '';
+        const matchesService = filters.service === "" || (showPending ? payment.paidFor : getServiceType()).toLowerCase().includes(filters.service.toLowerCase());
         
         // Date range filtering (you can implement this based on your requirements)
         let matchesDateRange = true;
         if (filters.dateRange) {
-            const paymentDate = new Date(payment.createdAt);
+            const paymentDate = new Date(showPending ? payment.date : payment.createdAt);
             const now = new Date();
             
             switch (filters.dateRange) {
@@ -183,40 +208,55 @@ const Payments = () => {
                 <h1 className="text-2xl font-bold mb-4">Payments</h1>
 
                 {/* Filters */}
-                <div className="flex space-x-4 mb-6">
-                    <input
-                        type="text"
-                        name="patientId"
-                        placeholder="Search by Payment ID"
-                        value={filters.patientId}
-                        onChange={handleFilterChange}
-                        className="p-2 border border-gray-300 rounded-md hover:bg-gray-100"
-                    />
-                    <select
-                        name="dateRange"
-                        value={filters.dateRange}
-                        onChange={handleFilterChange}
-                        className="p-2 border border-gray-300 rounded-md bg-white hover:bg-gray-100"
+                <div className="flex justify-between items-center mb-6">
+                    <div className="flex space-x-4">
+                        <input
+                            type="text"
+                            name="patientId"
+                            placeholder="Search by Payment ID"
+                            value={filters.patientId}
+                            onChange={handleFilterChange}
+                            className="p-2 border border-gray-300 rounded-md hover:bg-gray-100"
+                        />
+                        <select
+                            name="dateRange"
+                            value={filters.dateRange}
+                            onChange={handleFilterChange}
+                            className="p-2 border border-gray-300 rounded-md bg-white hover:bg-gray-100"
+                        >
+                            <option value="">Select Date Range</option>
+                            <option value="today">Today</option>
+                            <option value="lastWeek">Last Week</option>
+                            <option value="lastMonth">Last Month</option>
+                            <option value="last3Months">Last 3 Months</option>
+                            <option value="last6Months">Last 6 Months</option>
+                            <option value="lastYear">Last Year</option>
+                        </select>
+                        <select
+                            name="service"
+                            value={filters.service}
+                            onChange={handleFilterChange}
+                            className="p-2 w-1/6 border border-gray-300 rounded-md bg-white hover:bg-gray-100"
+                        >
+                            <option value="">All Services</option>
+                            <option value="Consultation">Consultation</option>
+                            <option value="Workshop">Workshop</option>
+                            <option value="Medicine">Medicine</option>
+                        </select>
+                    </div>
+                    <button
+                        onClick={() => {
+                            setShowPending(!showPending);
+                            setCurrentPage(1);
+                        }}
+                        className={`px-4 py-2 rounded-md font-medium transition-colors ${
+                            showPending 
+                                ? "bg-blue-600 text-white hover:bg-blue-700" 
+                                : "bg-gray-200 text-gray-700 hover:bg-gray-300"
+                        }`}
                     >
-                        <option value="">Select Date Range</option>
-                        <option value="today">Today</option>
-                        <option value="lastWeek">Last Week</option>
-                        <option value="lastMonth">Last Month</option>
-                        <option value="last3Months">Last 3 Months</option>
-                        <option value="last6Months">Last 6 Months</option>
-                        <option value="lastYear">Last Year</option>
-                    </select>
-                    <select
-                        name="service"
-                        value={filters.service}
-                        onChange={handleFilterChange}
-                        className="p-2 w-1/6 border border-gray-300 rounded-md bg-white hover:bg-gray-100"
-                    >
-                        <option value="">All Services</option>
-                        <option value="Consultation">Consultation</option>
-                        <option value="Workshop">Workshop</option>
-                        <option value="Medicine">Medicine</option>
-                    </select>
+                        {showPending ? "Show All Payments" : "Show Pending Payments"}
+                    </button>
                 </div>
 
                 {/* Payment Table */}
@@ -243,18 +283,18 @@ const Payments = () => {
     <tbody>
       {currentPayments.length > 0 ? (
         currentPayments.map((payment, idx) => (
-          <tr key={payment._id || idx} className="border-b border-blue-200">
+          <tr key={payment._id || payment.referenceId || idx} className="border-b border-blue-200">
             {/* Payment ID */}
             <td className="bg-gray-100 p-4 text-gray-900 text-center">
-              {payment._id}
+              {showPending ? payment.referenceId : payment._id}
             </td>
             {/* Patient Name */}
             <td className="bg-white p-4 text-gray-600 text-center">
-              {payment.appointmentId?.patient?.name || "N/A"}
+              {showPending ? payment.patientName : (payment.appointmentId?.patient?.name || "N/A")}
             </td>
             {/* Date & Time */}
             <td className="bg-gray-100 p-4 text-gray-600 text-center">
-              {formatDateTime(payment.createdAt)}
+              {formatDateTime(showPending ? payment.date : payment.createdAt)}
             </td>
             {/* Service */}
             <td className="bg-white p-4 text-gray-600 text-center">
@@ -323,8 +363,8 @@ const Payments = () => {
                 {/* Summary */}
                 <div className="mt-6 p-4 bg-gray-50 rounded-lg">
                     <p className="text-sm text-gray-600">
-                        Showing {currentPayments.length} of {filteredPayments.length} payments
-                        {filteredPayments.length !== payments.length && ` (filtered from ${payments.length} total)`}
+                        Showing {currentPayments.length} of {filteredPayments.length} {showPending ? 'pending ' : ''}payments
+                        {filteredPayments.length !== (showPending ? pendingPayments : payments).length && ` (filtered from ${(showPending ? pendingPayments : payments).length} total)`}
                     </p>
                 </div>
             </div>
