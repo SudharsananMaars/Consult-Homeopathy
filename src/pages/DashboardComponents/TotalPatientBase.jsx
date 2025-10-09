@@ -3,7 +3,7 @@ import config from '/src/config.js';
   
 const API_URL = config.API_URL;
 
-export default function TotalPatient() {
+export default function TotalPatient({ filter = 'month' }) {
   const [statusData, setStatusData] = useState([]);
   const [entryData, setEntryData] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -12,7 +12,7 @@ export default function TotalPatient() {
 
   useEffect(() => {
     const fetchData = async () => {
-      console.log('Fetching data...');
+      console.log('Fetching data with filter:', filter);
       console.log('API URL:', API_URL);
       
       try {
@@ -27,7 +27,7 @@ export default function TotalPatient() {
           headers: {
             'Content-Type': 'application/json',
           },
-          body: JSON.stringify({ filter: 'month' }),
+          body: JSON.stringify({ filter: filter }),
         });
 
         console.log('Status response status:', statusResponse.status);
@@ -49,7 +49,7 @@ export default function TotalPatient() {
           headers: {
             'Content-Type': 'application/json',
           },
-          body: JSON.stringify({ filter: 'month' }),
+          body: JSON.stringify({ filter: filter }),
         });
 
         console.log('Entry response status:', entryResponse.status);
@@ -72,7 +72,7 @@ export default function TotalPatient() {
     };
 
     fetchData();
-  }, []);
+  }, [filter]);
 
   const getStatusCount = (status) => {
     const item = statusData.find((s) => s.status === status);
@@ -198,26 +198,24 @@ export default function TotalPatient() {
       </div>
 
       {/* Tabs */}
- <div className="flex justify-center">
-  <div className="flex gap-3 mb-2 bg-gray-200 p-1 rounded-full w-max">
-    {["Instagram", "Facebook", "Youtube"].map((tab) => (
-      <button
-        key={tab}
-        onClick={() => setActiveTab(tab)}
-        className={`text-xs font-medium px-3 py-1 rounded-full transition-colors ${
-          activeTab === tab
-            ? "bg-white text-gray-900"
-            : "text-gray-500 hover:text-gray-700"
-        }`}
-        type="button"
-      >
-        {tab}
-      </button>
-    ))}
-  </div>
-</div>
-
-
+      <div className="flex justify-center">
+        <div className="flex gap-3 mb-2 bg-gray-200 p-1 rounded-full w-max">
+          {["Instagram", "Facebook", "Youtube"].map((tab) => (
+            <button
+              key={tab}
+              onClick={() => setActiveTab(tab)}
+              className={`text-xs font-medium px-3 py-1 rounded-full transition-colors ${
+                activeTab === tab
+                  ? "bg-white text-gray-900"
+                  : "text-gray-500 hover:text-gray-700"
+              }`}
+              type="button"
+            >
+              {tab}
+            </button>
+          ))}
+        </div>
+      </div>
 
       {/* Top Performing Content */}
       <div className="mb-3">
@@ -251,64 +249,63 @@ export default function TotalPatient() {
       </div>
 
       {/* Engagement Trends Chart */}
-<div className="flex-1 min-h-0 px-6">
-  <div className="text-gray-800 text-sm font-semibold mb-1.5">Engagement Trends</div>
-  <div className="relative w-full h-28 p-2">
-    
-    {/* Y-axis labels and dotted lines */}
-    <div className="absolute left-0 top-0 bottom-5 flex flex-col justify-between text-xs text-gray-400 pr-2 w-full">
-      {[100, 80, 60, 40, 20, 0].map((val) => (
-        <div key={val} className="relative w-full">
-          <span className="absolute -left-6">{val}%</span>
-          <div className="border-t border-dotted border-gray-300 w-full absolute top-1/2 transform -translate-y-1/2"></div>
-        </div>
-      ))}
-    </div>
-    
-    {/* Chart area */}
-    <div className="ml-7 h-full pb-5 flex items-end justify-around gap-0.5">
-      {engagementData.map((data, idx) => {
-        const postsHeight = (data.posts / maxEngagement) * 100;
-        const videosHeight = (data.videos / maxEngagement) * 100;
-
-        return (
-          <div key={idx} className="flex flex-col items-center flex-1 h-full justify-end">
-            <div className="flex gap-0.5 items-end mb-1">
-              <div 
-                className="w-1.5 bg-cyan-400" // Removed rounded-t
-                style={{ height: `${postsHeight}%` }}
-              />
-              <div 
-                className="w-1.5 bg-orange-400" // Removed rounded-t
-                style={{ height: `${videosHeight}%` }}
-              />
-            </div>
+      <div className="flex-1 min-h-0 px-6">
+        <div className="text-gray-800 text-sm font-semibold mb-1.5">Engagement Trends</div>
+        <div className="relative w-full h-28 p-2">
+          
+          {/* Y-axis labels and dotted lines */}
+          <div className="absolute left-0 top-0 bottom-5 flex flex-col justify-between text-xs text-gray-400 pr-2 w-full">
+            {[100, 80, 60, 40, 20, 0].map((val) => (
+              <div key={val} className="relative w-full">
+                <span className="absolute -left-6">{val}%</span>
+                <div className="border-t border-dotted border-gray-300 w-full absolute top-1/2 transform -translate-y-1/2"></div>
+              </div>
+            ))}
           </div>
-        );
-      })}
-    </div>
-    
-    {/* X-axis labels */}
-    <div className="absolute bottom-0 left-7 right-0 flex justify-around text-xs text-gray-400">
-      {engagementData.map((data, idx) => (
-        <span key={idx} className="flex-1 text-center text-xs">{data.week.replace('Week ', 'W')}</span>
-      ))}
-    </div>
-  </div>
+          
+          {/* Chart area */}
+          <div className="ml-7 h-full pb-5 flex items-end justify-around gap-0.5">
+            {engagementData.map((data, idx) => {
+              const postsHeight = (data.posts / maxEngagement) * 100;
+              const videosHeight = (data.videos / maxEngagement) * 100;
 
-  {/* Legend */}
-  <div className="flex justify-center gap-3 mt-1.5 text-xs">
-    <div className="flex items-center gap-1">
-      <div className="w-2.5 h-2.5 rounded-full bg-cyan-400"></div>
-      <span className="text-gray-600 text-xs">Posts</span>
-    </div>
-    <div className="flex items-center gap-1">
-      <div className="w-2.5 h-2.5 rounded-full bg-orange-400"></div>
-      <span className="text-gray-600 text-xs">Videos</span>
-    </div>
-  </div>
-</div>
+              return (
+                <div key={idx} className="flex flex-col items-center flex-1 h-full justify-end">
+                  <div className="flex gap-0.5 items-end mb-1">
+                    <div 
+                      className="w-1.5 bg-cyan-400"
+                      style={{ height: `${postsHeight}%` }}
+                    />
+                    <div 
+                      className="w-1.5 bg-orange-400"
+                      style={{ height: `${videosHeight}%` }}
+                    />
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+          
+          {/* X-axis labels */}
+          <div className="absolute bottom-0 left-7 right-0 flex justify-around text-xs text-gray-400">
+            {engagementData.map((data, idx) => (
+              <span key={idx} className="flex-1 text-center text-xs">{data.week.replace('Week ', 'W')}</span>
+            ))}
+          </div>
+        </div>
 
+        {/* Legend */}
+        <div className="flex justify-center gap-3 mt-1.5 text-xs">
+          <div className="flex items-center gap-1">
+            <div className="w-2.5 h-2.5 rounded-full bg-cyan-400"></div>
+            <span className="text-gray-600 text-xs">Posts</span>
+          </div>
+          <div className="flex items-center gap-1">
+            <div className="w-2.5 h-2.5 rounded-full bg-orange-400"></div>
+            <span className="text-gray-600 text-xs">Videos</span>
+          </div>
+        </div>
+      </div>
     </div>
   );
 }

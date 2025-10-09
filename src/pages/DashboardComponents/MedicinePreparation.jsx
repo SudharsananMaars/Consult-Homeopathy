@@ -3,7 +3,7 @@ import config from "/src/config.js";
 
 const API_URL = config.API_URL;
 
-const MedicineDashboardComponent = () => {
+const MedicineDashboardComponent = ({ filter = 'month' }) => {
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -21,7 +21,7 @@ const MedicineDashboardComponent = () => {
             headers: {
               "Content-Type": "application/json",
             },
-            body: JSON.stringify({ filter: "month" }),
+            body: JSON.stringify({ filter: filter }),
           }
         );
 
@@ -43,7 +43,7 @@ const MedicineDashboardComponent = () => {
     };
 
     fetchData();
-  }, []);
+  }, [filter]);
 
   useEffect(() => {
     const fetchTatData = async () => {
@@ -54,7 +54,7 @@ const MedicineDashboardComponent = () => {
           headers: {
             "Content-Type": "application/json",
           },
-          body: JSON.stringify({ filter: "month" }),
+          body: JSON.stringify({ filter: filter }),
         });
 
         if (!response.ok) {
@@ -73,7 +73,7 @@ const MedicineDashboardComponent = () => {
     };
 
     fetchTatData();
-  }, []);
+  }, [filter]);
 
   if (loading) {
     return (
@@ -148,29 +148,28 @@ const MedicineDashboardComponent = () => {
       <div className="flex gap-4 flex-1">
         {/* Left: Completed and Pending */}
         <div className="flex flex-col gap-2 w-32">
-  {/* Completed */}
-  <div className="bg-white rounded-lg shadow-sm border border-gray-100 flex h-[55px]">
-    <div className="w-1 bg-green-500 rounded-l-lg"></div>
-    <div className="flex flex-col justify-center px-2 py-1">
-      <p className="text-[12px] font-semibold text-gray-600 mb-0">Completed</p>
-      <p className="text-base font-bold text-green-600">
-        {data?.completedMedicines || 0}
-      </p>
-    </div>
-  </div>
+          {/* Completed */}
+          <div className="bg-white rounded-lg shadow-sm border border-gray-100 flex h-[55px]">
+            <div className="w-1 bg-green-500 rounded-l-lg"></div>
+            <div className="flex flex-col justify-center px-2 py-1">
+              <p className="text-[12px] font-semibold text-gray-600 mb-0">Completed</p>
+              <p className="text-base font-bold text-green-600">
+                {data?.completedMedicines || 0}
+              </p>
+            </div>
+          </div>
 
-  {/* Pending */}
-  <div className="bg-white rounded-lg shadow-sm border border-gray-100 flex h-[55px]">
-    <div className="w-1 bg-orange-400 rounded-l-lg"></div>
-    <div className="flex flex-col justify-center px-2 py-1">
-      <p className="text-[12px] font-semibold text-gray-600 mb-0">Pending</p>
-      <p className="text-base font-bold text-orange-400">
-        {data?.pendingMedicines || 0}
-      </p>
-    </div>
-  </div>
-</div>
-
+          {/* Pending */}
+          <div className="bg-white rounded-lg shadow-sm border border-gray-100 flex h-[55px]">
+            <div className="w-1 bg-orange-400 rounded-l-lg"></div>
+            <div className="flex flex-col justify-center px-2 py-1">
+              <p className="text-[12px] font-semibold text-gray-600 mb-0">Pending</p>
+              <p className="text-base font-bold text-orange-400">
+                {data?.pendingMedicines || 0}
+              </p>
+            </div>
+          </div>
+        </div>
 
         {/* Center: Pending by Cause Graph */}
         <div className="h-[150px] w-[220px]">

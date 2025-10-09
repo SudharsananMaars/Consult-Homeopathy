@@ -3,7 +3,7 @@ import config from '/src/config.js';
 
 const API_URL = config.API_URL;
 
-export default function PatientCare() {
+export default function PatientCare({ filter = 'month' }) {
   const [data, setData] = useState({
     consistentPatients: 0,
     inconsistentPatients: 0,
@@ -40,7 +40,7 @@ export default function PatientCare() {
             'Content-Type': 'application/json',
           },
           body: JSON.stringify({
-            filter: 'month'
+            filter: filter
           }),
         });
 
@@ -73,7 +73,7 @@ export default function PatientCare() {
     };
 
     fetchAdherenceData();
-  }, []);
+  }, [filter]);
 
   // Fetch TAT data
   useEffect(() => {
@@ -87,7 +87,7 @@ export default function PatientCare() {
             'Content-Type': 'application/json',
           },
           body: JSON.stringify({
-            filter: 'month'
+            filter: filter
           }),
         });
 
@@ -110,20 +110,18 @@ export default function PatientCare() {
         console.error('Error fetching TAT data:', err);
         // Don't set main error state, just keep default TAT values
       } finally {
-        setTatLoading(false);
+       setTatLoading(false);
       }
     };
 
     fetchTATData();
-  }, []);
+  }, [filter]);
 
   const formatTAT = (value) => {
-  if (!value) return "0m"; // fallback
-  // Keep only numbers followed by "m" or "hr"
-  const match = value.match(/(\d+\s*(?:m|hr))/);
-  return match ? match[0] : "0m";
-};
-
+    if (!value) return "0m";
+    const match = value.match(/(\d+\s*(?:m|hr))/);
+    return match ? match[0] : "0m";
+  };
 
   const totalPatients =
     data.consistentPatients +
@@ -137,9 +135,6 @@ export default function PatientCare() {
   const circumference = 2 * Math.PI * 30;
   const completionOffset =
     circumference - (circumference * careCompletionPercentage) / 100;
-
-
-  
 
   return (
     <div className="h-full flex flex-col">
@@ -173,21 +168,20 @@ export default function PatientCare() {
               </div>
             </div>
             <div className="border border-gray-200 rounded-lg p-3 shadow-md flex flex-col items-center">
-  <p className="text-xs font-semibold text-gray-700 mb-1 text-center">
-    Avg Turnaround Time
-  </p>
-  <p className="text-xs text-gray-600 text-center">
-    Delivery → First Dose:{" "}
-    {tatLoading ? (
-      <span className="font-bold text-gray-400">...</span>
-    ) : (
-      <span className="font-bold text-gray-800">
-        {formatTAT(tatData?.shipmentToPatientCare?.overall?.averageFormatted)}
-      </span>
-    )}
-  </p>
-</div>
-
+              <p className="text-xs font-semibold text-gray-700 mb-1 text-center">
+                Avg Turnaround Time
+              </p>
+              <p className="text-xs text-gray-600 text-center">
+                Delivery → First Dose:{" "}
+                {tatLoading ? (
+                  <span className="font-bold text-gray-400">...</span>
+                ) : (
+                  <span className="font-bold text-gray-800">
+                    {formatTAT(tatData?.shipmentToPatientCare?.overall?.averageFormatted)}
+                  </span>
+                )}
+              </p>
+            </div>
           </div>
 
           {/* Content Row */}
@@ -196,9 +190,7 @@ export default function PatientCare() {
             <div className="flex flex-col gap-1.5">
               {/* Consistent */}
               <div className="bg-white rounded-lg shadow-sm border border-gray-100 flex w-36">
-                {/* Left color block */}
                 <div className="w-1 bg-green-500 rounded-l-lg"></div>
-                {/* Content */}
                 <div className="flex flex-col justify-center px-2 py-1">
                   <div className="text-gray-700 font-semibold text-xs">Consistent</div>
                   <div className="text-green-600 font-bold text-base leading-tight">

@@ -3,7 +3,7 @@ import config from "/src/config.js";
 
 const API_URL = config.API_URL;
 
-const PatientCommunicationCard = () => {
+const PatientCommunicationCard = ({ filter = 'month' }) => {
   const [qualityData, setQualityData] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState(null);
@@ -79,7 +79,6 @@ const PatientCommunicationCard = () => {
         throw new Error("Authentication token not found");
       }
 
-      // Prepare payload: existing questions with _id, new questions without _id
       const payload = questions
         .map((q) => {
           const item = {
@@ -87,14 +86,13 @@ const PatientCommunicationCard = () => {
             category: q.category,
           };
 
-          // Only include _id if it exists (existing questions)
           if (q._id) {
             item._id = q._id;
           }
 
           return item;
         })
-        .filter((q) => q.question && q.question.trim() !== ""); // Filter out empty questions
+        .filter((q) => q.question && q.question.trim() !== "");
 
       const response = await fetch(
         `${API_URL}/api/analytics/questions/bulk-update`,
@@ -117,7 +115,6 @@ const PatientCommunicationCard = () => {
       if (data.success) {
         alert("Questions saved successfully!");
         setIsModalOpen(false);
-        // Refresh the questions list
         fetchQuestions();
       } else {
         throw new Error(data.message || "Failed to save questions");
@@ -164,7 +161,7 @@ const PatientCommunicationCard = () => {
             headers: {
               "Content-Type": "application/json",
             },
-            body: JSON.stringify({ filter: "month" }),
+            body: JSON.stringify({ filter: filter }),
           }
         );
 
@@ -182,7 +179,6 @@ const PatientCommunicationCard = () => {
       } catch (err) {
         console.error("Error fetching messenger data:", err);
         setMessengerError(err.message);
-        // Fallback to mock data on error
         setMessengerData({
           patientsWithMessage: 40,
           patientsWithUnreadMessages: 40,
@@ -198,7 +194,7 @@ const PatientCommunicationCard = () => {
     };
 
     fetchMessengerData();
-  }, []);
+  }, [filter]);
 
   useEffect(() => {
     const fetchFeedbackData = async () => {
@@ -211,7 +207,7 @@ const PatientCommunicationCard = () => {
           headers: {
             "Content-Type": "application/json",
           },
-          body: JSON.stringify({ filter: "month" }),
+          body: JSON.stringify({ filter: filter }),
         });
 
         if (!response.ok) {
@@ -234,7 +230,7 @@ const PatientCommunicationCard = () => {
     };
 
     fetchFeedbackData();
-  }, []);
+  }, [filter]);
 
   // Fetch quality assurance data from API
   useEffect(() => {
@@ -250,7 +246,7 @@ const PatientCommunicationCard = () => {
             headers: {
               "Content-Type": "application/json",
             },
-            body: JSON.stringify({ filter: "month" }),
+            body: JSON.stringify({ filter: filter }),
           }
         );
 
@@ -268,7 +264,6 @@ const PatientCommunicationCard = () => {
       } catch (err) {
         console.error("Error fetching quality data:", err);
         setError(err.message);
-        // Fallback to mock data on error
         setQualityData({
           averageTimeToFirstLogin: "15 min",
           prescriptionRevisionRatePercentage: 4,
@@ -281,8 +276,9 @@ const PatientCommunicationCard = () => {
     };
 
     fetchQualityData();
-  }, []);
+  }, [filter]);
 
+  // Render functions remain the same...
   const renderMessengerContent = () => {
     if (isMessengerLoading) {
       return (
@@ -495,16 +491,13 @@ const PatientCommunicationCard = () => {
         <div className="flex flex-col space-y-4">
           {data.map((item, index) => (
             <div key={index} className="flex">
-              {/* Y-axis label and line */}
               <div className="w-[70px] flex justify-end pr-2">
                 <div className="text-[11px] text-gray-700 text-right pt-[2px] w-full">
                   {item.channel}
                 </div>
               </div>
 
-              {/* Bar and grid container */}
               <div className="relative w-[160px]">
-                {/* Vertical grid lines */}
                 <div className="absolute inset-0 flex justify-between">
                   {[0, 10, 20, 30, 40, 50].map((val) => (
                     <div
@@ -514,7 +507,6 @@ const PatientCommunicationCard = () => {
                   ))}
                 </div>
 
-                {/* Bars stacked vertically */}
                 <div className="flex flex-col space-y-1 relative">
                   <div
                     className="h-[10px] rounded-full bg-blue-400"
@@ -534,14 +526,12 @@ const PatientCommunicationCard = () => {
           ))}
         </div>
 
-        {/* X-axis Labels */}
         <div className="flex justify-between text-[10px] text-gray-500 mt-3 ml-[74px]">
           {[0, 10, 20, 30, 40, 50].map((val) => (
             <span key={val}>{val}</span>
           ))}
         </div>
 
-        {/* Legend */}
         <div className="flex gap-3 text-[10px] justify-center pt-2 mt-1">
           <div className="flex items-center gap-1">
             <div className="w-2 h-2 rounded-sm bg-blue-400"></div>
@@ -578,7 +568,6 @@ const PatientCommunicationCard = () => {
       );
     }
 
-    // Default categories structure
     const defaultCategories = [
       { name: "Consultation", value: 0, color: "bg-purple-400" },
       { name: "Medicine Delivery", value: 0, color: "bg-blue-400" },
@@ -586,7 +575,6 @@ const PatientCommunicationCard = () => {
       { name: "Overall", value: 0, color: "bg-purple-500" },
     ];
 
-    // Map API data to categories
     const categories = defaultCategories.map((cat) => {
       const apiCategory = feedbackData?.categories?.find(
         (c) => c.category.toLowerCase() === cat.name.toLowerCase()
@@ -603,39 +591,33 @@ const PatientCommunicationCard = () => {
     return (
       <>
         <div className="space-y-2">
-  {categories.map((cat, idx) => (
-    <div key={idx} className="flex items-center justify-between gap-4">
-      {/* Category name */}
-      <span className="text-xs text-gray-600 w-24">{cat.name}</span>
+          {categories.map((cat, idx) => (
+            <div key={idx} className="flex items-center justify-between gap-4">
+              <span className="text-xs text-gray-600 w-24">{cat.name}</span>
 
-      {/* Bar chart */}
-      <div className="relative flex-1 bg-gray-100 rounded-full h-2 overflow-hidden">
-        {/* Vertical line at the start */}
-        <div className="absolute left-0 top-0 bottom-0 w-0.5 bg-gray-400" />
+              <div className="relative flex-1 bg-gray-100 rounded-full h-2 overflow-hidden">
+                <div className="absolute left-0 top-0 bottom-0 w-0.5 bg-gray-400" />
+                <div
+                  className={`bg-purple-500 h-full transition-all`}
+                  style={{ width: `${(cat.value / maxStars) * 100}%` }}
+                ></div>
+              </div>
 
-        {/* Bar fill - all same purple */}
-        <div
-          className={`bg-purple-500 h-full transition-all`}
-          style={{ width: `${(cat.value / maxStars) * 100}%` }}
-        ></div>
-      </div>
-
-      {/* Star ratings */}
-      <div className="flex items-center gap-0.5">
-        {[...Array(maxStars)].map((_, i) => (
-          <span
-            key={i}
-            className={`text-sm ${ // Increased from text-xs to text-sm
-              i < Math.floor(cat.value) ? "text-yellow-400" : "text-gray-300"
-            }`}
-          >
-            ★
-          </span>
-        ))}
-      </div>
-    </div>
-  ))}
-</div>
+              <div className="flex items-center gap-0.5">
+                {[...Array(maxStars)].map((_, i) => (
+                  <span
+                    key={i}
+                    className={`text-sm ${
+                      i < Math.floor(cat.value) ? "text-yellow-400" : "text-gray-300"
+                    }`}
+                  >
+                    ★
+                  </span>
+                ))}
+              </div>
+            </div>
+          ))}
+        </div>
 
         <div className="flex items-center justify-center mt-3 gap-2 pt-2 border-t border-gray-100">
           <span className="bg-yellow-100 rounded-full px-3 py-1 text-xs font-bold text-yellow-700">

@@ -3,23 +3,16 @@ import config from "/src/config.js";
 
 const API_URL = config.API_URL;
 
-function InventoryOverview() {
-  // State for inventory card data
+function InventoryOverview({ filter = 'month' }) {
   const [inventoryData, setInventoryData] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
 
-  // State for vendor performance data
   const [vendorData, setVendorData] = useState(null);
   const [vendorLoading, setVendorLoading] = useState(true);
 
-  // State for order frequency data
   const [orderData, setOrderData] = useState(null);
   const [orderLoading, setOrderLoading] = useState(true);
-
-  const API_PAYLOAD = {
-    filter: "month",
-  };
 
   // Fetch inventory data
   const fetchInventoryData = async () => {
@@ -29,7 +22,7 @@ function InventoryOverview() {
       const response = await fetch(`${API_URL}/api/analytics/stock-summary`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(API_PAYLOAD),
+        body: JSON.stringify({ filter: filter }),
       });
 
       if (!response.ok) {
@@ -58,7 +51,7 @@ function InventoryOverview() {
       const response = await fetch(`${API_URL}/api/analytics/vendor-summary`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(API_PAYLOAD),
+        body: JSON.stringify({ filter: filter }),
       });
 
       if (!response.ok) {
@@ -86,7 +79,7 @@ function InventoryOverview() {
         {
           method: "PATCH",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ filter: "day" }),
+          body: JSON.stringify({ filter: filter }),
         }
       );
 
@@ -106,14 +99,12 @@ function InventoryOverview() {
     }
   };
 
-  // Call all fetch functions on component mount
   useEffect(() => {
     fetchInventoryData();
     fetchVendorData();
     fetchOrderData();
-  }, []);
+  }, [filter]);
 
-  // Helper to extract and display card values
   const getCardValue = (field) => {
     if (isLoading) return "...";
     if (error) return "N/A";
@@ -126,7 +117,6 @@ function InventoryOverview() {
   const aboveThresholdCount = getCardValue("aboveThreshold");
   const stockoutsCount = getCardValue("stockOut");
 
-  // Vendor Performance Chart
   const renderVendorChart = () => {
     if (vendorLoading)
       return <div className="text-xs text-gray-400">Loading...</div>;
@@ -142,7 +132,6 @@ function InventoryOverview() {
 
           return (
             <div key={idx} className="flex flex-col items-center flex-1">
-              {/* Bar container */}
               <div
                 className="w-full flex gap-1 items-end"
                 style={{ height: "80px" }}
@@ -157,7 +146,6 @@ function InventoryOverview() {
                 ></div>
               </div>
 
-              {/* X-axis / Vendor name */}
               <div className="text-xs text-gray-600 mt-2 text-center">
                 {vendor.vendorName}
               </div>
@@ -168,7 +156,6 @@ function InventoryOverview() {
     );
   };
 
-  // Order Frequency Chart
   const renderOrderChart = () => {
     if (orderLoading)
       return <div className="text-xs text-gray-400">Loading...</div>;
@@ -184,7 +171,6 @@ function InventoryOverview() {
       })
       .join(" ");
 
-    // Create area path
     const areaPoints = `0,100 ${points} 100,100`;
 
     return (
@@ -194,20 +180,17 @@ function InventoryOverview() {
           className="w-full h-full"
           preserveAspectRatio="none"
         >
-          {/* Area fill */}
           <polygon
             points={areaPoints}
             fill="url(#orangeGradient)"
             opacity="0.6"
           />
-          {/* Line */}
           <polyline
             points={points}
             fill="none"
             stroke="#fb923c"
             strokeWidth="2"
           />
-          {/* Gradient definition */}
           <defs>
             <linearGradient
               id="orangeGradient"
@@ -221,7 +204,6 @@ function InventoryOverview() {
             </linearGradient>
           </defs>
         </svg>
-        {/* X-axis labels */}
         <div className="absolute bottom-0 left-0 right-0 flex justify-between text-xs text-gray-400 px-1">
           <span>8 AM</span>
           <span>4 PM</span>
@@ -234,7 +216,6 @@ function InventoryOverview() {
   return (
     <div className="h-full flex flex-col">
       <div className="flex items-start justify-between gap-4 h-full">
-        {/* Left Section: Title + Status Cards */}
         <div className="flex flex-col gap-2" style={{ minWidth: "160px" }}>
           <div>
             <div className="text-semibold text-lg font-bold text-black-500">
@@ -246,9 +227,7 @@ function InventoryOverview() {
             </div>
           </div>
 
-          {/* Status Cards - Compact */}
           <div className="flex flex-col gap-1.5">
-            {/* Above Threshold */}
             <div className="relative bg-white rounded-md shadow-sm border border-gray-100 pl-2.5 pr-2.5 py-1.5">
               <div className="absolute left-0 top-0 h-full w-1 rounded-l-md bg-sky-400" />
               <div className="text-[12px] font-semibold text-gray-600">Above Threshold</div>
@@ -257,7 +236,6 @@ function InventoryOverview() {
               </div>
             </div>
 
-            {/* Below Threshold */}
             <div className="relative bg-white rounded-md shadow-sm border border-gray-100 pl-2.5 pr-2.5 py-1.5">
               <div className="absolute left-0 top-0 h-full w-1 rounded-l-md bg-red-500" />
               <div className="text-[12px] font-semibold text-gray-600">Below Threshold</div>
@@ -266,7 +244,6 @@ function InventoryOverview() {
               </div>
             </div>
 
-            {/* Stockouts */}
             <div className="relative bg-white rounded-md shadow-sm border border-gray-100 pl-2.5 pr-2.5 py-1.5">
               <div className="absolute left-0 top-0 h-full w-1 rounded-l-md bg-amber-400" />
               <div className="text-[12px] font-semibold text-gray-600">Stockouts</div>
@@ -277,20 +254,17 @@ function InventoryOverview() {
           </div>
         </div>
 
-        {/* Vendor Performance Chart */}
         <div className="flex-1 flex flex-col mt-2">
           <div className="text-xs font-semibold text-gray-700 mb-1 mt-1.5">
             Vendor Performance
           </div>
           <div className="rounded-lg p-2 pt-3 flex-1 flex flex-col">
-            {/* Y-axis labels */}
             <div className="flex text-xs text-gray-400 mb-1">
               <div className="w-8 text-right">100%</div>
             </div>
 
             <div className="flex-1">{renderVendorChart()}</div>
 
-            {/* Legend */}
             <div className="flex gap-3 text-xs justify-center mt-1">
               <div className="flex items-center gap-1">
                 <div className="w-2 h-2 rounded-sm bg-green-500"></div>
@@ -304,24 +278,20 @@ function InventoryOverview() {
           </div>
         </div>
 
-        {/* Order Frequency Chart */}
         <div className="flex-1 flex flex-col mt-2">
           <div className="text-xs font-semibold text-gray-700 mb-1">
             Order Frequency Chart
           </div>
 
           <div className="rounded-lg p-2 pt-3 flex-1 flex flex-col">
-            {/* Y-axis top label */}
             <div className="text-xs text-gray-400 mb-1">500</div>
 
-            {/* Chart container */}
             <div className="flex-1">
               {renderOrderChart()}
             </div>
           </div>
         </div>
 
-        {/* Right Section: Materials & Expiry */}
         <div className="flex flex-col gap-3" style={{ minWidth: "140px" }}>
           <div>
             <div className="text-xs font-semibold text-gray-700 mb-1">

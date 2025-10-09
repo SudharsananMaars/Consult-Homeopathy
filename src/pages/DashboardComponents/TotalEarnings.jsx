@@ -14,7 +14,7 @@ import config from "/src/config.js";
 
 const API_URL = config.API_URL;
 
-const TotalEarningsComponent = () => {
+const TotalEarningsComponent = ({ filter = 'month' }) => {
   const [data, setData] = useState(null);
   const [chartData, setChartData] = useState(null);
   const [pendingData, setPendingData] = useState(null);
@@ -35,7 +35,7 @@ const TotalEarningsComponent = () => {
               "Content-Type": "application/json",
             },
             body: JSON.stringify({
-              filter: "month",
+              filter: filter,
             }),
           }
         );
@@ -61,7 +61,7 @@ const TotalEarningsComponent = () => {
               "Content-Type": "application/json",
             },
             body: JSON.stringify({
-              filter: "month",
+              filter: filter,
             }),
           }
         );
@@ -109,7 +109,7 @@ const TotalEarningsComponent = () => {
     };
 
     fetchData();
-  }, []);
+  }, [filter]);
 
   if (loading) {
     return (
@@ -291,7 +291,7 @@ const TotalEarningsComponent = () => {
         <div className="flex items-center gap-60">
           {/* Pending */}
           <div className="flex items-center gap-1">
-            <span className="text-gray-700 font-semibold text-[12px]">
+           <span className="text-gray-700 font-semibold text-[12px]">
               Pending
             </span>
             <span>:</span>
