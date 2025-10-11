@@ -19,7 +19,6 @@ import "react-calendar/dist/Calendar.css";
 import config from "../../config";
 
 const API_URL = config.API_URL;
-const patientId = localStorage.getItem("userId");
 const medicineColors = [
   "bg-blue-100 text-blue-800",
   "bg-green-100 text-green-800",
@@ -42,6 +41,7 @@ const getMedicineColorIndex = (medicineName) => {
 };
 
 const Prescription = () => {
+  const patientId = localStorage.getItem("userId");
   const [activeTab, setActiveTab] = useState("Prescription");
   const [prescriptions, setPrescriptions] = useState([]);
   const [selectedPrescription, setSelectedPrescription] = useState(null);

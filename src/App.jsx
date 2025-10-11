@@ -78,6 +78,7 @@ import AssistantDoctorDashboard from "/src/pages/doctor pages/AssistantDoctorDas
 import AddDoctor from "/src/pages/doctor pages/AddDoctor.jsx";
 import AssistLeave from "/src/pages/doctor pages/AssistLeave.jsx";
 import VideoSettings from "/src/pages/doctor pages/VideoSettings.jsx";
+import UpcomingAppointment from "./pages/doctor pages/UpcomingAppointments.jsx";
 import AdminLeaveManagement from "./pages/doctor pages/AdminLeaveManagement.jsx";
 import LeaveSettingsForm from "./pages/doctor pages/LeaveSettingsForm.jsx";
 import PayrollSettings from "./pages/doctor pages/payrollsettings.jsx";
@@ -614,6 +615,14 @@ function App() {
           element={
             <ProtectedRoute allowedRoles={["Doctor"]}>
               <DocSettings />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/upcoming-appointments"
+          element={
+            <ProtectedRoute allowedRoles={["Doctor"]}>
+              <UpcomingAppointment />
             </ProtectedRoute>
           }
         />
