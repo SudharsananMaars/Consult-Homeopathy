@@ -826,10 +826,12 @@ const PatientCommunicationCard = ({ filter = "month" }) => {
   };
 
   return (
-    <div className="h-full flex flex-col p-4 ">
+    <div className="h-full flex flex-col p-1 ">
       <div className="flex items-start justify-between gap-6 h-full">
         <div className="flex flex-col gap-3" style={{ minWidth: "240px" }}>
-          <h2 className="text-lg font-bold text-black-500">
+          <h2 className="text-lg font-bold text-gray-800 -mt-1">
+            {" "}
+            {/* moved heading slightly up */}
             Patient Communication & Feedback
           </h2>
           {renderMessengerContent()}
@@ -841,8 +843,7 @@ const PatientCommunicationCard = ({ filter = "month" }) => {
 
         <div
           className="flex flex-col bg-gradient-to-br from-blue-50 to-purple-50 rounded-xl px-5 py-4 border border-blue-100 shadow-sm"
-          style={{ minWidth: "280px" }}
-        >
+          style={{ minWidth: "280px" }}>
           <div className="text-sm font-bold text-gray-800 mb-3 text-center">
             Quality Assurance
           </div>
