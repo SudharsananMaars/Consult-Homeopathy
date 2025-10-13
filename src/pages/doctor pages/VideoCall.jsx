@@ -16,6 +16,8 @@ const VideoCall = () => {
   const [notesWindow, setNotesWindow] = useState(null);
   const lastSavedNotes = useRef("");
   const saveTimeoutRef = useRef(null);
+  const [isMarked, setIsMarked] = useState(false);
+  const [isMarkedNoShow, setIsMarkedNoShow] = useState(false);
 
   useEffect(() => {
     if (location.state?.meetLink && location.state?.appointmentID) {
@@ -436,6 +438,56 @@ const VideoCall = () => {
     }
   };
 
+  const token = localStorage.getItem("token")
+  const handleNoShow = () => {
+    if (confirm("Mark patient as no-show?")) {
+        fetch(`${API_URL}/api/doctor/${appointmentID}/no-show`, {
+            method: 'PATCH',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${token}`
+            },
+            body: JSON.stringify({ noShow: true })
+        })
+        .then(response => {
+            if (!response.ok) {
+                throw new Error('Network response was not ok');
+            }
+            alert('No-show marked successfully');
+            setIsMarkedNoShow(true);
+        })
+        .catch(error => {
+            console.error('Error marking no-show:', error);
+            alert('Failed to mark no-show');
+        });
+    }
+};
+const handleAttempt = () => {
+    if (confirm("Mark patient as no-show?")) {
+        fetch(`${API_URL}/api/doctor/${appointmentID}/no-show`, {
+            method: 'PATCH',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${token}`
+            },
+            body: JSON.stringify({ noShow: false })
+        })
+        .then(response => {
+            if (!response.ok) {
+                throw new Error('Network response was not ok');
+            }
+            alert('No-show marked successfully');
+            setIsMarked(true);
+        })
+        .catch(error => {
+            console.error('Error marking no-show:', error);
+            alert('Failed to mark no-show');
+        });
+    }
+};
+
+
+
   return (
     <div className="h-screen bg-gray-100 overflow-hidden">
       {!isCallActive ? (
@@ -514,7 +566,28 @@ const VideoCall = () => {
               >
                 Submit Notes
               </button>
-              
+              <button 
+      onClick={handleNoShow}
+      disabled={isMarkedNoShow}
+      className={`w-full py-3 px-4 font-medium rounded-md transition-colors focus:outline-none focus:ring-2 focus:ring-opacity-50 ${
+        isMarkedNoShow 
+          ? 'bg-gray-400 text-white cursor-not-allowed' 
+          : 'bg-green-600 text-white hover:bg-green-700 focus:ring-green-500'
+      }`}
+    >
+      {isMarkedNoShow ? 'Marked' : 'Mark As No Show'}
+    </button>
+              <button 
+      onClick={handleAttempt}
+      disabled={isMarked}
+      className={`w-full py-3 px-4 font-medium rounded-md transition-colors focus:outline-none focus:ring-2 focus:ring-opacity-50 ${
+        isMarked 
+          ? 'bg-gray-400 text-white cursor-not-allowed' 
+          : 'bg-yellow-600 text-white hover:bg-yellow-700 focus:ring-yellow-500'
+      }`}
+    >
+      {isMarked ? 'Marked' : 'Mark as Attended'}
+    </button>
               <button 
                 onClick={handleEndCall}
                 className="w-full py-3 px-4 bg-red-600 text-white font-medium rounded-md hover:bg-red-700 transition-colors focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-opacity-50"

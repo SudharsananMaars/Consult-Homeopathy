@@ -1,434 +1,111 @@
-import React, { useState , useEffect} from 'react';
-import profile from '/src/assets/images/doctor images/profile.jpg';
-import doc from '/src/assets/images/doctor images/doc.jpg';
-import Online_Doctor from '/src/assets/images/doctor images/Online_Doctor.jpg';
-import Consultation from '/src/assets/images/doctor images/Consultation.jpg';
-import cal1 from '/src/assets/images/doctor images/cal1.jpg';
-import config from "../../config";
-import { FaPhone,FaStar, FaEllipsisV, FaClock, FaArrowLeft, FaArrowRight,FaVideo,FaTimes,FaCheck } from 'react-icons/fa'; // Import new icons
+import React, { useState } from "react";
 import DoctorLayout from "/src/components/doctor components/DoctorLayout.jsx";
-import { Pie ,Bar} from 'react-chartjs-2';
-import { Chart as ChartJS, ArcElement, CategoryScale, LinearScale, PointElement, LineElement, Title, Tooltip, Legend, BarElement } from 'chart.js';
-import Select from "react-select";
-import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
-import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
-import { StaticDatePicker } from '@mui/x-date-pickers/StaticDatePicker';
-import dayjs from 'dayjs';
-import { Box } from '@mui/material';
-
-ChartJS.register(ArcElement, Tooltip, Legend);
+import WorkforceOverview from "/src/pages/DashboardComponents/WorkforceOverview.jsx";
+import InventoryOverview from "/src/pages/DashboardComponents/InventoryOverview.jsx";
+import Shipment from "/src/pages/DashboardComponents/Shipment.jsx";
+import MedicinePreparation from "/src/pages/DashboardComponents/MedicinePreparation.jsx";
+import PatientCare from "/src/pages/DashboardComponents/PatientCare.jsx";
+import TotalPatientBase from "/src/pages/DashboardComponents/TotalPatientBase.jsx";
+import TotalEarnings from "/src/pages/DashboardComponents/TotalEarnings.jsx";
+import PatientCommunication from "/src/pages/DashboardComponents/PatientCommunication.jsx";
+import Appointments from "/src/pages/DashboardComponents/Appointments.jsx";
 
 function Dashboard() {
-  const API_URL = config.API_URL;
-  
-  // State for total patients
-  const [totalPatients, setTotalPatients] = useState('0');
-  const [loadingPatients, setLoadingPatients] = useState(true);
-  const [totalConsultations, setTotalConsultations] = useState('0');
-  const [loadingConsultations, setLoadingConsultations] = useState(true);
-  const [appointments, setAppointments] = useState('0');
-  const [loadingAppointments,setLoadingAppointments] = useState(true);
-
-  // Fetch total patients
-  useEffect(() => {
-    const fetchTotalPatients = async () => {
-      try {
-        const token = localStorage.getItem('token');
-        const response = await fetch(`${API_URL}/api/patient/total-no-patients`, {
-          method: 'GET',
-          headers: {
-            'Authorization': `Bearer ${token}`,
-            'Content-Type': 'application/json'
-          }
-        });
-        
-        const data = await response.json();
-        
-        if (data.success) {
-          setTotalPatients(data.totalPatients.toString());
-        }
-      } catch (error) {
-        console.error('Error fetching total patients:', error);
-        setTotalPatients('0'); // fallback value
-      } finally {
-        setLoadingPatients(false);
-      }
-    };
-
-    fetchTotalPatients();
-  }, [API_URL]);
-
-  // Fetch total consultations
-  useEffect(() => {
-    const fetchTotalConsultations = async () => {
-      try {
-        const token = localStorage.getItem('token');
-        const response = await fetch(`${API_URL}/api/doctor/appointments/total-count`, {
-          method: 'GET',
-          headers: {
-            'Authorization': `Bearer ${token}`,
-            'Content-Type': 'application/json'
-          }
-        });
-        
-        const data = await response.json();
-        
-        if (data.success) {
-          setTotalConsultations(data.totalAppointments.toString());
-        }
-      } catch (error) {
-        console.error('Error fetching total consultations:', error);
-        setTotalConsultations('0'); // fallback value
-      } finally {
-        setLoadingConsultations(false);
-      }
-    };
-
-    fetchTotalConsultations();
-  }, [API_URL]);
-
-  useEffect(() => {
-    const fetchTotalConsultations = async () => {
-      try {
-        const token = localStorage.getItem('token');
-        const response = await fetch(`${API_URL}/api/doctor/appointments/today/count`, {
-          method: 'GET',
-          headers: {
-            'Authorization': `Bearer ${token}`,
-            'Content-Type': 'application/json'
-          }
-        });
-        
-        const data = await response.json();
-        
-        if (data.success) {
-          setAppointments(data.count.toString());
-        }
-      } catch (error) {
-        console.error('Error fetching total appointments:', error);
-        setAppointments('0'); // fallback value
-      } finally {
-        setLoadingAppointments(false);
-      }
-    };
-
-    fetchTotalConsultations();
-  }, [API_URL]);
-
-  const overviewCards = [
-    { title: 'Appointments', count: appointments , color: 'bg-white border-l-4 border-blue-500', image: cal1 },
-    { title: 'Total Patients', count: totalPatients, color: 'bg-white border-l-4 border-yellow-500', image: Online_Doctor },
-    { title: 'Consultations', count:  totalConsultations, color: 'bg-white border-l-4 border-pink-500', image: Consultation },
-    { title: 'Inventory', count: '75%', color: 'bg-white border-l-4 border-red-500', image: cal1 },
-  ];
-
-  const [patientsToday, setPatientsToday] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [selectedDate, setSelectedDate] = useState(dayjs());
-
-useEffect(() => {
-  const fetchAppointments = async () => {
-    try {
-      const token = localStorage.getItem('token');
-      const response = await fetch(`${API_URL}/api/doctor/todays-appointments?date=${selectedDate.format('YYYY-MM-DD')}`, {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json'
-        }
-      });
-      
-      const data = await response.json();
-      
-      if (data.success) {
-        // Transform API data to match the new structure
-        const transformedData = data.appointments.map(appointment => ({
-          appointmentId: appointment.appointmentId,
-          name: appointment.patient.name,
-          patientId: appointment.patient.id,
-          phone: appointment.patient.phone,
-          disease: 'Consultation', // Placeholder as requested
-          time: appointment.timeSlot,
-          status: appointment.status,
-          meetLink: appointment.meetLink,
-          img: profile // keeping your existing image logic
-        }));
-        setPatientsToday(transformedData);
-      }
-    } catch (error) {
-      console.error('Error fetching appointments:', error);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  fetchAppointments();
-}, [selectedDate, API_URL]);
-
-const handleJoinCall = (meetLink) => {
-  if (meetLink) {
-    window.open(meetLink, '_blank');
-  } else {
-    // Handle case where meetLink is not available
-    console.log('Meeting link not available');
-  }
-};
-
-const handleReschedule = (appointmentId) => {
-  // Placeholder for reschedule functionality
-  console.log('Reschedule appointment:', appointmentId);
-  // TODO: Implement reschedule logic when backend is ready
-};
-
-  const [notes, setNotes] = useState([]);
-  const [newNote, setNewNote] = useState('');
-  
-  // Handler for adding a new note
-  const addNote = () => {
-    if (newNote.trim() !== '') {
-      setNotes([...notes, newNote]);
-      setNewNote(''); // Clear the input field after adding
-    }
-  };
-
-  const doctorOptions = [
-    { value: "dr_admin", label: "Self" },
-    { value: "dr_smith", label: "Dr. Smith" },
-    { value: "dr_johnson", label: "Dr. Johnson" },
-    { value: "dr_brown", label: "Dr. Brown" },
-  ];
-  
-    // State to store selected doctor for each patient
-    const [selectedDoctors, setSelectedDoctors] = useState({});
-  
-    // Handle doctor selection for a specific patient
-    const handleDoctorSelect = (patientId, selectedOption) => {
-      setSelectedDoctors((prevSelected) => ({
-        ...prevSelected,
-        [patientId]: selectedOption,
-      }));
-    };
-  
-    // Function to display appropriate patients based on the active tab
-    const renderTable = (patients) => (
-      <table className="min-w-full table-auto">
-        <thead>
-          <tr className="bg-gray-200 text-left">
-            <th className="px-4 py-2">Patient ID</th>
-            <th className="px-4 py-2">Name</th>
-            <th className="px-4 py-2">Date</th>
-            <th className="px-4 py-2">Time</th>
-            <th className="px-4 py-2">Disease</th>
-            <th className="px-4 py-2">Disease Type</th>
-            <th className="px-4 py-2">Doctor</th>
-          </tr>
-        </thead>
-        <tbody>
-          {patients.map((patient, index) => (
-            <tr key={index} className="border-t">
-              <td className="px-4 py-2">{patient.id}</td>
-              <td className="px-4 py-2">{patient.name}</td>
-              <td className="px-4 py-2">{patient.date}</td>
-              <td className="px-4 py-2">{patient.time}</td>
-              <td className="px-4 py-2">{patient.disease}</td>
-              <td className="px-4 py-2">{patient.diseaseType}</td>
-              <td className="px-4 py-2">
-                <Select
-                  options={doctorOptions}
-                  value={selectedDoctors[patient.id] || null} // Show selected value or null if not selected
-                  onChange={(selectedOption) => handleDoctorSelect(patient.id, selectedOption)}
-                  className="w-48"
-                  placeholder="Select Doctor"
-                  isClearable
-                  isSearchable
-                />
-              </td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
-    );
+  const [selectedFilter, setSelectedFilter] = useState("day");
 
   return (
-    <div>
-        <DoctorLayout>
-    <div className="p-6 space-y-8">
-      {/* Overview Cards - First Line Only */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4 md:gap-10">
-        {overviewCards.map((card, index) => (
-          <div
-            key={index}
-            className={`p-8 ${card.color} rounded-lg shadow-sm hover:shadow-md transition-shadow duration-200 bg-white`}
-          >
-            <div className="flex items-center justify-between h-full">
-  <div className="flex-1 flex flex-col justify-center -mt-4">
-    <p className="text-lg text-gray-600 font-semibold">{card.title}</p>
-    <p className={`text-3xl font-bold mt-3 ${
-      card.color.includes('border-blue-500') ? 'text-blue-500' :
-      card.color.includes('border-yellow-500') ? 'text-yellow-500' :
-      card.color.includes('border-pink-500') ? 'text-pink-500' :
-      card.color.includes('border-red-500') ? 'text-red-500' : 'text-gray-900'
-    }`}>{card.count}</p>
-  </div>
-<div className="ml-5 flex items-center">
-  <img
-    src={card.image}
-    alt={card.title}
-    className="h-20 w-20 rounded-lg object-cover"
-  />
-</div>
-
-</div>
-          </div>
-        ))}
-      </div>
-
-      {/* Patients Table and Calendar - Side by Side */}
-      <div className="flex space-x-6">
-        {/* Your Patients Today Container - Restructured */}
-        <div className="flex-1 bg-white rounded-lg shadow-lg">
-          <div className="flex justify-between items-center p-6">
-            <h2 className="text-lg text-[#232360] font-semibold">Your Patients</h2>
-            <button className="text-sm text-blue-600 hover:underline">View All</button>
-          </div>
-          
-          <div className="p-6">
-            {loading ? (
-              <div className="text-center py-8">Loading appointments...</div>
-            ) : patientsToday.length === 0 ? (
-              <div className="text-center py-8 text-gray-500">No appointments today</div>
-            ) : (
-              <div className="overflow-x-auto">
-<table className="w-full">
-  <thead>
-    <tr className="text-left text-sm font-medium text-gray-500 border-b">
-      <th className="pb-3 w-2/6">Name</th>
-      <th className="pb-3 w-2/6">Disease</th>
-      <th className="pb-3 w-1/6">Time</th>
-      <th className="pb-3 w-auto text-left">Action</th>
-    </tr>
-  </thead>
-
-  <tbody className="divide-y divide-gray-100">
-    {patientsToday.map((patient, index) => (
-      <tr
-        key={patient.appointmentId || index}
-        className="hover:bg-gray-50"
-      >
-        {/* Name */}
-        <td className="py-4">
-          <div className="flex items-center space-x-3">
-            <img
-              src={doc}
-              alt="Patient"
-              className="w-10 h-10 rounded-full object-cover"
-            />
-            <div>
-              <div className="font-bold text-[#232360] text-sm">
-                {patient.name}
-              </div>
-            </div>
-          </div>
-        </td>
-
-        {/* Disease */}
-        <td className="py-4">
-          <span className="text-sm text-gray-700">{patient.disease}</span>
-        </td>
-
-        {/* Time */}
-<td className="py-4">
-  <div className="flex items-center text-sm text-gray-600">
-    <FaClock className="mr-1 text-xs" /> {patient.time}
-  </div>
-</td>
-
-{/* Action */}
-<td className="py-4">
-  {(() => {
-    const now = new Date();
-    const appointmentTime = new Date(patient.time); // make sure patient.time is ISO format or parse properly
-    const diffMinutes = (appointmentTime - now) / (1000 * 60);
-
-    // enable between 15 mins before and 30 mins after
-    const isJoinEnabled = diffMinutes <= 15 && diffMinutes >= -30;
-
-    return (
-      <div className="flex items-center space-x-2 justify-end">
-        <button
-          disabled={!isJoinEnabled}
-          className={`px-3 py-1 text-xs font-medium rounded-full transition-colors ${
-            isJoinEnabled
-              ? "bg-green-500 text-white hover:bg-green-600"
-              : "bg-gray-300 text-gray-500 cursor-not-allowed"
-          }`}
-          onClick={() => handleJoinCall(patient.meetLink)}
-        >
-          Join
-        </button>
-
-        <button
-          className="px-3 py-1 text-xs font-medium text-white bg-red-500 rounded-full hover:bg-red-600 transition-colors"
-          onClick={() => handleReschedule(patient.appointmentId)}
-        >
-          Reschedule
-        </button>
-
-        <button className="p-2 text-gray-600 hover:text-gray-900">
-          <FaEllipsisV className="text-sm" />
-        </button>
-      </div>
-    );
-  })()}
-</td>
-
-      </tr>
-    ))}
-  </tbody>
-</table>
-              </div>
-            )}
+    <DoctorLayout>
+      <div className="p-6 space-y-6">
+        {/* Filter Section */}
+        <div className="flex justify-end">
+          <div className="inline-flex border-2 border-blue-500 rounded-full p-0.5 bg-white shadow-md">
+            <button
+              onClick={() => setSelectedFilter("day")}
+              className={`px-4 py-1 rounded-full text-xs font-medium transition-all ${
+                selectedFilter === "day"
+                  ? "bg-blue-500 text-white shadow-md"
+                  : "text-gray-600 hover:text-gray-800"
+              }`}
+            >
+              Day
+            </button>
+            <button
+              onClick={() => setSelectedFilter("week")}
+              className={`px-4 py-1 rounded-full text-xs font-medium transition-all ${
+                selectedFilter === "week"
+                  ? "bg-blue-500 text-white shadow-md"
+                  : "text-gray-600 hover:text-gray-800"
+              }`}
+            >
+              Week
+            </button>
+            <button
+              onClick={() => setSelectedFilter("month")}
+              className={`px-4 py-1 rounded-full text-xs font-medium transition-all ${
+                selectedFilter === "month"
+                  ? "bg-blue-500 text-white shadow-md"
+                  : "text-gray-600 hover:text-gray-800"
+              }`}
+            >
+              Month
+            </button>
           </div>
         </div>
 
-        {/* Updated Calendar Section */}
-        <div className="w-80 bg-[#E5E7EB] rounded-lg shadow-lg overflow-hidden">
-  <div className="p-4">
-    <h2 className="text-lg text-gray-700 font-semibold">Upcoming Appointments</h2>
-  </div>
+        {/* First Row: TotalPatientBase (left) + TotalEarnings & Appointments (right) */}
+        <div className="grid grid-cols-3 gap-6">
+          {/* Left: Total Patient Base - spans full height */}
+          <div className="bg-white rounded-xl shadow-[0_4px_6px_-1px_rgba(0,0,0,0.1),0_2px_4px_-1px_rgba(0,0,0,0.06)] p-6 overflow-auto">
+            <TotalPatientBase filter={selectedFilter} />
+          </div>
 
-  <LocalizationProvider dateAdapter={AdapterDayjs}>
-    <Box
-      sx={{
-        width: "100%",
-        paddingLeft: "4px",
-        paddingRight: "10px",
-        paddingTop: "8px",
-        paddingBottom: "8px",
-        display: "flex",
-        justifyContent: "center",
-      }}
-    >
-      <div className="rounded-xl overflow-hidden scale-90">
-        <StaticDatePicker
-          displayStaticWrapperAs="desktop"
-          value={selectedDate}
-          onChange={(newValue) => setSelectedDate(newValue)}
-          slotProps={{
-            toolbar: { hidden: true },
-            actionBar: { hidden: true },
-          }}
-        />
-      </div>
-    </Box>
-  </LocalizationProvider>
-</div>
+          {/* Right: Two stacked cards taking 2 columns */}
+          <div className="col-span-2 flex flex-col gap-6">
+            {/* Top: Total Earnings */}
+            <div className="bg-white rounded-xl shadow-[0_4px_6px_-1px_rgba(0,0,0,0.1),0_2px_4px_-1px_rgba(0,0,0,0.06)] p-6 h-[367px] overflow-auto">
+              <TotalEarnings filter={selectedFilter} />
+            </div>
 
+            {/* Bottom: Appointments */}
+            <div className="bg-white rounded-xl shadow-[0_4px_6px_-1px_rgba(0,0,0,0.1),0_2px_4px_-1px_rgba(0,0,0,0.06)] p-6 h-[367px] overflow-auto">
+              <Appointments filter={selectedFilter} />
+            </div>
+          </div>
+        </div>
+
+        {/* Second Row: 3 cards (MedicinePreparation, Shipment, PatientCare) */}
+        <div className="grid grid-cols-3 gap-6">
+          <div className="bg-white rounded-xl shadow-[0_4px_6px_-1px_rgba(0,0,0,0.1),0_2px_4px_-1px_rgba(0,0,0,0.06)] p-6 h-[270px] overflow-auto">
+            <MedicinePreparation filter={selectedFilter} />
+          </div>
+          <div className="bg-white rounded-xl shadow-[0_4px_6px_-1px_rgba(0,0,0,0.1),0_2px_4px_-1px_rgba(0,0,0,0.06)] p-6 h-[270px] overflow-auto">
+            <Shipment filter={selectedFilter} />
+          </div>
+          <div className="bg-white rounded-xl shadow-[0_4px_6px_-1px_rgba(0,0,0,0.1),0_2px_4px_-1px_rgba(0,0,0,0.06)] p-6 h-[270px] overflow-auto">
+            <PatientCare filter={selectedFilter} />
+          </div>
+        </div>
+
+        {/* Third Row: Patient Communication - full width */}
+        <div className="bg-white rounded-xl shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.08),0_4px_6px_-1px_rgba(0,0,0,0.1),0_2px_4px_-1px_rgba(0,0,0,0.06)] p-6 h-[270px] overflow-auto">
+          <PatientCommunication filter={selectedFilter} />
+        </div>
+
+        {/* Fourth Row: WorkforceOverview (left) + InventoryOverview (right) */}
+        <div className="grid grid-cols-3 gap-6">
+          {/* Left: Workforce - same width as Medicine Preparation */}
+          <div className="bg-white rounded-xl shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.08),0_4px_6px_-1px_rgba(0,0,0,0.1),0_2px_4px_-1px_rgba(0,0,0,0.06)] p-6 h-[270px] overflow-auto">
+            <WorkforceOverview filter={selectedFilter} />
+          </div>
+
+          {/* Right: Inventory - spans 2 columns */}
+          <div className="col-span-2 bg-white rounded-xl shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.08),0_4px_6px_-1px_rgba(0,0,0,0.1),0_2px_4px_-1px_rgba(0,0,0,0.06)] p-6 h-[270px] overflow-auto">
+            <InventoryOverview filter={selectedFilter} />
+          </div>
+        </div>
       </div>
-    </div>
-</DoctorLayout>
-</div>
+    </DoctorLayout>
   );
-};
+}
 
 export default Dashboard;

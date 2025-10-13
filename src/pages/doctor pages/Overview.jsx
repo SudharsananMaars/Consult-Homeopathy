@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import DoctorLayout from '/src/components/doctor components/DoctorLayout.jsx';
-import { FaRegCalendarAlt } from "react-icons/fa";
+import { FaRegCalendarAlt, FaInfoCircle } from "react-icons/fa";
 import DatePicker from 'react-datepicker';
 import 'react-datepicker/dist/react-datepicker.css';
 import axios from 'axios';
@@ -16,9 +16,83 @@ const Overview = () => {
   const [selectedDate, setSelectedDate] = useState(new Date());
   const [patients, setPatients] = useState([]);
   const [loading, setLoading] = useState(false);
+  const [followUpData, setFollowUpData] = useState([]);
+  const [showFollowUpDates, setShowFollowUpDates] = useState(null);
 
   // Format date to YYYY-MM-DD
   const formatDate = (date) => date.toISOString().split('T')[0];
+
+  // Fetch follow-up calls data
+  useEffect(() => {
+    const fetchFollowUpCalls = async () => {
+      try {
+        const res = await axios.get(`${API_URL}/api/doctor/follow-up-calls`, {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        });
+        if (res.data.success && Array.isArray(res.data.data)) {
+          setFollowUpData(res.data.data);
+        }
+      } catch (err) {
+        console.error("Error fetching follow-up calls:", err);
+      }
+    };
+    fetchFollowUpCalls();
+  }, []);
+
+  // Check if follow-up call button should be enabled for a patient
+  const isFollowUpEnabled = (patientId) => {
+    const patient = followUpData.find(p => p._id === patientId);
+    if (!patient) return false;
+    
+    const selectedDateStr = formatDate(selectedDate);
+    return patient.followUpCallsMade.some(
+      call => formatDate(new Date(call.date)) === selectedDateStr && !call.callMade
+    );
+  };
+
+  // Get follow-up dates for a patient
+  const getFollowUpDates = (patientId) => {
+    const patient = followUpData.find(p => p._id === patientId);
+    return patient?.followUpCallsMade || [];
+  };
+
+
+  // Handle follow-up call button click
+const handleFollowUpCall = async (patientId) => {
+  try {
+    const dateStr = formatDate(selectedDate);
+    await axios.patch(
+      `${API_URL}/api/doctor/update-follow-up-call-status/${patientId}`,
+      {
+        date: dateStr,
+        callMade: true
+      },
+      {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      }
+    );
+    
+    // Refresh follow-up data after successful update
+    const res = await axios.get(`${API_URL}/api/doctor/follow-up-calls`, {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    });
+    if (res.data.success && Array.isArray(res.data.data)) {
+      setFollowUpData(res.data.data);
+    }
+    
+    alert("Follow-up call marked as completed!");
+  } catch (err) {
+    console.error("Error updating follow-up call status:", err);
+    alert("Failed to update follow-up call status");
+  }
+};
+
 
 useEffect(() => {
   const fetchData = async () => {
@@ -130,6 +204,9 @@ useEffect(() => {
           Call
         </th>
         <th className="bg-white text-center p-4 font-bold text-gray-700 text-sm">
+          Follow up Calls
+        </th>
+        <th className="bg-gray-100 text-center p-4 font-bold text-gray-700 text-sm">
           Remarks
         </th>
       </tr>
@@ -186,12 +263,37 @@ useEffect(() => {
               </td>
               {/* Call */}
               <td className="bg-gray-100 p-4 text-center">
-                <button className="inline-flex items-center px-2.5 py-1.5 border text-xs font-medium rounded-[5px] text-white bg-blue-500 hover:bg-blue-700 focus:ring-2 focus:ring-offset-2 focus:ring-blue-700">
-                  Call
-                </button>
+                <div className="flex items-center justify-center gap-2">
+                  <button className="inline-flex items-center px-2.5 py-1.5 border text-xs font-medium rounded-[5px] text-white bg-blue-500 hover:bg-blue-700 focus:ring-2 focus:ring-offset-2 focus:ring-blue-700">
+                    Call
+                  </button>
+                </div>
+              </td>
+              {/* Follow up calls */}
+              <td className="bg-white p-4 text-center">
+                <div className="flex items-center justify center gap-2">
+                  <button
+  disabled={!isFollowUpEnabled(p.patientId)}
+  onClick={() => handleFollowUpCall(p.patientId)}
+  className={`inline-flex items-center px-2.5 py-1.5 border text-xs font-medium rounded-[5px] ${
+    isFollowUpEnabled(p.patientId)
+      ? "text-white bg-green-500 hover:bg-green-700 focus:ring-2 focus:ring-offset-2 focus:ring-green-700"
+      : "text-gray-400 bg-gray-200 cursor-not-allowed"
+  }`}
+>
+  Follow Up
+</button>
+                <button
+                    onClick={() => setShowFollowUpDates(p.patientId)}
+                    className="text-blue-500 hover:text-blue-700 focus:outline-none"
+                    title="View follow-up dates"
+                  >
+                    <FaInfoCircle size={16} />
+                  </button>
+                  </div>
               </td>
               {/* Remarks */}
-              <td className="bg-white p-4 text-center">
+              <td className="bg-gray-100 p-4 text-center">
                 <input
                   type="text"
                   placeholder="Add remark"
@@ -204,7 +306,7 @@ useEffect(() => {
       ) : (
         <tr>
           <td
-            colSpan={8}
+            colSpan={9}
             className="bg-white text-center text-gray-500 py-6"
           >
             No patient records found.
@@ -295,6 +397,49 @@ useEffect(() => {
     </div>
   </div>
 )}
+
+      {/* Follow-up Dates Modal */}
+      {showFollowUpDates && (
+        <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-40 z-50">
+          <div className="bg-white p-6 rounded-xl shadow-lg w-[90%] max-w-md">
+            <h3 className="text-lg font-semibold mb-4 text-gray-800">Follow-up Call Dates</h3>
+            
+            {getFollowUpDates(showFollowUpDates).length > 0 ? (
+              <div className="space-y-2">
+                {getFollowUpDates(showFollowUpDates).map((call, idx) => (
+                  <div key={idx} className="flex justify-between items-center p-3 bg-gray-50 rounded-lg">
+                    <span className="text-sm text-gray-700">
+                      {new Date(call.date).toLocaleDateString('en-US', { 
+                        year: 'numeric', 
+                        month: 'short', 
+                        day: 'numeric' 
+                      })}
+                    </span>
+                    <span className={`text-xs font-semibold px-3 py-1 rounded-full ${
+                      call.callMade 
+                        ? "bg-green-100 text-green-800" 
+                        : "bg-yellow-100 text-yellow-800"
+                    }`}>
+                      {call.callMade ? "Completed" : "Pending"}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <p className="text-sm text-gray-500">No follow-up dates scheduled.</p>
+            )}
+
+            <div className="flex justify-end mt-4">
+              <button
+                onClick={() => setShowFollowUpDates(null)}
+                className="px-4 py-1.5 bg-blue-500 text-white text-sm rounded hover:bg-blue-700"
+              >
+                Close
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </DoctorLayout>
   );
 };

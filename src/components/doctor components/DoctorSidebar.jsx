@@ -22,6 +22,7 @@ import {
   LogOut,
   Syringe
 } from "lucide-react";
+import { FaCalendarAlt } from "react-icons/fa";
 import { motion, AnimatePresence } from "framer-motion";
 import SidebarProfile from "./DoctorSidebarProfile";
 import axios from "axios";
@@ -51,12 +52,18 @@ const Sidebar = ({ role }) => {
           },
           {
             id: 3,
+            name: "Upcoming Appointments",
+            icon: FaCalendarAlt,
+            path: "/upcoming-appointments"
+          },
+          {
+            id: 4,
             name: "Patients",
             icon: Users,
             path: "/patients"
           },
           {
-            id: 4,
+            id: 5,
             name: "Doctors",
             icon: Stethoscope,
             sublinks: [
@@ -69,58 +76,64 @@ const Sidebar = ({ role }) => {
               { id: 43, path: "/assistdoc/doctors", name: "External Doctors" },
             ],
           },
-          { id: 5, path: "/docpayments", name: "Payments", icon: Wallet },
+          { id: 6, path: "/docpayments", name: "Payments", icon: Wallet },
           {
-            id: 6,
+            id: 7,
             path: "/overview",
             name: "Overview",
             icon: PieChart,
           },
           {
-            id: 7,
+            id: 8,
             path: "/medicine-preparation",
             name: "Medicine Preparation",
             icon: Syringe,
           },
           {
-            id: 8,
+            id: 9,
             path: "/medicine-preparation/preparation",
             name: "Medicine Preparation Dashboard",
             icon: Pill,
           },
           {
-            id: 9,
+            id: 10,
             path: "/doctor-inventory",
             name: "Patient Inventory",
             icon: Package,
           },
           {
-            id: 10,
+            id: 11,
             path: "/workshoppage",
             name: "Workshops",
             icon: Video,
           },
-          { id: 11, path: "/content", name: "Content", icon: FileText },
-          {
+           {
             id: 12,
+            path: "/debitcredit",
+            name: "Credit and Debit Notes",
+            icon: FileText,
+          },
+          { id: 13, path: "/content", name: "Content", icon: FileText },
+          {
+            id: 14,
             path: "/lekagedetection",
             name: "Leakage Detection",
             icon: Droplet,
           },
           {
-            id: 13,
+            id: 15,
             path: "/doctor-dashboard/all",
             name: "Doctor CRM",
             icon: Stethoscope,
           },
           {
-            id: 14,
+            id: 16,
             path: "/allocation",
             name: "Doctor Allocation",
             icon: UserCheck,
           },
-          { id: 15, path: "/docsettings", name: "Settings", icon: Settings },
-          { id: 16, path: "/hrm", name: "HR Management", icon: Users },
+          { id: 17, path: "/docsettings", name: "Settings", icon: Settings },
+          { id: 18, path: "/hrm", name: "HR Management", icon: Users },
         ]
       : role === "assistant-doctor"
       ? [
@@ -306,17 +319,8 @@ const Sidebar = ({ role }) => {
         }}
         transition={{ type: "spring", stiffness: 300, damping: 30 }}
       >
-        {/* Logo section */}
-        <div className="px-6 py-2 flex justify-center">
-          <img
-            src="/src/assets/images/doctor images/homeologo2.png"
-            alt="Homeopathy Logo"
-            className="h-18 w-auto object-contain"
-          />
-        </div>
-
         {/* Doctor Profile section */}
-        <div className="px-6 pb-6 py-4 flex flex-col items-center">
+        <div className="px-6 pb-6 py-9 flex flex-col items-center">
           <SidebarProfile />
         </div>
 

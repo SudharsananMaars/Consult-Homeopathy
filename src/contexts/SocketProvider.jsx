@@ -86,6 +86,12 @@ export const SocketProvider = ({ children }) => {
       }
     );
 
+    
+socketRef.current.on("requestFeedback", (data) => {
+  console.log("🔔 SocketProvider: requestFeedback received:", data);
+  // The Messenger component will also receive this via its own listener
+});
+
     // message receive + unread
     const handleReceiveMessage = (msg) => {
       console.log(
@@ -142,6 +148,7 @@ export const SocketProvider = ({ children }) => {
       socketRef.current.off("userOffline");
       socketRef.current.off("userTyping");
       socketRef.current.off("botStatusChanged");
+      socketRef.current.off("requestFeedback");
       socketRef.current.off("receiveMessage", handleReceiveMessage);
       socketRef.current.disconnect();
     };

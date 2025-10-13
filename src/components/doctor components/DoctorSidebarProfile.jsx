@@ -54,25 +54,30 @@ const SidebarProfile = () => {
   }
 
   return (
-  <div className="flex flex-col items-center space-y-3">
-    {/* Profile Image - Larger and curved */}
-    <div className="relative">
-      <img
-        src={doctorDetails.profilePhoto || defaultDoctorImage}
-        alt="Doctor Profile"
-        className="w-24 h-24 rounded-2xl object-cover border-3 border-white shadow-lg"
-      />
-    </div>
-    
-    {/* Doctor Name - Centered */}
-    <div className="text-center">
-      <h3 className="text-lg font-semibold text-gray-800">
-        {doctorDetails.name || "Me"}
-      </h3>
-    </div>
+    <div className="flex flex-col items-center space-y-2">
+  {/* Profile Image */}
+  <div className="relative">
+    <img
+      src={doctorDetails.profilePhoto || defaultDoctorImage}
+      alt="Doctor Profile"
+      className="w-24 h-24 rounded-full object-cover border-4 border-white shadow-lg"
+    />
   </div>
-);
 
+  {/* Doctor Name */}
+  <div className="text-center">
+    <h3 className="text-lg font-semibold text-gray-800">
+      {doctorDetails.name || "Me"}
+    </h3>
+    {/* Qualification */}
+    <p className="text-sm text-gray-500">MBBS</p>
+  </div>
+
+  {/* Horizontal separator */}
+  <div className="w-full h-[2px] bg-[#7C7EF0] rounded-full mt-1"></div>
+</div>
+
+  );
 };
 
 export default SidebarProfile;

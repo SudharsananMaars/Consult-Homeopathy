@@ -18,8 +18,13 @@ const NewAppointment = () => {
   const [availableSlots, setAvailableSlots] = useState([]);
   const [user, setUser] = useState(null);
   const [reservedAppointment, setReservedAppointment] = useState(null);
-  const [timeSlots, setTimeSlots] = useState([]);
+  const [timeSlots, setTimeSlots] = useState({ 
+  Normal: [], 
+  "Post Working Hours": [], 
+  Weekoff: [] 
+});
   const [isLoadingSlots, setIsLoadingSlots] = useState(false);
+  const [selectedSlotPrice, setSelectedSlotPrice] = useState(null);
   const [paymentStatus, setPaymentStatus] = useState(null);
   const [symptomInput, setSymptomInput] = useState("");
   const [isAnalyzing, setIsAnalyzing] = useState(false);
@@ -189,13 +194,12 @@ const NewAppointment = () => {
         const appointmentDate = dayjs(startDate).format("YYYY-MM-DD");
         try {
           const res = await axios.post(
-            `
-            ${API_URL}/api/patient/checkSlots`,
+            `${API_URL}/api/patient/checkSlots`,
             { appointmentDate },
             { headers: { Authorization: `Bearer ${token}` } }
           );
           setAvailableSlots(res.data.availableSlots || []);
-          setSelectedTime(null); // Reset selected time when date changes
+          setSelectedTime(null);
         } catch (err) {
           console.error("Error fetching slots:", err);
           setErrorMessage("Failed to load available slots");
@@ -224,19 +228,19 @@ const NewAppointment = () => {
             }
           );
 
-          setTimeSlots(res.data.result || []);
-          setSelectedTime(null); // Reset selected time when date changes
-          setErrorMessage(""); // Clear any previous errors
+          setTimeSlots(res.data.result || { Normal: [], "Post Working Hours": [], Weekoff: [] });
+          setSelectedTime(null);
+          setSelectedSlotPrice(null);
+          setErrorMessage("");
         } catch (err) {
           console.error("Error fetching time slots:", err);
           setErrorMessage("Failed to load available time slots");
-          setTimeSlots([]); // Clear slots on error
+          setTimeSlots({ Normal: [], "Post Working Hours": [] });
         } finally {
           setIsLoadingSlots(false);
         }
       } else {
-        // Clear slots if no date selected
-        setTimeSlots([]);
+        setTimeSlots({ Normal: [], "Post Working Hours": [], Weekoff: [] });
       }
     };
 
@@ -266,7 +270,7 @@ const NewAppointment = () => {
         } catch (err) {
           console.error("Error checking appointment status:", err);
         }
-      }, 5000); // Check every 5 seconds
+      }, 5000);
     }
     return () => clearInterval(interval);
   }, [reservedAppointment, navigate]);
@@ -277,7 +281,6 @@ const NewAppointment = () => {
     if (!selectedTime) errors.time = "Please select a time slot";
     if (!consultingFor)
       errors.consultingFor = "Please select consulting person";
-    // Removed the consultingReason validation
     if (consultingReason?.value === "Other" && symptom.length < 10) {
       errors.symptom = "Please enter at least 10 characters for symptom";
     }
@@ -291,26 +294,28 @@ const NewAppointment = () => {
     }
   };
 
+  const handleTimeSlotSelect = (slot, category) => {
+    setSelectedTime(slot.time);
+    setSelectedSlotPrice({ price: slot.price, category });
+  };
+
   const reserveAppointment = async () => {
     setIsProcessing(true);
     setErrorMessage("");
     const token = localStorage.getItem("token");
     const appointmentDate = dayjs(startDate).format("YYYY-MM-DD");
 
-    // Updated payload to handle optional consultingReason
     const payload = {
       appointmentDate,
       timeSlot: selectedTime,
       consultingFor: "Self",
-      consultingReason: analysisResult.classification,
+      consultingReason: analysisResult?.classification || "",
       symptom: symptomInput,
     };
 
-    // Debug log to see what's being sent
     console.log("Sending payload:", payload);
 
     try {
-      // Step 1: Reserve the appointment
       const bookRes = await axios.post(
         `${API_URL}/api/patient/bookAppointment`,
         payload,
@@ -332,7 +337,6 @@ const NewAppointment = () => {
     } catch (err) {
       console.error("Error reserving appointment:", err);
 
-      // Better error handling
       let errorMsg = "Booking failed. Please try again.";
       if (err.response?.data?.message) {
         errorMsg = err.response.data.message;
@@ -342,7 +346,6 @@ const NewAppointment = () => {
         errorMsg = err.message;
       }
 
-      // Log the full error response for debugging
       console.log("Full error response:", err.response?.data);
 
       setErrorMessage(errorMsg);
@@ -441,9 +444,6 @@ const NewAppointment = () => {
   };
 
   const handleConfirmClick = async () => {
-    console.log(user.user.name);
-    console.log(user.user.email);
-    console.log(user.user.phone);
     if (!isRazorpayLoaded) {
       setErrorMessage("Payment system is loading. Please wait...");
       return;
@@ -453,20 +453,17 @@ const NewAppointment = () => {
     setErrorMessage("");
 
     try {
-      // Step 1: Reserve the appointment
       const reservation = await reserveAppointment();
       if (!reservation) return;
 
-      // Step 2: Create Razorpay order
       const order = await createRazorpayOrder(
         reservation.appointmentId,
-        reservation.amount
+        selectedSlotPrice.price
       );
 
-      // Step 3: Open Razorpay payment modal
       const options = {
         key: "rzp_test_4yi0hOj6P7akiv",
-        amount: order.amount * 100,
+        amount: selectedSlotPrice.price * 100,
         currency: "INR",
         name: "Doctor Consultation",
         description: "Appointment Booking",
@@ -476,7 +473,6 @@ const NewAppointment = () => {
             setPaymentStatus("verifying");
             await verifyPayment(response, reservation.appointmentId);
             setPaymentStatus("verified");
-            // The status check useEffect will handle the navigation
           } catch (err) {
             setPaymentStatus("failed");
             setErrorMessage(
@@ -486,9 +482,9 @@ const NewAppointment = () => {
           }
         },
         prefill: {
-          name: user?.name || "John Doe",
-          email: user?.email || "example@gmail.com",
-          contact: user?.phone || "90000000000",
+          name: user?.user?.name || "John Doe",
+          email: user?.user?.email || "example@gmail.com",
+          contact: user?.user?.phone || "9000000000",
         },
         theme: {
           color: "#0e76a8",
@@ -618,24 +614,97 @@ const NewAppointment = () => {
 
           <div>
             <label className="text-lg font-semibold block mb-2">Pick Your Time</label>
-            <div className="grid grid-cols-3 gap-2">
-              {timeSlots.map((time) => (
-                <button
-                  key={time}
-                  onClick={() => setSelectedTime(time)}
-                  className={`p-2 rounded border transition ${
-                    selectedTime === time
-                      ? "bg-blue-500 text-white"
-                      : "bg-white hover:bg-blue-100"
-                  }`}
-                >
-                  {time}
-                </button>
-              ))}
-            </div>
+            
+            {timeSlots.Normal && timeSlots.Normal.length > 0 && (
+              <div className="mb-4">
+                <h3 className="text-sm font-semibold text-gray-700 mb-2">Normal Hours</h3>
+                <div className="grid grid-cols-3 gap-2">
+                  {timeSlots.Normal.map((slot) => (
+                    <button
+                      key={slot.time}
+                      onClick={() => handleTimeSlotSelect(slot, "Normal")}
+                      className={`p-2 rounded border transition ${
+                        selectedTime === slot.time
+                          ? "bg-blue-500 text-white"
+                          : "bg-white hover:bg-blue-100"
+                      }`}
+                    >
+                      <div className="text-sm">{slot.time}</div>
+                      <div className="text-xs">₹{slot.price}</div>
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {timeSlots["Post Working Hours"] && timeSlots["Post Working Hours"].length > 0 && (
+              <div className="mb-4">
+                <h3 className="text-sm font-semibold text-gray-700 mb-2">Post Working Hours</h3>
+                <p className="text-xs text-amber-600 mb-2 bg-amber-50 p-2 rounded border border-amber-200">
+                  ℹ️ Slots after regular working hours are charged at a premium rate due to extended service availability.
+                </p>
+                <div className="grid grid-cols-3 gap-2">
+                  {timeSlots["Post Working Hours"].map((slot) => (
+                    <button
+                      key={slot.time}
+                      onClick={() => handleTimeSlotSelect(slot, "Post Working Hours")}
+                      className={`p-2 rounded border transition ${
+                        selectedTime === slot.time
+                          ? "bg-blue-500 text-white"
+                          : "bg-white hover:bg-blue-100"
+                      }`}
+                    >
+                      <div className="text-sm">{slot.time}</div>
+                      <div className="text-xs">₹{slot.price}</div>
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {timeSlots.Weekoff && timeSlots.Weekoff.length > 0 && (
+  <div className="mb-4">
+    <h3 className="text-sm font-semibold text-gray-700 mb-2">Weekend/Holiday</h3>
+    <p className="text-xs text-blue-600 mb-2 bg-blue-50 p-2 rounded border border-blue-200">
+      ℹ️ Weekend and holiday slots are available at increased rates.
+    </p>
+    <div className="grid grid-cols-3 gap-2">
+      {timeSlots.Weekoff.map((slot) => (
+        <button
+          key={slot.time}
+          onClick={() => handleTimeSlotSelect(slot, "Weekoff")}
+          className={`p-2 rounded border transition ${
+            selectedTime === slot.time
+              ? "bg-blue-500 text-white"
+              : "bg-white hover:bg-blue-100"
+          }`}
+        >
+          <div className="text-sm">{slot.time}</div>
+          <div className="text-xs">₹{slot.price}</div>
+        </button>
+      ))}
+    </div>
+  </div>
+)}
 
             {formErrors.time && (
               <p className="text-red-500 text-sm mt-1">{formErrors.time}</p>
+            )}
+            
+            {selectedSlotPrice && (
+              <div className="mt-4 p-3 bg-blue-50 border border-blue-200 rounded">
+                <p className="text-sm">
+                  <strong>Selected Time:</strong> {selectedTime}
+                </p>
+                <p className="text-sm">
+                  <strong>Consultation Fee:</strong> ₹{selectedSlotPrice.price}
+                </p>
+                {selectedSlotPrice.category === "Post Working Hours" && (
+                  <p className="text-xs text-amber-700 mt-1">
+                    * Premium pricing for post-working hours
+                  </p>
+                )}
+              </div>
             )}
           </div>
 
@@ -659,6 +728,14 @@ const NewAppointment = () => {
                 <p>
                   <strong>Time:</strong> {selectedTime}
                 </p>
+                <p>
+                  <strong>Consultation Fee:</strong> ₹{selectedSlotPrice?.price}
+                </p>
+                {selectedSlotPrice?.category === "Post Working Hours" && (
+                  <p className="text-xs text-amber-600 bg-amber-50 p-2 rounded mt-1">
+                    * This is a post-working hours slot with premium pricing
+                  </p>
+                )}
                 <p>
                   <strong>Consulting For:</strong> {consultingFor?.label}
                 </p>
