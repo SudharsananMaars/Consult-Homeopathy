@@ -417,35 +417,61 @@ const Allocation = () => {
 
   // Group detailed allocations by doctor
   const groupedDetailedAllocations = () => {
-    const grouped = {};
-    detailedAllocations.forEach((allocation) => {
-      const doctorInfo = allocation.doctorId;
-      const doctorId =
-        typeof doctorInfo === "object" ? doctorInfo._id : doctorInfo;
-      const doctorName =
-        typeof doctorInfo === "object" ? doctorInfo.name : "Unknown Doctor";
-      const doctorRole =
-        typeof doctorInfo === "object"
-          ? doctors.find((d) => d._id === doctorId)?.role || "No role specified"
-          : "No role specified";
-      const doctorFollow =
-        typeof doctorInfo === "object"
-          ? doctorInfo.follow || "No follows"
-          : "No follows";
+  const grouped = {};
+  
+  if (!detailedAllocations || !Array.isArray(detailedAllocations)) {
+    return [];
+  }
+  
+  detailedAllocations.forEach((allocation) => {
+    // Skip if allocation or doctorId is null/undefined
+    if (!allocation || !allocation.doctorId) return;
+    
+    const doctorInfo = allocation.doctorId;
+    
+    // Handle both object and string doctorId
+    const doctorId =
+      doctorInfo && typeof doctorInfo === "object" && doctorInfo._id
+        ? doctorInfo._id
+        : doctorInfo;
+    
+    // Skip if we couldn't extract a valid doctorId
+    if (!doctorId) return;
+    
+    const doctorName =
+      doctorInfo && typeof doctorInfo === "object" && doctorInfo.name
+        ? doctorInfo.name
+        : "Unknown Doctor";
+    
+    // Safely find the doctor
+    const doctorObj = doctors && Array.isArray(doctors)
+      ? doctors.find((d) => d && d._id === doctorId)
+      : null;
+    
+    const doctorRole = doctorObj?.role || "No role specified";
+    
+    const doctorFollow =
+      doctorInfo && typeof doctorInfo === "object" && doctorInfo.follow
+        ? doctorInfo.follow
+        : "No follows";
 
-      if (!grouped[doctorId]) {
-        grouped[doctorId] = {
-          doctor: doctorName,
-          role: doctorRole,
-          follows: doctorFollow,
-          allocatedRoles: [],
-        };
-      }
+    if (!grouped[doctorId]) {
+      grouped[doctorId] = {
+        doctor: doctorName,
+        role: doctorRole,
+        follows: doctorFollow,
+        allocatedRoles: [],
+      };
+    }
+    
+    // Only push role if it exists
+    if (allocation.role) {
       grouped[doctorId].allocatedRoles.push(allocation.role);
-    });
+    }
+  });
 
-    return Object.values(grouped);
-  };
+  return Object.values(grouped);
+};
 
   const stats = calculateAllocationStats();
 
