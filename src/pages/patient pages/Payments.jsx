@@ -11,6 +11,10 @@ const Payments = () => {
   const [payingBill, setPayingBill] = useState(null);
   const [isRazorpayLoaded, setIsRazorpayLoaded] = useState(false);
   const [paymentStatus, setPaymentStatus] = useState(null);
+  const [address, setAddress] = useState('');
+const [isEditingAddress, setIsEditingAddress] = useState(false);
+const [addressLoading, setAddressLoading] = useState(false);
+const [addressError, setAddressError] = useState(null);
   const [errorMessage, setErrorMessage] = useState("");
   const API_URL = config.API_URL;
 
@@ -29,6 +33,25 @@ const Payments = () => {
       }
     };
   }, []);
+
+  useEffect(() => {
+  const fetchAddress = async () => {
+    try {
+      const userId = localStorage.getItem('userId');
+      if (!userId) return;
+
+      const response = await fetch(`${API_URL}/api/patient/${userId}/address`);
+      if (response.ok) {
+        const data = await response.json();
+        setAddress(data.address || '');
+      }
+    } catch (err) {
+      console.error('Error fetching address:', err);
+    }
+  };
+
+  fetchAddress();
+}, [API_URL]);
 
   useEffect(() => {
     const fetchPayments = async () => {
@@ -329,6 +352,40 @@ const Payments = () => {
     }
   };
 
+const handleUpdateAddress = async () => {
+  setAddressLoading(true);
+  setAddressError(null);
+  
+  try {
+    const userId = localStorage.getItem('userId');
+    if (!userId) {
+      throw new Error('User ID not found');
+    }
+
+    const response = await fetch(`${API_URL}/api/patient/${userId}/address`, {
+      method: 'PATCH',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ address: address.trim() }),
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(errorData.message || 'Failed to update address');
+    }
+
+    const data = await response.json();
+    setAddress(data.address || address.trim());
+    setIsEditingAddress(false);
+  } catch (err) {
+    console.error('Error updating address:', err);
+    setAddressError(err.message);
+  } finally {
+    setAddressLoading(false);
+  }
+};
+
   // Safe access to payment data
   const safePaymentsData = paymentsData || {
     summary: { totalAmount: 0, amountPaid: 0, amountDue: 0 },
@@ -357,6 +414,66 @@ const Payments = () => {
       
           <h1 className="text-2xl font-bold text-black-600 mb-1">Medicine Payment</h1>
          
+         {/* Delivery Address Section */}
+<div className="bg-white rounded-xl shadow-sm border border-gray-100 p-5">
+  <div className="flex items-start justify-between">
+    <div className="flex items-start space-x-3 flex-1">
+      <div className="flex-shrink-0 mt-1">
+        <Truck className="h-5 w-5 text-blue-600" />
+      </div>
+      <div className="flex-1">
+        <h3 className="text-sm font-semibold text-gray-900 mb-1">Delivery Address</h3>
+        {isEditingAddress ? (
+          <div className="space-y-3">
+            <textarea
+              value={address}
+              onChange={(e) => setAddress(e.target.value)}
+              placeholder="Enter your delivery address..."
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none text-sm"
+              rows="3"
+            />
+            {addressError && (
+              <p className="text-xs text-red-600">{addressError}</p>
+            )}
+            <div className="flex space-x-2">
+              <button
+                onClick={handleUpdateAddress}
+                disabled={addressLoading}
+                className="px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors"
+              >
+                {addressLoading ? 'Saving...' : 'Save'}
+              </button>
+              <button
+                onClick={() => {
+                  setIsEditingAddress(false);
+                  setAddressError(null);
+                }}
+                disabled={addressLoading}
+                className="px-4 py-2 bg-gray-200 text-gray-700 text-sm font-medium rounded-lg hover:bg-gray-300 disabled:cursor-not-allowed transition-colors"
+              >
+                Cancel
+              </button>
+            </div>
+          </div>
+        ) : (
+          <div>
+            <p className="text-sm text-gray-700">
+              {address || <span className="text-gray-400 italic">No delivery address set</span>}
+            </p>
+          </div>
+        )}
+      </div>
+    </div>
+    {!isEditingAddress && (
+      <button
+        onClick={() => setIsEditingAddress(true)}
+        className="ml-4 px-3 py-1.5 text-xs font-medium text-blue-600 hover:text-blue-700 hover:bg-blue-50 rounded-lg transition-colors"
+      >
+        {address ? 'Change' : 'Add'}
+      </button>
+    )}
+  </div>
+</div>
    
 
         {/* Error Message Display */}
