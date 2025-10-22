@@ -256,7 +256,13 @@ const FirstForm = () => {
   const handleInputChange = (e) => {
     const { name, value } = e.target;
     setFormData((prevData) => ({ ...prevData, [name]: value }));
-
+    if (name === "mobileNumber" || name === "whatsappNumber") {
+    // Remove any non-digit characters and limit to 10 digits
+    const numbersOnly = value.replace(/\D/g, "").slice(0, 10);
+    setFormData((prevData) => ({ ...prevData, [name]: numbersOnly }));
+  } else {
+    setFormData((prevData) => ({ ...prevData, [name]: value }));
+  }
     if (name === "symptom") {
       if (value.length < 40) {
         setSymptomError("Please enter at least 40 characters for the symptom.");
@@ -478,7 +484,7 @@ const FirstForm = () => {
             await sendMessage(formData, patientId);
           }
 
-          alert("Form Submitted Successfully");
+          alert("Registration successful! Your password has been sent to your email.");
 
           // Reset form (removed password from reset)
           setFormData({
@@ -565,6 +571,7 @@ const FirstForm = () => {
               name="fullName"
               value={formData.fullName}
               onChange={handleInputChange}
+              maxLength={100}
               className="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm py-2 px-3 border"
               placeholder="Enter your full name"
             />
@@ -770,6 +777,7 @@ const FirstForm = () => {
               name="email"
               value={formData.email}
               onChange={handleInputChange}
+              maxLength={100}
               className="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm py-2 px-3 border"
               placeholder="your.email@example.com"
             />
@@ -823,6 +831,7 @@ const FirstForm = () => {
                 name="symptom"
                 value={formData.symptom}
                 onChange={handleInputChange}
+                maxLength={100}
                 className="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm py-2 px-3 border"
                 placeholder="Please describe your symptoms"
               />
@@ -873,7 +882,6 @@ const FirstForm = () => {
             )}
           </div>
 
-          {/* Patient Entry */}
           {/* Patient Entry */}
           <div className="col-span-1">
             <label

@@ -279,10 +279,21 @@ const Allocation = () => {
     });
   };
 
-  const handleAddRole = () => {
-    const newRoleNumber = roles.length + 1;
-    setRoles([...roles, `${newRoleNumber}.New Role`]);
-  };
+const handleAddRole = () => {
+  const newRoleNumber = roles.length + 1;
+  setRoles([...roles, { name: `${newRoleNumber}.New Role`, isEditable: true }]);
+};
+
+const handleRoleNameChange = (index, newName) => {
+  setRoles(prev => {
+    const updated = [...prev];
+    if (typeof updated[index] === 'object' && updated[index].isEditable) {
+      updated[index] = { ...updated[index], name: newName };
+    }
+    return updated;
+  });
+  setHasChanges(true);
+};
 
   const resetAllocations = async () => {
     try {
@@ -519,7 +530,7 @@ const Allocation = () => {
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
                 <div className="bg-blue-50 rounded-lg p-6 border-l-4 border-blue-400 min-h-[140px] flex flex-col items-center justify-center text-center">
                   <div className="text-xl text-blue-600 font-bold mb-2">
-                    Organization Count
+                    Employees Count
                   </div>
                   <div className="text-3xl font-extrabold text-blue-700">
                     {stats.total}
@@ -528,7 +539,7 @@ const Allocation = () => {
 
                 <div className="bg-orange-50 rounded-lg p-6 border-l-4 border-orange-400 min-h-[140px] flex flex-col items-center justify-center text-center">
                   <div className="text-xl text-orange-600 font-bold mb-2">
-                    No of Resources
+                    No of Roles Allocated
                   </div>
                   <div className="text-3xl font-extrabold text-orange-700">
                     {stats.allocated}
@@ -537,7 +548,7 @@ const Allocation = () => {
 
                 <div className="bg-green-50 rounded-lg p-6 border-l-4 border-green-400 min-h-[140px] flex flex-col items-center justify-center text-center">
                   <div className="text-xl text-green-600 font-bold mb-2">
-                    Roles
+                    Roles 
                   </div>
                   <div className="text-3xl font-extrabold text-green-700">
                     {stats.allocatedRoles}
@@ -546,7 +557,7 @@ const Allocation = () => {
 
                 <div className="bg-red-50 rounded-lg p-6 border-l-4 border-red-400 min-h-[140px] flex flex-col items-center justify-center text-center">
                   <div className="text-xl text-red-600 font-bold mb-2">
-                    No of Resources Allocated
+                    No of Roles Unallocated
                   </div>
                   <div className="text-3xl font-extrabold text-red-700">
                     {stats.unallocatedRoles}
@@ -710,80 +721,97 @@ const Allocation = () => {
           )}
 
           <div className="space-y-3">
-            {roles.map((role, index) => (
-              <div key={index}>
-                {typeof role === "object" ? (
-                  <div className="bg-gray-50 rounded-lg border border-gray-200">
-                    <div className="p-4">
-                      <div className="flex items-center justify-between">
-                        {/* Role name and optional select box */}
-                        <div className="flex items-center gap-3">
-                          <span className="font-semibold text-gray-900">
-                            {role.name}
-                          </span>
-                          {role.name === "7.Follow ups" &&
-                            role.children?.length === 0 && (
-                              <div className="w-80">
-                                {renderRoleSelect(role.name)}
-                              </div>
-                            )}
-                        </div>
-
-                        {/* Chevron button moved to the right */}
-                        <button
-                          onClick={() => toggleRoleExpansion(role.name)}
-                          className="text-gray-500 hover:text-gray-700 transition-colors"
-                        >
-                          {expandedRoles[role.name] ? (
-                            <ChevronDown className="w-5 h-5" />
-                          ) : (
-                            <ChevronRight className="w-5 h-5" />
-                          )}
-                        </button>
-                      </div>
-
-                      {expandedRoles[role.name] && (
-                        <div className="mt-4 space-y-2">
-                          {role.children.map((childRole, childIndex) => (
-                            <div
-                              key={childIndex}
-                              className="bg-white rounded-lg p-3 border border-gray-100 ml-8"
-                            >
-                              <div className="flex items-center justify-between">
-                                <span className="text-gray-700 text-sm">
-                                  {childRole}
-                                </span>
-                                <div className="w-80">
-                                  {renderRoleSelect(childRole)}
-                                </div>
-                              </div>
-                            </div>
-                          ))}
-                        </div>
-                      )}
-                    </div>
-                  </div>
+  {roles.map((role, index) => (
+    <div key={index}>
+      {typeof role === "object" ? (
+        <div className="bg-gray-50 rounded-lg border border-gray-200">
+          <div className="p-4">
+            <div className="flex items-center justify-between">
+              {/* Role name and optional select box */}
+              <div className="flex items-center gap-3">
+                {role.isEditable ? (
+                  <input
+                    type="text"
+                    value={role.name}
+                    onChange={(e) => handleRoleNameChange(index, e.target.value)}
+                    className="font-semibold text-gray-900 border border-gray-300 rounded px-3 py-1 focus:border-blue-400 focus:ring-2 focus:ring-blue-100 outline-none"
+                    placeholder="Enter role name"
+                  />
                 ) : (
-                  <div className="bg-gray-50 rounded-lg p-4 border border-gray-200">
+                  <span className="font-semibold text-gray-900">
+                    {role.name}
+                  </span>
+                )}
+                {role.name === "7.Follow ups" &&
+                  role.children?.length === 0 && (
+                    <div className="w-80">
+                      {renderRoleSelect(role.name)}
+                    </div>
+                  )}
+              </div>
+
+              {/* Chevron button moved to the right */}
+              {role.children && (
+                <button
+                  onClick={() => toggleRoleExpansion(role.name)}
+                  className="text-gray-500 hover:text-gray-700 transition-colors"
+                >
+                  {expandedRoles[role.name] ? (
+                    <ChevronDown className="w-5 h-5" />
+                  ) : (
+                    <ChevronRight className="w-5 h-5" />
+                  )}
+                </button>
+              )}
+              
+              {/* Show select box for editable roles without children */}
+              {role.isEditable && !role.children && (
+                <div className="w-80">{renderRoleSelect(role.name)}</div>
+              )}
+            </div>
+
+            {expandedRoles[role.name] && role.children && (
+              <div className="mt-4 space-y-2">
+                {role.children.map((childRole, childIndex) => (
+                  <div
+                    key={childIndex}
+                    className="bg-white rounded-lg p-3 border border-gray-100 ml-8"
+                  >
                     <div className="flex items-center justify-between">
-                      <span className="font-semibold text-gray-900">
-                        {role}
+                      <span className="text-gray-700 text-sm">
+                        {childRole}
                       </span>
-                      <div className="w-80">{renderRoleSelect(role)}</div>
+                      <div className="w-80">
+                        {renderRoleSelect(childRole)}
+                      </div>
                     </div>
                   </div>
-                )}
+                ))}
               </div>
-            ))}
-
-            <button
-              onClick={handleAddRole}
-              className="w-full mt-4 p-4 border-2 border-dashed border-gray-300 rounded-lg text-gray-500 hover:border-blue-400 hover:text-blue-500 transition-colors flex items-center justify-center gap-2 bg-gray-50 hover:bg-blue-50"
-            >
-              <Plus className="w-5 h-5" />
-              Add New Role
-            </button>
+            )}
           </div>
+        </div>
+      ) : (
+        <div className="bg-gray-50 rounded-lg p-4 border border-gray-200">
+          <div className="flex items-center justify-between">
+            <span className="font-semibold text-gray-900">
+              {role}
+            </span>
+            <div className="w-80">{renderRoleSelect(role)}</div>
+          </div>
+        </div>
+      )}
+    </div>
+  ))}
+
+  <button
+    onClick={handleAddRole}
+    className="w-full mt-4 p-4 border-2 border-dashed border-gray-300 rounded-lg text-gray-500 hover:border-blue-400 hover:text-blue-500 transition-colors flex items-center justify-center gap-2 bg-gray-50 hover:bg-blue-50"
+  >
+    <Plus className="w-5 h-5" />
+    Add New Role
+  </button>
+</div>
         </div>
 
         {hasChanges && (

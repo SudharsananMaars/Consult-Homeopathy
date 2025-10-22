@@ -135,14 +135,6 @@ const Home = () => {
               <h1 className="text-2xl font-bold text-gray-800">
                 Patient Management Dashboard
               </h1>
-              <div className="flex items-center space-x-4">
-                <BsSearch className="text-xl text-gray-500" />
-                <input
-                  type="text"
-                  placeholder="Search..."
-                  className="p-2 rounded-md border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                />
-              </div>
             </div>
 
             {/* Dashboard Stats Cards */}

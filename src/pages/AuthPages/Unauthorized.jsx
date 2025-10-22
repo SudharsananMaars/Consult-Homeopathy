@@ -27,13 +27,6 @@ const Unauthorized = () => {
         >
           Log In
         </Link>
-        
-        <Link 
-          to="/"
-          className="inline-block bg-gray-200 hover:bg-gray-300 text-gray-700 font-medium py-2 px-6 rounded-md transition duration-300"
-        >
-          Home
-        </Link>
       </div>
     </div>
   );

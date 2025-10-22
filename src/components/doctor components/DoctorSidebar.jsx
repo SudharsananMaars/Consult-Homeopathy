@@ -62,20 +62,6 @@ const Sidebar = ({ role }) => {
             icon: Users,
             path: "/patients"
           },
-          {
-            id: 5,
-            name: "Doctors",
-            icon: Stethoscope,
-            sublinks: [
-              { id: 41, path: "/assistdoc", name: "Assistant Doctors" },
-              {
-                id: 42,
-                path: "/assistdoc/docprofile",
-                name: "Doctor Profiles",
-              },
-              { id: 43, path: "/assistdoc/doctors", name: "External Doctors" },
-            ],
-          },
           { id: 6, path: "/docpayments", name: "Payments", icon: Wallet },
           {
             id: 7,

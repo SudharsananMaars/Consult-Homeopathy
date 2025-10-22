@@ -43,15 +43,15 @@ const Patients = () => {
                     id: patient._id,
                     name: patient.name || "Unknown",
                     recentVisit: new Date(patient.updatedAt).toLocaleString(),
-                    doctor: patient.medicalDetails?.doctor || "Unassigned",
-                    disease: patient.medicalDetails?.diseaseType?.name || "Not specified",
-                    diseaseType: patient.medicalDetails?.diseaseType?.category || "Not specified",
-                    status: getPatientStatus(patient),
+                    doctor: "Dr. Me", // API doesn't have doctor field
+                    disease: patient.medicalDetails?.diseaseName || "Not specified",
+                    diseaseType: patient.classification|| "Not specified",
+                    status: patient.newExisting,
                     phone: patient.phone,
                     email: patient.email,
                     age: patient.age,
                     newExisting: patient.newExisting,
-                    followUp: patient.follow,
+                    followUp: patient.follow || patient.medicalDetails?.follow || "N/A",
                     rawData: patient // Store the original data for reference
                 }));
                 
@@ -79,10 +79,13 @@ const Patients = () => {
 
     // Helper function to determine patient status based on various fields
     const getPatientStatus = (patient) => {
-        if (patient.medicalDetails?.enquiryStatus === "Recovered") return "Recovered";
+        const enquiryStatus = patient.medicalDetails?.enquiryStatus;
+        
+        if (enquiryStatus === "Not Interested") return "Not Interested";
+        if (enquiryStatus === "Recovered") return "Recovered";
         if (patient.newExisting === "New") return "New Patient";
-        if (patient.medicalDetails?.enquiryStatus === "Enquired") return "In Treatment";
-        return patient.medicalDetails?.enquiryStatus || "Unknown";
+        if (enquiryStatus === "Enquired") return "In Treatment";
+        return enquiryStatus || "Unknown";
     };
 
     const handleFilterChange = (e) => {
@@ -122,6 +125,8 @@ const Patients = () => {
                 return "bg-blue-100 text-blue-700";
             case "In Treatment":
                 return "bg-yellow-100 text-yellow-700";
+            case "Not Interested":
+                return "bg-red-100 text-red-700";
             default:
                 return "bg-gray-100 text-gray-700";
         }
@@ -275,13 +280,7 @@ const Patients = () => {
             </td>
             {/* Status */}
             <td className="bg-gray-100 p-4 text-center">
-              <span
-                className={`px-2 py-1 rounded-full text-sm font-semibold ${getStatusBgColor(
-                  patient.status
-                )}`}
-              >
                 {patient.status}
-              </span>
             </td>
             {/* Follow Up */}
             <td className="bg-white p-4 text-gray-600 text-center">
