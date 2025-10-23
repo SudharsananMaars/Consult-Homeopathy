@@ -129,7 +129,7 @@ const Payments = () => {
     const filteredPayments = (showPending ? pendingPayments : payments).filter((payment) => {
         const paymentId = showPending ? payment.referenceId : payment._id;
         const matchesPatientId = paymentId?.toLowerCase().includes(filters.patientId.toLowerCase()) || '';
-        const matchesService = filters.service === "" || (showPending ? payment.paidFor : getServiceType()).toLowerCase().includes(filters.service.toLowerCase());
+        const matchesService = filters.service === "" || payment.paidFor?.toLowerCase().includes(filters.service.toLowerCase());
         
         // Date range filtering (you can implement this based on your requirements)
         let matchesDateRange = true;
@@ -236,7 +236,7 @@ const Payments = () => {
                             name="service"
                             value={filters.service}
                             onChange={handleFilterChange}
-                            className="p-2 w-1/6 border border-gray-300 rounded-md bg-white hover:bg-gray-100"
+                            className="p-2 w-1/3 border border-gray-300 rounded-md bg-white hover:bg-gray-100"
                         >
                             <option value="">All Services</option>
                             <option value="Consultation">Consultation</option>

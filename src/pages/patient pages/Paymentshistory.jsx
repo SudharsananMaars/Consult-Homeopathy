@@ -93,8 +93,8 @@ const PaymentsHistory = () => {
 
   // Filter payments based on search criteria
   const filteredPayments = payments.filter((payment) => {
-    const matchesPaymentId = payment.razorpayPaymentId?.toLowerCase().includes(filters.paymentId.toLowerCase()) || false;
-    const matchesStatus = filters.status === "" || payment.status?.toLowerCase() === filters.status.toLowerCase();
+    const matchesPaymentId = payment.razorpayPaymentId?.includes(filters.paymentId) || false;
+    const matchesStatus = filters.status === "" || payment.status === filters.status;
     
     // Date range filtering
     let matchesDateRange = true;

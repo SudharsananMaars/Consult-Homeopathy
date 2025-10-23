@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import Layout from "/src/components/patient components/Layout.jsx";
-import { Heart, HeartOff, MessageCircle, Share } from 'lucide-react';
+import { Heart, HeartOff, MessageCircle, Share, Trash2, X } from 'lucide-react';
 import config from "../../config";
 
 const API_URL = config.API_URL;
@@ -9,8 +9,11 @@ const PatientContent = () => {
   const [posts, setPosts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [commentInputs, setCommentInputs] = useState({});
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [commentToDelete, setCommentToDelete] = useState(null);
   const token = localStorage.getItem("token");
-
+  const currentUserId = localStorage.getItem("userId");
+  
   const fetchPosts = async () => {
     try {
       const res = await fetch(`${API_URL}/api/post/homePosts`, {
@@ -81,20 +84,47 @@ const PatientContent = () => {
     }
   };
 
+  const openDeleteModal = (commentId) => {
+    setCommentToDelete(commentId);
+    setShowDeleteModal(true);
+  };
+
+  const closeDeleteModal = () => {
+    setShowDeleteModal(false);
+    setCommentToDelete(null);
+  };
+
+  const confirmDeleteComment = async () => {
+    if (!commentToDelete) return;
+
+    try {
+      const res = await fetch(`${API_URL}/api/post/${commentToDelete}/deleteComment`, {
+        method: "DELETE",
+        headers: { Authorization: `Bearer ${token}` },
+      });
+
+      const data = await res.json();
+      if (data.success) {
+        fetchPosts();
+        closeDeleteModal();
+      } else {
+        console.error("Failed to delete comment");
+      }
+    } catch (err) {
+      console.error("Error deleting comment:", err);
+    }
+  };
+
   useEffect(() => {
     fetchPosts();
   }, []);
 
   return (
     <Layout>
-     
         {/* Header */}
-      
           <div className="max-w-2xl mx-auto px-4 py-8">
             <h1 className="text-2xl font-bold text-gray-900">Channel Content</h1>
           </div>
-
-
         {/* Main Content */}
         <div className="max-w-2xl mx-auto px-4 py-6">
           {loading ? (
@@ -216,6 +246,15 @@ const PatientContent = () => {
                                 </div>
                                 <p className="text-xs text-gray-500 mt-1 ml-3">{comment.timeAgo}</p>
                               </div>
+                              {currentUserId && comment.user?._id === currentUserId && (
+                                <button
+                                  onClick={() => openDeleteModal(comment._id)}
+                                  className="flex-shrink-0 text-gray-400 hover:text-red-600 transition-colors p-1"
+                                  title="Delete comment"
+                                >
+                                  <Trash2 size={16} />
+                                </button>
+                              )}
                             </div>
                           ))}
                         </div>
@@ -262,6 +301,47 @@ const PatientContent = () => {
             </div>
           )}
         </div>
+
+        {/* Delete Confirmation Modal */}
+        {showDeleteModal && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+            <div className="bg-white rounded-lg shadow-xl max-w-md w-full overflow-hidden">
+              {/* Modal Header */}
+              <div className="flex items-center justify-between px-6 py-4 border-b border-gray-200">
+                <h3 className="text-lg font-semibold text-gray-900">Delete Comment</h3>
+                <button
+                  onClick={closeDeleteModal}
+                  className="text-gray-400 hover:text-gray-600 transition-colors"
+                >
+                  <X size={20} />
+                </button>
+              </div>
+
+              {/* Modal Body */}
+              <div className="px-6 py-4">
+                <p className="text-gray-600">
+                  Are you sure you want to delete this comment? This action cannot be undone.
+                </p>
+              </div>
+
+              {/* Modal Footer */}
+              <div className="flex items-center justify-end space-x-3 px-6 py-4 bg-gray-50">
+                <button
+                  onClick={closeDeleteModal}
+                  className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={confirmDeleteComment}
+                  className="px-4 py-2 text-sm font-medium text-white bg-red-600 rounded-lg hover:bg-red-700 transition-colors"
+                >
+                  Delete
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
      
     </Layout>
   );

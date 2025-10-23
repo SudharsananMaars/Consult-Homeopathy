@@ -2,10 +2,7 @@ import { useEffect, useState } from "react";
 import Layout from "../../components/patient components/Layout";
 import axios from "axios";
 import {
-  FaUserMd,
   FaCalendarAlt,
-  FaClock,
-  FaMoneyBillWave,
   FaTimes,
 } from "react-icons/fa";
 import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider";
@@ -13,7 +10,6 @@ import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
 import { DateCalendar } from "@mui/x-date-pickers/DateCalendar";
 import dayjs from "dayjs";
 import config from "../../config";
-
 
 const API_URL = config.API_URL;
 
@@ -23,13 +19,16 @@ const AppointmentsPage = () => {
   const [totalPages, setTotalPages] = useState(1);
   const [loading, setLoading] = useState(true);
 
-  
   // Reschedule popup states
   const [isReschedulePopupOpen, setIsReschedulePopupOpen] = useState(false);
   const [selectedAppointment, setSelectedAppointment] = useState(null);
   const [rescheduleDate, setRescheduleDate] = useState(null);
-  const [timeSlots, setTimeSlots] = useState([]);
-  const [selectedTimeSlot, setSelectedTimeSlot] = useState(null);
+  const [timeSlots, setTimeSlots] = useState({ 
+    Normal: [], 
+    "Post Working Hours": [], 
+    Weekoff: [] 
+  });
+  const [selectedSlot, setSelectedSlot] = useState(null); // Now stores {time, price, category}
   const [isLoadingSlots, setIsLoadingSlots] = useState(false);
   const [rescheduleError, setRescheduleError] = useState("");
   const [isRescheduling, setIsRescheduling] = useState(false);
@@ -76,19 +75,19 @@ const AppointmentsPage = () => {
           }
         );
         
-        setTimeSlots(res.data.result || []);
-        setSelectedTimeSlot(null);
+        setTimeSlots(res.data.result || { Normal: [], "Post Working Hours": [], Weekoff: [] });
+        setSelectedSlot(null);
         setRescheduleError("");
         
       } catch (err) {
         console.error("Error fetching time slots:", err);
         setRescheduleError("Failed to load available time slots");
-        setTimeSlots([]);
+        setTimeSlots({ Normal: [], "Post Working Hours": [], Weekoff: [] });
       } finally {
         setIsLoadingSlots(false);
       }
     } else {
-      setTimeSlots([]);
+      setTimeSlots({ Normal: [], "Post Working Hours": [], Weekoff: [] });
     }
   };
 
@@ -131,8 +130,8 @@ const AppointmentsPage = () => {
     setSelectedAppointment(appointment);
     setIsReschedulePopupOpen(true);
     setRescheduleDate(null);
-    setTimeSlots([]);
-    setSelectedTimeSlot(null);
+    setTimeSlots({ Normal: [], "Post Working Hours": [], Weekoff: [] });
+    setSelectedSlot(null);
     setRescheduleError("");
   };
 
@@ -140,49 +139,52 @@ const AppointmentsPage = () => {
     setIsReschedulePopupOpen(false);
     setSelectedAppointment(null);
     setRescheduleDate(null);
-    setTimeSlots([]);
-    setSelectedTimeSlot(null);
+    setTimeSlots({ Normal: [], "Post Working Hours": [], Weekoff: [] });
+    setSelectedSlot(null);
     setRescheduleError("");
   };
 
+  const handleTimeSlotSelect = (slot, category) => {
+    setSelectedSlot({ time: slot.time, price: slot.price, category });
+  };
+
   const handleRescheduleConfirm = async () => {
-  if (!rescheduleDate || !selectedTimeSlot) {
-    setRescheduleError("Please select both date and time slot");
-    return;
-  }
-  
-  setIsRescheduling(true);
-  setRescheduleError("");
-  
-  try {
-    const response = await axios.patch(
-      `${API_URL}/api/patient/${selectedAppointment._id}/reschedule`,
-      {
-        appointmentDate: dayjs(rescheduleDate).format("YYYY-MM-DD"),
-        timeSlot: selectedTimeSlot
-      },
-      {
-        headers: {
-          Authorization: `Bearer ${localStorage.getItem("token")}`,
-          "Content-Type": "application/json",
+    if (!rescheduleDate || !selectedSlot) {
+      setRescheduleError("Please select both date and time slot");
+      return;
+    }
+    
+    setIsRescheduling(true);
+    setRescheduleError("");
+    
+    try {
+      const response = await axios.patch(
+        `${API_URL}/api/patient/${selectedAppointment._id}/reschedule`,
+        {
+          appointmentDate: dayjs(rescheduleDate).format("YYYY-MM-DD"),
+          timeSlot: selectedSlot.time
         },
-      }
-    );
-    
-    // Refresh appointments after successful reschedule
-    await fetchAppointments(currentPage);
-    handleReschedulePopupClose();
-    
-  } catch (error) {
-    console.error("Error rescheduling appointment:", error);
-    setRescheduleError("Failed to reschedule appointment. Please try again.");
-  } finally {
-    setIsRescheduling(false);
-  }
-};
+        {
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem("token")}`,
+            "Content-Type": "application/json",
+          },
+        }
+      );
+      
+      // Refresh appointments after successful reschedule
+      await fetchAppointments(currentPage);
+      handleReschedulePopupClose();
+      
+    } catch (error) {
+      console.error("Error rescheduling appointment:", error);
+      setRescheduleError("Failed to reschedule appointment. Please try again.");
+    } finally {
+      setIsRescheduling(false);
+    }
+  };
 
   const canReschedule = (appointment) => {
-    // Only allow rescheduling for confirmed appointments
     return appointment.status === "confirmed";
   };
 
@@ -217,12 +219,12 @@ const AppointmentsPage = () => {
                   </div>
 
                   <div className="text-gray-700 space-y-2">
-                   <div className="flex items-center gap-2">
-  <FaCalendarAlt className="text-blue-500" />
-  <span>
-    {new Date(appt.appointmentDate).toLocaleDateString()} • {appt.timeSlot}
-  </span>
-</div>
+                    <div className="flex items-center gap-2">
+                      <FaCalendarAlt className="text-blue-500" />
+                      <span>
+                        {new Date(appt.appointmentDate).toLocaleDateString()} • {appt.timeSlot}
+                      </span>
+                    </div>
 
                     {appt.diseaseName && (
                       <div className="text-sm text-gray-500">
@@ -321,8 +323,8 @@ const AppointmentsPage = () => {
 
         {/* Reschedule Popup */}
         {isReschedulePopupOpen && (
-          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-            <div className="bg-white rounded-lg shadow-lg w-full max-w-md mx-4 max-h-[90vh] overflow-y-auto">
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+            <div className="bg-white rounded-lg shadow-lg w-full max-w-2xl max-h-[90vh] overflow-y-auto">
               <div className="p-6">
                 {/* Header */}
                 <div className="flex justify-between items-center mb-6">
@@ -355,61 +357,151 @@ const AppointmentsPage = () => {
                   </p>
                 </div>
 
-                {/* Date Picker */}
-                <div className="mb-6">
-                  <h3 className="font-semibold text-gray-700 mb-3">Select New Date:</h3>
-                  <LocalizationProvider dateAdapter={AdapterDayjs}>
-                    <DateCalendar
-                      value={rescheduleDate}
-                      onChange={setRescheduleDate}
-                      minDate={minDate}
-                      maxDate={maxDate}
-                      sx={{
-                        width: '100%',
-                        '& .MuiPickersCalendarHeader-root': {
-                          paddingLeft: 1,
-                          paddingRight: 1,
-                        },
-                      }}
-                    />
-                  </LocalizationProvider>
-                </div>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  {/* Date Picker */}
+                  <div>
+                    <h3 className="font-semibold text-gray-700 mb-3">Select New Date:</h3>
+                    <LocalizationProvider dateAdapter={AdapterDayjs}>
+                      <DateCalendar
+                        value={rescheduleDate}
+                        onChange={setRescheduleDate}
+                        minDate={minDate}
+                        maxDate={maxDate}
+                        sx={{
+                          width: '100%',
+                          '& .MuiPickersCalendarHeader-root': {
+                            paddingLeft: 1,
+                            paddingRight: 1,
+                          },
+                        }}
+                      />
+                    </LocalizationProvider>
+                  </div>
 
-                {/* Time Slots */}
-                {rescheduleDate && (
-                  <div className="mb-6">
+                  {/* Time Slots */}
+                  <div>
                     <h3 className="font-semibold text-gray-700 mb-3">Select New Time:</h3>
-                    {isLoadingSlots ? (
+                    
+                    {!rescheduleDate ? (
+                      <p className="text-gray-500 text-sm">Please select a date first</p>
+                    ) : isLoadingSlots ? (
                       <p className="text-gray-500 text-sm">Loading available slots...</p>
-                    ) : timeSlots.length === 0 ? (
-                      <p className="text-gray-500 text-sm">No slots available for this date</p>
                     ) : (
-                      <div className="grid grid-cols-3 gap-2">
-                        {timeSlots.map((time) => (
-                          <button
-                            key={time}
-                            onClick={() => setSelectedTimeSlot(time)}
-                            className={`p-2 rounded border text-sm transition ${
-                              selectedTimeSlot === time
-                                ? "bg-blue-500 text-white border-blue-500"
-                                : "bg-white hover:bg-blue-50 border-gray-300"
-                            }`}
-                          >
-                            {time}
-                          </button>
-                        ))}
+                      <div className="space-y-4 max-h-96 overflow-y-auto">
+                        {/* Normal Hours */}
+                        {timeSlots.Normal && timeSlots.Normal.length > 0 && (
+                          <div>
+                            <h4 className="text-sm font-semibold text-gray-700 mb-2">Normal Hours</h4>
+                            <div className="grid grid-cols-2 gap-2">
+                              {timeSlots.Normal.map((slot) => (
+                                <button
+                                  key={slot.time}
+                                  onClick={() => handleTimeSlotSelect(slot, "Normal")}
+                                  className={`p-2 rounded border transition ${
+                                    selectedSlot?.time === slot.time
+                                      ? "bg-blue-500 text-white border-blue-500"
+                                      : "bg-white hover:bg-blue-50 border-gray-300"
+                                  }`}
+                                >
+                                  <div className="text-sm font-medium">{slot.time}</div>
+                                  <div className="text-xs">₹{slot.price}</div>
+                                </button>
+                              ))}
+                            </div>
+                          </div>
+                        )}
+
+                        {/* Post Working Hours */}
+                        {timeSlots["Post Working Hours"] && timeSlots["Post Working Hours"].length > 0 && (
+                          <div>
+                            <h4 className="text-sm font-semibold text-gray-700 mb-2">Post Working Hours</h4>
+                            <p className="text-xs text-amber-600 mb-2 bg-amber-50 p-2 rounded border border-amber-200">
+                              ℹ️ Slots after regular working hours are charged at a premium rate.
+                            </p>
+                            <div className="grid grid-cols-2 gap-2">
+                              {timeSlots["Post Working Hours"].map((slot) => (
+                                <button
+                                  key={slot.time}
+                                  onClick={() => handleTimeSlotSelect(slot, "Post Working Hours")}
+                                  className={`p-2 rounded border transition ${
+                                    selectedSlot?.time === slot.time
+                                      ? "bg-blue-500 text-white border-blue-500"
+                                      : "bg-white hover:bg-blue-50 border-gray-300"
+                                  }`}
+                                >
+                                  <div className="text-sm font-medium">{slot.time}</div>
+                                  <div className="text-xs">₹{slot.price}</div>
+                                </button>
+                              ))}
+                            </div>
+                          </div>
+                        )}
+
+                        {/* Weekoff */}
+                        {timeSlots.Weekoff && timeSlots.Weekoff.length > 0 && (
+                          <div>
+                            <h4 className="text-sm font-semibold text-gray-700 mb-2">Weekend/Holiday</h4>
+                            <p className="text-xs text-blue-600 mb-2 bg-blue-50 p-2 rounded border border-blue-200">
+                              ℹ️ Weekend and holiday slots are available at increased rates.
+                            </p>
+                            <div className="grid grid-cols-2 gap-2">
+                              {timeSlots.Weekoff.map((slot) => (
+                                <button
+                                  key={slot.time}
+                                  onClick={() => handleTimeSlotSelect(slot, "Weekoff")}
+                                  className={`p-2 rounded border transition ${
+                                    selectedSlot?.time === slot.time
+                                      ? "bg-blue-500 text-white border-blue-500"
+                                      : "bg-white hover:bg-blue-50 border-gray-300"
+                                  }`}
+                                >
+                                  <div className="text-sm font-medium">{slot.time}</div>
+                                  <div className="text-xs">₹{slot.price}</div>
+                                </button>
+                              ))}
+                            </div>
+                          </div>
+                        )}
+
+                        {timeSlots.Normal.length === 0 && 
+                         timeSlots["Post Working Hours"].length === 0 && 
+                         timeSlots.Weekoff.length === 0 && (
+                          <p className="text-gray-500 text-sm">No slots available for this date</p>
+                        )}
+                      </div>
+                    )}
+
+                    {/* Selected Slot Info */}
+                    {selectedSlot && (
+                      <div className="mt-4 p-3 bg-blue-50 border border-blue-200 rounded">
+                        <p className="text-sm">
+                          <strong>Selected Time:</strong> {selectedSlot.time}
+                        </p>
+                        <p className="text-sm">
+                          <strong>Consultation Fee:</strong> ₹{selectedSlot.price}
+                        </p>
+                        {selectedSlot.category === "Post Working Hours" && (
+                          <p className="text-xs text-amber-700 mt-1">
+                            * Premium pricing for post-working hours
+                          </p>
+                        )}
+                        {selectedSlot.category === "Weekoff" && (
+                          <p className="text-xs text-blue-700 mt-1">
+                            * Premium pricing for weekend/holiday
+                          </p>
+                        )}
                       </div>
                     )}
                   </div>
-                )}
+                </div>
 
                 {/* Error message */}
                 {rescheduleError && (
-                  <p className="text-red-500 text-sm mb-4">{rescheduleError}</p>
+                  <p className="text-red-500 text-sm mt-4">{rescheduleError}</p>
                 )}
 
                 {/* Action buttons */}
-                <div className="flex gap-3 justify-end">
+                <div className="flex gap-3 justify-end mt-6">
                   <button
                     onClick={handleReschedulePopupClose}
                     className="px-4 py-2 bg-gray-300 text-gray-700 rounded-md hover:bg-gray-400"
@@ -418,7 +510,7 @@ const AppointmentsPage = () => {
                   </button>
                   <button
                     onClick={handleRescheduleConfirm}
-                    disabled={!rescheduleDate || !selectedTimeSlot || isRescheduling}
+                    disabled={!rescheduleDate || !selectedSlot || isRescheduling}
                     className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
                   >
                     {isRescheduling ? "Rescheduling..." : "Confirm Reschedule"}
