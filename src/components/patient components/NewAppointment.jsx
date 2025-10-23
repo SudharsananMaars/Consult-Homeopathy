@@ -177,7 +177,7 @@ const NewAppointment = () => {
           })),
         ];
         setConsultingForOptions(options);
-        setConsultingFor(options[0]); // Default to Self
+        setConsultingFor(null); // Default to Self
       } catch (err) {
         console.error("Error fetching family members:", err);
         setErrorMessage("Failed to load family members");
@@ -306,12 +306,12 @@ const NewAppointment = () => {
     const appointmentDate = dayjs(startDate).format("YYYY-MM-DD");
 
     const payload = {
-      appointmentDate,
-      timeSlot: selectedTime,
-      consultingFor: "Self",
-      consultingReason: analysisResult?.classification || "",
-      symptom: symptomInput,
-    };
+  appointmentDate,
+  timeSlot: selectedTime,
+  consultingFor: consultingFor?.value,  // <-- Use the selected value
+  consultingReason: analysisResult?.classification || "",
+  symptom: symptomInput,
+};
 
     console.log("Sending payload:", payload);
 
@@ -533,7 +533,7 @@ const NewAppointment = () => {
               options={consultingForOptions}
               value={consultingFor}
               onChange={setConsultingFor}
-              placeholder="Select person..."
+              placeholder="Select consulting person..."
             />
             {formErrors.consultingFor && (
               <p className="text-red-500 text-sm mt-1">
