@@ -315,12 +315,6 @@ const SlotTypeRow = ({
             <Edit2 size={16} />
           </button>
         )}
-        <button
-          onClick={() => onDelete(slot.id)}
-          className="text-gray-500 hover:text-red-600 transition-colors"
-        >
-          <Trash2 size={16} />
-        </button>
       </div>
     </div>
   );
