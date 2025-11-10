@@ -29,24 +29,11 @@ const DEFAULT_ROLES = [
     name: "2.Consultation-Acute",
     children: ["2.1 New Patients", "2.2 Existing Patients"],
   },
-  "3.Prescription Writing",
+  "3.Prescription",
   "4.Medicine Preparation",
-  "5.Medicine and Shipment Payment",
-  "5.1 Medicine and Shipment Queries",
-  "6.Inventory Tracking & Coordination",
-  {
-    name: "7.Follow ups",
-    children: [
-      "7.1 Patient Calling",
-      "7.2 Consultation",
-      "7.3 Consultation Payment",
-      "7.4 Calling Potential Patients",
-    ],
-  },
-  "8.Patient Care",
-  "9.Executive",
-  "10.Admin Clinic",
-  "11.Admin Operations",
+  "5.Payment",
+  "6.Shipment",
+  "7.Patient Care",
 ];
 
 const FOLLOW_UP_MAPPING = {
@@ -54,19 +41,11 @@ const FOLLOW_UP_MAPPING = {
   "1.2 Existing Patients": "Chronic-Existing",
   "2.1 New Patients": "Acute-New",
   "2.2 Existing Patients": "Acute-Existing",
-  "3.Prescription Writing": "Prescription",
+  "3.Prescription": "Prescription",
   "4.Medicine Preparation": "Medicine-Prep",
-  "5.Medicine and Shipment Payment": "Medicine-Shipment",
-  "5.1 Medicine and Shipment Queries": "Medicine-Shipment-Queries",
-  "6.Inventory Tracking & Coordination": "Inventory",
-  "7.1 Patient Calling": "Patient-Call",
-  "7.2 Consultation": "Consultation-Query",
-  "7.3 Consultation Payment": "Consultation-Payment",
-  "7.4 Calling Potential Patients": "Potential-Patients",
-  "8.Patient Care": "Patient-Care",
-  "9.Executive": "Executive",
-  "10.Admin Clinic": "Admin-Clinic",
-  "11.Admin Operations": "Admin-Operations",
+  "5.Payment": "Medicine-Shipment",
+  "6.Shipment": "Medicine-Shipment-Queries",
+  "7.Patient Care": "Patient-Care",
 };
 
 const Allocation = () => {
@@ -327,7 +306,7 @@ const Allocation = () => {
       )?.[0] || "";
 
     const isParentRole = role === "7.Follow ups";
-    const isChildRole = role.startsWith("7.") && role !== "7.Follow ups";
+    const isChildRole = role.startsWith("7.") && role !== "7.Follow ups" && role !== "7.Patient Care";
 
     return (
       <select
@@ -384,17 +363,21 @@ const Allocation = () => {
     ).length;
 
     const totalRoles = roles.reduce((count, role) => {
-      if (typeof role === "object" && role.children) {
-        return count + role.children.length + 1;
-      }
-      return count + 1;
-    }, 0);
+  if (typeof role === "object" && role.children) {
+    return count + role.children.length;
+  }
+  return count + 1;
+}, 0);
 
-    const allocatedRoles = Object.values(allocations).reduce(
-      (count, doctorRoles) => count + doctorRoles.length,
-      0
-    );
-    const unallocatedRoles = totalRoles - allocatedRoles;
+const allocatedRoles = Object.values(allocations).reduce(
+  (count, doctorRoles) => {
+    // Only count roles that are in the DEFAULT_ROLES
+    const validRoles = doctorRoles.filter(r => !r.startsWith("7.") || r === "7.Patient Care");
+    return count + validRoles.length;
+  },
+  0
+);
+const unallocatedRoles = Math.max(0, totalRoles - allocatedRoles);
 
     return {
       total,
