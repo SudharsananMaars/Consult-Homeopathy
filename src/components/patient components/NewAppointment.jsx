@@ -177,7 +177,7 @@ const NewAppointment = () => {
           })),
         ];
         setConsultingForOptions(options);
-        setConsultingFor(null); // Default to Self
+        setConsultingFor(options[0]); // Default to Self
       } catch (err) {
         console.error("Error fetching family members:", err);
         setErrorMessage("Failed to load family members");

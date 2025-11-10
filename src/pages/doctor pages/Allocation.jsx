@@ -12,7 +12,6 @@ import {
   ChevronRight,
   Users,
   UserCheck,
-  UserX,
   Eye,
   EyeOff,
 } from "lucide-react";
@@ -32,50 +31,42 @@ const DEFAULT_ROLES = [
   },
   "3.Prescription Writing",
   "4.Medicine Preparation",
-  "5.Medicine and Shipment Payment Followup",
+  "5.Medicine and Shipment Payment",
   "5.1 Medicine and Shipment Queries",
   "6.Inventory Tracking & Coordination",
   {
     name: "7.Follow ups",
     children: [
-      "7.1 Follow ups-Patient Calling",
-      "7.2 Follow ups-Consultation",
-      "7.3 Follow ups-Consultation Payment",
-      "7.4.Calling Potential patients",
+      "7.1 Patient Calling",
+      "7.2 Consultation",
+      "7.3 Consultation Payment",
+      "7.4 Calling Potential Patients",
     ],
   },
-  "8.Follow up Queries",
-  "9.Follow up Patient Care",
-  "10.Information & Knowledge",
-  "11.Vendor Listing",
-  "12.Marketplace Queries",
-  "13.Executive",
-  "14.Admin Clinic",
-  "15.Admin Operations",
+  "8.Patient Care",
+  "9.Executive",
+  "10.Admin Clinic",
+  "11.Admin Operations",
 ];
 
 const FOLLOW_UP_MAPPING = {
-  "1.1 New Patients": "Follow up-Chronic-New",
-  "1.2 Existing Patients": "Follow up-Chronic-Existing",
-  "2.1 New Patients": "Follow up-Acute-New",
-  "2.2 Existing Patients": "Follow up-Acute-Existing",
-  "3.Prescription Writing": "Follow up-P",
-  "4.Medicine Preparation": "Follow up-MP",
-  "5.Medicine and Shipment Payment Followup": "Follow up-Mship",
-  "5.1 Medicine and Shipment Queries": "Follow up-MSQ",
-  "6.Inventory Tracking & Coordination": "Follow up-ITC",
-  "7.1 Follow ups-Patient Calling": "Follow up-PCall",
-  "7.2 Follow ups-Consultation": "Follow up-ConsultationQuery",
-  "7.3 Follow ups-Consultation Payment": "Follow up-CPayment",
-  "7.4.Calling Potential patients": "Follow up-Potential",
-  "8.Follow up Queries": "Follow up-Queries",
-  "9.Follow up Patient Care": "Follow up-PCare",
-  "10.Information & Knowledge": "Follow up-Info",
-  "11.Vendor Listing": "Follow up-Vendor",
-  "12.Marketplace Queries": "Follow up-Marketplace",
-  "13.Executive": "Follow up-Executive",
-  "14.Admin Clinic": "Follow up-adminClinic",
-  "15.Admin Operations": "Follow up-adminOperations",
+  "1.1 New Patients": "Chronic-New",
+  "1.2 Existing Patients": "Chronic-Existing",
+  "2.1 New Patients": "Acute-New",
+  "2.2 Existing Patients": "Acute-Existing",
+  "3.Prescription Writing": "Prescription",
+  "4.Medicine Preparation": "Medicine-Prep",
+  "5.Medicine and Shipment Payment": "Medicine-Shipment",
+  "5.1 Medicine and Shipment Queries": "Medicine-Shipment-Queries",
+  "6.Inventory Tracking & Coordination": "Inventory",
+  "7.1 Patient Calling": "Patient-Call",
+  "7.2 Consultation": "Consultation-Query",
+  "7.3 Consultation Payment": "Consultation-Payment",
+  "7.4 Calling Potential Patients": "Potential-Patients",
+  "8.Patient Care": "Patient-Care",
+  "9.Executive": "Executive",
+  "10.Admin Clinic": "Admin-Clinic",
+  "11.Admin Operations": "Admin-Operations",
 };
 
 const Allocation = () => {
@@ -107,12 +98,11 @@ const Allocation = () => {
       ]);
       const fetchedDoctors = doctorsResponse.data.map((doctor) => ({
         ...doctor,
-        _id: doctor._id.$oid || doctor._id, // Handle both object and string IDs
+        _id: doctor._id.$oid || doctor._id,
       }));
       setDoctors(fetchedDoctors);
       console.log("Fetched doctors:", fetchedDoctors);
 
-      // Store detailed allocations for the table
       setDetailedAllocations(allocationsResponse.data);
 
       const allocationsMap = allocationsResponse.data.reduce(
@@ -184,7 +174,6 @@ const Allocation = () => {
       console.log("Server response:", response.data);
       setDebug((prev) => ({ ...prev, serverResponse: response.data }));
 
-      // Update detailed allocations with the response
       setDetailedAllocations(response.data.allocations || []);
 
       setSuccess(true);
@@ -260,40 +249,38 @@ const Allocation = () => {
 
   const assignChildRoles = (allocations, doctorId) => {
     const childRoles = [
-      "7.1 Follow ups-Patient Calling",
-      "7.2 Follow ups-Consultation",
-      "7.3 Follow ups-Consultation Payment",
-      "7.4.Calling Potential patients",
+      "7.1 Patient Calling",
+      "7.2 Consultation",
+      "7.3 Consultation Payment",
+      "7.4 Calling Potential Patients",
     ];
 
     childRoles.forEach((childRole) => {
-      // Remove the child role from any other doctor
       Object.keys(allocations).forEach((key) => {
         allocations[key] = allocations[key].filter((r) => r !== childRole);
       });
 
-      // Assign the child role to the selected doctor
       if (!allocations[doctorId].includes(childRole)) {
         allocations[doctorId].push(childRole);
       }
     });
   };
 
-const handleAddRole = () => {
-  const newRoleNumber = roles.length + 1;
-  setRoles([...roles, { name: `${newRoleNumber}.New Role`, isEditable: true }]);
-};
+  const handleAddRole = () => {
+    const newRoleNumber = roles.length + 1;
+    setRoles([...roles, { name: `${newRoleNumber}.New Role`, isEditable: true }]);
+  };
 
-const handleRoleNameChange = (index, newName) => {
-  setRoles(prev => {
-    const updated = [...prev];
-    if (typeof updated[index] === 'object' && updated[index].isEditable) {
-      updated[index] = { ...updated[index], name: newName };
-    }
-    return updated;
-  });
-  setHasChanges(true);
-};
+  const handleRoleNameChange = (index, newName) => {
+    setRoles((prev) => {
+      const updated = [...prev];
+      if (typeof updated[index] === "object" && updated[index].isEditable) {
+        updated[index] = { ...updated[index], name: newName };
+      }
+      return updated;
+    });
+    setHasChanges(true);
+  };
 
   const resetAllocations = async () => {
     try {
@@ -396,7 +383,6 @@ const handleRoleNameChange = (index, newName) => {
       allocatedDoctorIds.has(d._id)
     ).length;
 
-    // Count total roles
     const totalRoles = roles.reduce((count, role) => {
       if (typeof role === "object" && role.children) {
         return count + role.children.length + 1;
@@ -426,7 +412,6 @@ const handleRoleNameChange = (index, newName) => {
     };
   };
 
-  // Group detailed allocations by doctor
   const groupedDetailedAllocations = () => {
     const grouped = {};
     detailedAllocations.forEach((allocation) => {
@@ -647,17 +632,12 @@ const handleRoleNameChange = (index, newName) => {
                 {groupedDetailedAllocations().length > 0 ? (
                   groupedDetailedAllocations().map((item, index) => (
                     <tr key={index} className="border-b border-blue-200">
-                      {/* Doctor */}
                       <td className="bg-gray-100 p-4 font-medium text-gray-900 text-center">
                         {item.doctor}
                       </td>
-
-                      {/* Role */}
                       <td className="bg-white p-4 text-gray-600 text-center">
                         {item.role}
                       </td>
-
-                      {/* Follows (comma → numbered list, centered) */}
                       <td className="bg-gray-100 p-4 text-gray-600 text-center">
                         {item.follows ? (
                           <ol className="list-decimal list-inside inline-block text-left space-y-1">
@@ -671,8 +651,6 @@ const handleRoleNameChange = (index, newName) => {
                           <span className="text-gray-400">No follows</span>
                         )}
                       </td>
-
-                      {/* Allocated Roles (no numbering) */}
                       <td className="bg-white p-4 text-gray-600 text-center">
                         {item.allocatedRoles.length > 0 ? (
                           <div className="space-y-1 text-left inline-block">
@@ -721,97 +699,94 @@ const handleRoleNameChange = (index, newName) => {
           )}
 
           <div className="space-y-3">
-  {roles.map((role, index) => (
-    <div key={index}>
-      {typeof role === "object" ? (
-        <div className="bg-gray-50 rounded-lg border border-gray-200">
-          <div className="p-4">
-            <div className="flex items-center justify-between">
-              {/* Role name and optional select box */}
-              <div className="flex items-center gap-3">
-                {role.isEditable ? (
-                  <input
-                    type="text"
-                    value={role.name}
-                    onChange={(e) => handleRoleNameChange(index, e.target.value)}
-                    className="font-semibold text-gray-900 border border-gray-300 rounded px-3 py-1 focus:border-blue-400 focus:ring-2 focus:ring-blue-100 outline-none"
-                    placeholder="Enter role name"
-                  />
-                ) : (
-                  <span className="font-semibold text-gray-900">
-                    {role.name}
-                  </span>
-                )}
-                {role.name === "7.Follow ups" &&
-                  role.children?.length === 0 && (
-                    <div className="w-80">
-                      {renderRoleSelect(role.name)}
-                    </div>
-                  )}
-              </div>
+            {roles.map((role, index) => (
+              <div key={index}>
+                {typeof role === "object" ? (
+                  <div className="bg-gray-50 rounded-lg border border-gray-200">
+                    <div className="p-4">
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-3">
+                          {role.isEditable ? (
+                            <input
+                              type="text"
+                              value={role.name}
+                              onChange={(e) =>
+                                handleRoleNameChange(index, e.target.value)
+                              }
+                              className="font-semibold text-gray-900 border border-gray-300 rounded px-3 py-1 focus:border-blue-400 focus:ring-2 focus:ring-blue-100 outline-none"
+                              placeholder="Enter role name"
+                            />
+                          ) : (
+                            <span className="font-semibold text-gray-900">
+                              {role.name}
+                            </span>
+                          )}
+                          {role.name === "7.Follow ups" &&
+                            role.children?.length === 0 && (
+                              <div className="w-80">
+                                {renderRoleSelect(role.name)}
+                              </div>
+                            )}
+                        </div>
 
-              {/* Chevron button moved to the right */}
-              {role.children && (
-                <button
-                  onClick={() => toggleRoleExpansion(role.name)}
-                  className="text-gray-500 hover:text-gray-700 transition-colors"
-                >
-                  {expandedRoles[role.name] ? (
-                    <ChevronDown className="w-5 h-5" />
-                  ) : (
-                    <ChevronRight className="w-5 h-5" />
-                  )}
-                </button>
-              )}
-              
-              {/* Show select box for editable roles without children */}
-              {role.isEditable && !role.children && (
-                <div className="w-80">{renderRoleSelect(role.name)}</div>
-              )}
-            </div>
+                        {role.children && (
+                          <button
+                            onClick={() => toggleRoleExpansion(role.name)}
+                            className="text-gray-500 hover:text-gray-700 transition-colors"
+                          >
+                            {expandedRoles[role.name] ? (
+                              <ChevronDown className="w-5 h-5" />
+                            ) : (
+                              <ChevronRight className="w-5 h-5" />
+                            )}
+                          </button>
+                        )}
 
-            {expandedRoles[role.name] && role.children && (
-              <div className="mt-4 space-y-2">
-                {role.children.map((childRole, childIndex) => (
-                  <div
-                    key={childIndex}
-                    className="bg-white rounded-lg p-3 border border-gray-100 ml-8"
-                  >
-                    <div className="flex items-center justify-between">
-                      <span className="text-gray-700 text-sm">
-                        {childRole}
-                      </span>
-                      <div className="w-80">
-                        {renderRoleSelect(childRole)}
+                        {role.isEditable && !role.children && (
+                          <div className="w-80">{renderRoleSelect(role.name)}</div>
+                        )}
                       </div>
+
+                      {expandedRoles[role.name] && role.children && (
+                        <div className="mt-4 space-y-2">
+                          {role.children.map((childRole, childIndex) => (
+                            <div
+                              key={childIndex}
+                              className="bg-white rounded-lg p-3 border border-gray-100 ml-8"
+                            >
+                              <div className="flex items-center justify-between">
+                                <span className="text-gray-700 text-sm">
+                                  {childRole}
+                                </span>
+                                <div className="w-80">
+                                  {renderRoleSelect(childRole)}
+                                </div>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      )}
                     </div>
                   </div>
-                ))}
+                ) : (
+                  <div className="bg-gray-50 rounded-lg p-4 border border-gray-200">
+                    <div className="flex items-center justify-between">
+                      <span className="font-semibold text-gray-900">{role}</span>
+                      <div className="w-80">{renderRoleSelect(role)}</div>
+                    </div>
+                  </div>
+                )}
               </div>
-            )}
-          </div>
-        </div>
-      ) : (
-        <div className="bg-gray-50 rounded-lg p-4 border border-gray-200">
-          <div className="flex items-center justify-between">
-            <span className="font-semibold text-gray-900">
-              {role}
-            </span>
-            <div className="w-80">{renderRoleSelect(role)}</div>
-          </div>
-        </div>
-      )}
-    </div>
-  ))}
+            ))}
 
-  <button
-    onClick={handleAddRole}
-    className="w-full mt-4 p-4 border-2 border-dashed border-gray-300 rounded-lg text-gray-500 hover:border-blue-400 hover:text-blue-500 transition-colors flex items-center justify-center gap-2 bg-gray-50 hover:bg-blue-50"
-  >
-    <Plus className="w-5 h-5" />
-    Add New Role
-  </button>
-</div>
+            <button
+              onClick={handleAddRole}
+              className="w-full mt-4 p-4 border-2 border-dashed border-gray-300 rounded-lg text-gray-500 hover:border-blue-400 hover:text-blue-500 transition-colors flex items-center justify-center gap-2 bg-gray-50 hover:bg-blue-50"
+            >
+              <Plus className="w-5 h-5" />
+              Add New Role
+            </button>
+          </div>
         </div>
 
         {hasChanges && (

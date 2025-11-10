@@ -537,7 +537,7 @@ usernameSystemAccess: '',
                 <option value="">Select Designation</option>
                 <option value="admin-doctor">Admin Doctor</option>
                 <option value="assistant-doctor">Assistant Doctor</option>
-                <option value="Executive">Executive</option>
+                <option value="Executive">Medicine Preparer</option>
               </select>
             </div>
 
