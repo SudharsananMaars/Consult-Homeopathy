@@ -21,7 +21,8 @@ const RawMaterialForm = ({ isEdit = false }) => {
     isAlcohol: false,
     vendorName: '',
     vendorLocation: '',
-    vendorPhone: ''
+    vendorPhone: '',
+    qrSize: 'Medium'
   };
 
   const [formData, setFormData] = useState(initialState);
@@ -207,6 +208,7 @@ const RawMaterialForm = ({ isEdit = false }) => {
       formDataToSubmit.append('vendorName', formData.vendorName);
       formDataToSubmit.append('vendorPhone', formData.vendorPhone);
       formDataToSubmit.append('vendorLocation', formData.vendorLocation);
+      formDataToSubmit.append('qrSize', formData.qrSize);
       
       // Append the image file if it exists
       if (imageFile) {
@@ -615,6 +617,24 @@ const RawMaterialForm = ({ isEdit = false }) => {
             className="w-full border border-gray-300 rounded-lg px-4 py-2 mt-1 focus:outline-none focus:ring-2 focus:ring-blue-500"
           />
         </div>
+
+        {/* QR Size */}
+<div>
+  <label htmlFor="qrSize" className="block font-medium text-gray-700">QR Code Size</label>
+  <select
+    id="qrSize"
+    name="qrSize"
+    value={formData.qrSize}
+    onChange={handleChange}
+    required
+    className="w-full border border-gray-300 rounded-lg px-4 py-2 mt-1 focus:outline-none focus:ring-2 focus:ring-blue-500"
+  >
+    <option value="Very Small">Very Small</option>
+    <option value="Small">Small</option>
+    <option value="Medium">Medium</option>
+    <option value="Large">Large</option>
+  </select>
+</div>
 
         {/* Vendor Information Section */}
         <div className="border-t border-gray-200 pt-6">
