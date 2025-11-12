@@ -22,7 +22,7 @@ const AddVendor = () => {
   });
   
   const [products, setProducts] = useState([
-    { rawMaterialName: '', rawMaterialPrice: '' }
+    { rawMaterialName: '', rawMaterialPrice: '', quantity: '', uom: '' }
   ]);
 
   const handleVendorChange = (e) => {
@@ -49,7 +49,7 @@ const AddVendor = () => {
   };
 
   const addProductField = () => {
-    setProducts([...products, { rawMaterialName: '', rawMaterialPrice: '' }]);
+    setProducts([...products, { rawMaterialName: '', rawMaterialPrice: '', quantity: '', uom: '' }]);
   };
 
   const removeProductField = (index) => {
@@ -94,7 +94,7 @@ const AddVendor = () => {
     
     if (!vendor.zipCode.trim()) {
       newErrors.zipCode = 'Zip code is required';
-    } else if (!/^\d{5}(-\d{4})?$/.test(vendor.zipCode)) {
+    } else if (!/^\d{6}(-\d{4})?$/.test(vendor.zipCode)) {
       newErrors.zipCode = 'Please enter a valid zip code';
     }
     
@@ -113,6 +113,15 @@ const AddVendor = () => {
       } else if (isNaN(parseFloat(product.rawMaterialPrice)) || parseFloat(product.rawMaterialPrice) <= 0) {
         newErrors[`products[${index}].rawMaterialPrice`] = 'Price must be a positive number';
       }
+      if (!product.quantity) {
+  newErrors[`products[${index}].quantity`] = 'Quantity is required';
+} else if (isNaN(parseFloat(product.quantity)) || parseFloat(product.quantity) <= 0) {
+  newErrors[`products[${index}].quantity`] = 'Quantity must be a positive number';
+}
+
+if (!product.uom.trim()) {
+  newErrors[`products[${index}].uom`] = 'Unit of measure is required';
+}
     });
     
     return newErrors;
@@ -362,7 +371,7 @@ const AddVendor = () => {
               {products.map((product, index) => (
                 <div key={index} className="mb-4 bg-white p-4 rounded-lg shadow-sm">
                   <div className="grid grid-cols-1 md:grid-cols-12 gap-4 items-end">
-                    <div className="md:col-span-5">
+                    <div className="md:col-span-4">
                       <label htmlFor={`rawMaterialName${index}`} className="block text-sm font-medium text-gray-700 mb-1">
                         Raw Material Name<span className="text-red-500">*</span>
                       </label>
@@ -387,7 +396,7 @@ const AddVendor = () => {
                       )}
                     </div>
                     
-                    <div className="md:col-span-5">
+                    <div className="md:col-span-3">
                       <label htmlFor={`rawMaterialPrice${index}`} className="block text-sm font-medium text-gray-700 mb-1">
                         Price<span className="text-red-500">*</span>
                       </label>
@@ -411,6 +420,44 @@ const AddVendor = () => {
                         <p className="mt-1 text-sm text-red-600">{errors[`products[${index}].rawMaterialPrice`]}</p>
                       )}
                     </div>
+
+                    <div className="md:col-span-3">
+  <label htmlFor={`quantity${index}`} className="block text-sm font-medium text-gray-700 mb-1">
+    Quantity<span className="text-red-500">*</span>
+  </label>
+  <input
+    type="number"
+    step="0.01"
+    min="0"
+    id={`quantity${index}`}
+    name="quantity"
+    value={product.quantity}
+    onChange={(e) => handleProductChange(index, e)}
+    placeholder="0"
+    className={`w-full rounded-md border ${errors[`products[${index}].quantity`] ? 'border-red-500' : 'border-gray-300'} focus:border-blue-500 focus:ring focus:ring-blue-200 focus:ring-opacity-50 py-2 px-3`}
+  />
+  {errors[`products[${index}].quantity`] && (
+    <p className="mt-1 text-sm text-red-600">{errors[`products[${index}].quantity`]}</p>
+  )}
+</div>
+
+<div className="md:col-span-3">
+  <label htmlFor={`uom${index}`} className="block text-sm font-medium text-gray-700 mb-1">
+    Unit of Measure<span className="text-red-500">*</span>
+  </label>
+  <input
+    type="text"
+    id={`uom${index}`}
+    name="uom"
+    value={product.uom}
+    onChange={(e) => handleProductChange(index, e)}
+    placeholder="e.g. kg, lbs"
+    className={`w-full rounded-md border ${errors[`products[${index}].uom`] ? 'border-red-500' : 'border-gray-300'} focus:border-blue-500 focus:ring focus:ring-blue-200 focus:ring-opacity-50 py-2 px-3`}
+  />
+  {errors[`products[${index}].uom`] && (
+    <p className="mt-1 text-sm text-red-600">{errors[`products[${index}].uom`]}</p>
+  )}
+</div>
                     
                     <div className="md:col-span-2">
                       <button
