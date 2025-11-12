@@ -173,7 +173,7 @@ function App() {
         <Route
           path="/vendors"
           element={
-            <ProtectedRoute allowedRoles={["admin", "Manager"]}>
+            <ProtectedRoute allowedRoles={["admin", "Manager", "Doctor"]}>
               <VendorDashboard />
             </ProtectedRoute>
           }
@@ -181,7 +181,7 @@ function App() {
         <Route
           path="/vendors/add"
           element={
-            <ProtectedRoute allowedRoles={["admin", "Manager"]}>
+            <ProtectedRoute allowedRoles={["admin", "Manager", "Doctor"]}>
               <AddVendor />
             </ProtectedRoute>
           }
@@ -189,7 +189,7 @@ function App() {
         <Route
           path="/vendors/edit/:id"
           element={
-            <ProtectedRoute allowedRoles={["admin", "Manager"]}>
+            <ProtectedRoute allowedRoles={["admin", "Manager", "Doctor"]}>
               <EditVendor />
             </ProtectedRoute>
           }
