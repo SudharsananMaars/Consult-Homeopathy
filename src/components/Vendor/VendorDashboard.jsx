@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import axios from 'axios';
 import VendorList from './VendorList';
-import { ChevronRight, Plus, Loader, AlertTriangle, Users, Package, DollarSign } from 'lucide-react';
+import { ChevronRight, Plus, Loader, AlertTriangle, Users, Package, ArrowLeft } from 'lucide-react';
 
 import config from '../../config';
 const VendorDashboard = () => {
@@ -126,20 +126,27 @@ const VendorDashboard = () => {
     <p className="text-gray-500 mt-1">Monitor and manage your vendor relationships</p>
   </div>
   <div className="flex gap-3">
-    <Link
-      to="/vendors/add"
-      className="inline-flex items-center px-4 py-2 bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-700 transition-colors focus:ring-4 focus:ring-blue-300"
-    >
-      <Plus className="w-5 h-5 mr-2" />
-      Add New Vendor
-    </Link>
-    <Link
-      to="/amendmenthistory"
-      className="inline-flex items-center px-4 py-2 bg-gray-600 text-white font-medium rounded-lg hover:bg-gray-700 transition-colors focus:ring-4 focus:ring-gray-300"
-    >
-      Amendment History
-    </Link>
-  </div>
+  <Link
+    to="/dashboard"  
+    className="inline-flex items-center px-4 py-2 bg-gray-200 text-gray-700 font-medium rounded-lg hover:bg-gray-200 transition-colors focus:ring-4 focus:ring-gray-200"
+  >
+    <ArrowLeft className="w-5 h-5 mr-2" />
+    Back to Dashboard
+  </Link>
+  <Link
+    to="/vendors/add"
+    className="inline-flex items-center px-4 py-2 bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-700 transition-colors focus:ring-4 focus:ring-blue-300"
+  >
+    <Plus className="w-5 h-5 mr-2" />
+    Add New Vendor
+  </Link>
+  <Link
+    to="/amendmenthistory"
+    className="inline-flex items-center px-4 py-2 bg-gray-600 text-white font-medium rounded-lg hover:bg-gray-700 transition-colors focus:ring-4 focus:ring-gray-300"
+  >
+    Amendment History
+  </Link>
+</div>
 </div>
 
       

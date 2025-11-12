@@ -185,8 +185,15 @@ const InventoryDashboard = () => {
 
   return (
     <div className="p-6 bg-gradient-to-b from-white to-gray-50 rounded-2xl shadow-md">
-      <h2 className="text-3xl font-bold text-gray-800 mb-6 text-center">Inventory Dashboard</h2>
-
+      <div className="flex justify-between items-center mb-6">
+    <h2 className="text-3xl font-bold text-gray-800">Inventory Dashboard</h2>
+    <Link 
+      to="/dashboard"
+      className="bg-gray-600 hover:bg-gray-700 text-white text-sm px-4 py-2 rounded-lg shadow flex items-center gap-2"
+    >
+      ← Back to Dashboard
+    </Link>
+  </div>
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-10">
         <div className="bg-white rounded-2xl shadow p-4 text-center hover:shadow-lg transition">
           <h3 className="text-lg font-semibold text-gray-700">Raw Materials</h3>

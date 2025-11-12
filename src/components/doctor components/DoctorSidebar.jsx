@@ -23,7 +23,7 @@ import {
   LogOut,
   Syringe
 } from "lucide-react";
-import { FaCalendarAlt } from "react-icons/fa";
+import { FaCalendarAlt, FaStore } from "react-icons/fa";
 import { motion, AnimatePresence } from "framer-motion";
 import SidebarProfile from "./DoctorSidebarProfile";
 import axios from "axios";
@@ -78,84 +78,99 @@ const Sidebar = ({ role }) => {
           },
           {
             id: 9,
+            path: "/vendors",
+            name: "Vendor Management",
+            icon: FaStore,
+          },
+          {
+            id: 10,
             path: "/medicine-preparation",
             name: "Medicine Preparation",
             icon: Syringe,
           },
           {
-            id: 10,
+            id: 11,
             path: "/medicine-preparation/preparation",
             name: "Medicine Preparation Dashboard",
             icon: Pill,
           },
           {
-            id: 11,
+            id: 12,
             path: "/doctor-inventory",
             name: "Patient Inventory",
             icon: Package,
           },
           {
-            id: 12,
+            id: 13,
             path: "/workshoppage",
             name: "Workshops",
             icon: Video,
           },
            {
-            id: 13,
+            id: 14,
             path: "/debitcredit",
             name: "Credit and Debit Notes",
             icon: FileText,
           },
-          { id: 14, path: "/content", name: "Content", icon: FileText },
+          { id: 15, path: "/content", name: "Content", icon: FileText },
           {
-            id: 15,
+            id: 16,
             path: "/lekagedetection",
             name: "Leakage Detection",
             icon: Droplet,
           },
           {
-            id: 16,
+            id: 17,
             path: "/doctor-dashboard/all",
             name: "Doctor CRM",
             icon: Stethoscope,
           },
           {
-            id: 17,
+            id: 18,
             path: "/allocation",
             name: "Doctor Allocation",
             icon: UserCheck,
           },
-          { id: 18, path: "/docsettings", name: "Settings", icon: Settings },
-          { id: 19, path: "/hrm", name: "HR Management", icon: Users },
+          { id: 19, path: "/docsettings", name: "Settings", icon: Settings },
+          { id: 20, path: "/hrm", name: "HR Management", icon: Users },
         ]
       : role === "assistant-doctor"
       ? [
           { id: 1, path: "/dashboard", name: "Home", icon: Home },
           {
             id: 2,
+            path: "/appointments/list",
             name: "Appointments",
             icon: Calendar,
-            sublinks: [
-              { id: 21, path: "/appointments/calender", name: "Calendar" },
-              { id: 22, path: "/appointments/list", name: "Appointment List" },
-            ],
           },
-          { id: 3, path: "/docpayments", name: "Payments", icon: Wallet },
           {
-            id: 4,
+            id: 3,
+            name: "Patients",
+            icon: Users,
+            path: "/patients"
+          },
+          { id: 4, path: "/docpayments", name: "Payments", icon: Wallet },
+          {
+            id: 5,
             path: "/inventory",
             name: "Inventory",
             icon: Package,
           },
-          { id: 5, path: "/content", name: "Content", icon: FileText },
           {
             id: 6,
+            path: "/overview",
+            name: "Overview",
+            icon: PieChart,
+          },
+          { id: 7, path: "/content", name: "Content", icon: FileText },
+          {
+            id: 8,
             path: "/doctor-dashboard",
             name: "Doctor CRM",
             icon: Stethoscope,
           },
-          { id: 7, path: "/assistleave", name: "Leave", icon: Calendar },
-          { id: 8, path: "/docsettings", name: "Settings", icon: Settings },
+          { id: 9, path: "/assistleave", name: "Leave", icon: Calendar },
+          { id: 10, path: "/docsettings", name: "Settings", icon: Settings },
         ]
       : [];
 

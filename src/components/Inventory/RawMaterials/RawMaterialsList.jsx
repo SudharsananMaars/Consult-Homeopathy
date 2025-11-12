@@ -135,47 +135,48 @@ const RawMaterialsList = () => {
   return (
     <div className="p-6 bg-white rounded-2xl shadow-md">
       <div className="flex flex-col md:flex-row justify-between items-center mb-6">
-        <h2 className="text-2xl font-bold text-gray-800 mb-4 md:mb-0">
-          Raw Materials
-        </h2>
-          <div className="flex items-center gap-4">
-            <div className="flex items-center gap-4">
-              <div className="flex items-center gap-2">
-                <label htmlFor="filter" className="text-sm font-medium text-gray-700"></label>
-                <select
-                  id="filter"
-                  value={filter}
-                  onChange={(e) => handleFilterChange(e.target.value)}
-                  className="border border-gray-300 rounded-lg px-3 py-1 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                >
-                  <option value="all">All</option>
-                  <option value="expiring">Expiring Soon</option>
-                  <option value="lowstock">Low Stock</option>
-                </select>
-              </div>
-
-              <div className="flex items-center gap-2">
-                <label htmlFor="typeFilter" className="text-sm font-medium text-gray-700">Type:</label>
-                <select
-                  id="typeFilter"
-                  value={typeFilter}
-                  onChange={(e) => setTypeFilter(e.target.value)}
-                  className="border border-gray-300 rounded-lg px-3 py-1 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                >
-                  <option value="all">All</option>
-                  <option value="Raw Material">Raw Material</option>
-                  <option value="Packaging">Packaging</option>
-                </select>
-              </div>
-            </div>
-          {/*<Link
-            to="/raw-materials/new"
-            className="bg-blue-600 hover:bg-blue-700 text-white text-sm px-4 py-2 rounded-lg shadow"
-          >
-            + Add Raw Material
-          </Link>*/}
-        </div>
+  <h2 className="text-2xl font-bold text-gray-800 mb-4 md:mb-0">
+    Raw Materials
+  </h2>
+  <div className="flex items-center gap-4">
+    <div className="flex items-center gap-4">
+      <div className="flex items-center gap-2">
+        <label htmlFor="filter" className="text-sm font-medium text-gray-700"></label>
+        <select
+          id="filter"
+          value={filter}
+          onChange={(e) => handleFilterChange(e.target.value)}
+          className="border border-gray-300 rounded-lg px-3 py-1 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
+        >
+          <option value="all">All</option>
+          <option value="expiring">Expiring Soon</option>
+          <option value="lowstock">Low Stock</option>
+        </select>
       </div>
+
+      <div className="flex items-center gap-2">
+        <label htmlFor="typeFilter" className="text-sm font-medium text-gray-700">Type:</label>
+        <select
+          id="typeFilter"
+          value={typeFilter}
+          onChange={(e) => setTypeFilter(e.target.value)}
+          className="border border-gray-300 rounded-lg px-3 py-1 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
+        >
+          <option value="all">All</option>
+          <option value="Raw Material">Raw Material</option>
+          <option value="Packaging">Packaging</option>
+        </select>
+      </div>
+    </div>
+    
+    <Link
+      to="/inventory"
+      className="bg-blue-600 hover:bg-blue-700 text-white text-sm px-4 py-2 rounded-lg shadow"
+    >
+      ← Back to Inventory
+    </Link>
+  </div>
+</div>
 
       {filteredMaterials.length === 0 ? (
         <div className="text-center text-gray-600 py-10">
