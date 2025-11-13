@@ -41,7 +41,7 @@ const RawMaterialForm = ({ isEdit = false }) => {
   // Category options based on type
   const categoryOptions = {
     'Raw Material': ['Pills', 'Liquid', 'Tablets', 'Individual Medicine'],
-    'Packaging': ['Wrapper', 'Cardboard Box']
+    'Packaging': ['Wrapper', 'Cardboard Box', 'Bottle', 'Container']
   };
 
   // UOM mapping based on category
@@ -52,7 +52,9 @@ const RawMaterialForm = ({ isEdit = false }) => {
       'Pills': 'gms',
       'Individual Medicine': 'pieces',
       'Wrapper': 'pieces',
-      'Cardboard Box': 'pieces'
+      'Cardboard Box': 'pieces',
+      'Bottle': 'pieces',
+      'Container': 'pieces'
     };
     return uomMap[category] || '';
   };

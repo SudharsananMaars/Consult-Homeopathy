@@ -196,27 +196,33 @@ const VendorList = () => {
                       <div className="overflow-x-auto">
                         <table className="min-w-full divide-y divide-gray-200">
                           <thead className="bg-gray-50">
-                            <tr>
-                              <th scope="col" className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                Raw Material
-                              </th>
-                              <th scope="col" className="px-4 py-2 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                Price
-                              </th>
-                            </tr>
-                          </thead>
-                          <tbody className="bg-white divide-y divide-gray-200">
-                            {vendor.products.map((product, index) => (
-                              <tr key={index} className={index % 2 === 0 ? 'bg-white' : 'bg-gray-50'}>
-                                <td className="px-4 py-2 text-sm text-gray-900">
-                                  {product.rawMaterialName}
-                                </td>
-                                <td className="px-4 py-2 text-sm text-gray-900 text-right">
-                                  ₹{parseFloat(product.rawMaterialPrice).toFixed(2)}
-                                </td>
-                              </tr>
-                            ))}
-                          </tbody>
+  <tr>
+    <th scope="col" className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+      Raw Material
+    </th>
+    <th scope="col" className="px-4 py-2 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
+      Quantity
+    </th>
+    <th scope="col" className="px-4 py-2 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+      Price
+    </th>
+  </tr>
+</thead>
+<tbody className="bg-white divide-y divide-gray-200">
+  {vendor.products.map((product, index) => (
+    <tr key={index} className={index % 2 === 0 ? 'bg-white' : 'bg-gray-50'}>
+      <td className="px-4 py-2 text-sm text-gray-900">
+        {product.rawMaterialName}
+      </td>
+      <td className="px-4 py-2 text-sm text-gray-900 text-center">
+        {product.quantity} {product.uom}
+      </td>
+      <td className="px-4 py-2 text-sm text-gray-900 text-right">
+        ₹{parseFloat(product.rawMaterialPrice).toFixed(2)}
+      </td>
+    </tr>
+  ))}
+</tbody>
                         </table>
                       </div>
                     ) : (
