@@ -337,9 +337,6 @@ const MedicinePackaging = () => {
                         Stick Label
                       </th>
                       <th className="bg-white text-center p-4 font-bold text-gray-700 text-sm">
-                        Upload Image
-                      </th>
-                      <th className="bg-gray-100 text-center p-4 font-bold text-gray-700 text-sm">
                         Print Label
                       </th>
                     </tr>
@@ -365,11 +362,6 @@ const MedicinePackaging = () => {
                           </select>
                         </td>
                         <td className="bg-white p-4 text-center">
-                          <button className="bg-gray-200 px-3 py-1 rounded hover:bg-gray-300">
-                            Upload
-                          </button>
-                        </td>
-                        <td className="bg-gray-100 p-4 text-center">
                           <button
                             className="bg-blue-500 text-white px-3 py-1 rounded hover:bg-blue-600"
                             onClick={() => {

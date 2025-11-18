@@ -1,9 +1,8 @@
 import React, { useState, useEffect, useRef } from "react";
-import { FaArrowLeft, FaPlus, FaMinus, FaTrash, FaShoppingCart, FaCheck, FaExclamationTriangle } from "react-icons/fa";
+import { FaCheck, FaExclamationTriangle } from "react-icons/fa";
 import moment from "moment";
 import config from "../../config";
 import { ChevronDown, Filter, ListFilter } from "lucide-react";
-import { InformationCircleIcon } from "@heroicons/react/24/outline";
 import { useParams, useNavigate } from "react-router-dom"; 
 import referenceImgSrc from '../../assets/images/ReferenceImage.png';
 
@@ -17,6 +16,7 @@ const MedicinePreparationView = () => {
   const [scanSource, setScanSource] = useState(null);
   const [postWeightData, setPostWeightData] = useState({}); 
   const [rawMaterials, setRawMaterials] = useState([]);
+  const [capturedImages, setCapturedImages] = useState({});
   const [isOpen, setIsOpen] = useState(false);
   const [init, setInit] = useState(null);
   const [step3Instructions, setStep3Instructions] = useState([]);
@@ -327,6 +327,31 @@ useEffect(() => {
 }, []);
 
 
+const handleImageCapture = async (material) => {
+  try {
+    const input = document.createElement('input');
+    input.type = 'file';
+    input.accept = 'image/*';
+    input.capture = 'environment'; // Use camera on mobile
+    
+    input.onchange = async (e) => {
+      const file = e.target.files[0];
+      if (!file) return;
+      
+      // Store the image file
+      setCapturedImages(prev => ({
+        ...prev,
+        [material.rawMaterialId]: file
+      }));
+    };
+    
+    input.click();
+  } catch (error) {
+    console.error("Error capturing image:", error);
+    alert("Failed to capture image");
+  }
+};
+
 
 const handleSelectMedicine = async (medicine) => {
   setSelectedMedicine(medicine);
@@ -479,6 +504,31 @@ const handlePrepare = async () => {
 
     const responseData = await res.json();
     console.log("Video upload successful:", responseData);
+
+    for (const material of rawMaterials) {
+  const imageFile = capturedImages[material.rawMaterialId];
+  if (imageFile) {
+    try {
+      const imageFormData = new FormData();
+      imageFormData.append("prescriptionId", prescription._id);
+      imageFormData.append("medicineName", selectedMedicine.medicineName);
+      imageFormData.append("photo", imageFile);
+
+      await fetch(`${API_URL}/api/medicine-summary/upload-preparation-photo`, {
+        method: "POST",
+        headers: {
+          ...(token && { 'Authorization': `Bearer ${token}` })
+        },
+        body: imageFormData,
+      });
+      
+      console.log(`Image uploaded for ${material.name}`);
+    } catch (imgErr) {
+      console.error(`Failed to upload image for ${material.name}:`, imgErr);
+      // Continue with other uploads even if one fails
+    }
+  }
+}
     
   } catch (err) {
     console.error("Network error during video upload:", err);
@@ -494,6 +544,7 @@ const handlePrepare = async () => {
   setSelectedMedicine(null);
   setCart([]);
   setRawMaterials([]);
+  setCapturedImages({});
 
   const remainingItems = prescription.prescriptionItems.filter(
     item => !newPrepared.includes(item._id)
@@ -1594,13 +1645,14 @@ const stopRecording = () => {
           </td>
 
           {/* Upload button */}
-          <td className="bg-gray-100 p-4 text-center">
-            <button
-              className="bg-gray-200 text-gray-700 px-3 py-1 rounded hover:bg-gray-300 transition-colors text-xs font-medium"
-            >
-              Upload
-            </button>
-          </td>
+<td className="bg-gray-100 p-4 text-center">
+  <button
+    onClick={() => handleImageCapture(material)}
+    className="bg-blue-500 text-white px-3 py-1 rounded hover:bg-blue-600 transition-colors text-xs font-medium"
+  >
+    {capturedImages[material.rawMaterialId] ? "✓ Uploaded" : "Upload"}
+  </button>
+</td>
         </tr>
       ))}
     </tbody>

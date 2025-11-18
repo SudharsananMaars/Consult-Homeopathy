@@ -131,16 +131,24 @@ const MedicinePreparation = () => {
                                 </p>
                               </div>
                               <div className="flex gap-2">
-                                {medicine.preparationVideoUrl && (
-                                  <button
-                                    onClick={() => handleVideoPlay(medicine.preparationVideoUrl)}
-                                    className="inline-flex items-center gap-1 px-3 py-1.5 text-xs font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
-                                  >
-                                    <FaPlay className="w-3 h-3" />
-                                    Play Video
-                                  </button>
-                                )}
-                              </div>
+  {medicine.preparationVideoUrl && (
+    <button
+      onClick={() => handleVideoPlay(medicine.preparationVideoUrl)}
+      className="inline-flex items-center gap-1 px-3 py-1.5 text-xs font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+    >
+      <FaPlay className="w-3 h-3" />
+      Play Video
+    </button>
+  )}
+  {medicine.preparationPhoto && (
+    <button
+      onClick={() => window.open(medicine.preparationPhoto, '_blank')}
+      className="inline-flex items-center gap-1 px-3 py-1.5 text-xs font-medium rounded-md text-white bg-green-600 hover:bg-green-700 focus:ring-2 focus:ring-offset-2 focus:ring-green-500"
+    >
+      View Photo
+    </button>
+  )}
+</div>
                             </div>
                           </div>
                         ))}
