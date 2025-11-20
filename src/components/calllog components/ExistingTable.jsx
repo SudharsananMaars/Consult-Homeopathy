@@ -1447,17 +1447,14 @@ const handleTabChange = (tab) => {
           },
         });
         break;
-      case "ViewPrescription":
-        const appointmentId = item.medicalDetails._id;
-        setModalContent(
-          <PrescriptionViewModal
-            isOpen={true}
-            onClose={() => setShowModal(false)}
-            appointmentId={appointmentId}
-          />
-        );
-        setShowModal(true);
-        break;
+        case "ViewPrescription":
+  const prescriptionId = item.medicalDetails.prescription_id;
+  if (prescriptionId) {
+    navigate(`/view-prescription/${prescriptionId}`);
+  } else {
+    alert("Prescription ID not found for this patient");
+  }
+  break;
         case "MarkAsLost":
   try {
     const prescriptionId = item.medicalDetails.prescription_id;

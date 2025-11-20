@@ -561,57 +561,68 @@ const [polishingNote, setPolishingNote] = useState(false);
   };
 
   const updatePrescriptionItem = (itemId, field, value) => {
-    setPrescriptionData((prev) => ({
-      ...prev,
-      prescriptionItems: prev.prescriptionItems.map((item) => {
-        if (item.id === itemId) {
-          let updatedItem = { ...item };
+  setPrescriptionData((prev) => {
+    const updatedItems = prev.prescriptionItems.map((item) => {
+      if (item.id === itemId) {
+        let updatedItem = { ...item };
 
-          if (field === "frequencies") {
-            // Store frequencies directly without transformation
-            updatedItem.frequencies = value;
+        if (field === "frequencies") {
+          // Store frequencies directly without transformation
+          updatedItem.frequencies = value;
 
-            // Update frequencyType from the first frequency
-            if (value && value.length > 0) {
-              updatedItem.frequencyType = value[0].frequencyType;
-            }
-          } else if (field === "form") {
-            const formQuantity = getQuantityByForm(value);
-            updatedItem = {
-              ...updatedItem,
-              form: value,
-              dispenseQuantity: formQuantity.quantity,
-              uom: formQuantity.uom,
-              preparationQuantity: (item.preparationQuantity || []).map(
-                (prep) => ({
-                  ...prep,
-                  unit: formQuantity.uom,
-                })
-              ),
-            };
-          } else {
-            updatedItem[field] = value;
+          // Update frequencyType from the first frequency
+          if (value && value.length > 0) {
+            updatedItem.frequencyType = value[0].frequencyType;
           }
-          console.log("Updating", field, "with", value);
-
-          return updatedItem;
+        } else if (field === "form") {
+          const formQuantity = getQuantityByForm(value);
+          updatedItem = {
+            ...updatedItem,
+            form: value,
+            dispenseQuantity: formQuantity.quantity,
+            uom: formQuantity.uom,
+            preparationQuantity: (item.preparationQuantity || []).map(
+              (prep) => ({
+                ...prep,
+                unit: formQuantity.uom,
+              })
+            ),
+          };
+        } else {
+          updatedItem[field] = value;
         }
-        return item;
-      }),
-    }));
+        console.log("Updating", field, "with", value);
 
-    // Trigger distilled water calculation for liquid forms when dispense quantity changes
-    if (field === "dispenseQuantity" || field === "form") {
-      setTimeout(() => {
-        const currentItem = prescriptionData.prescriptionItems.find(
-          (item) => item.id === itemId
-        );
-        if (currentItem && currentItem.form === "Liquid form") {
-          calculateDistilledWaterQuantity(itemId);
-        }
-      }, 100);
-    }
-  };
+        return updatedItem;
+      }
+      return item;
+    });
+
+    // Recalculate total medicine charges
+    const totalMedicineCharges = updatedItems.reduce(
+      (sum, item) => sum + (parseFloat(item.price) || 0),
+      0
+    );
+
+    return {
+      ...prev,
+      prescriptionItems: updatedItems,
+      medicineCharges: totalMedicineCharges,
+    };
+  });
+
+  // Trigger distilled water calculation for liquid forms when dispense quantity changes
+  if (field === "dispenseQuantity" || field === "form") {
+    setTimeout(() => {
+      const currentItem = prescriptionData.prescriptionItems.find(
+        (item) => item.id === itemId
+      );
+      if (currentItem && currentItem.form === "Liquid form") {
+        calculateDistilledWaterQuantity(itemId);
+      }
+    }, 100);
+  }
+};
 
   // Form quantity mapping based on medicine form
   const getQuantityByForm = (form) => {
@@ -2335,12 +2346,24 @@ const [polishingNote, setPolishingNote] = useState(false);
                         </td>
 
                         {/* Price */}
-                        <td className="px-4 py-4 text-center min-w-24">
-                          <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-semibold bg-green-100 text-green-800">
-                            ₹{item.price.toFixed(2)}
-                          </span>
-                        </td>
-
+                        {/* Price */}
+<td className="px-4 py-4 text-center min-w-24">
+  <input
+    type="number"
+    value={item.price}
+    onChange={(e) =>
+      updatePrescriptionItem(
+        item.id,
+        "price",
+        parseFloat(e.target.value) || 0
+      )
+    }
+    className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-green-500 focus:border-transparent bg-green-50 text-green-800 font-semibold text-center"
+    min="0"
+    step="0.01"
+    placeholder="0.00"
+  />
+</td>
                         {/* Medicine Consumption */}
                         <td
   className={`px-4 py-4 min-w-64 ${
@@ -2462,7 +2485,7 @@ const [polishingNote, setPolishingNote] = useState(false);
               </div>
               <div>
                 <label className="block text-sm font-medium mb-1">
-                  Additional Charges
+                  Consultation Charges
                 </label>
                 <input
                   type="number"
