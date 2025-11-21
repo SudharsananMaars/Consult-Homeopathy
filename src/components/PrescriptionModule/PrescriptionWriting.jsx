@@ -1243,6 +1243,7 @@ const [polishingNote, setPolishingNote] = useState(false);
           // medicineConsumptionType: true,
           price: true,
           medicineConsumption: true,
+          preparationQuantity: true,
         };
       case "Only Medicine":
       case "Medicine + Kit":
@@ -1858,9 +1859,6 @@ const [polishingNote, setPolishingNote] = useState(false);
                       Frequency
                     </th>
                     <th className="border-b border-gray-200 px-4 py-4 text-sm font-semibold text-gray-700 text-left">
-                      Price
-                    </th>
-                    <th className="border-b border-gray-200 px-4 py-4 text-sm font-semibold text-gray-700 text-left">
                       Medicine Consumption
                     </th>
                     <th className="border-b border-gray-200 px-4 py-4 text-sm font-semibold text-gray-700 text-left">
@@ -2344,26 +2342,6 @@ const [polishingNote, setPolishingNote] = useState(false);
                             </button>
                           </div>
                         </td>
-
-                        {/* Price */}
-                        {/* Price */}
-<td className="px-4 py-4 text-center min-w-24">
-  <input
-    type="number"
-    value={item.price}
-    onChange={(e) =>
-      updatePrescriptionItem(
-        item.id,
-        "price",
-        parseFloat(e.target.value) || 0
-      )
-    }
-    className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-green-500 focus:border-transparent bg-green-50 text-green-800 font-semibold text-center"
-    min="0"
-    step="0.01"
-    placeholder="0.00"
-  />
-</td>
                         {/* Medicine Consumption */}
                         <td
   className={`px-4 py-4 min-w-64 ${
@@ -2461,8 +2439,15 @@ const [polishingNote, setPolishingNote] = useState(false);
                 <input
                   type="number"
                   value={prescriptionData.medicineCharges}
-                  readOnly
-                  className="w-full border rounded px-3 py-2 bg-gray-100"
+                  onChange={(e) =>
+                    setPrescriptionData((prev) => ({
+                      ...prev,
+                      medicineCharges: parseFloat(e.target.value) || 0,
+                    }))
+                  }
+                  className="w-full border rounded px-3 py-2"
+                  min="0"
+                  step="1"
                 />
               </div>
               <div>
