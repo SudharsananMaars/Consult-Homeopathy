@@ -199,57 +199,26 @@ const PrescriptionViewModal = () => {
     );
   };
 
-  const renderGroupedSchedule = (item, slot) => {
-    if (item.frequentSchedule && item.frequentSchedule.length > 0) {
-      // Only render in 'morning' slot and skip others
-      if (slot !== "morning") return null;
+const renderGroupedSchedule = (item, slot) => {
+  if (item.frequentSchedule && item.frequentSchedule.length > 0) {
+    if (slot !== "morning") return "0";
+    
+    // Check if any day has a dose scheduled
+    const hasDosage = item.frequentSchedule.some(
+      (sched) => sched.frequentFrequency?.doses > 0
+    );
+    return hasDosage ? "1" : "0";
+  }
 
-      const groups = [];
-      let currentGroup = {
-        startDay: item.frequentSchedule[0].day,
-        endDay: item.frequentSchedule[0].day,
-        frequency: item.frequentSchedule[0].frequency,
-        doses: item.frequentSchedule[0].frequentFrequency.doses,
-      };
-
-      for (let i = 1; i < item.frequentSchedule.length; i++) {
-        const current = item.frequentSchedule[i];
-        const prev = item.frequentSchedule[i - 1];
-
-        if (
-          current.frequency === prev.frequency &&
-          current.frequentFrequency.doses === prev.frequentFrequency.doses
-        ) {
-          currentGroup.endDay = current.day;
-        } else {
-          groups.push({ ...currentGroup });
-          currentGroup = {
-            startDay: current.day,
-            endDay: current.day,
-            frequency: current.frequency,
-            doses: current.frequentFrequency.doses,
-          };
-        }
-      }
-
-      groups.push({ ...currentGroup });
-
-      return groups.map((group, idx) => (
-        <div key={idx} className="mb-1 text-blue-700">
-          <strong>
-            Day{" "}
-            {group.startDay === group.endDay
-              ? group.startDay
-              : `${group.startDay}-${group.endDay}`}
-          </strong>{" "}
-          - {group.doses} doses | {group.frequency}
-        </div>
-      ));
-    }
-
-    // If standardSchedule exists, fallback to normal logic
-    return renderTimingForSlot(slot, item.standardSchedule);
-  };
+  // For standardSchedule
+  if (!item.standardSchedule || item.standardSchedule.length === 0) return "0";
+  
+  const hasDosage = item.standardSchedule.some(
+    (sched) => sched?.timing?.[slot]?.time || sched?.timing?.[slot]?.food
+  );
+  
+  return hasDosage ? "1" : "0";
+};
 
   // Check if prescription has any frequent frequency items
   const hasFrequentItems = () => {
@@ -377,8 +346,7 @@ const PrescriptionViewModal = () => {
       <th className="px-3 py-2 font-semibold text-center">Label</th>
       <th className="px-3 py-2 font-semibold text-center">Date</th>
       <th className="px-3 py-2 font-semibold text-left">Medicine Name</th>
-      <th className="px-3 py-2 font-semibold text-left">Form</th>
-      <th className="px-3 py-2 font-semibold text-left">Duration</th>
+      <th className="px-3 py-2 font-semibold text-left">Type</th>
       {hasFrequentItems() ? (
         <th className="px-3 py-2 font-semibold text-left">Dosage</th>
       ) : (
@@ -389,11 +357,12 @@ const PrescriptionViewModal = () => {
           <th className="px-3 py-2 font-semibold text-left">Night</th>
         </>
       )}
+       <th className="px-3 py-2 font-semibold text-left">Duration</th>
       <th className="px-3 py-2 font-semibold text-left">Consumption</th>
     </tr>
   </thead>
 
-  <tbody>
+<tbody>
     {prescriptionData.prescriptionItems.map((item, index) => {
       const medicineDuration = getMedicineDuration(item.medicineName, prescriptionData._id);
       const dateRange = medicineDuration
@@ -403,55 +372,66 @@ const PrescriptionViewModal = () => {
       const showData = (value) => (value ? value : "-");
 
       return (
-        <tr key={index} className="align-middle">
-          <td className="px-3 py-2 text-center align-middle">{index + 1}</td>
-          <td className="px-3 py-2 text-center font-bold align-middle">{showData(item.label)}</td>
-          <td className="px-3 py-2 text-center font-bold align-middle">{showData(dateRange)}</td>
-          <td className="px-3 py-2 align-middle">{showData(item.medicineName)}</td>
-          <td className="px-3 py-2 align-middle">{showData(item.form)}</td>
-          <td className="px-3 py-2 align-middle">
-            {showData(item.duration)}
-            {item.standardSchedule?.[0]?.day && (
-              <div className="mt-1">{item.standardSchedule[0].day}</div>
+        <>
+          {/* Main medicine row */}
+          <tr key={index} className="align-middle">
+            <td className="px-3 py-2 text-center align-middle">{index + 1}</td>
+            <td className="px-3 py-2 text-center font-bold align-middle">{showData(item.label)}</td>
+            <td className="px-3 py-2 text-center font-bold align-middle">{showData(dateRange)}</td>
+            <td className="px-3 py-2 align-middle">{showData(item.medicineName)}</td>
+            <td className="px-3 py-2 align-middle">{showData(item.form)}</td>
+            {hasFrequentItems() ? (
+              <td className="px-3 py-2 align-middle">
+                {item.frequencyType === "frequent" ? (
+                  renderGroupedSchedule(item, "morning") || "-"
+                ) : (
+                  <div className="space-y-1">
+                    <div>
+                      <strong>Morning:</strong> {renderGroupedSchedule(item, "morning") || "-"}
+                    </div>
+                    <div>
+                      <strong>Noon:</strong> {renderGroupedSchedule(item, "afternoon") || "-"}
+                    </div>
+                    <div>
+                      <strong>Evening:</strong> {renderGroupedSchedule(item, "evening") || "-"}
+                    </div>
+                    <div>
+                      <strong>Night:</strong> {renderGroupedSchedule(item, "night") || "-"}
+                    </div>
+                  </div>
+                )}
+              </td>
+            ) : item.frequentSchedule && item.frequentSchedule.length > 0 ? (
+              <td className="px-3 py-2 align-middle" colSpan={4}>
+                {renderGroupedSchedule(item, "morning") || "-"}
+              </td>
+            ) : (
+              <>
+                <td className="px-3 py-2 align-middle">{renderGroupedSchedule(item, "morning") || "-"}</td>
+                <td className="px-3 py-2 align-middle">{renderGroupedSchedule(item, "afternoon") || "-"}</td>
+                <td className="px-3 py-2 align-middle">{renderGroupedSchedule(item, "evening") || "-"}</td>
+                <td className="px-3 py-2 align-middle">{renderGroupedSchedule(item, "night") || "-"}</td>
+              </>
             )}
-          </td>
-
-          {hasFrequentItems() ? (
             <td className="px-3 py-2 align-middle">
-              {item.frequencyType === "frequent" ? (
-                renderGroupedSchedule(item, "morning") || "-"
-              ) : (
-                <div className="space-y-1">
-                  <div>
-                    <strong>Morning:</strong> {renderGroupedSchedule(item, "morning") || "-"}
-                  </div>
-                  <div>
-                    <strong>Noon:</strong> {renderGroupedSchedule(item, "afternoon") || "-"}
-                  </div>
-                  <div>
-                    <strong>Evening:</strong> {renderGroupedSchedule(item, "evening") || "-"}
-                  </div>
-                  <div>
-                    <strong>Night:</strong> {renderGroupedSchedule(item, "night") || "-"}
-                  </div>
-                </div>
+              {showData(item.duration)}
+              {item.standardSchedule?.[0]?.day && (
+                <div className="mt-1">{item.standardSchedule[0].day}</div>
               )}
             </td>
-          ) : item.frequentSchedule && item.frequentSchedule.length > 0 ? (
-            <td className="px-3 py-2 align-middle" colSpan={4}>
-              {renderGroupedSchedule(item, "morning") || "-"}
-            </td>
-          ) : (
-            <>
-              <td className="px-3 py-2 align-middle">{renderGroupedSchedule(item, "morning") || "-"}</td>
-              <td className="px-3 py-2 align-middle">{renderGroupedSchedule(item, "afternoon") || "-"}</td>
-              <td className="px-3 py-2 align-middle">{renderGroupedSchedule(item, "evening") || "-"}</td>
-              <td className="px-3 py-2 align-middle">{renderGroupedSchedule(item, "night") || "-"}</td>
-            </>
-          )}
+            <td className="px-3 py-2 align-middle">{showData(item.medicineConsumption)}</td>
+          </tr>
 
-          <td className="px-3 py-2 align-middle">{showData(item.medicineConsumption)}</td>
-        </tr>
+          {/* Instructions row - only if additionalComments exist */}
+          {item.additionalComments && (
+            <tr key={`${index}-instruction`}>
+              <td colSpan={hasFrequentItems() ? 9 : 12} className="px-3 py-2  border-l-4 border-yellow-400">
+                <span className="font-semibold text-gray-700">Instructions: </span>
+                <span className="text-gray-600">{item.additionalComments}</span>
+              </td>
+            </tr>
+          )}
+        </>
       );
     })}
   </tbody>
