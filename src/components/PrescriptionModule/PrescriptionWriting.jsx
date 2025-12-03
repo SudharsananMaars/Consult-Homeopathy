@@ -64,6 +64,7 @@ const PrescriptionWriting = () => {
   const [selectedPrescriptionId, setSelectedPrescriptionId] = useState(null);
   const [appointmentData, setAppointmentData] = useState(null);
   const [showPrescriptionTable, setShowPrescriptionTable] = useState(true);
+  const [mixedMedicineCounter, setMixedMedicineCounter] = useState(1);
   const [frequencyType, setFrequencyType] = useState("standard");
 // Add these to your existing state declarations
 const [discountType, setDiscountType] = useState("percentage"); // or "fixed"
@@ -99,6 +100,8 @@ const [polishingNote, setPolishingNote] = useState(false);
       prescriptionItems: [
         {
           id: 1,
+          isMixedMedicine: false,
+          mixedMedicines: [], 
           prescriptionType: "Only Prescription",
           consumptionType: "Sequential",
           medicineName: "",
@@ -559,6 +562,88 @@ const [polishingNote, setPolishingNote] = useState(false);
       }
     }, 50);
   };
+
+
+  const addMixedMedicineItem = () => {
+  const newId = Math.max(...prescriptionData.prescriptionItems.map(item => item.id), 0) + 1;
+  
+  const newMixedItem = {
+    id: newId,
+    isMixedMedicine: true, // Flag to identify mixed medicine
+    prescriptionType: "Only Prescription",
+    medicineConsumptionType: "Sequential",
+    duration: "",
+    frequencies: [],
+    durationRanges: [],
+    medicineConsumption: "",
+    customConsumption: "",
+    label: `M${mixedMedicineCounter}`, // M for Mixed
+    additionalComments: "",
+    // Nested medicines array
+    mixedMedicines: [
+      {
+        id: `${newId}-1`,
+        medicineName: "",
+        form: "Tablets",
+        dispenseQuantity: 0,
+        rawMaterials: [],
+        preparationQuantity: [],
+        uom: "Pieces",
+        price: 0,
+      }
+    ]
+  };
+
+  setPrescriptionData(prev => ({
+    ...prev,
+    prescriptionItems: [...prev.prescriptionItems, newMixedItem]
+  }));
+  
+  setMixedMedicineCounter(prev => prev + 1);
+};
+
+const addMedicineToMixedGroup = (mixedItemId) => {
+  setPrescriptionData(prev => ({
+    ...prev,
+    prescriptionItems: prev.prescriptionItems.map(item => {
+      if (item.id === mixedItemId && item.isMixedMedicine) {
+        const newMedicineId = `${mixedItemId}-${item.mixedMedicines.length + 1}`;
+        return {
+          ...item,
+          mixedMedicines: [
+            ...item.mixedMedicines,
+            {
+              id: newMedicineId,
+              medicineName: "",
+              form: "Tablets",
+              dispenseQuantity: 0,
+              rawMaterials: [],
+              preparationQuantity: [],
+              uom: "Pieces",
+              price: 0,
+            }
+          ]
+        };
+      }
+      return item;
+    })
+  }));
+};
+
+const removeMedicineFromMixedGroup = (mixedItemId, medicineId) => {
+  setPrescriptionData(prev => ({
+    ...prev,
+    prescriptionItems: prev.prescriptionItems.map(item => {
+      if (item.id === mixedItemId && item.isMixedMedicine) {
+        return {
+          ...item,
+          mixedMedicines: item.mixedMedicines.filter(med => med.id !== medicineId)
+        };
+      }
+      return item;
+    })
+  }));
+};
 
   const updatePrescriptionItem = (itemId, field, value) => {
   setPrescriptionData((prev) => {
@@ -1106,6 +1191,38 @@ const [polishingNote, setPolishingNote] = useState(false);
       setSaving(false);
     }
   };
+
+  const updateMixedMedicine = (mixedItemId, medicineId, field, value) => {
+  setPrescriptionData(prev => ({
+    ...prev,
+    prescriptionItems: prev.prescriptionItems.map(item => {
+      if (item.id === mixedItemId && item.isMixedMedicine) {
+        return {
+          ...item,
+          mixedMedicines: item.mixedMedicines.map(med => {
+            if (med.id === medicineId) {
+              let updatedMed = { ...med, [field]: value };
+              
+              // Handle form change
+              if (field === "form") {
+                const formQuantity = getQuantityByForm(value);
+                updatedMed = {
+                  ...updatedMed,
+                  dispenseQuantity: formQuantity.quantity,
+                  uom: formQuantity.uom,
+                };
+              }
+              
+              return updatedMed;
+            }
+            return med;
+          })
+        };
+      }
+      return item;
+    })
+  }));
+};
 
   // OPTIONAL: Helper function to validate frequency data structure
   const validateFrequencyData = (frequencies, frequencyType) => {
@@ -1815,6 +1932,14 @@ const [polishingNote, setPolishingNote] = useState(false);
                   Add Medicine
                 </button>
 
+                 <button
+    onClick={addMixedMedicineItem}
+    className="flex items-center gap-2 px-5 py-2.5 bg-gradient-to-r from-purple-600 to-purple-700 text-white rounded-lg hover:from-purple-700 hover:to-purple-800 transition-all duration-200 shadow-md hover:shadow-lg"
+  >
+    <IoIosAdd className="text-lg" />
+    Add Mixed Medicine
+  </button>
+
                 <button
                   onClick={resetPrescriptionData}
                   className="flex items-center gap-2 px-4 py-2.5 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-all duration-200 shadow hover:shadow-lg"
@@ -1874,10 +1999,469 @@ const [polishingNote, setPolishingNote] = useState(false);
                 </thead>
                 <tbody className="divide-y divide-gray-100">
                   {prescriptionData.prescriptionItems.map((item, index) => {
-                    const fieldVisibility = getFieldVisibility(
-                      item.prescriptionType
-                    );
+    const fieldVisibility = getFieldVisibility(item.prescriptionType);
 
+    // Check if this is a mixed medicine row
+    if (item.isMixedMedicine) {
+      return (
+        <React.Fragment key={item.id}>
+          {/* Main Mixed Medicine Row - Common Fields */}
+          <tr className="bg-purple-50 hover:bg-purple-100 transition-colors duration-150">
+            <td className="px-4 py-4 text-center" rowSpan={item.mixedMedicines.length + 1}>
+              <span className="inline-flex items-center justify-center w-8 h-8 bg-purple-100 text-purple-800 rounded-full text-sm font-medium">
+                {index + 1}
+              </span>
+            </td>
+            
+            {/* Common fields for mixed medicine */}
+            <td className="px-4 py-4 min-w-48" colSpan="2">
+              <select
+    value={item.prescriptionType}
+    onChange={(e) => updatePrescriptionItem(item.id, "prescriptionType", e.target.value)}
+    className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm"
+  >
+    <option value="Only Prescription">Only Prescription</option>
+    <option value="Prescription + Medicine">Prescription + Medicine</option>
+    <option value="Medicine + Kit">Medicine + Kit</option>
+    <option value="Only Medicine">Only Medicine</option>
+    <option value="Prescription + Medicine kit">Prescription + Medicine kit</option>
+    <option value="SOS Medicine">SOS Medicine</option>
+  </select>
+            </td>
+            
+            <td className="px-4 py-4 min-w-44">
+              <select
+    value={item.medicineConsumptionType}
+    onChange={(e) => updatePrescriptionItem(item.id, "medicineConsumptionType", e.target.value)}
+    className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm"
+  >
+    <option value="Sequential">Sequential</option>
+    <option value="Sequential + Gap">Sequential + Gap</option>
+    <option value="Parallel">Parallel</option>
+    <option value="Parallel + Gap">Parallel + Gap</option>
+  </select>
+            </td>
+            
+            {/* Empty cells for medicine-specific fields */}
+            <td colSpan="4" className="px-4 py-4 text-center text-gray-400">
+              → Individual medicines below
+            </td>
+            
+            {/* Duration */}
+            <td
+                          className={`px-4 py-4 min-w-32 ${
+                            !fieldVisibility.duration
+                              ? "opacity-30 pointer-events-none"
+                              : ""
+                          }`}
+                        >
+                          <button
+                            type="button"
+                            disabled={!fieldVisibility.duration}
+                            onClick={() =>
+                              fieldVisibility.duration &&
+                              openDurationModal(item, index)
+                            }
+                            className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm bg-white hover:bg-gray-50 hover:border-gray-300 text-left transition-all duration-200 flex items-center justify-between disabled:bg-gray-100 disabled:cursor-not-allowed"
+                          >
+                            <span className="text-gray-700">
+                              {item.duration && item.duration !== "undefined"
+                                ? item.duration
+                                : "Set Duration"}
+                            </span>
+                            <svg
+                              className="w-4 h-4 text-gray-400"
+                              fill="none"
+                              stroke="currentColor"
+                              viewBox="0 0 24 24"
+                            >
+                              <path
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                strokeWidth="2"
+                                d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 100 4m0-4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 100 4m0-4v2m0-6V4"
+                              />
+                            </svg>
+                          </button>
+                        </td>
+            
+            {/* Frequency */}
+<td className="px-4 py-4 min-w-32">
+  <div className="space-y-2">
+    {/* Frequency Type Selector */}
+    <select
+      value={item.frequencyType || "standard"}
+      onChange={(e) =>
+        updatePrescriptionItem(item.id, "frequencyType", e.target.value)
+      }
+      className="w-full border border-gray-200 rounded-lg px-3 py-1.5 text-xs bg-white hover:bg-gray-50 hover:border-gray-300 transition-all duration-200"
+    >
+      <option value="standard">Standard (4 times/day)</option>
+      <option value="frequent">Frequent Interval</option>
+    </select>
+
+    {/* Frequency Config Button */}
+    <button
+      type="button"
+      onClick={() => openFrequencyModal(item, index)}
+      className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm bg-white hover:bg-gray-50 hover:border-gray-300 text-left transition-all duration-200 flex items-center justify-between"
+    >
+      <span className="text-gray-700">
+        {item.frequencies?.length > 0
+          ? `${item.frequencies.length} frequencies`
+          : "Set Frequency"}
+      </span>
+      <svg
+        className="w-4 h-4 text-gray-400"
+        fill="none"
+        stroke="currentColor"
+        viewBox="0 0 24 24"
+      >
+        <path
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          strokeWidth="2"
+          d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 100 4m0-4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 100 4m0-4v2m0-6V4"
+        />
+      </svg>
+    </button>
+  </div>
+</td>
+            
+            {/* Medicine Consumption */}
+            <td className="px-4 py-4 min-w-64">
+  <MedicineConsumptionSelector 
+    form={item.form}
+    value={item.medicineConsumption}
+    customValue={item.customConsumption}
+    onChange={(val) => updatePrescriptionItem(item.id, "medicineConsumption", val)}
+    onCustomChange={(val) => updatePrescriptionItem(item.id, "customConsumption", val)}
+    disabled={!fieldVisibility.medicineConsumption}
+    itemId={item.id}
+  />
+</td>
+
+{/* Label */}
+<td className="px-4 py-4">
+  <LabelDropdown
+    item={item}
+    updatePrescriptionItem={updatePrescriptionItem}
+    fieldVisibility={fieldVisibility}
+  />
+</td>
+            
+            {/* Instructions */}
+            <td className="px-4 py-4 min-w-48">
+              <textarea
+                value={item.additionalComments}
+                onChange={(e) => updatePrescriptionItem(item.id, "additionalComments", e.target.value)}
+                className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm"
+                rows="2"
+                placeholder="Instructions..."
+              />
+            </td>
+            
+            {/* Actions */}
+            <td className="px-4 py-4 text-center">
+                          {prescriptionData.prescriptionItems.length > 1 && (
+                            <button
+                              onClick={() => removePrescriptionItem(item.id)}
+                              className="inline-flex items-center px-3 py-2 bg-red-600 text-white rounded-lg text-sm hover:bg-red-700 transition-colors duration-200 shadow-sm hover:shadow-md"
+                              title="Remove item"
+                            >
+                              <svg
+                                className="w-4 h-4"
+                                fill="none"
+                                stroke="currentColor"
+                                viewBox="0 0 24 24"
+                              >
+                                <path
+                                  strokeLinecap="round"
+                                  strokeLinejoin="round"
+                                  strokeWidth="2"
+                                  d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
+                                ></path>
+                              </svg>
+                            </button>
+                          )}
+                        </td>
+          </tr>
+
+          {/* Nested Medicine Rows */}
+          {item.mixedMedicines.map((medicine, medIndex) => (
+            <tr key={medicine.id} className="bg-white border-l-4 border-purple-300">
+              <td className="px-4 py-4 pl-12" colSpan="2">
+                <div className="flex items-center gap-2">
+                  <span className="text-purple-600 font-medium">#{medIndex + 1}</span>
+                  <select
+                    value={medicine.medicineName}
+                    onChange={(e) => updateMixedMedicine(item.id, medicine.id, "medicineName", e.target.value)}
+                    className="flex-1 border border-gray-200 rounded-lg px-3 py-2 text-sm"
+                  >
+                    <option value="">Select medicine</option>
+                    {medicines.map(med => (
+                      <option key={med._id} value={med.name}>{med.name}</option>
+                    ))}
+                  </select>
+                </div>
+              </td>
+              
+              {/* Medicine Form */}
+              <td className="px-4 py-4">
+                <select
+                  value={medicine.form}
+                  onChange={(e) => updateMixedMedicine(item.id, medicine.id, "form", e.target.value)}
+                  className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm"
+                >
+                  <option value="Tablets">Tablets</option>
+                  <option value="Pills">Pills</option>
+                  <option value="Liquid form">Liquid form</option>
+                  <option value="Individual Medicine">Individual Medicine</option>
+                </select>
+              </td>
+              
+              {/* Dispense Quantity */}
+              <td className="px-4 py-4 min-w-32">
+                          {item.form === "Liquid form" ? (
+                            <select
+                              value={item.dispenseQuantity}
+                              onChange={(e) => {
+                                updatePrescriptionItem(
+                                  item.id,
+                                  "dispenseQuantity",
+                                  e.target.value
+                                );
+                              }}
+                              className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white hover:border-gray-300 transition-colors"
+                            >
+                              <option value="">Select quantity</option>
+                              <option value="5ml">5ml</option>
+                              <option value="15ml">15ml</option>
+                              <option value="30ml">30ml</option>
+                            </select>
+                          ) : item.form === "Pills" ? (
+                            <select
+                              value={item.dispenseQuantity}
+                              onChange={(e) =>
+                                updatePrescriptionItem(
+                                  item.id,
+                                  "dispenseQuantity",
+                                  e.target.value
+                                )
+                              }
+                              className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white hover:border-gray-300 transition-colors"
+                            >
+                              <option value="">Select quantity</option>
+                              <option value="1/2 dram">1/2 dram</option>
+                              <option value="1 dram">1 dram</option>
+                              <option value="2 dram">2 dram</option>
+                            </select>
+                          ) : item.form === "Tablets" ? (
+                            <select
+                              value={item.dispenseQuantity}
+                              onChange={(e) =>
+                                updatePrescriptionItem(
+                                  item.id,
+                                  "dispenseQuantity",
+                                  e.target.value
+                                )
+                              }
+                              className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white hover:border-gray-300 transition-colors"
+                            >
+                              <option value="">Select quantity</option>
+                              <option value="10gram">10gram</option>
+                              <option value="20gram">20gram</option>
+                              <option value="25gram">25gram</option>
+                            </select>
+                          ) : (
+                            <input
+                              type="text"
+                              value={item.dispenseQuantity}
+                              onChange={(e) =>
+                                updatePrescriptionItem(
+                                  item.id,
+                                  "dispenseQuantity",
+                                  e.target.value
+                                )
+                              }
+                              className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white hover:border-gray-300 transition-colors"
+                              placeholder="Enter quantity"
+                            />
+                          )}
+                        </td>
+
+              {/* Raw Material */}
+<td className="px-4 py-4">
+  <div className="relative">
+    <button
+      type="button"
+      onClick={() => {
+        const dropdown = document.getElementById(`raw-material-dropdown-${item.id}-${medicine.id}`);
+        dropdown.style.display = dropdown.style.display === "block" ? "none" : "block";
+      }}
+      className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm text-left bg-white hover:bg-gray-50"
+    >
+      Raw Materials ({medicine.rawMaterials?.length || 0})
+    </button>
+    <div
+      id={`raw-material-dropdown-${item.id}-${medicine.id}`}
+      className="absolute z-10 w-72 bg-white border rounded-lg shadow-lg mt-2 max-h-48 overflow-y-auto hidden"
+    >
+      {/* Same structure as regular medicine raw material dropdown */}
+      {filteredRawMaterials.map((material) => (
+        <div key={material._id} className="grid grid-cols-2 px-3 py-2 hover:bg-blue-50">
+          <label className="flex items-center text-sm cursor-pointer">
+            <input
+              type="checkbox"
+              checked={medicine.rawMaterials?.some(rm => rm._id === material._id)}
+              onChange={(e) => {
+                // Handle nested medicine raw material selection
+                setPrescriptionData(prev => ({
+                  ...prev,
+                  prescriptionItems: prev.prescriptionItems.map(pItem => {
+                    if (pItem.id === item.id) {
+                      return {
+                        ...pItem,
+                        mixedMedicines: pItem.mixedMedicines.map(med => {
+                          if (med.id === medicine.id) {
+                            let updatedRawMaterials = [...(med.rawMaterials || [])];
+                            if (e.target.checked) {
+                              updatedRawMaterials.push({
+                                _id: material._id,
+                                name: material.name,
+                                selected: true
+                              });
+                            } else {
+                              updatedRawMaterials = updatedRawMaterials.filter(rm => rm._id !== material._id);
+                            }
+                            return { ...med, rawMaterials: updatedRawMaterials };
+                          }
+                          return med;
+                        })
+                      };
+                    }
+                    return pItem;
+                  })
+                }));
+              }}
+              className="mr-3 rounded border-gray-300 text-blue-600"
+            />
+            {material.name}
+          </label>
+          <span className="text-sm">{material.currentQuantity ?? 0}</span>
+        </div>
+      ))}
+    </div>
+  </div>
+</td>
+
+{/* Preparation Quantity */}
+<td className="px-4 py-4 min-w-52">
+      <div className="space-y-2">
+        {medicine.preparationQuantity?.map((prep) => (
+          <div key={prep._id} className="flex items-center gap-2 p-2 bg-gray-50 rounded-lg border border-gray-100">
+            <span className="text-sm text-gray-700 flex-1 truncate">{prep.name}</span>
+            <input
+              type="number"
+              value={
+                prep.name.toLowerCase().includes("distilled water")
+                  ? dropsToMl(prep.quantity).toFixed(1)
+                  : prep.quantity
+              }
+              onChange={(e) => {
+                setPrescriptionData(prev => ({
+                  ...prev,
+                  prescriptionItems: prev.prescriptionItems.map(pItem => {
+                    if (pItem.id === item.id) {
+                      return {
+                        ...pItem,
+                        mixedMedicines: pItem.mixedMedicines.map(med => {
+                          if (med.id === medicine.id) {
+                            const updatedPrep = med.preparationQuantity.map(p => {
+                              if (p._id === prep._id) {
+                                const qty = parseFloat(e.target.value) || 0;
+                                return { ...p, quantity: qty, totalPrice: qty * p.pricePerUnit };
+                              }
+                              return p;
+                            });
+                            
+                            // Recalculate total price for this medicine
+                            const totalPrice = updatedPrep.reduce((sum, rm) => sum + rm.totalPrice, 0);
+                            
+                            return { 
+                              ...med, 
+                              preparationQuantity: updatedPrep,
+                              price: totalPrice 
+                            };
+                          }
+                          return med;
+                        })
+                      };
+                    }
+                    return pItem;
+                  })
+                }));
+              }}
+              disabled={
+                item.form === "Liquid form" &&
+                prep.name.toLowerCase().includes("distilled water")
+              }
+              className="w-20 border border-gray-200 rounded px-2 py-1 text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:bg-gray-100 disabled:cursor-not-allowed"
+              min="0"
+              step="0.1"
+            />
+            <span className="text-sm text-gray-500">
+              {prep.name.toLowerCase().includes("distilled water")
+                ? "ml"
+                : prep.unit === "ml"
+                ? "drops"
+                : prep.unit}
+            </span>
+            {item.form === "Liquid form" &&
+              prep.name.toLowerCase().includes("distilled water") && (
+                <span className="text-xs text-blue-600 ml-2">(Auto)</span>
+              )}
+          </div>
+        ))}
+        {(!medicine.preparationQuantity || medicine.preparationQuantity.length === 0) && (
+          <div className="p-3 text-center">
+            <span className="text-sm text-gray-400">No materials selected</span>
+          </div>
+        )}
+      </div>
+    </td>
+              
+              {/* Empty cells for common fields (rowspan) */}
+              <td colSpan="6"></td>
+              
+              {/* Delete button for individual medicine */}
+              <td className="px-4 py-4 text-center">
+                {item.mixedMedicines.length > 1 && (
+                  <button
+                    onClick={() => removeMedicineFromMixedGroup(item.id, medicine.id)}
+                    className="inline-flex items-center px-2 py-1 bg-red-500 text-white rounded text-xs"
+                  >
+                    <IoMdTrash />
+                  </button>
+                )}
+              </td>
+            </tr>
+          ))}
+
+          {/* Add Medicine Button Row */}
+          <tr className="bg-purple-50">
+            <td colSpan="14" className="px-4 py-2 text-center">
+              <button
+                onClick={() => addMedicineToMixedGroup(item.id)}
+                className="inline-flex items-center gap-1 px-3 py-1 bg-purple-600 text-white rounded text-sm hover:bg-purple-700"
+              >
+                <IoIosAdd /> Add Medicine to Group
+              </button>
+            </td>
+          </tr>
+        </React.Fragment>
+      );
+    }
                     return (
                       <tr
                         key={item.id}
