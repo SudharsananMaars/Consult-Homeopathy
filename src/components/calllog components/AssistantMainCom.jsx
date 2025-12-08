@@ -3,6 +3,7 @@ import { useParams, useNavigate } from "react-router-dom";
 import axios from "axios";
 import PatientsTable from "./PatientsTable";
 import WorkTable from "./WorkTable";
+import AllTable from "./AllTable";
 import ExistingTable from "./ExistingTable";
 import StatusCompleteTable from "./StatusCompleted";
 import InProgressTable from "./InProgressTable";
@@ -112,7 +113,7 @@ const AssistantMainCom = () => {
   const renderPatientsTable = () => {
     switch (activeTab) {
       case "all":
-        return <PatientsTable />;
+        return <AllTable />;
       case "myAllocation":
         return <WorkTable />;
       case "existing":
