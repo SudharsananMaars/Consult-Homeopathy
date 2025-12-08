@@ -64,6 +64,8 @@ const PrescriptionWriting = () => {
   const [selectedPrescriptionId, setSelectedPrescriptionId] = useState(null);
   const [appointmentData, setAppointmentData] = useState(null);
   const [showPrescriptionTable, setShowPrescriptionTable] = useState(true);
+  const [followUpDate, setFollowUpDate] = useState("");
+const [followUpTime, setFollowUpTime] = useState("");
   const [mixedMedicineCounter, setMixedMedicineCounter] = useState(1);
   const [frequencyType, setFrequencyType] = useState("standard");
 // Add these to your existing state declarations
@@ -1083,6 +1085,10 @@ const removeMedicineFromMixedGroup = (mixedItemId, medicineId) => {
 };
 
   const prepareDataForBackend = (prescriptionData) => {
+      let followUpDateTime = null;
+  if (followUpDate && followUpTime) {
+    followUpDateTime = new Date(`${followUpDate}T${followUpTime}:00.000Z`).toISOString();
+  }
     const backendData = {
       appointmentID: patientData.medicalDetails._id,
       ...prescriptionData,
@@ -2430,7 +2436,6 @@ const removeMedicineFromMixedGroup = (mixedItemId, medicineId) => {
         )}
       </div>
     </td>
-              
               {/* Empty cells for common fields (rowspan) */}
               <td colSpan="6"></td>
               
@@ -3011,6 +3016,36 @@ const removeMedicineFromMixedGroup = (mixedItemId, medicineId) => {
               </table>
             </div>
           </div>
+
+          {/* Follow-up Date/Time Section */}
+<div className="bg-white rounded-lg shadow p-6">
+  <h2 className="text-lg font-semibold mb-4">Follow-up Schedule</h2>
+  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+    <div>
+      <label className="block text-sm font-medium mb-1">
+        Follow-up Date
+      </label>
+      <input
+        type="date"
+        value={followUpDate}
+        onChange={(e) => setFollowUpDate(e.target.value)}
+        className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500"
+        min={new Date().toISOString().split('T')[0]}
+      />
+    </div>
+    <div>
+      <label className="block text-sm font-medium mb-1">
+        Follow-up Time
+      </label>
+      <input
+        type="time"
+        value={followUpTime}
+        onChange={(e) => setFollowUpTime(e.target.value)}
+        className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500"
+      />
+    </div>
+  </div>
+</div>
 
           {/* Summary Section */}
           <div className="bg-white rounded-lg shadow p-6">
