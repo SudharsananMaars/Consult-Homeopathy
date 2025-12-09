@@ -4,8 +4,7 @@ import { FaEllipsisV } from "react-icons/fa";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
 import config from "../../config";
-// Configure your API URL (you can also use environment variables)
-const API_URL = config.API_URL || "http://localhost:5000";
+const API_URL = config.API_URL;
 
 const Patients = () => {
     const navigate = useNavigate();
