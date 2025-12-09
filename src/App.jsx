@@ -147,6 +147,7 @@ import MedicinePreparationLogin from "./pages/MedicinePreparationPages/MedicineP
 import Preparation from "./pages/MedicinePreparationPages/preparation";
 import AmendmentHistory from "./components/Vendor/AmendmentHistory.jsx";
 import SetPassword from "./pages/patient pages/SetPassword.jsx";
+import FeedbackFollowUp from "./pages/doctor pages/FeedbackFollow.jsx";
 
 // Error Fallback Component
 const ErrorFallback = () => <ServerError />;
@@ -559,6 +560,14 @@ function App() {
           element={
             <ProtectedRoute allowedRoles={["Doctor"]}>
               <DoctorMessenger />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/feedbackfollow"
+          element={
+            <ProtectedRoute allowedRoles={["Doctor"]}>
+              <FeedbackFollowUp />
             </ProtectedRoute>
           }
         />
