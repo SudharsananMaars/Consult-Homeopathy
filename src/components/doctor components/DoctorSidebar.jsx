@@ -65,9 +65,9 @@ const Sidebar = ({ role }) => {
           },
           {
             id: 21,
-            name: "Feedback",
+            name: "New Patients",
             icon: Users,
-            path: "/feedbackfollow"
+            path: "/newpatients"
           },
           { id: 6, path: "/docpayments", name: "Payments", icon: Wallet },
           {

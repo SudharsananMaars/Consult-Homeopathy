@@ -55,6 +55,7 @@ function getPageTitle(pathname) {
     '/assistdoc': 'Assistant Doctors',
     '/assistdoc/docprofile': 'Doctor Profiles',
     '/assistdoc/doctors': 'External Doctors',
+    '/newpatients':'New Patients',
     
     // Payments & Financial
     '/docpayments': 'Payments',

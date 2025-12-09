@@ -564,7 +564,7 @@ function App() {
           }
         />
         <Route
-          path="/feedbackfollow"
+          path="/newpatients"
           element={
             <ProtectedRoute allowedRoles={["Doctor"]}>
               <FeedbackFollowUp />
