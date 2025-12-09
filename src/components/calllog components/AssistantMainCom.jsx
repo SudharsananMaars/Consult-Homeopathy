@@ -112,6 +112,9 @@ const AssistantMainCom = () => {
 
   const renderPatientsTable = () => {
     switch (activeTab) {
+
+      case "patientlist":
+        return <PatientsTable />;
       case "all":
         return <AllTable />;
       case "myAllocation":
@@ -427,7 +430,7 @@ const AssistantMainCom = () => {
 
         {/* Desktop View - Tabs */}
         <div className="hidden md:flex space-x-2 bg-white p-2 rounded-lg">
-          {["all", "myAllocation", "existing", "lost"].map(
+          {["patientlist","all", "myAllocation", "existing", "lost"].map(
             (tab) => (
               <button
                 key={tab}
@@ -438,7 +441,9 @@ const AssistantMainCom = () => {
                     : "bg-white text-gray-700 hover:bg-gray-100 hover:shadow"
                 }`}
               >
-                {tab === "all"
+                {tab === "patientlist"
+                  ? "Patients List"
+                  : tab === "all"
                   ? "All"
                   : tab === "myAllocation"
                   ? "New"

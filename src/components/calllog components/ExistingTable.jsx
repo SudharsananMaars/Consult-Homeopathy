@@ -92,6 +92,41 @@ const [countsLoading, setCountsLoading] = useState(true);
     navigate(`${location.pathname}?${params.toString()}`, { replace: true });
   };
 
+  const sections = [
+  {
+    id: 1,
+    title: "Patient Information & Consultation Details",
+  },
+  {
+    id: 2,
+    title: "Communication & Interaction Channels",
+  },
+  {
+    id: 3,
+    title: "Client Status & Tracking",
+  },
+  {
+    id: 4,
+    title: "Appointment & Payment",
+  }
+];
+
+const TabSwitcher = () => {
+  return (
+    <div className="flex justify-around space-x-4 mb-4 mx-2 overflow-x-auto">
+      {sections.map((section) => (
+        <button
+          key={section.id}
+          className="flex-grow px-4 py-2 rounded-lg transition-colors duration-200 text-center whitespace-nowrap bg-gray-100 text-gray-700 hover:bg-gray-200"
+        >
+          {section.title}
+        </button>
+      ))}
+    </div>
+  );
+};
+
+
   const handleEnquiryStatusChange = async (patientId, newStatus) => {
     try {
       const response = await axios.put(`${API_URL}/api/log/update-status/${patientId}`, {
@@ -1661,6 +1696,9 @@ const handleTabChange = (tab) => {
     </div>
   </div>
 </div>
+
+{/* Tabs */}
+  <TabSwitcher />
       
       <div className="w-full overflow-x-auto">
         <table className="w-full overflow-hidden rounded-lg">

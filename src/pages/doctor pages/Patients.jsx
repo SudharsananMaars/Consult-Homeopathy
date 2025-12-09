@@ -15,14 +15,14 @@ const Patients = () => {
 
     const [filters, setFilters] = useState({
         patientId: "",
-        doctor: "",
+        userStatus: "Active",
         status: "",
         diseaseType: "",
     });
 
     const [currentPage, setCurrentPage] = useState(1);
     const [entriesPerPage, setEntriesPerPage] = useState(10);
-    const [doctors, setDoctors] = useState([]);
+    const [userStatuses, setUserStatuses] = useState(["Active", "Dormant", "Lost", "Inactive"]);
     const [statuses, setStatuses] = useState([]);
     const [diseaseTypes, setDiseaseTypes] = useState([]);
 
@@ -42,7 +42,7 @@ const Patients = () => {
                     id: patient._id,
                     name: patient.name || "Unknown",
                     recentVisit: new Date(patient.updatedAt).toLocaleString(),
-                    doctor: "Dr. Me", // API doesn't have doctor field
+                    userStatus: patient.userStatus || "Active",
                     disease: patient.medicalDetails?.diseaseName || "Not specified",
                     diseaseType: patient.classification|| "Not specified",
                     status: patient.newExisting,
@@ -57,11 +57,9 @@ const Patients = () => {
                 setPatients(transformedData);
                 
                 // Extract unique values for filters
-                const uniqueDoctors = [...new Set(transformedData.map(p => p.doctor).filter(Boolean))];
                 const uniqueStatuses = [...new Set(transformedData.map(p => p.status).filter(Boolean))];
                 const uniqueDiseaseTypes = [...new Set(transformedData.map(p => p.diseaseType).filter(Boolean))];
                 
-                setDoctors(uniqueDoctors);
                 setStatuses(uniqueStatuses);
                 setDiseaseTypes(uniqueDiseaseTypes);
                 
@@ -102,7 +100,7 @@ const Patients = () => {
     const filteredPatients = patients.filter((patient) =>
         (patient.id.toLowerCase().includes(filters.patientId.toLowerCase()) ||
          patient.name.toLowerCase().includes(filters.patientId.toLowerCase())) &&
-        (filters.doctor === "" || patient.doctor.toLowerCase().includes(filters.doctor.toLowerCase())) &&
+        (filters.userStatus === "" || patient.userStatus.toLowerCase() === filters.userStatus.toLowerCase()) &&
         (filters.status === "" || patient.status.toLowerCase().includes(filters.status.toLowerCase())) &&
         (filters.diseaseType === "" || patient.diseaseType.toLowerCase().includes(filters.diseaseType.toLowerCase()))
     );
@@ -182,16 +180,16 @@ const Patients = () => {
                         className="p-2 border border-gray-300 rounded-md hover:bg-gray-100"
                     />
                     <select
-                        name="doctor"
-                        value={filters.doctor}
-                        onChange={handleFilterChange}
-                        className="p-2 w-40 border border-gray-300 rounded-md bg-white hover:bg-gray-100"
-                    >
-                        <option value="">All Doctors</option>
-                        {doctors.map((doctor, index) => (
-                            <option key={index} value={doctor}>{doctor}</option>
-                        ))}
-                    </select>
+    name="userStatus"  // Changed from "doctor"
+    value={filters.userStatus}
+    onChange={handleFilterChange}
+    className="p-2 w-40 border border-gray-300 rounded-md bg-white hover:bg-gray-100"
+>
+    <option value="">All Status</option>
+    {userStatuses.map((status, index) => (
+        <option key={index} value={status}>{status}</option>
+    ))}
+</select>
                     <select
                         name="status"
                         value={filters.status}
@@ -230,7 +228,7 @@ const Patients = () => {
           Recent Visit
         </th>
         <th className="bg-white text-center p-4 font-bold text-gray-700 text-sm">
-          Doctor Assigned
+          User Status
         </th>
         <th className="bg-gray-100 text-center p-4 font-bold text-gray-700 text-sm">
           Disease
@@ -239,12 +237,9 @@ const Patients = () => {
           Disease Type
         </th>
         <th className="bg-gray-100 text-center p-4 font-bold text-gray-700 text-sm">
-          Status
+          Patient Type
         </th>
         <th className="bg-white text-center p-4 font-bold text-gray-700 text-sm">
-          Follow Up
-        </th>
-        <th className="bg-gray-100 text-center p-4 font-bold text-gray-700 text-sm">
           Actions
         </th>
       </tr>
@@ -267,7 +262,7 @@ const Patients = () => {
             </td>
             {/* Doctor */}
             <td className="bg-white p-4 text-gray-600 text-center">
-              {patient.doctor}
+              {patient.userStatus}
             </td>
             {/* Disease */}
             <td className="bg-gray-100 p-4 text-gray-600 text-center">
@@ -281,12 +276,8 @@ const Patients = () => {
             <td className="bg-gray-100 p-4 text-center">
                 {patient.status}
             </td>
-            {/* Follow Up */}
-            <td className="bg-white p-4 text-gray-600 text-center">
-              {patient.followUp}
-            </td>
             {/* Actions */}
-            <td className="bg-gray-100 p-4 text-center">
+            <td className="bg-white p-4 text-center">
               <button
                 onClick={() => handleViewDetails(patient.id)}
                 className="inline-flex items-center px-2.5 py-1.5 border text-xs font-medium rounded-[5px] text-white bg-blue-500 hover:bg-blue-700 focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
