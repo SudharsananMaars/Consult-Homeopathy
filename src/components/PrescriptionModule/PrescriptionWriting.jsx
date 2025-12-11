@@ -56,9 +56,13 @@ const PrescriptionWriting = () => {
   const [medicines, setMedicines] = useState([]);
   const [rawMaterials, setRawMaterials] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [showPrescriptionDetails, setShowPrescriptionDetails] = useState(false);
+const [appointmentDetails, setAppointmentDetails] = useState(null);
+const [selectedAppointmentId, setSelectedAppointmentId] = useState(null);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState(null);
   const [searchTerm, setSearchTerm] = useState("");
+  const [patientHistory, setPatientHistory] = useState(null);
   const [searchRawTerm, setSearchRawTerm] = useState("");
   const [existingPrescriptions, setExistingPrescriptions] = useState([]);
   const [selectedPrescriptionId, setSelectedPrescriptionId] = useState(null);
@@ -66,6 +70,7 @@ const PrescriptionWriting = () => {
   const [showPrescriptionTable, setShowPrescriptionTable] = useState(true);
   const [followUpDate, setFollowUpDate] = useState("");
 const [followUpTime, setFollowUpTime] = useState("");
+const [activeTab, setActiveTab] = useState("inProgress"); // 'inProgress' or 'completed'
   const [mixedMedicineCounter, setMixedMedicineCounter] = useState(1);
   const [frequencyType, setFrequencyType] = useState("standard");
 // Add these to your existing state declarations
@@ -209,6 +214,27 @@ const [polishingNote, setPolishingNote] = useState(false);
     console.log("Draft cleared");
   }, []);
 
+  const fetchAppointmentPrescriptions = async (appointmentId) => {
+  try {
+    setLoading(true);
+    const authAxios = createAuthAxios();
+    
+    const response = await authAxios.get(
+      `${API_URL}/api/doctor/appointment/${appointmentId}`
+    );
+    
+    setAppointmentDetails(response.data);
+    setSelectedAppointmentId(appointmentId);
+    setShowPrescriptionDetails(true);
+    // Don't change showPrescriptionTable - keep it true
+  } catch (err) {
+    console.error("Error fetching appointment details:", err);
+    toast.error("Failed to load prescription details");
+  } finally {
+    setLoading(false);
+  }
+};
+
   const resetPrescriptionData = useCallback(() => {
     localStorage.removeItem("draftPrescription");
 
@@ -263,6 +289,18 @@ const [polishingNote, setPolishingNote] = useState(false);
       return false;
     }
   }, []);
+
+
+
+  // Add this computed value after fetching data
+const filteredAppointments = existingPrescriptions.filter(appointment => {
+  if (activeTab === "inProgress") {
+    return appointment.status === "New" || appointment.status === "Existing";
+  } else {
+    return appointment.status === "Completed";
+  }
+});
+
 
   // Auto-cleanup old drafts (call this on app startup)
   const cleanupOldDrafts = useCallback(() => {
@@ -771,12 +809,12 @@ const removeMedicineFromMixedGroup = (mixedItemId, medicineId) => {
       setLoading(true);
       const authAxios = createAuthAxios();
 
-      const [medicinesRes, rawMaterialsRes, prescriptionsRes, appointmentRes] =
+      const [medicinesRes, rawMaterialsRes, historyRes, appointmentRes] =
         await Promise.all([
           authAxios.get(`${API_URL}/api/prescriptionControl/medicines`),
           authAxios.get(`${API_URL}/api/prescriptionControl/rawMaterials`),
           authAxios.get(
-            `${API_URL}/api/prescriptionControl/patient/${patientData._id}`
+            `${API_URL}/api/doctor/history/${patientData._id}`
           ),
           patientData.appointmentId
             ? authAxios.get(
@@ -787,7 +825,9 @@ const removeMedicineFromMixedGroup = (mixedItemId, medicineId) => {
       // console.log("medicines: ", medicinesRes.data);
       setMedicines(medicinesRes.data?.data || []);
       setRawMaterials(rawMaterialsRes.data?.data || []);
-      setExistingPrescriptions(prescriptionsRes.data?.data || []);
+      const historyData = historyRes.data || {};
+      setPatientHistory(historyData);
+      setExistingPrescriptions(historyData.appointments || []);
 
       if (appointmentRes) {
         const appointment = appointmentRes.data?.data || {};
@@ -1662,184 +1702,331 @@ const removeMedicineFromMixedGroup = (mixedItemId, medicineId) => {
 
       {/* Header */}
       <div className="flex items-center justify-between mb-6">
-        <div className="flex items-center">
+  <h1 className="text-2xl font-bold text-gray-800">Prescription</h1>
+
+  {/* Right-side Button */}
+  <button
+  onClick={() => navigate("/doctor-dashboard/all")}
+    className="flex items-center gap-2 bg-blue-500 hover:bg-blue-600 text-white font-medium px-5 py-2 rounded-lg shadow-sm transition"
+  >
+    Back to Dashboard
+    <span className="text-xl">›</span>
+  </button>
+</div>
+
+
+      {/* Patient Info - New Design */}
+      <div className="bg-white rounded-2xl shadow-lg border-2 border-blue-200 p-8">
+  <div className="flex items-start gap-8">
+    {/* Avatar */}
+    <div className="flex-shrink-0">
+      <div className="w-28 h-28 rounded-full bg-gradient-to-br from-teal-100 to-teal-200 flex items-center justify-center border-4 border-teal-300">
+        <svg className="w-16 h-16 text-teal-500" fill="currentColor" viewBox="0 0 24 24">
+          <path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/>
+        </svg>
+      </div>
+    </div>
+
+    {/* Patient Details */}
+    <div className="flex-1">
+      <div className="mb-6">
+        <h2 className="text-3xl font-bold text-gray-800 mb-1">
+          {patientData?.name || 'Patient Name'}
+        </h2>
+        <p className="text-lg text-gray-600">
+          {patientData?.phone || 'N/A'}
+        </p>
+      </div>
+
+      {/* Info Grid */}
+      <div className="grid grid-cols-3 gap-x-12 gap-y-6">
+        <div>
+          <span className="font-semibold text-gray-800 text-base">Age : </span>
+          <span className="text-gray-600 text-base">{patientData?.age || 'N/A'}</span>
+        </div>
+        <div>
+          <span className="font-semibold text-gray-800 text-base">Email : </span>
+          <span className="text-gray-600 text-base">
+            {patientHistory?.patientDetails?.email || 'N/A'}
+          </span>
+        </div>
+        <div>
+          <span className="font-semibold text-gray-800 text-base">Source : </span>
+          <span className="text-gray-600 text-base">
+            {patientHistory?.patientDetails?.source || 'N/A'}
+          </span>
+        </div>
+        
+        <div>
+          <span className="font-semibold text-gray-800 text-base">Gender : </span>
+          <span className="text-gray-600 text-base">
+            {patientHistory?.patientDetails?.gender || patientData?.gender || 'N/A'}
+          </span>
+        </div>
+        <div>
+          <span className="font-semibold text-gray-800 text-base">Address : </span>
+          <span className="text-gray-600 text-base">
+            {patientHistory?.patientDetails?.address || 'N/A'}, {patientHistory?.patientDetails?.city || ''}
+          </span>
+        </div>
+        <div>
+          <span className="font-semibold text-gray-800 text-base">Last Visit : </span>
+          <span className="text-gray-600 text-base">
+            {patientHistory?.patientDetails?.lastVisit 
+              ? new Date(patientHistory.patientDetails.lastVisit).toLocaleDateString('en-GB', { 
+                  day: '2-digit', 
+                  month: 'short', 
+                  year: 'numeric' 
+                })
+              : 'N/A'}
+          </span>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+{showPrescriptionTable && (
+  <>
+    {/* Tab Navigation - Separate Container */}
+    <div className="p-4 mb-4 mt-12">
+      <div className="flex gap-2">
+        <button
+          onClick={() => setActiveTab("inProgress")}
+          className={`flex-1 px-6 py-3 rounded-lg font-medium transition-colors ${
+            activeTab === "inProgress"
+              ? "bg-blue-500 text-white"
+              : "bg-white text-gray-700 border border-gray-300"
+          }`}
+        >
+          Consultation in Progress
+        </button>
+        <button
+          onClick={() => setActiveTab("completed")}
+          className={`flex-1 px-6 py-3 rounded-lg font-medium transition-colors ${
+            activeTab === "completed"
+              ? "bg-blue-500 text-white"
+              : "bg-white text-gray-700 border border-gray-300"
+          }`}
+        >
+          Past / Completed Consultation
+        </button>
+      </div>
+    </div>
+
+    {/* Consultation Cards - Separate Container */}
+    <div className="bg-white rounded-lg border-2 border-blue-200 shadow-lg p-6 mt-12">
+  {showPrescriptionDetails && appointmentDetails ? (
+    // Show prescription details view
+    <>
+      <div className="flex justify-between items-center mb-6">
+        <div className="flex items-center gap-4">
           <button
-            onClick={() => navigate("/doctor-dashboard")}
-            className="flex items-center text-blue-600 hover:text-blue-800 mr-4"
+            onClick={() => {
+              setShowPrescriptionDetails(false);
+              setAppointmentDetails(null);
+            }}
+            className="flex items-center gap-2 text-gray-600 hover:text-gray-800"
           >
-            <IoIosArrowBack className="text-xl mr-1" />
-            Back to Dashboard
+            <IoIosArrowBack className="text-xl" />
+            Back
           </button>
-          <h1 className="text-2xl font-bold text-gray-800">
-            Prescription for {patientData?.name || "Patient"}
-          </h1>
+          <h2 className="text-2xl font-bold text-gray-800">
+            Consultation-{appointmentDetails.appointmentUniqueId}
+          </h2>
         </div>
+        
+        <button
+          onClick={() => handleAddToPrescription(selectedAppointmentId)}
+          className="flex items-center gap-2 px-5 py-2.5 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors shadow-md"
+        >
+          <IoIosAdd className="text-xl" />
+          Add Prescription
+        </button>
       </div>
 
-      {/* Patient Info */}
-      <div className="bg-white rounded-lg shadow p-4 mb-6">
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <div>
-            <span className="font-medium">Patient Name:</span>{" "}
-            {patientData?.name}
-          </div>
-          <div>
-            <span className="font-medium">Age:</span> {patientData?.age}
-          </div>
-          <div>
-            <span className="font-medium">Phone:</span> {patientData?.phone}
-          </div>
-        </div>
+      {/* Status Summary Cards */}
+<div className="flex justify-center gap-4 mb-6">
+  <div className="w-48 border-l-4 border-green-500 bg-white p-4 rounded-lg shadow-lg">
+    <div className="flex justify-between items-center">
+      <span className="text-gray-600 font-medium">Active</span>
+      <span className="text-2xl font-bold text-green-600">
+        {appointmentDetails.statusCounts?.Active || 0}
+      </span>
+    </div>
+  </div>
+  <div className="w-48 border-l-4 border-orange-500 bg-white p-4 rounded-lg shadow-lg">
+    <div className="flex justify-between items-center">
+      <span className="text-gray-600 font-medium">Hold</span>
+      <span className="text-2xl font-bold text-orange-600">
+        {appointmentDetails.statusCounts?.Hold || 0}
+      </span>
+    </div>
+  </div>
+  <div className="w-48 border-l-4 border-red-500 bg-white p-4 rounded-lg shadow-lg">
+    <div className="flex justify-between items-center">
+      <span className="text-gray-600 font-medium">Closed</span>
+      <span className="text-2xl font-bold text-red-600">
+        {appointmentDetails.statusCounts?.Closed || 0}
+      </span>
+    </div>
+  </div>
+</div>
+
+      {/* Prescriptions List */}
+<div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+  {appointmentDetails.prescriptions?.map((prescription) => (
+    <div
+      key={prescription.prescriptionId}
+      className="bg-white border border-gray-200 rounded-xl p-5 hover:shadow-lg transition-shadow"
+    >
+      {/* Header */}
+      <div className="flex justify-between items-start mb-4">
+        <h3 className="font-bold text-gray-900 text-base">
+          {prescription.prescriptionUniqueId}
+        </h3>
+        <span className="px-4 py-2 rounded text-sm font-semibold bg-yellow-500 text-white">
+  Mark as closed
+</span>
+
       </div>
 
-      {/* Existing Prescriptions Table */}
-      {showPrescriptionTable && (
-        <div className="bg-white rounded-lg shadow p-4 mb-6">
-          <div className="flex justify-between items-center mb-4">
-            <h2 className="text-lg font-semibold">Existing Prescriptions</h2>
-            <button
-              onClick={handleCreateNewPrescription}
-              className="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700"
-            >
-              Create New Prescription
-            </button>
-          </div>
+      {/* Details */}
+      <div className="space-y-2.5 mb-5">
+  <div className="text-sm">
+    <span className="text-gray-900 font-medium">Consulting Type : </span>
+    <span className="text-gray-700">{prescription.diseaseType}</span>
+  </div>
+  <div className="text-sm">
+    <span className="text-gray-900 font-medium">Consulting For : </span>
+    <span className="text-gray-700">{prescription.consultingFor}</span>
+  </div>
+  <div className="text-sm">
+    <span className="text-gray-900 font-medium">Created on : </span>
+    <span className="text-gray-700">
+      {new Date(prescription.createdAt).toLocaleDateString('en-GB', {
+        day: '2-digit',
+        month: 'short',
+        year: 'numeric'
+      })}
+    </span>
+  </div>
+  <div>
+    <h4 className="text-sm font-semibold text-gray-900 mb-2">Medicines</h4>
+    <ol className="list-decimal list-inside space-y-1 text-sm text-gray-600">
+      {prescription.medicineNames.split(',').map((medicine, idx) => (
+        <li key={idx}>{medicine.trim()}</li>
+      ))}
+    </ol>
+  </div>
+</div>
 
-          {existingPrescriptions.length > 0 ? (
-            <div className="overflow-x-auto">
-              <table className="w-full border-collapse border border-gray-300">
-                <thead>
-                  <tr className="bg-gray-50">
-                    <th className="border border-gray-300 px-4 py-2 text-left">
-                      Date
-                    </th>
-                    <th className="border border-gray-300 px-4 py-2 text-left">
-                      Consulting Type
-                    </th>
-                    <th className="border border-gray-300 px-4 py-2 text-left">
-                      Consulting For
-                    </th>
-                    <th className="border border-gray-300 px-4 py-2 text-left">
-                      Medicine Course
-                    </th>
-                    <th className="border border-gray-300 px-4 py-2 text-left">
-                      View Prescription
-                    </th>
-                    <th className="border border-gray-300 px-4 py-2 text-left">
-                      Action Status
-                    </th>
-                    <th className="border border-gray-300 px-4 py-2 text-left">
-                      Actions
-                    </th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {existingPrescriptions.map((prescription) => (
-                    <tr key={prescription._id} className="hover:bg-gray-50">
-                      <td className="border border-gray-300 px-4 py-2">
-                        {new Date(prescription.createdAt).toLocaleDateString()}
-                      </td>
-                      <td className="border border-gray-300 px-4 py-2">
-                        {/* {prescription.consultingType || "N/A"} */}
-                        {patientData?.medicalDetails?.diseaseType?.name}
-                      </td>
-                      <td className="border border-gray-300 px-4 py-2">
-                        {/* {prescription.consultingFor || "N/A"} */}
-                        {patientData?.medicalDetails?.drafts}
-                      </td>
-                      <td className="border border-gray-300 px-4 py-2">
-                        {prescription.medicineCourse} days
-                      </td>
-                      <td className="border border-gray-300 px-4 py-2">
-                        <button
-                          onClick={() =>
-                            navigate(`/view-prescription/${prescription._id}`)
-                          }
-                          className="text-blue-600 hover:underline"
-                        >
-                          View Prescription
-                        </button>
-                      </td>
-                      <div>
-                        <td className="border border-gray-300 px-4 py-2 text-center">
-                          {prescription.action?.status === "In Progress" ? (
-                            <button
-                              className="bg-yellow-500 text-white px-3 py-1 rounded hover:bg-yellow-600"
-                              onClick={() =>
-                                handleOpenCloseModal(prescription._id)
-                              }
-                            >
-                              Mark as Closed
-                            </button>
-                          ) : (
-                            <button
-                              className="bg-green-600 text-white px-3 py-1 rounded hover:bg-green-700"
-                              // onClick={() => handleUpdateActionStatus(prescription._id, "In Progress")}
-                            >
-                              Closed
-                            </button>
-                          )}
-                        </td>
-                      </div>
-                      <td className="border border-gray-300 px-4 py-2">
-                        <button
-                          onClick={() =>
-                            handleAddToPrescription(prescription._id)
-                          }
-                          className="px-3 py-1 bg-blue-600 text-white rounded text-sm hover:bg-blue-700"
-                        >
-                          Add Prescription
-                        </button>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-                {showCloseModal && (
-                  <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
-                    <div className="bg-white p-6 rounded shadow-lg w-full max-w-md">
-                      <h2 className="text-lg font-semibold mb-4">
-                        Add Close Comment
-                      </h2>
-                      <textarea
-                        rows="4"
-                        className="w-full p-2 border rounded mb-4"
-                        placeholder="Enter reason or notes for closing..."
-                        value={closeComment}
-                        onChange={(e) => setCloseComment(e.target.value)}
-                      />
-                      <div className="flex justify-end gap-3">
-                        <button
-                          className="bg-gray-300 text-gray-700 px-4 py-2 rounded"
-                          onClick={() => setShowCloseModal(false)}
-                        >
-                          Cancel
-                        </button>
-                        <button
-                          className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
-                          onClick={handleConfirmCloseStatus}
-                        >
-                          Confirm Close
-                        </button>
-                      </div>
-                    </div>
-                  </div>
-                )}
-              </table>
-            </div>
-          ) : (
-            <div className="text-center py-8 text-gray-500">
-              <p>No existing prescriptions found for this patient.</p>
-              <button
-                onClick={handleCreateNewPrescription}
-                className="mt-4 px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
+      {/* Action Button */}
+      <div className="pt-3">
+        <button
+          onClick={() => navigate(`/view-timesheet/${prescription.prescriptionId}`)}
+          className="w-full flex items-center justify-center gap-1 px-4 py-2.5 bg-blue-600 text-white rounded-md text-sm font-medium hover:bg-blue-700 transition-colors"
+        >
+          View Timesheet
+        </button>
+      </div>
+    </div>
+  ))}
+</div>
+    </>
+  ) : (
+    // Show consultation cards (existing view)
+    filteredAppointments.length > 0 ? (
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+        {filteredAppointments.map((appointment) => (
+          <div
+            key={appointment.appointmentId}
+            className="bg-white border border-gray-200 rounded-xl p-5 hover:shadow-lg transition-shadow"
+          >
+            {/* Header */}
+            <div className="flex justify-between items-start mb-4">
+              <h3 className="font-bold text-gray-900 text-base">
+                Consultation-{appointment.appointmentUniqueId}
+              </h3>
+              <span
+                className={`px-3 py-1 rounded text-xs font-semibold ${
+                  appointment.status === "New"
+                    ? "bg-red-500 text-white"
+                    : appointment.status === "Existing"
+                    ? "bg-orange-400 text-white"
+                    : "bg-green-500 text-white"
+                }`}
               >
-                Create First Prescription
-              </button>
+                {appointment.status}
+              </span>
             </div>
-          )}
-        </div>
-      )}
-      
+
+            {/* Details */}
+            <div className="space-y-2.5 mb-5">
+              <div className="text-sm">
+                <span className="text-gray-900 font-medium">Consulting Type : </span>
+                <span className="text-gray-700">{appointment.diseaseType}</span>
+              </div>
+              <div className="text-sm">
+                <span className="text-gray-900 font-medium">Consulting For : </span>
+                <span className="text-gray-700">{appointment.consultingFor}</span>
+              </div>
+              <div className="text-sm">
+                <span className="text-gray-900 font-medium">Created on : </span>
+                <span className="text-gray-700">
+                  {new Date(appointment.createdAt).toLocaleDateString('en-GB', {
+                    day: '2-digit',
+                    month: 'short',
+                    year: 'numeric'
+                  })}
+                </span>
+              </div>
+              <div className="text-sm">
+                <span className="text-gray-900 font-medium">Total Prescriptions : </span>
+                <span className="text-gray-700">{appointment.prescriptionCount}</span>
+              </div>
+            </div>
+
+            {/* Action Buttons */}
+            <div className="flex gap-2 pt-3">
+              {appointment.prescriptionCount === 0 ? (
+                <button
+                  onClick={() => handleAddToPrescription(appointment.appointmentId)}
+                  className="flex-1 flex items-center justify-center gap-1 px-4 py-2.5 bg-blue-600 text-white rounded-md text-sm font-medium hover:bg-blue-700 transition-colors"
+                >
+                  <IoIosAdd className="text-lg" />
+                  Add Prescription
+                </button>
+              ) : (
+                <button
+                  onClick={() => fetchAppointmentPrescriptions(appointment.appointmentId)}
+                  className="flex-1 flex items-center justify-center gap-1 px-4 py-2.5 bg-blue-600 text-white rounded-md text-sm font-medium hover:bg-blue-700 transition-colors"
+                >
+                  View Prescription
+                </button>
+              )}
+            </div>
+          </div>
+        ))}
+      </div>
+    ) : (
+      <div className="text-center py-12 text-gray-500">
+        <p className="text-lg mb-4">No consultations found in this category.</p>
+        {activeTab === "inProgress" && (
+          <button
+            onClick={handleCreateNewPrescription}
+            className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+          >
+            Create New Consultation
+          </button>
+        )}
+      </div>
+    )
+  )}
+</div>
+  </>
+)}
+
 
       {showAddMedicineModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-40">
@@ -1873,7 +2060,7 @@ const removeMedicineFromMixedGroup = (mixedItemId, medicineId) => {
       {!showPrescriptionTable && (
         <div className="space-y-6">
           {/* Prescription Details */}
-          <div className="bg-white rounded-lg shadow p-6">
+          <div className="bg-white rounded-lg shadow p-6 mt-12">
             <h2 className="text-lg font-semibold mb-4">Prescription Details</h2>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
               <div>
